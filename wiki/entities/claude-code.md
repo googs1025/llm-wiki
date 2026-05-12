@@ -2,8 +2,8 @@
 title: Claude Code
 tags: [ai-agent, claude, cli-tool, llm-infra]
 date: 2026-05-12
-sources: [src-claude-mem-architecture]
-related: [[claude-mem]], [[claude-agent-sdk]]
+sources: [src-claude-mem-architecture, src-claude-context-architecture]
+related: [[claude-mem]], [[claude-agent-sdk]], [[claude-context]], [[mcp]]
 ---
 
 # Claude Code
@@ -34,8 +34,9 @@ Claude Code 作为**宿主 runtime**，向插件暴露 6 个 Lifecycle Hook：
 
 - 宿主：Claude Code CLI
 - SDK：[[claude-agent-sdk]]（用于在脚本/插件内调用 Claude 做编程任务）
-- 插件机制：plugin/hooks/hooks.json 注册生命周期钩子
+- 插件机制：plugin/hooks/hooks.json 注册生命周期钩子（如 [[claude-mem]]）
 - Skill 机制：通过 SKILL.md 注册可被 Agent 自主调用的工具（如 claude-mem 的 `mem-search`）
+- [[mcp|MCP]] 客户端：通过 `claude mcp add` 加载第三方工具 server（如 [[claude-context]]）
 
 ## 参考
 

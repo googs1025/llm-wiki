@@ -15,6 +15,9 @@ date: 2026-05-12
 - [[claude-code]] — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制
 - [[claude-mem]] — 给 Claude Code 装上长期记忆的开源插件
 - [[claude-agent-sdk]] — `@anthropic-ai/claude-agent-sdk`，Agent 编程 SDK
+- [[claude-context]] — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent
+- [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
+- [[milvus]] — 开源向量数据库（dense + sparse + RRF）
 
 ## 概念 (Concepts)
 
@@ -29,6 +32,14 @@ date: 2026-05-12
 - [[three-tier-search-protocol]] — 三层搜索协议（防上下文爆炸）
 - [[ai-as-compressor]] — AI 作为压缩器的设计哲学
 
+### 检索 / RAG
+- [[code-semantic-search]] — 代码语义检索方法论
+- [[hybrid-search-rrf]] — Dense + Sparse + RRF 重排混合检索
+- [[merkle-dag-fingerprint]] — 内容指纹做增量同步
+
+### Agent 工程
+- [[ai-agent-plugin-patterns]] — AI Agent 外挂的 9 条设计原则（迁移检查表）
+
 ## 源文件摘要 (Sources)
 
 - [[src-k8s-v1.36-sneak-peek]] — K8s v1.36 新特性预览（弃用 externalIPs、SELinux GA）
@@ -37,6 +48,7 @@ date: 2026-05-12
 - [[src-ai-vulnerability-discovery]] — AI 驱动的漏洞发现变革与应对策略
 - [[src-argocd-overview]] — Argo CD 核心功能与架构概览
 - [[src-claude-mem-architecture]] — claude-mem 架构与设计思路（v13.1.0，跨会话记忆插件）
+- [[src-claude-context-architecture]] — Claude Context 架构（v0.1.13，MCP 代码语义检索）
 
 ## 分析 (Analysis)
 
@@ -61,7 +73,8 @@ _暂无条目_
 
 ### AI Agent / LLM Infra
 - bullmq — Node.js 任务队列（claude-mem 后台压缩调度）
-- chroma — 开源向量数据库
-- mcp — Model Context Protocol
+- chroma — 开源向量数据库（claude-mem 使用）
 - fts5 — SQLite 全文索引扩展
 - outbox-pattern — 事务性消息发布模式
+- tree-sitter — 多语言 AST 解析器（claude-context AST splitter 基础）
+- rrf — Reciprocal Rank Fusion 重排算法（已并入 hybrid-search-rrf 概念页）

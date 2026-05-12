@@ -32,3 +32,7 @@ date: 2026-04-22
 ## [2026-05-12] ingest | claude-mem 架构与设计思路
 
 来源：thedotmack/claude-mem v13.1.0 架构分析。新建源摘要页 + 3 实体页（claude-mem / claude-code / claude-agent-sdk）+ 4 概念页（agent-memory / event-driven-memory-pipeline / three-tier-search-protocol / ai-as-compressor）。核心洞察：AI 作为压缩器而非问答器，边缘轻量 + 后台异步，三层搜索防上下文爆炸。
+
+## [2026-05-12] ingest | Claude Context 架构与 AI Agent 外挂设计原则
+
+来源：zilliztech/claude-context v0.1.13 架构分析。新建源摘要页 + 3 实体页（claude-context / milvus / mcp）+ 4 概念页（code-semantic-search / hybrid-search-rrf / merkle-dag-fingerprint / ai-agent-plugin-patterns）。反向更新 claude-code（加 MCP 客户端能力）、claude-mem（链接 mcp）。核心洞察：9 条 AI Agent 外挂迁移原则（分层 / 接口化 / 降级链 / 内容指纹 / 协议通道纪律 / 协作式取消 / 流式批处理 / 快照自愈 / 混合检索）。
