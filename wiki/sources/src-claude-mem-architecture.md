@@ -24,6 +24,54 @@ related: [[claude-mem]], [[claude-code]], [[claude-agent-sdk]], [[agent-memory]]
 
 详见 [[event-driven-memory-pipeline]]。
 
+### 完整架构图
+
+```
+┌─────────────────────────  CLAUDE CODE 运行时  ─────────────────────────┐
+│                                                                          │
+│  事件钩子（plugin/hooks/hooks.json 注册的 6 个 Lifecycle 钩子）           │
+│  ┌────────────┐ ┌──────────────┐ ┌────────────────┐ ┌─────────────┐    │
+│  │SessionStart│ │UserPromptSub │ │PreToolUse(Read)│ │PostToolUse  │    │
+│  └─────┬──────┘ └──────┬───────┘ └────────┬───────┘ └──────┬──────┘    │
+│        │               │                  │                │           │
+│        ▼               ▼                  ▼                ▼           │
+│   bun-runner.js（轻量 stdin 接力 → 派发 worker-service 子命令）           │
+└─────────────────────────────┬───────────────────────────────────────────┘
+                              │ HTTP / 进程派发
+                              ▼
+┌────────────────────  Worker Service (Express daemon)  ────────────────────┐
+│  src/services/worker-service.ts                                            │
+│  端口: 37700 + (uid % 100)  •  PID: ~/.claude-mem/worker.pid               │
+│                                                                            │
+│  路由层（7 组 Routes）                                                     │
+│   /api/context/*   /api/sessions/*   /api/observations                     │
+│   /api/search/*    /api/memory/save  /api/chroma/status   /v1/*            │
+│                                                                            │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────┐    │
+│  │ Providers        │  │ ResponseProcessor│  │ ChromaSync           │    │
+│  │ Claude/Gemini/OR │→ │ XML→Observation  │→ │ 向量同步 + watermark │    │
+│  │ (Agent SDK 调用) │  │ 事务批量入库     │  │ 回填                  │    │
+│  └──────────────────┘  └────────┬─────────┘  └──────────┬───────────┘    │
+└─────────────────────────────────┼────────────────────────┼────────────────┘
+                                  ▼                        ▼
+                       ┌────────────────────┐   ┌────────────────────┐
+                       │ SQLite             │   │ Chroma 向量库      │
+                       │ ~/.claude-mem/.db  │   │ ~/.claude-mem/chroma│
+                       │ observations / FTS5│   │ 语义检索           │
+                       │ sessions / prompts │   │                    │
+                       └─────────┬──────────┘   └─────────┬──────────┘
+                                 └─────────┬──────────────┘
+                                           │
+                          ┌────────────────┴────────────────┐
+                          ▼                                 ▼
+                ┌──────────────────┐               ┌──────────────────┐
+                │ mem-search Skill │               │ Viewer UI (React)│
+                │ 3 层搜索协议     │               │ SSE 流式渲染     │
+                │ search→timeline  │               │ 时间线/观察列表  │
+                │ →get_observations│               │                  │
+                └──────────────────┘               └──────────────────┘
+```
+
 ## 六个生命周期钩子
 
 | 阶段 | 触发 | Handler | 作用 |
