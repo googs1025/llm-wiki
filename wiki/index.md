@@ -18,6 +18,7 @@ date: 2026-05-12
 - [[claude-context]] — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
 - [[milvus]] — 开源向量数据库（dense + sparse + RRF）
+- [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 
 ## 概念 (Concepts)
 
@@ -39,6 +40,8 @@ date: 2026-05-12
 
 ### Agent 工程
 - [[ai-agent-plugin-patterns]] — AI Agent 外挂的 9 条设计原则（迁移检查表）
+- [[declarative-agent-management]] — 用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）
+- [[agent-credential-isolation]] — Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key
 
 ## 源文件摘要 (Sources)
 
@@ -49,6 +52,7 @@ date: 2026-05-12
 - [[src-argocd-overview]] — Argo CD 核心功能与架构概览
 - [[src-claude-mem-architecture]] — claude-mem 架构与设计思路（v13.1.0，跨会话记忆插件）
 - [[src-claude-context-architecture]] — Claude Context 架构（v0.1.13，MCP 代码语义检索）
+- [[src-hiclaw-architecture]] — HiClaw 架构（v1.1.0，K8s 原生多 Agent 协作平台，Matrix IM + Higress 网关凭据托管）
 
 ## 分析 (Analysis)
 
@@ -78,3 +82,8 @@ _暂无条目_
 - outbox-pattern — 事务性消息发布模式
 - tree-sitter — 多语言 AST 解析器（claude-context AST splitter 基础）
 - rrf — Reciprocal Rank Fusion 重排算法（已并入 hybrid-search-rrf 概念页）
+- higress — AI 网关（HiClaw 凭据托管核心，apig-20240327 SDK）
+- matrix-protocol — 分布式 IM 协议（HiClaw 协作平面）
+- k8s-operator — Kubernetes Operator 模式（HiClaw 控制平面骨架）
+- kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
+- autogen / langgraph / crewai — 多 Agent 框架同类对比项

@@ -36,3 +36,6 @@ date: 2026-04-22
 ## [2026-05-12] ingest | Claude Context 架构与 AI Agent 外挂设计原则
 
 来源：zilliztech/claude-context v0.1.13 架构分析。新建源摘要页 + 3 实体页（claude-context / milvus / mcp）+ 4 概念页（code-semantic-search / hybrid-search-rrf / merkle-dag-fingerprint / ai-agent-plugin-patterns）。反向更新 claude-code（加 MCP 客户端能力）、claude-mem（链接 mcp）。核心洞察：9 条 AI Agent 外挂迁移原则（分层 / 接口化 / 降级链 / 内容指纹 / 协议通道纪律 / 协作式取消 / 流式批处理 / 快照自愈 / 混合检索）。
+## [2026-05-13] ingest | HiClaw 架构
+
+来源：agentscope-ai/HiClaw v1.1.0 架构分析（HEAD `e21ac83`）。**首次通过新建的 `ingest-codebase` skill 自动产出。** 新建 raw 文件（323 行）+ wiki source 页（226 行），ASCII 自查通过（raw 67 │ ↔ wiki 67 │ byte-identical）。核心洞察：K8s operator 模式套到 AI Agent 运维（CRD = Agent 声明，reconcile = 自愈）；Matrix IM 作协作平面（每个 Agent 是 IM 用户，人在回路天然成立）；Higress AI Gateway 托管真凭据（Worker 永远只持 consumer key 实现 prompt-injection 抗性）；OpenClaw/QwenPaw/Hermes 三 runtime 可插（最近默认从 OpenClaw 切到 QwenPaw）；嵌入式 K8s 走 kine SQLite 让"装上像 Docker，骨子里是 K8s"。
