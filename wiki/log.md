@@ -39,3 +39,7 @@ date: 2026-04-22
 ## [2026-05-13] ingest | HiClaw 架构
 
 来源：agentscope-ai/HiClaw v1.1.0 架构分析（HEAD `e21ac83`）。**首次通过新建的 `ingest-codebase` skill 自动产出。** 新建 raw 文件（323 行）+ wiki source 页（226 行），ASCII 自查通过（raw 67 │ ↔ wiki 67 │ byte-identical）。核心洞察：K8s operator 模式套到 AI Agent 运维（CRD = Agent 声明，reconcile = 自愈）；Matrix IM 作协作平面（每个 Agent 是 IM 用户，人在回路天然成立）；Higress AI Gateway 托管真凭据（Worker 永远只持 consumer key 实现 prompt-injection 抗性）；OpenClaw/QwenPaw/Hermes 三 runtime 可插（最近默认从 OpenClaw 切到 QwenPaw）；嵌入式 K8s 走 kine SQLite 让"装上像 Docker，骨子里是 K8s"。
+
+## [2026-05-13] ingest | agent-sandbox 架构
+
+来源：kubernetes-sigs/agent-sandbox v0.4.5+11 架构分析（HEAD `e1d8898`）。`ingest-codebase` skill 第二次产出，整套流程稳定。新建 raw 文件（260+ 行）+ wiki source 页（200+ 行）+ 4 个实体页 stub（agent-sandbox / gvisor / kata-containers）+ 2 个概念页 stub（k8s-operator / k8s-crd / network-policy）。ASCII 自查 raw 86 │ ↔ wiki 81 │（94% 保留，差异来自"安全模型"信任边界图未带到 wiki）。核心洞察：(1) Sandbox CRD 把 "1 stable identity + 持久存储 + 可暂停 + 可调度销毁" 做成第一类 K8s 资源（不是 Deployment 也不是 StatefulSet），`replicas: 0|1` 强制约束承载暂停语义；(2) **隔离机制完全委托** K8s 原语——controller 不强制 gVisor/Kata/NetworkPolicy，全在用户填的 PodTemplate 里透传，最大化基座灵活性；(3) WarmPool + OwnerReference 热转移做出 ~0 启动延迟的 Claim 领养；(4) Template 级默认 NetworkPolicy = deny RFC1918 + deny 云元数据，把"AI Agent 跑用户代码的 SSRF 防御"做成系统约束；(5) 跟 [[HiClaw]] **互补不竞争**——前者基础设施层，后者应用层，HiClaw Worker 理论上可以跑在 agent-sandbox 上。

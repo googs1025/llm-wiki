@@ -10,6 +10,8 @@ date: 2026-05-12
 ### 云原生
 - [[kubernetes]] — 容器编排平台，云原生核心（5 篇源文件）
 - [[argocd]] — Kubernetes GitOps 持续交付工具
+- [[gvisor]] — Google 出品的用户态内核容器隔离运行时
+- [[kata-containers]] — OpenInfra 出品的轻量 microVM 容器运行时
 
 ### AI Agent / LLM Infra
 - [[claude-code]] — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制
@@ -19,6 +21,7 @@ date: 2026-05-12
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
 - [[milvus]] — 开源向量数据库（dense + sparse + RRF）
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
+- [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
 
 ## 概念 (Concepts)
 
@@ -26,6 +29,9 @@ date: 2026-05-12
 - [[gitops]] — 以 Git 为单一事实来源的运维方法论
 - [[ai-ops]] — AI/LLM 增强运维（告警分诊、根因分析）
 - [[cloud-native-security]] — 云原生安全实践与趋势
+- [[k8s-operator]] — K8s Operator 模式（CRD + reconcile loop）
+- [[k8s-crd]] — CustomResourceDefinition 扩展点
+- [[network-policy]] — K8s NetworkPolicy（L3/L4 网络隔离）
 
 ### Agent 记忆 / 设计模式
 - [[agent-memory]] — Agent 长期记忆领域综述
@@ -53,6 +59,7 @@ date: 2026-05-12
 - [[src-claude-mem-architecture]] — claude-mem 架构与设计思路（v13.1.0，跨会话记忆插件）
 - [[src-claude-context-architecture]] — Claude Context 架构（v0.1.13，MCP 代码语义检索）
 - [[src-hiclaw-architecture]] — HiClaw 架构（v1.1.0，K8s 原生多 Agent 协作平台，Matrix IM + Higress 网关凭据托管）
+- [[src-agent-sandbox-architecture]] — agent-sandbox 架构（v0.4.5，K8s SIG Apps 孵化的 Sandbox CRD，AI Agent 安全隔离运行时原语）
 
 ## 分析 (Analysis)
 
@@ -74,6 +81,8 @@ _暂无条目_
 - prometheus — 监控系统
 - serverless-wasm — Serverless 与 WebAssembly
 - platform-engineering — 平台工程
+- kueue — K8s 多租户作业队列（agent-sandbox examples 用 v1beta2）
+- cilium — eBPF CNI，扩展 NetworkPolicy 到 L7（agent-sandbox examples 用作 Unmanaged 模式后端）
 
 ### AI Agent / LLM Infra
 - bullmq — Node.js 任务队列（claude-mem 后台压缩调度）
