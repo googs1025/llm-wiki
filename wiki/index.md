@@ -25,6 +25,8 @@ date: 2026-05-12
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
 - [[agentgateway]] — Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）
+- [[powermem]] — OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
+- [[oceanbase]] — 蚂蚁集团开源的企业级分布式数据库（PowerMem 默认后端，原生向量 + FTS + 图）
 
 ## 概念 (Concepts)
 
@@ -44,6 +46,7 @@ date: 2026-05-12
 - [[event-driven-memory-pipeline]] — 事件采集 → AI 压缩 → 双索引 → 反向注入闭环
 - [[three-tier-search-protocol]] — 三层搜索协议（防上下文爆炸）
 - [[ai-as-compressor]] — AI 作为压缩器的设计哲学
+- [[ebbinghaus-forgetting-curve]] — `R = e^(-t/S)` 数学模型驱动 working/short/long 三层记忆衰减与晋升（PowerMem 核心）
 
 ### 检索 / RAG
 - [[code-semantic-search]] — 代码语义检索方法论
@@ -67,6 +70,7 @@ date: 2026-05-12
 - [[src-hiclaw-architecture]] — HiClaw 架构（v1.1.0，K8s 原生多 Agent 协作平台，Matrix IM + Higress 网关凭据托管）
 - [[src-agent-sandbox-architecture]] — agent-sandbox 架构（v0.4.5，K8s SIG Apps 孵化的 Sandbox CRD，AI Agent 安全隔离运行时原语）
 - [[src-agentgateway-architecture]] — agentgateway 架构（v1.2.0-alpha.2，Istio 系骨架 + Rust 数据面，LLM/MCP/A2A 三协议 AI Gateway）
+- [[src-powermem-architecture]] — PowerMem 架构（v1.1.1，OceanBase 持久化记忆中间件，向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
 
 ## 分析 (Analysis)
 
