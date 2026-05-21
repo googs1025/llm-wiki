@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agent-sandbox 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-13</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>agent-sandbox 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-13 · 来源：agent-sandbox-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">k8s-operator</span><span class="tag">ai-infra</span><span class="tag">agent-sandbox</span><span class="tag">sig-apps</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/agent-sandbox-architecture-analysis.md</code> · 仓库：<a href="https://github.com/kubernetes-sigs/agent-sandbox">kubernetes-sigs/agent-sandbox</a> · 分析版本 v0.4.5+11 (HEAD <code>e1d8898</code>)</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><code>kubernetes-sigs/agent-sandbox</code> 是 <strong>K8s SIG Apps 官方孵化</strong>的 Sandbox <span class="wikilink wikilink-missing" title="未建页：k8s-crd">CRD</span> 与 controller，把 AI Agent runtime 那种"长寿命、有状态、单实例、可暂停、有稳定身份"的容器形态建模成第一类 K8s 资源——比 <a class="wikilink" href="../entities/kubernetes.html">Deployment</a>（无状态副本）和 <a class="wikilink" href="../entities/kubernetes.html">StatefulSet</a>（编号 Pod）都更精准。核心手段：1 个 <code>Sandbox</code> CR = 1 个 Pod + 1 个 headless Service + 持久 PVC + 可选 <code>Template</code>/<code>Claim</code>/<code>WarmPool</code> 三件套，<strong>隔离机制（<span class="wikilink wikilink-missing" title="未建页：gvisor">gVisor</span>/<span class="wikilink wikilink-missing" title="未建页：kata-containers">Kata</span>/<span class="wikilink wikilink-missing" title="未建页：network-policy">NetworkPolicy</span>）完全委托给标准 K8s 原语</strong>，controller 只做生命周期编排。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    subgraph USER["用户 / AI Agent 进程"]
+        direction LR
+        Yml["kubectl YAML"]
+        GoSDK["Go SDK (clients/go)"]
+        PySDK["Python SDK"]
+    end
+
+    subgraph API["Kubernetes API Server"]
+        direction LR
+        subgraph CORE["agents.x-k8s.io/v1alpha1"]
+            SB["Sandbox (CR)<br/>Spec: PodTemplate · VolumeClaim…<br/>ShutdownTime · ShutdownPolicy<br/>Replicas (0|1)"]
+        end
+        subgraph EXT["extensions.agents…"]
+            SC["SandboxClaim (CR)<br/>user-friendly"]
+            WP["SandboxWarmPool<br/>Spec: Replicas N · TemplateRef · UpdateStrategy"]
+            TPL["SandboxTemplate<br/>Spec: PodTemplate · VolumeClaim…<br/>NetworkPolicy · EnvVarsPolicy"]
+        end
+        SC -- "owns Sandbox" --> SB
+        WP -- "owns N× Sandbox<br/>(pre-warmed, 等候 Claim 领养)" --> SB
+        SC -- "references" --> TPL
+        WP -- "TemplateRef" --> TPL
+    end
+
+    subgraph CTRL["agent-sandbox-controller (cmd/agent-sandbox-controller)"]
+        R["SandboxReconciler (always)<br/>+ SandboxClaimReconciler  (--extensions=true)<br/>+ SandboxTemplateReconciler<br/>+ SandboxWarmPoolReconciler<br/>+ SimpleSandboxQueue (per-template FIFO O(1) adopt)"]
+    end
+
+    subgraph NODE["Kubelet 节点"]
+        direction LR
+        Pod["Pod (1:1 per Sandbox)<br/>runtimeClassName: gvisor / kata / runc"]
+        Svc["Service (ClusterIP=None, headless)<br/>{sandbox}.{ns}.svc.cluster.local"]
+        PVC["PVC: {tplname}-{sandboxname}<br/>持久存储，Sandbox 重启不丢"]
+        NP["NetworkPolicy (Template-shared)<br/>默认 deny + 仅放行公网 egress<br/>(deny RFC1918 + metadata server)"]
+        Pod <--> Svc
+        Pod <--> PVC
+    end
+
+    USER -- "apply / RPC / kubectl exec" --> API
+    API -- "watch + reconcile" --> CTRL
+    CTRL -- "creates / owns" --> NODE
+
+    classDef u fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef a fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef c fill:#14532d,stroke:#166534,color:#fff
+    classDef n fill:#5b21b6,stroke:#6d28d9,color:#fff
+    class USER,Yml,GoSDK,PySDK u
+    class API,CORE,EXT,SB,SC,WP,TPL a
+    class CTRL,R c
+    class NODE,Pod,Svc,PVC,NP n
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌──────────────────────────────────────────────────────────────────────────────┐
+│                              用户 / AI Agent 进程                              │
+│                                                                              │
+│   kubectl YAML        ▼ Go SDK (clients/go)        ▼ Python SDK             │
+│                                                                              │
+└─────────────┬────────────────────────┬──────────────────────┬────────────────┘
+              │                        │                      │
+              ▼ (apply)                ▼ (RPC / kubectl exec) ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Kubernetes API Server                              │
+│                                                                             │
+│  Group: agents.x-k8s.io/v1alpha1            Group: extensions.agents...     │
+│  ┌──────────────────┐                       ┌───────────────────────┐       │
+│  │  Sandbox  (CR)   │ ◄───── owns ────────  │  SandboxClaim     (CR)│       │
+│  │                  │                       │   (user-friendly)     │       │
+│  │  Spec:           │ ◄── owns (pre-warm) ──┤                       │       │
+│  │   PodTemplate    │                       └──────────┬────────────┘       │
+│  │   VolumeClaim... │                                  │ references         │
+│  │   ShutdownTime   │       ┌───────────────────┐      │                    │
+│  │   ShutdownPolicy │       │ SandboxWarmPool   │      ▼                    │
+│  │   Replicas (0|1) │       │  Spec:            │     ┌──────────────────┐  │
+│  └────────┬─────────┘       │   Replicas: N     │     │ SandboxTemplate  │  │
+│           │                 │   TemplateRef     │────►│  Spec:           │  │
+│           │                 │   UpdateStrategy  │     │   PodTemplate    │  │
+│           │                 └─────────┬─────────┘     │   VolumeClaim... │  │
+│           │                           │ owns          │   NetworkPolicy  │  │
+│           │                           │ N×Sandbox     │   EnvVarsPolicy  │  │
+│           │                           ▼               └──────────────────┘  │
+│           │              (pre-warmed Sandboxes 等候被 Claim 领养)            │
+└───────────┼─────────────────────────────────────────────────────────────────┘
+            │ watch + reconcile
+            ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│           agent-sandbox-controller (cmd/agent-sandbox-controller)            │
+│           ┌──────────────────────────────────────────────────────┐           │
+│           │  SandboxReconciler (always)                          │           │
+│           │  + SandboxClaimReconciler   (--extensions=true)      │           │
+│           │  + SandboxTemplateReconciler  ↑                      │           │
+│           │  + SandboxWarmPoolReconciler  ↑                      │           │
+│           │  + SimpleSandboxQueue (per-template FIFO O(1) adopt) │           │
+│           └────────────────────────┬─────────────────────────────┘           │
+└────────────────────────────────────┼─────────────────────────────────────────┘
+                                     │ creates / owns
+                                     ▼
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  Kubelet 节点                                                                 │
+│  ┌─────────────────────────┐    ┌────────────────────────────────────┐      │
+│  │  Pod  (1:1 per Sandbox) │ ←─►│  Service (ClusterIP=None, headless) │      │
+│  │  ┌───────────────────┐  │    │   ⇒ {sandbox}.{ns}.svc.cluster.local│      │
+│  │  │ container         │  │    └────────────────────────────────────┘      │
+│  │  │ runtimeClassName: │  │    ┌────────────────────────────────────┐      │
+│  │  │   gvisor / kata   │◄─┤    │ PVC: {tplname}-{sandboxname}        │      │
+│  │  │   / runc          │  │    │   (持久存储，Sandbox 重启不丢)        │      │
+│  │  └───────────────────┘  │    └────────────────────────────────────┘      │
+│  └─────────────────────────┘    ┌────────────────────────────────────┐      │
+│                                 │ NetworkPolicy (Template-shared)     │      │
+│                                 │  默认 deny + 仅放行公网 egress       │      │
+│                                 │  (deny RFC1918 + metadata server)   │      │
+│                                 └────────────────────────────────────┘      │
+└──────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h2 id="模块分层">模块分层</h2>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CRD 定义层</strong></td>
+<td>4 个 CRD 的 Go 类型 + kubebuilder 标注 → <code>controller-gen</code> 自动生成 YAML。Spec/Status 即 API 契约。</td>
+</tr>
+<tr>
+<td><strong>Reconciler 层</strong></td>
+<td>controller-runtime 风格的 4 个 reconciler。watch + owns + 幂等 reconcile。Claim/WarmPool/Template 通过 <code>--extensions=true</code> 开关启用。</td>
+</tr>
+<tr>
+<td><strong>运行时支持</strong></td>
+<td>绝对时间 + TTL 过期计算、Prometheus 指标、per-template-hash 的 FIFO 领养队列（O(1) WarmPool adopt）。</td>
+</tr>
+<tr>
+<td><strong>入口二进制</strong></td>
+<td>单二进制 <code>agent-sandbox-controller</code>，flags 控制 extensions 开关、leader election、并发度、OTel tracing、pprof。</td>
+</tr>
+<tr>
+<td><strong>Client SDK</strong></td>
+<td>Go / Python / 标准 K8s clientset。Go SDK 提供远程 exec、文件传输、gateway 隧道、追踪注入——给 AI Agent runtime 调用 Sandbox 用。</td>
+</tr>
+<tr>
+<td><strong>打包</strong></td>
+<td>Helm chart（CRDs / RBAC / Deployment / metrics Service）+ 单独的 <code>k8s/crds/</code> 给手工 kubectl apply。</td>
+</tr>
+<tr>
+<td><strong>示例与集成</strong></td>
+<td>17 个 <code>examples/</code>：hello-world / kata-gke / openclaw / hermes / langchain / jupyter / vscode / chrome / HPA / Kueue / Cilium。"读完 examples 就会用"。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>分层关键约束</strong>：<code>api/</code> 与 <code>extensions/api/</code> 是被 K8s API server 直接读的契约，只能改不能删；<code>internal/</code> 严格私有；<code>controllers/</code> 不允许 import <code>extensions/</code>（核心稳定、扩展演进的边界）。</p>
+<h2 id="关键数据流">关键数据流</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    T0["t=0 — 用户 kubectl apply Sandbox 或 SandboxClaim"]
+    AS["apiserver 收到 CR"]
+    Rec["Reconcile(sandbox)<br/>controllers/sandbox_controller.go<br/>· checkSandboxExpiry (L1003)<br/>· reconcilePVCs (L853) → 创建 PVC<br/>· reconcilePod (L531)<br/>　- 有 SandboxPodNameAnnotation → warm-pool 领养，复用现有 Pod<br/>　- 否则 Create Pod {sandbox.Name}<br/>· reconcileService (L398) → headless Service (ClusterIP=None)<br/>· 算 Conditions (Ready / Finished)<br/>· Update Status + requeueAfter(min(timeLeft, 2s))"]
+    Run["Pod 起来 → 容器内 Agent runtime (OpenClaw / Hermes / …)<br/>AI Agent 进程 ← SDK (gateway/tunnel/exec) ← 外部 caller<br/>(在 gVisor / Kata 内运行，宿主机内核被隔离)"]
+    Exp["t = ShutdownTime — handleSandboxExpiry (L922)<br/>ShutdownPolicy=Retain (default): 删 Pod+Svc，保留 Sandbox CR (status: expired)<br/>ShutdownPolicy=Delete: 整个 Sandbox 也删掉"]
+
+    T0 --> AS -- "watch event" --> Rec --> Run --> Exp
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>   t=0       用户 kubectl apply Sandbox 或 SandboxClaim
+              │
+              ▼
+   ┌─────────────────────────┐
+   │ apiserver 收到 CR       │
+   └────────────┬────────────┘
+                │ watch event
+                ▼
+   ┌────────────────────────────────────────────────────────┐
+   │ Reconcile(sandbox) — controllers/sandbox_controller.go │
+   │  ├─ checkSandboxExpiry      (line 1003)                │
+   │  ├─ reconcilePVCs           (line 853)  ──► 创建 PVC    │
+   │  ├─ reconcilePod            (line 531)                 │
+   │  │    ├─ 如果有 SandboxPodNameAnnotation：              │
+   │  │    │    └─ 走&quot;warm pool 领养&quot;分支，复用现有 Pod      │
+   │  │    └─ 否则 Create Pod {sandbox.Name}                │
+   │  ├─ reconcileService        (line 398)  ──► 创建        │
+   │  │    └─ headless Service (ClusterIP=None)             │
+   │  ├─ 算 Conditions (Ready/Finished)                     │
+   │  └─ Update Status + requeueAfter(min(timeLeft, 2s))    │
+   └────────────────────────────┬───────────────────────────┘
+                                │
+                                ▼
+   ┌─────────────────────────────────────────────────────┐
+   │ Pod 起来 → 容器内 Agent runtime (OpenClaw/Hermes/…) │
+   │                                                     │
+   │ AI Agent 进程 ←── SDK (gateway/tunnel/exec) ─────── │ ← 外部 caller
+   │ (在 gVisor / Kata 内运行，宿主机内核被隔离)          │
+   └─────────────────────────────────────────────────────┘
+                                │
+                                │ t = ShutdownTime（绝对时间）
+                                ▼
+   ┌─────────────────────────────────────────────────────┐
+   │ handleSandboxExpiry (line 922)                      │
+   │   ├─ ShutdownPolicy=Retain (default): 删 Pod+Svc，   │
+   │   │    保留 Sandbox CR (status 显示 expired)         │
+   │   └─ ShutdownPolicy=Delete: 整个 Sandbox 也删掉      │
+   └─────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h3 id="sandboxclaim-快慢路径">SandboxClaim 快/慢路径</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    U["user kubectl apply SandboxClaim"]
+    GoC["SandboxClaimReconciler.getOrCreateSandbox<br/>(sandboxclaim_controller.go:320)"]
+    Fast["【快路径】adoptSandboxFromCandidates (L719)<br/>· query SimpleSandboxQueue[templateHash]<br/>· 找到 1 个 WarmPool 已就绪的 Sandbox<br/>· patch: 清掉 WarmPool 的 OwnerReference<br/>· patch: 把 Claim 设为新 owner<br/>≈ 0 启动延迟"]
+    Slow["【慢路径】createSandbox (L385)<br/>没找到 / WarmPoolPolicy=none / 自定义 env (与 warmpool 不兼容)<br/>· 读 SandboxTemplate<br/>· 复制 PodTemplate + VolumeClaimTemplates<br/>· 注入 claim 的额外 env / labels<br/>· SetControllerReference(claim, sandbox)<br/>· Create Sandbox CR<br/>≈ Pod 冷启动延迟（秒级）"]
+
+    U --> GoC
+    GoC --> Fast
+    GoC --> Slow
+
+    classDef f fill:#14532d,stroke:#166534,color:#fff
+    classDef s fill:#7c2d12,stroke:#9a3412,color:#fff
+    class Fast f
+    class Slow s
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>   user kubectl apply SandboxClaim
+        │
+        ▼
+   SandboxClaimReconciler.getOrCreateSandbox  (sandboxclaim_controller.go:320)
+        │
+        ├─►【快路径】adoptSandboxFromCandidates (line 719)
+        │     query SimpleSandboxQueue[templateHash]
+        │     找到 1 个 WarmPool 已就绪的 Sandbox
+        │     ├─ patch: 清掉 WarmPool 的 OwnerReference
+        │     └─ patch: 把 Claim 设为新 owner   ≈ 0 启动延迟
+        │
+        └─►【慢路径】createSandbox (line 385)
+              没找到 / WarmPoolPolicy=none / 自定义 env (跟 warmpool 不兼容)
+              ├─ 读 SandboxTemplate
+              ├─ 复制 PodTemplate + VolumeClaimTemplates
+              ├─ 注入 claim 的额外 env / labels
+              ├─ SetControllerReference(claim, sandbox)
+              └─ Create Sandbox CR  ≈ Pod 冷启动延迟（秒级）
+</code></pre>
+</details>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li>
+<p><strong>为什么不复用 Deployment / StatefulSet</strong>：AI Agent runtime 既不像 Deployment 那样无状态可副本（Agent 有会话状态），也不像 StatefulSet 那样需要编号有序（每个 sandbox 是独立用户实例）。需要的是 <strong>"1 个 stable identity + 持久存储 + 可调度销毁 + 可暂停可恢复"的单实例语义</strong>——Pet 概念在云原生的回归，但这次明确为 AI Agent runtime 量身定做。<code>replicas: 0|1</code> 强制约束就是"暂停 = scale to 0、恢复 = scale to 1"语义的承载。</p>
+</li>
+<li>
+<p><strong>隔离机制全部委托标准 K8s 原语</strong>：controller 不强制任何隔离手段——<span class="wikilink wikilink-missing" title="未建页：gvisor">gVisor</span> / <span class="wikilink wikilink-missing" title="未建页：kata-containers">Kata</span> / <code>securityContext</code> / <code>serviceAccount</code> / <code>seccomp</code> 都在用户填写的 <code>PodTemplate.Spec</code> 里，原样透传。controller 唯一<strong>强势注入</strong>的是 (1) headless Service 强制走 DNS（多 sandbox 才能各自有稳定身份），(2) Template 级的默认 <span class="wikilink wikilink-missing" title="未建页：network-policy">NetworkPolicy</span>（deny RFC1918 内网 + deny 云元数据服务）。这种"机制由 K8s 提供、策略由用户挑选"的分工，让它能兼容 GKE Kata、EKS Firecracker、本地 gVisor 任何隔离基座。这条与 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">AI Agent 外挂设计原则</a>里"隔离用现成机制、不重新发明"完全吻合。</p>
+</li>
+<li>
+<p><strong>WarmPool + OwnerReference 转移实现 ~0 启动延迟</strong>：单纯 Sandbox 冷启动慢（镜像拉取 + Kata/gVisor 初始化数秒到数十秒）。WarmPool 维护 N 个 pre-warmed Sandbox，Claim 来了<strong>不是新建 Pod，而是把 Ready 的 Pod 改归属者</strong>。<code>SimpleSandboxQueue</code> 是 per-template-hash 的线程安全 FIFO，O(1) 找候选。<code>sandboxclaim_pod_exclusivity_test.go</code> 这个测试名直白地说明 handoff 历史上踩过"1 个 Sandbox 对 2 个 Pod / 幽灵 Pod"的坑。</p>
+</li>
+<li>
+<p><strong>声明式 NetworkPolicy 而非隐式 firewalling</strong>：Template 级别声明 <code>Managed</code>/<code>Unmanaged</code>。Managed 默认就是严格 deny——明确把"AI Agent 跑用户输入的代码必须默认禁掉内网访问 + 云元数据访问"做成系统约束，而不是文档里的最佳实践。</p>
+</li>
+<li>
+<p><strong>PVC 不被 Sandbox 标为 owned</strong>：Sandbox 删除时 PVC 不级联回收，保留用户数据——"数据生命周期 ≠ 工作负载生命周期"做成了第一类设计。代价是孤儿 PVC 需要外部清理策略。</p>
+</li>
+<li>
+<p><strong>绝对时间 ShutdownTime，无心跳续约</strong>：expiry 是声明式的，客户端要长寿命就主动 patch <code>shutdownTime</code>。controller 只做"现在 ≥ shutdownTime 就清理"的判断。避免 server 端维护"上次心跳时间"的状态，但代价是客户端要负责续期。</p>
+</li>
+<li>
+<p><strong>CRD validation 而非 webhook</strong>：没有 admission webhook，全靠 OpenAPI v3 schema validation + controller 幂等 reconcile。少一个组件 = 少一个故障点——典型 SIG-style 的"简单优先"。</p>
+</li>
+</ul>
+<h2 id="关键组件深入解读">关键组件深入解读</h2>
+<h3 id="sandboxreconciler-的三阶段子资源-reconcile">SandboxReconciler 的三阶段子资源 reconcile</h3>
+<p><code>Reconcile()</code> 主流程的工程亮点不在于复杂，而在于<strong>幂等三步永远按同一顺序</strong>：<code>reconcilePVCs</code> → <code>reconcilePod</code> → <code>reconcileService</code>。每一步内部都是 "Get → Create or Adopt or Validate ownership → Patch labels/annotations" 的三步式幂等。Service <strong>一定是 headless</strong>（<code>ClusterIP: None</code>），selector 用 <code>agents.x-k8s.io/sandbox-name-hash=&lt;hash&gt;</code>（hash 防止 sandbox 名过长触碰 K8s label 63 字符上限）。这导致每个 Sandbox 自动有 DNS A record：<code>{sandbox}.{ns}.svc.{clusterDomain}</code>——成为 Sandbox "稳定身份"承诺的实现基础。</p>
+<p><code>requeueAfter = max(timeLeft, 2s)</code> 是个被反复琢磨的小细节：既避免热循环打爆 apiserver，又保证即将过期的 Sandbox 准时被清理，不依赖 informer event。</p>
+<h3 id="sandboxclaimreconciler-的-adoption-协议">SandboxClaimReconciler 的 adoption 协议</h3>
+<p>这是 extensions 子系统最有意思的代码，~60 行实现了 "WarmPool → Claim 的所有权热迁移"：</p>
+<ol>
+<li>从 <code>SimpleSandboxQueue</code> 拿到候选 Sandbox 名（已 Ready 的）；</li>
+<li><strong>乐观锁 patch</strong>：用 <code>OptimisticLockErrorMsg</code> resourceVersion 保护，避免两个并发 Claim 抢同一个 Sandbox；</li>
+<li>清掉 WarmPool 标识标签；</li>
+<li><strong>OwnerReferences 置换</strong>：移除 WarmPool 的 controller ref，加 Claim 的 controller ref——后续删 WarmPool 不会再级联删这个 Sandbox；</li>
+<li>Claim status 记录 <code>AdoptedSandboxName</code>，下次 reconcile 走 short-circuit。</li>
+</ol>
+<p>关键不变量是 4 + 5 必须原子（同一个 patch 请求里）。这就是 <code>sandboxclaim_pod_exclusivity_test.go</code> 守护的不变量。</p>
+<h2 id="与同类对比">与同类对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>agent-sandbox</th>
+<th><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></th>
+<th>普通 K8s Deployment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>抽象层级</td>
+<td><strong>基础设施</strong>（Sandbox 原语）</td>
+<td><strong>应用层</strong>（Manager + Workers 协作）</td>
+<td>基础设施（无状态副本）</td>
+</tr>
+<tr>
+<td>单实例 + 稳定身份</td>
+<td>✅（核心设计目标）</td>
+<td>⚠️（Worker 之间通过 Matrix 房间）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>持久存储</td>
+<td>✅</td>
+<td>✅（MinIO + PVC）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>多 Agent 编排</td>
+<td>❌（单 sandbox，多 sandbox 靠上层）</td>
+<td>✅（Team/Manager CRD）</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>WarmPool 预热</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>隔离机制</td>
+<td><strong>委托</strong> K8s（gVisor/Kata 任选）</td>
+<td>Higress 网关 + <span class="wikilink wikilink-missing" title="未建页：agent-credential-isolation\">凭据隔离</span></td>
+<td>取决于 runtimeClass</td>
+</tr>
+<tr>
+<td>治理</td>
+<td>K8s SIG Apps 官方孵化</td>
+<td>阿里 Higress 团队开源</td>
+<td>K8s core</td>
+</tr>
+</tbody>
+</table>
+<p><strong>定位结论</strong>：agent-sandbox 与 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> <strong>互补不竞争</strong>。前者提供"安全运行 1 个有状态 Agent 容器"的基础设施；后者提供"管 N 个 Agent 协作 + IM 平面 + 凭据网关"的应用层。理论上 HiClaw 的 Worker runtime 完全可以跑在 agent-sandbox 之上——一个用 Sandbox 做隔离底座，一个用 Worker CRD 做协作上层。这种分层正是云原生生态的健康样态。</p>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> — 应用层多 Agent 协作平台（与本项目互补）</li>
+<li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span> — 本项目所遵循的 controller pattern</li>
+<li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a> — 用 K8s CRD 声明式管理 AI Agent 的方法论</li>
+<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a> — 凭据零暴露设计模式（HiClaw 用，本项目不直接处理）</li>
+<li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> — AI Agent 外挂的 9 条设计原则</li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><span class="wikilink wikilink-missing" title="未建页：gvisor">gvisor</span></li><li><span class="wikilink wikilink-missing" title="未建页：kata-containers">kata-containers</span></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-agent-sandbox-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#sandboxclaim-快慢路径">SandboxClaim 快/慢路径</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#sandboxreconciler-的三阶段子资源-reconcile">SandboxReconciler 的三阶段子资源 reconcile</a></li><li class="level-3"><a href="#sandboxclaimreconciler-的-adoption-协议">SandboxClaimReconciler 的 adoption 协议</a></li><li class=""><a href="#与同类对比">与同类对比</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

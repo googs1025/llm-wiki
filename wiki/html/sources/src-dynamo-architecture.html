@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NVIDIA Dynamo 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-15</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>NVIDIA Dynamo 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-15 · 来源：dynamo-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">distributed-serving</span><span class="tag">kv-cache</span><span class="tag">kubernetes</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/dynamo-architecture-analysis.md</code> · 仓库：https://github.com/ai-dynamo/dynamo · 分析版本 1.2.0（commit 7997117，2026-05-15）</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 是 NVIDIA 开源的<strong>数据中心级 <a class="wikilink" href="../concepts/llm-inference.html">LLM 推理</a>编排层</strong>：用 Rust 运行时 + Python 组件 + Go K8s Operator，把 <a class="wikilink" href="../entities/sglang.html">SGLang</a> / <a class="wikilink" href="../entities/vllm.html">vLLM</a> / TensorRT-LLM 等推理引擎拼成具备<a class="wikilink" href="../concepts/disaggregated-serving.html">分离式 prefill/decode</a>、<a class="wikilink" href="../concepts/radix-attention.html">KV 感知路由</a>、四级 KV 缓存（KVBM）和 SLA 自动扩缩容的协调集群。它不替代推理引擎，而是让一群 GPU/Node 变成"一个协调的推理系统"。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    Client["Client (OpenAI API)"]
+
+    subgraph FE["FRONTEND — Rust axum + Python wrapper"]
+        F1["/v1/chat/completions<br/>validate → preprocess → migration → route<br/>lib/llm/src/http · components/"]
+    end
+
+    subgraph PLANES["三平面 (Request · Control · Storage/Events)"]
+        direction LR
+        Router["KV-Aware Router (lib/kv-router)<br/>· Radix tree of block hashes / wkr<br/>· cost = prefill_load + decode_cost<br/>  − overlap credits"]
+        Runtime["DistributedRuntime (lib/runtime)<br/>· Discovery trait<br/>· Component registry<br/>· HealthCheckManager<br/>· Pipeline framework"]
+        Planner["Planner — Python<br/>components/.../planner<br/>· Prometheus scrape<br/>· Throughput + Load scaling laws<br/>· Emits ScalingDecision → K8s Op"]
+    end
+
+    subgraph WORK["WORKER POOL — Python wrappers via PyO3"]
+        direction LR
+        PW["Prefill Worker<br/>SGLang / vLLM / TRT-LLM<br/>+ KVBM hooks"]
+        DW["Decode Worker<br/>SGLang / vLLM / TRT-LLM<br/>+ KVBM hooks"]
+        PW -- "KV transfer (NIXL / GDS)" --> DW
+        PW <-- "KV-events (NATS JetStream)" --> DW
+    end
+
+    subgraph STORE["STORAGE / EVENTS PLANE"]
+        direction TB
+        KVBM["KVBM Tier Hierarchy (lib/kvbm-*)<br/>G1 GPU device memory ── LRU<br/>G2 CPU pinned ── LFU<br/>G3 NVMe / SSD (NIXL)<br/>G4 S3 / Azure / Object (NIXL)<br/>Consolidator dedupe by SequenceHash (128-bit PLH)"]
+        Bus["NATS JetStream + Object Store<br/>· kv-events subject<br/>· Radix tree snapshots"]
+    end
+
+    subgraph K8S["K8s Operator — Go (deploy/operator/)"]
+        Op["DGDR (request) → DGD (graph) → DCD (per-component pods)<br/>AIConfigurator profiles → Planner picks → Grove places (NVL72 aware)"]
+    end
+
+    Client -- "HTTP / SSE" --> F1
+    F1 --> Router
+    Router -- "TCP / NATS Core" --> WORK
+    Runtime -- "register / watch" --> WORK
+    Planner -- "patch DGD" --> Op
+    WORK <--> KVBM
+    KVBM <--> Bus
+    Op -- "topology-aware gang sched" --> WORK
+
+    classDef fe fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef pl fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef wk fill:#14532d,stroke:#166534,color:#fff
+    classDef st fill:#5b21b6,stroke:#6d28d9,color:#fff
+    classDef k8 fill:#831843,stroke:#9d174d,color:#fff
+    class FE,F1 fe
+    class PLANES,Router,Runtime,Planner pl
+    class WORK,PW,DW wk
+    class STORE,KVBM,Bus st
+    class K8S,Op k8
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>                    ┌─────────────────────────────────────────────┐
+                    │              Client (OpenAI API)            │
+                    └────────────────────┬────────────────────────┘
+                                         │ HTTP / SSE
+┌────────────────────────────────────────▼─────────────────────────────────────┐
+│ FRONTEND (Rust axum + Python wrapper)     lib/llm/src/http  +  components/  │
+│   /v1/chat/completions  ─► validate ─► preprocess ─► migration ─► route     │
+└────────────────────────────────────────┬─────────────────────────────────────┘
+                                         │
+            ┌────────────────────────────┼────────────────────────────┐
+            │     REQUEST PLANE          │      CONTROL PLANE         │
+            │   (TCP / NATS Core)        │   (etcd / K8s / file)      │
+            │                            │                            │
+            ▼                            ▼                            ▼
+┌──────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐
+│ KV-Aware Router      │  │ DistributedRuntime     │  │ Planner (Python)       │
+│ lib/kv-router        │  │ lib/runtime            │  │ components/.../planner │
+│ - Radix tree of      │  │ - Discovery trait      │  │ - Prometheus scrape    │
+│   block hashes/wkr   │  │ - Component registry   │  │ - Throughput + Load    │
+│ - Cost function:     │  │ - HealthCheckManager   │  │   scaling laws         │
+│   prefill_load +     │  │ - Pipeline framework   │  │ - Emits ScalingDecision│
+│   decode_cost -      │  │                        │  │   to K8s Operator      │
+│   overlap credits    │  └─────────┬──────────────┘  └──────────┬─────────────┘
+└──────────┬───────────┘            │                            │
+           │                        │ register / watch           │ patch DGD
+           ▼                        ▼                            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ WORKER POOL (Python wrappers around backends via PyO3)                      │
+│                                                                             │
+│   Prefill Worker        ────KV transfer (NIXL/GDS)────►   Decode Worker    │
+│   ┌──────────────┐                                        ┌──────────────┐ │
+│   │ SGLang/vLLM/ │      ◄────KV-events (NATS JetStream)─► │ SGLang/vLLM/ │ │
+│   │ TRT-LLM      │                                        │ TRT-LLM      │ │
+│   │ + KVBM hooks │                                        │ + KVBM hooks │ │
+│   └──────┬───────┘                                        └──────┬───────┘ │
+└──────────┼───────────────────────────────────────────────────────┼─────────┘
+           │                                                       │
+┌──────────▼───────────────────────────────────────────────────────▼─────────┐
+│ STORAGE / EVENTS PLANE                                                      │
+│                                                                             │
+│   KVBM Tier Hierarchy (lib/kvbm-*)            NATS JetStream + Object Store │
+│   G1: GPU device memory   ──LRU──┐            - kv-events subject           │
+│   G2: CPU pinned          ──LFU──┤            - Radix tree snapshots        │
+│   G3: NVMe/SSD (NIXL)            │                                          │
+│   G4: S3/Azure/Object (NIXL)     │                                          │
+│                                  │                                          │
+│   Consolidator dedupes by         │                                          │
+│   SequenceHash (128-bit PLH)      │                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                         ▲
+                                         │ topology-aware gang sched
+┌────────────────────────────────────────┴─────────────────────────────────────┐
+│ K8s Operator (Go, deploy/operator/)                                          │
+│   DGDR (request)  ─►  DGD (graph)  ─►  DCD (per-component pods)             │
+│   AIConfigurator profiles ─► Planner picks ─► Grove places (NVL72 aware)    │
+└──────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h2 id="模块分层">模块分层</h2>
+<table>
+<thead>
+<tr>
+<th>层 / 模块</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTP 前端（Rust axum + Python wrapper）</td>
+<td>OpenAI 兼容入口、SSE 流式、聚合、validation</td>
+</tr>
+<tr>
+<td>预处理流水线</td>
+<td>Tokenize、prompt template、多模态 decode、采样归一化</td>
+</tr>
+<tr>
+<td>迁移层（<code>migration.rs</code>）</td>
+<td>失败 worker 在飞请求自动迁移到新 worker（RetryManager）</td>
+</tr>
+<tr>
+<td><span class="wikilink wikilink-missing" title="未建页：radix-attention\">KV-aware Router</span></td>
+<td>XXH3 hash → radix tree → cost-based softmax 选 worker；多副本经 NATS JetStream 同步</td>
+</tr>
+<tr>
+<td>分布式运行时（<code>lib/runtime</code>）</td>
+<td>Runtime/Endpoint/Discovery/Transport 抽象；TCP+NATS 双平面</td>
+</tr>
+<tr>
+<td>KVBM（KV Block Manager）</td>
+<td>G1-G4 四级 KV 缓存、NIXL 零拷贝、TinyLFU 升降级、SequenceHash 去重</td>
+</tr>
+<tr>
+<td>Backend wrapper（Python）</td>
+<td><a class="wikilink" href="../entities/sglang.html">sglang</a>/<a class="wikilink" href="../entities/vllm.html">vllm</a>/TRT-LLM 适配；通过 PyO3 接入 Rust 运行时</td>
+</tr>
+<tr>
+<td>Planner（SLA 自动扩缩）</td>
+<td>Prometheus scrape + state machine + 推 K8s operator</td>
+</tr>
+<tr>
+<td>K8s 控制面（Go + Grove + Gateway plugin）</td>
+<td>CRD: DGDR→DGD→DCD；拓扑感知 gang scheduling</td>
+</tr>
+</tbody>
+</table>
+<p><strong>关键约束：</strong></p>
+<ul>
+<li>性能敏感路径（HTTP、tokenize、路由、KVBM）<strong>全部在 Rust</strong>；backend 适配薄到只剩 "engine.generate + publish KV events"。</li>
+<li>K8s operator 不做 placement，<strong>把拓扑感知外包给 Grove</strong>。</li>
+<li>控制平面（discovery）和事件平面（KV events）<strong>默认分离</strong>：file/mem 用 ZMQ，etcd/K8s 用 NATS。</li>
+</ul>
+<h2 id="关键数据流">关键数据流</h2>
+<p><strong>端到端请求路径（HTTP arrival → token streaming）：</strong></p>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    S1["[1] HTTP POST /v1/chat/completions"]
+    S2["[2] axum Router → handler_chat_completions<br/>lib/llm/src/http/service/openai.rs:2012"]
+    S3["[3] Validate (openai.rs:1233-1254)<br/>+ model / temperature / token defaults"]
+    S4["[4] Preprocessor pipeline (lib/llm/src/preprocessor/)<br/>TokenizeOperator → PromptFormattingOperator → SamplingOperator<br/>NvCreateChatCompletionRequest → PreprocessedRequest"]
+    S5["[5] Migration layer (lib/llm/src/migration.rs:115)<br/>RetryManager wraps; on CannotConnect/Disconnected/<br/>EngineShutdown (L189) replays Context::with_id(...)"]
+    S6["[6] KV-aware route decision<br/>· XXH3 PLH blocks (block_size=128, LoRA-aware)<br/>· ConcurrentRadixTree per worker → prefix overlap<br/>· cost = prefill_load_scale × adj_prefill + decode<br/>· softmax(−cost) sample"]
+    S7["[7] Dispatch via Request Plane<br/>TCP (pooled) or NATS Core → worker.generate"]
+    S8["[8] Worker (Python) calls backend engine<br/>SGLang sgl.Engine.async_generate · vLLM AsyncLLMEngine.generate · TRT-LLM executor"]
+    S9["[9] PrefillRouter picks prefill worker → runs prefill<br/>disaggregated_params returned"]
+    S10["[10] PrefillRouter picks decode worker<br/>KV blocks via NIXL / GPUDirect-RDMA"]
+    S11["[11] Decode generates tokens<br/>· KVBM.OffloadManager computes SequenceHash per block<br/>· publish to NATS 'kv-events' subject"]
+    S12["[12] Tokens stream back through SSE<br/>ChatCompletionAggregator collapses if stream=false"]
+    S13["[13] Response to client (200, JSON or SSE)"]
+
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7 --> S8
+    S8 -. "if disaggregated" .-> S9
+    S9 --> S10 --> S11 --> S12 --> S13
+    S8 -. "if monolithic" .-> S11
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>[1] HTTP POST /v1/chat/completions
+        │
+        ▼
+[2] axum Router (lib/llm/src/http/service/openai.rs:2012)
+    └─► handler_chat_completions
+        │
+        ▼
+[3] Validate (openai.rs:1233-1254)
+    + Apply model/temperature/token defaults
+        │
+        ▼
+[4] Preprocessor pipeline (lib/llm/src/preprocessor/)
+    TokenizeOperator → PromptFormattingOperator → SamplingOperator
+    NvCreateChatCompletionRequest ──► PreprocessedRequest
+        │
+        ▼
+[5] Migration layer (lib/llm/src/migration.rs:115)
+    RetryManager wraps the call; on CannotConnect/Disconnected/
+    EngineShutdown (line 189) replays with Context::with_id(...)
+        │
+        ▼
+[6] KV-aware route decision
+    ├─ Hash prompt → PLH blocks (XXH3, block_size=128, LoRA-aware)
+    ├─ Query ConcurrentRadixTree per worker for prefix overlap
+    └─ Selector logit (lib/kv-router/src/scheduling/selector.rs:161):
+       cost = prefill_load_scale × adjusted_prefill_blocks + decode_cost_blocks
+       softmax(−cost) sample
+        │
+        ▼
+[7] Dispatch via Request Plane
+    └─ TCP (pooled) or NATS Core → worker generate endpoint
+        │
+        ▼
+[8] Worker (Python) calls backend engine
+    ├─ SGLang: sgl.Engine.async_generate(...)
+    ├─ vLLM:   AsyncLLMEngine.generate(...)
+    └─ TRT-LLM: trtllm executor
+        │
+        ▼ [if disaggregated]
+[9] PrefillRouter picks prefill worker → runs prefill
+    └─ disaggregated_params returned
+        │
+        ▼
+[10] PrefillRouter picks decode worker
+     └─ KV blocks transferred via NIXL/GPUDirect-RDMA
+        │
+        ▼
+[11] Decode generates tokens
+     ├─ Each new block: KVBM.OffloadManager computes SequenceHash
+     └─ publish to NATS &quot;kv-events&quot; subject
+        │
+        ▼
+[12] Tokens stream back through SSE
+     └─ ChatCompletionAggregator collapses if stream=false
+        │
+        ▼
+[13] Response to client (status 200, JSON or SSE)
+</code></pre>
+</details>
+<p><strong>容错路径：</strong> worker 在 [8]–[11] 任意阶段挂掉 → <code>RetryManager</code> 检测 <code>is_migratable()</code> 错误 → 用同一个 <code>PreprocessedRequest</code> 重发到新 worker。guided decoding 和 n&gt;1 sampling 因状态机不可复制而禁用迁移。</p>
+<p><strong>Planner 自动扩缩容循环：</strong></p>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Tick["Tick scheduler<br/>load ~10s · throughput ~60s · &quot;agg&quot;"]
+    Gather["_gather_tick_input()<br/>· Prometheus: TTFT, ITL, ISL, OSL, QPS<br/>· FPM subscriber (ForwardPassMetrics)<br/>· per-worker queue depth"]
+
+    Tp["Throughput branch<br/>predict next-win traffic × safety<br/>→ replicas LB"]
+    Ld["Load branch<br/>estimate latency from queue + FPM<br/>vs SLA threshold"]
+    Cor["Correction factors<br/>prefill_correction = actual_ttft / expected_ttft<br/>decode_correction = actual_itl / expected_itl"]
+
+    Decide["ScalingDecision(num_prefill, num_decode) | None<br/>load &gt; throughput → use Load branch"]
+    Apply["_apply_effects() → K8s operator<br/>→ patches DGD replicas"]
+    Diag["Prometheus counters + JSON diagnostics"]
+
+    Tick --> Gather --> Tp & Ld & Cor
+    Tp --> Decide
+    Ld --> Decide
+    Cor --> Decide
+    Decide --> Apply --> Diag
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>            ┌──────────────────────────────────────────────────────┐
+            │  Tick scheduler (load ~10s, throughput ~60s, &quot;agg&quot;)  │
+            └────────────────────────┬─────────────────────────────┘
+                                     │
+                ┌────────────────────▼────────────────────┐
+                │  _gather_tick_input()                   │
+                │  - Prometheus: TTFT, ITL, ISL, OSL, QPS │
+                │  - FPM subscriber (ForwardPassMetrics)  │
+                │  - per-worker queue depth               │
+                └────────────────────┬────────────────────┘
+                                     │
+        ┌────────────────────────────┼────────────────────────────┐
+        │                            │                            │
+        ▼                            ▼                            ▼
+┌──────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
+│ Throughput branch│   │  Load branch         │   │ Correction factors:  │
+│ predict next-win │   │  estimate latency    │   │ prefill_correction = │
+│ traffic × safety │   │  from queue + FPM    │   │   actual_ttft /      │
+│ → replicas LB    │   │  vs SLA threshold    │   │   expected_ttft      │
+└────────┬─────────┘   └──────────┬───────────┘   │ decode_correction =  │
+         │                        │               │   actual_itl /       │
+         └──── load &gt; throughput ─┤               │   expected_itl       │
+                                  │               └──────────────────────┘
+                                  ▼
+                   ScalingDecision(num_prefill, num_decode) | None
+                                  │
+                                  ▼
+                    _apply_effects() ──► K8s operator
+                                       ──► patches DGD replicas
+                                  │
+                                  ▼
+                   Prometheus counters + JSON diagnostics
+</code></pre>
+</details>
+<p><strong>KV-aware Router cost function：</strong></p>
+<pre><code class="language-text">adjusted_prefill_blocks = max(
+    prefill_blocks
+    - overlap_score_credit * device_overlap_blocks
+    - host_cache_hit_weight * host_overlap_blocks
+    - disk_cache_hit_weight * disk_overlap_blocks
+    - shared_cache_multiplier * shared_beyond_blocks,
+    0,
+)
+cost = prefill_load_scale * adjusted_prefill_blocks + decode_blocks
+</code></pre>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li>
+<p><strong>三平面架构解耦</strong>：请求平面（低延迟，TCP/NATS Core）、控制平面（desired-state，etcd/K8s/file）、存储+事件平面（<a class="wikilink" href="../concepts/radix-attention.html">KV 可见性</a>，NATS JetStream + Object Store）三者独立演进。事件平面持久化保证 router 副本重启后能 replay。</p>
+</li>
+<li>
+<p><strong>Rust 内核 + Python 适配 + Go 控制器</strong>三语言协作：性能敏感路径全在 Rust（1000 个 .rs 文件）；backend 适配做到薄薄一层 Python（896 个 .py）；K8s CRD 控制循环用 Go（258 个 .go）。</p>
+</li>
+<li>
+<p><strong>请求迁移是默认能力</strong>：<code>RetryManager</code> 把 worker 死亡变成对客户端透明的事件。这是 Dynamo 区别于纯推理引擎（<a class="wikilink" href="../entities/vllm.html">vllm</a>、<a class="wikilink" href="../entities/sglang.html">sglang</a>）的根本特征——它把"集群"当作一等公民。</p>
+</li>
+<li>
+<p><strong>KV 块的全局身份 = SequenceHash</strong>：128-bit PositionalLineageHash（XXH3, seed=1337，混入 LoRA id）让一个 KV 块在 GPU/CPU/SSD/远端 + 多 worker 之间有同一个名字。Consolidator 去重、router 前缀匹配、KVBM 升降级都用它。</p>
+</li>
+<li>
+<p><strong>KVBM 四级层次（G1-G4）与 NIXL 统一传输</strong>：G1=GPU device、G2=CPU pinned、G3=NVMe/SSD、G4=S3/Azure。LRU 管 G1→G2，TinyLFU + presence filter 管 G2→G3。所有层都包装成 NIXL MemType，使得不同 tier 间的代码路径几乎同形。参见 <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>。</p>
+</li>
+<li>
+<p><strong>KV-aware 路由 ≠ 最大化命中率</strong>：成本函数同时惩罚 prefix overlap 不足和当前 worker 负载。多 router 副本通过 NATS JetStream 同步活跃块视图。softmax(−cost) 采样而非 argmin，留出概率分散负载。</p>
+</li>
+<li>
+<p><strong>AIConfigurator → Planner → Operator 三段式 SLA 闭环</strong>：AIConfigurator 离线扫 10K+ TP/EP/DEP 配置选 Pareto 前沿 → Planner 在线决策扩缩 → Operator 物化 K8s 资源。这是 1.0 "zero-config DGDR" 的实现基础。</p>
+</li>
+<li>
+<p><strong>拓扑感知外包给 Grove</strong>：Operator 不做 NVL72/rack/host placement，把 component group 翻译成 Grove <code>PodCliqueSet</code> + <code>PodCliqueScalingGroup</code> 交给外部 scheduler，只读 Grove condition 反传 DGD status。</p>
+</li>
+<li>
+<p><strong>Discovery backend 是 trait，不是硬编码</strong>：<code>KVStoreDiscovery</code>（etcd/file/memory）/<code>KubeDiscoveryClient</code>（EndpointSlice）/<code>MockDiscovery</code> 三种实现可热切。模型注册有身份冲突检测——不同模型注册同一 endpoint 会被拒绝（LoRA adapter 除外）。</p>
+</li>
+<li>
+<p><strong>canary 健康检查 + 自愈再注册</strong>：每个 endpoint 独立 health check task，超时则标 <code>NotReady</code> 并触发 re-register，K8s 拉起新 pod 后立即恢复路由。</p>
+</li>
+</ul>
+<h2 id="kvbm-四级层次核心组件深入">KVBM 四级层次（核心组件深入）</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    G1["G1 — GPU Memory (lib/kvbm-engine)<br/>Fastest, smallest capacity<br/>Active compute blocks"]
+    G2["G2 — CPU / Host Memory (lib/kvbm-logical pools)<br/>Pinned DRAM staging<br/>µs-latency RDMA ready (lib/kvbm-physical)"]
+    G3["G3 — NVMe / SSD (lib/kvbm-physical/storage)<br/>Persistent warm cache<br/>ms-latency disk ops"]
+    G4["G4 — Object Storage (lib/llm/block_manager/storage/object.rs)<br/>S3 / MinIO / Azure Blob<br/>Unlimited capacity, seconds+ latency"]
+
+    G1 -- "Offload G1→G2 (LRU pop_lru)" --> G2
+    G2 -- "Offload G2→G3 (TinyLFU + presence filter)" --> G3
+    G3 -- "Offload G3→G4 (NIXL OBJ backend)" --> G4
+
+    classDef hot fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef warm fill:#5b21b6,stroke:#6d28d9,color:#fff
+    classDef cold fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef cool fill:#14532d,stroke:#166534,color:#fff
+    class G1 hot
+    class G2 warm
+    class G3 cold
+    class G4 cool
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│ GPU Memory (G1)                    lib/kvbm-engine │
+│ - Fastest, smallest capacity                        │
+│ - Active compute blocks                             │
+└──────────────┬──────────────────────────────────────┘
+               │ Offload G1→G2 (LRU pop_lru)
+               ↓
+┌─────────────────────────────────────────────────────┐
+│ CPU/Host Memory (G2)     lib/kvbm-logical (pools)  │
+│ - Pinned DRAM staging                               │
+│ - µs-latency RDMA ready  lib/kvbm-physical         │
+└──────────────┬──────────────────────────────────────┘
+               │ Offload G2→G3 (TinyLFU + presence filter)
+               ↓
+┌─────────────────────────────────────────────────────┐
+│ NVMe/SSD (G3)           lib/kvbm-physical/storage  │
+│ - Persistent warm cache                             │
+│ - ms-latency disk ops                               │
+└──────────────┬──────────────────────────────────────┘
+               │ Offload G3→G4 (NIXL OBJ backend)
+               ↓
+┌─────────────────────────────────────────────────────┐
+│ Object Storage (G4)      lib/llm/block_manager/    │
+│ - S3/MinIO/Azure Blob    storage/object.rs         │
+│ - Unlimited capacity, seconds+ latency              │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<p>块生命周期 8 阶段：Allocate → Fill → Schedule → Compute → Hash（128-bit SequenceHash）→ Register → Consolidate（按 SequenceHash 去重）→ Evict/Restore（weak ref demotion）。</p>
+<p>NIXL 把 GPUDirect RDMA、NVMe-oF、对象存储都包装成统一 MemType，G1↔G2↔G3↔G4 的传输代码路径同形。详见 raw 中的"关键组件深入解读 / KVBM" 节。</p>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li><a class="wikilink" href="../entities/dynamo.html">dynamo</a> — 项目主页</li>
+<li><a class="wikilink" href="../entities/vllm.html">vllm</a> — 支持的推理 backend 之一</li>
+<li><a class="wikilink" href="../entities/sglang.html">sglang</a> — 支持的推理 backend 之一</li>
+<li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> — KV cache 分块管理基础理念</li>
+<li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> — KV-aware 路由的算法基础</li>
+<li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a> — 分离式 prefill/decode 概念</li>
+<li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a> — KV 多级缓存方法论</li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-dynamo-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#kvbm-四级层次核心组件深入">KVBM 四级层次（核心组件深入）</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

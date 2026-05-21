@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SGLang 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-15</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>SGLang 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">llm-inference</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">speculative-decoding</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/sglang-architecture-analysis.md</code> · 仓库：https://github.com/sgl-project/sglang · 分析版本：HEAD <code>50f4058</code>（main，2026-05-13）· 范围：<code>python/sglang/</code></p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/sglang.html">sglang</a> 是面向大规模 LLM 推理的高性能引擎：<strong>4 进程异步流水线</strong>（HTTP / TokenizerManager / Scheduler / DetokenizerManager）把 CPU 分词、GPU 推理、CPU 反分词彻底解耦；<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 把 KV 缓存复用从 <a class="wikilink" href="../entities/vllm.html">vllm</a> 的 16-token block 粒度做到 <strong>token 级</strong>，叠加 <strong>7 套可插拔投机解码</strong>（EAGLE / EAGLE-v2 / 多层 EAGLE / FrozenKV-MTP / NGRAM / DFLASH / Standalone）+ <strong><span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span></strong>（Mooncake / NIXL / Mori / Ascend 4 后端）+ <strong>10+ attention 后端</strong>（FlashInfer / FA3 / Triton / FlashMLA / NSA / DSV4 / ...），是 vLLM 之外的主流开源推理栈。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+flowchart TB
+    Client[HTTP Client]
+    Client --> L["launch_server.py<br/>Process 0: HTTP main<br/>default / --grpc-mode / --encoder-only / --use-ray"]
+    L -->|FastAPI/uvicorn| A["Protocol Adapters<br/>OpenAI / Anthropic / Ollama<br/>entrypoints/openai/serving_chat.py<br/>→ GenerateReqInput"]
+    A -->|in-process| TM["TokenizerManager (main proc)<br/>generate_request L516<br/>tokenize → input_ids<br/>send_to_scheduler.send_pyobj"]
+    TM -->|ZMQ PUSH<br/>scheduler_input_ipc| SCH
+
+    subgraph SCH["Scheduler subprocess (TP rank 0..N)"]
+      direction TB
+      EL["event_loop_normal/_overlap L1537<br/>recv_requests L1656<br/>get_next_batch_to_run L2485<br/>run_batch → ModelRunner.forward<br/>process_batch_result L3170"]
+      subgraph CORE["Inference Core"]
+        direction TB
+        SB["ScheduleBatch (in-flight)<br/>Req[]: prefix_indices / extend_input_len / out_cache_loc<br/>forward_mode: EXTEND/DECODE/MIXED"]
+        MEM["Memory subsystem<br/>RadixCache (tree, match_prefix/insert)<br/>ReqToTokenPool (req → token idx)<br/>TokenToKVPool (MHA/MLA/NSA)"]
+        MR["ModelRunner (model_executor/)<br/>ForwardBatch → AttentionBackend<br/>FlashInfer / FA3 / Triton / FlashMLA / ...<br/>CUDA Graph runner / Sampling"]
+        MIX["Optional Mixins (composed via inheritance)<br/>SpeculativeWorker (EAGLE-2/NGRAM/MTP/DFLASH/Standalone)<br/>SchedulerDisaggregation Prefill/Decode Mixin<br/>SchedulerPP / SchedulerDPAttn / SchedulerDllm"]
+        SB <-->|cache lookup| MEM
+        SB --> MR
+        MR -.composes.-> MIX
+      end
+      EL --> CORE
+    end
+
+    SCH -->|ZMQ PUSH<br/>detokenizer_ipc| DET["DetokenizerManager (subproc)<br/>event_loop L140<br/>tokenizer.batch_decode → BatchStrOutput"]
+    DET -->|ZMQ PUSH<br/>tokenizer_ipc| TM
+    TM --> Client
+
+    subgraph DISAGG["External cluster (P/D-disagg mode, optional)"]
+      direction LR
+      PI[Prefill instance<br/>full SGLang]
+      DI[Decode instance<br/>full SGLang]
+      PI -->|Mooncake / NIXL<br/>Mori / Ascend| DI
+    end
+    SCH -.optional.-> DISAGG
+
+    classDef proc fill:#1f2530,stroke:#6ea8fe,color:#e6e6e6
+    classDef core fill:#262b38,stroke:#83c4ff,color:#e6e6e6
+    class TM,SCH,DET,L proc
+    class SB,MEM,MR,MIX core
+  </div>
+</div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>                              ┌────────────────────────────────────────────────────┐
+                              │   sglang/launch_server.py  (Process 0: HTTP main)  │
+                              │   ├─ Default: http_server.py:launch_server()       │
+                              │   ├─ --grpc-mode → grpc_server.py:serve_grpc       │
+                              │   ├─ --encoder-only → disaggregation/encode_*      │
+                              │   └─ --use-ray → ray/http_server.py                │
+                              └───────────────────┬────────────────────────────────┘
+                                                  │ FastAPI/uvicorn
+                                                  v
+                            ┌─────────────────────────────────────────────┐
+                            │  OpenAI / Anthropic / Ollama adapters       │
+                            │  entrypoints/openai/serving_chat.py …       │
+                            │  (ChatCompletionRequest → GenerateReqInput) │
+                            └─────────────────────┬───────────────────────┘
+                                                  │ in-process call
+                                                  v
+       ╔═══════════════════════════════════════════════════════════════════════════╗
+       ║  TokenizerManager  (managers/tokenizer_manager.py)  — main process        ║
+       ║  • async generate_request() @ L516                                        ║
+       ║  • tokenize text → input_ids                                              ║
+       ║  • send_to_scheduler.send_pyobj(TokenizedGenerateReqInput)                ║
+       ║  • _wait_one_response() ← stream from detokenizer                         ║
+       ╚════════════════╤═══════════════════════════════════╤══════════════════════╝
+                        │ ZMQ PUSH                          ▲ ZMQ PULL
+        scheduler_input_ipc_name                      tokenizer_ipc_name
+                        v                                   │
+       ╔═══════════════════════════════════════╗  ╔════════╧═══════════════════════╗
+       ║  Scheduler (subprocess, TP rank 0..N) ║  ║  DetokenizerManager (subproc.) ║
+       ║  managers/scheduler.py                ║  ║  managers/detokenizer_manager  ║
+       ║  • event_loop_normal/_overlap @ 1537  ║  ║  • event_loop @ L140           ║
+       ║  • recv_requests @ 1656               ║  ║  • batch_decode(token_ids)     ║
+       ║  • get_next_batch_to_run @ 2485       ║  ║    → BatchStrOutput            ║
+       ║  • run_batch → ModelRunner.forward    ║  ╚════════╤═══════════════════════╝
+       ║  • process_batch_result @ 3170        ║           ▲ ZMQ PULL
+       ║    → send BatchTokenIDOutput          ║───────────┘ detokenizer_ipc_name
+       ╚════════════════╤══════════════════════╝
+                        │  owns the GPU
+                        v
+       ┌──────────────────────────────────────────────────────────────────────────┐
+       │                    Inference Core (within Scheduler proc)                │
+       │                                                                          │
+       │  ┌──── ScheduleBatch (in-flight) ────┐    ┌──── Mem subsystem ──────┐   │
+       │  │ Req[]:                            │    │ RadixCache (tree)       │   │
+       │  │   prefix_indices  (cached KV)     │◄──▶│   match_prefix / insert │   │
+       │  │   extend_input_len (new tokens)   │    │ ReqToTokenPool          │   │
+       │  │   out_cache_loc   (new KV slots)  │    │   (req → token idx)     │   │
+       │  │ forward_mode: EXTEND/DECODE/MIXED │    │ TokenToKVPool           │   │
+       │  └─────────────────┬─────────────────┘    │   MHA/MLA/NSA variants  │   │
+       │                    │                      └─────────────────────────┘   │
+       │                    v                                                    │
+       │  ┌──── ModelRunner (model_executor/) ────────────────────────────────┐  │
+       │  │  ForwardBatch (forward_batch_info.py)                             │  │
+       │  │  → AttentionBackend (FlashInfer / FA3 / Triton / FlashMLA / ...)  │  │
+       │  │  → CUDA Graph runner (decode replay) / piecewise / breakable      │  │
+       │  │  → Sampling (constrained vocab mask, grammar)                     │  │
+       │  └───────────────────────────────────────────────────────────────────┘  │
+       │                                                                          │
+       │  ┌──── Optional mixins (composed into Scheduler via inheritance) ────┐  │
+       │  │ • SpeculativeWorker  (EAGLE-2 / NGRAM / MTP / DFLASH / Standalone)│  │
+       │  │ • SchedulerDisaggregationPrefillMixin                             │  │
+       │  │ • SchedulerDisaggregationDecodeMixin                              │  │
+       │  │ • SchedulerPPMixin   (pipeline-parallel)                          │  │
+       │  │ • SchedulerDPAttnMixin (DP-attention)                             │  │
+       │  │ • SchedulerDllmMixin (diffusion-LLM)                              │  │
+       │  └───────────────────────────────────────────────────────────────────┘  │
+       └──────────────────────────────────────────────────────────────────────────┘
+
+  External cluster (P/D-disagg mode):
+                ┌──────────────────┐    KV transfer    ┌──────────────────┐
+                │ Prefill instance │ ════════════════&gt; │ Decode instance  │
+                │  (full SGLang)   │  Mooncake / NIXL  │  (full SGLang)   │
+                └──────────────────┘  Mori / Ascend    └──────────────────┘
+</code></pre>
+</details>
+<h2 id="模块分层">模块分层</h2>
+<table>
+<thead>
+<tr>
+<th>层 / 模块</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>HTTP / RPC 入口</strong></td>
+<td>FastAPI/uvicorn + gRPC + 离线 Engine API；<code>launch_subprocesses()</code> 启动 4 进程流水线</td>
+</tr>
+<tr>
+<td><strong>协议适配</strong></td>
+<td>OpenAI / Anthropic / Ollama 三套协议统一翻译成 <code>GenerateReqInput</code>，下游无感切换</td>
+</tr>
+<tr>
+<td><strong>TokenizerManager</strong></td>
+<td>主进程做分词 + ZMQ 出/入；DetokenizerManager 在独立进程做反分词；ZMQ 三段管道</td>
+</tr>
+<tr>
+<td><strong>Scheduler（GPU 主进程）</strong></td>
+<td>事件循环 + 准入控制 + batch 组装 + 调用 ModelRunner；用 8+ Mixin 拼装 disagg/PP/DPAttn/Dllm 横切特性</td>
+</tr>
+<tr>
+<td><strong>Memory 子系统</strong></td>
+<td>4 套 RadixCache 变体（vanilla / hi / mamba / swa / cpp）+ 两级 pool（Req→Token, Token→KV）+ 4 种 evict 策略</td>
+</tr>
+<tr>
+<td><strong>ModelRunner</strong></td>
+<td>ForwardMode 调度（EXTEND/DECODE/MIXED/TARGET_VERIFY/DRAFT_EXTEND）；CUDA Graph 预捕获 decode 路径</td>
+</tr>
+<tr>
+<td><strong>Attention 后端</strong></td>
+<td>10+ 可插拔后端：FlashInfer / FA3-4 / Triton / FlashMLA / NSA / DSV4 / FlexAttention / TorchNative / Wave / AITER / Intel-AMX</td>
+</tr>
+<tr>
+<td><strong>投机解码</strong></td>
+<td>7 算法走 <code>BaseSpecWorker</code> + <code>spec_registry</code>：EAGLE-2 / EAGLE-v2 / 多层 EAGLE / NGRAM / FrozenKV-MTP / DFLASH / Standalone</td>
+</tr>
+<tr>
+<td><strong>P/D 分离</strong></td>
+<td>prefill / decode 节点独立扩容 + 5 KV transfer backend：<span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span> / NIXL / Mori / Ascend / Fake</td>
+</tr>
+<tr>
+<td><strong>结构化输出</strong></td>
+<td>xgrammar / outlines / llguidance / reasoner backend；在 sampling 前 apply vocab mask</td>
+</tr>
+<tr>
+<td><strong>模型库</strong></td>
+<td>100+ 模型（LLaMA / Qwen / DeepSeek / Mixtral / Gemma / GPT-OSS / 多模态…）</td>
+</tr>
+<tr>
+<td><strong>多模态</strong></td>
+<td>image / audio / video 预处理 + KV 缓存；audio 走 Whisper / Qwen-ASR adapter</td>
+</tr>
+<tr>
+<td><strong>分布式</strong></td>
+<td>TP / PP / DP / EP + 专家并行 load balancing</td>
+</tr>
+<tr>
+<td><strong>前端 DSL</strong></td>
+<td>SGLang DSL（fork / gen / select）—— 论文里的 "Structured Generation Language"</td>
+</tr>
+</tbody>
+</table>
+<p><strong>分层约束</strong>：TokenizerManager 不持有 GPU；Mixin 之间互不依赖（disagg prefill / decode mixin 互斥）；RadixCache 4 变体按 attention 类型（MHA/MLA/Mamba/SWA）启动时绑死，不可混用；speculative + chunked prefill + disagg 三选二。</p>
+<h2 id="关键数据流端到端请求生命周期">关键数据流：端到端请求生命周期</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant C as HTTP Client
+    participant H as FastAPI<br/>http_server.py
+    participant TM as TokenizerManager<br/>(main proc)
+    participant SC as Scheduler<br/>(subproc)
+    participant MR as ModelRunner<br/>(GPU)
+    participant DT as DetokenizerManager<br/>(subproc)
+
+    C->>H: POST /v1/chat/completions
+    H->>H: parse ChatCompletionRequest<br/>build GenerateReqInput
+    H->>TM: tokenizer_manager.generate_request(obj)
+    TM->>TM: tokenizer(text) → input_ids<br/>build TokenizedGenerateReqInput
+    TM->>SC: ZMQ PUSH send_pyobj<br/>(scheduler_input_ipc)
+    activate SC
+    Note right of SC: event_loop_normal()<br/>scheduler.py:1537
+    SC->>SC: 1. recv_requests() — drain waiting_queue
+    SC->>SC: 2. get_next_batch_to_run<br/>RadixCache.match_prefix<br/>PrefillAdder budget check<br/>chunked prefill / policy (LPM/FCFS/LOF/DFS_WEIGHT)
+    SC->>MR: 3. run_batch(batch) → ForwardBatch
+    Note over MR: ForwardMode = EXTEND/DECODE/MIXED<br/>DECODE: CUDA graph replay<br/>EXTEND/MIXED: native attention kernel<br/>sampling (+ constrained vocab mask)
+    MR-->>SC: logits + sampled token_ids
+    SC->>SC: 4. process_batch_result<br/>write output_ids<br/>tree_cache.insert if finished
+    SC->>DT: ZMQ PUSH BatchTokenIDOutput<br/>(detokenizer_ipc)
+    deactivate SC
+    DT->>DT: tokenizer.batch_decode → strings<br/>build BatchStrOutput
+    DT->>TM: ZMQ PUSH BatchStrOutput<br/>(tokenizer_ipc)
+    TM-->>C: SSE stream / final JSON
+  </div>
+</div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Client HTTP POST /v1/chat/completions
+   │
+   v
+┌──────────────────────────────────────────────────────────────────────┐
+│ FastAPI handler (http_server.py) → OpenAIServingChat                 │
+│   • parse ChatCompletionRequest                                      │
+│   • build GenerateReqInput (text or input_ids, sampling_params,      │
+│     stream, return_logprob, ...)                                     │
+└────────────────────────────┬─────────────────────────────────────────┘
+                             │ tokenizer_manager.generate_request(obj)
+                             v
+┌──────────────────────────────────────────────────────────────────────┐
+│ TokenizerManager.generate_request()  (tokenizer_manager.py:516)      │
+│   • tokenizer(text) → input_ids                                      │
+│   • build TokenizedGenerateReqInput                                  │
+│   • send_to_scheduler.send_pyobj(obj)        ─── ZMQ PUSH ───┐       │
+│   • await _wait_one_response(rid)   ◄──── ZMQ PULL ────┐     │       │
+└──────────────────────────────────────────────────────────│─────│─────┘
+                                                          │     │
+       scheduler_input_ipc_name (ZMQ PUSH/PULL) ◄─────────│─────┘
+                             │                            │
+                             v                            │
+┌──────────────────────────────────────────────────────────────────────┐
+│ Scheduler.event_loop_normal()  (scheduler.py:1537)                   │
+│   step 1: recv_requests()                  → drain waiting_queue     │
+│   step 2: get_next_batch_to_run()                                    │
+│           • RadixCache.match_prefix(req)   → req.prefix_indices      │
+│           • PrefillAdder budget check:                               │
+│             rem_input_tokens, rem_chunk_tokens, rem_total_tokens     │
+│           • chunked prefill if extend_input_len &gt; chunk_size         │
+│           • policy = LPM / FCFS / LOF / DFS_WEIGHT                   │
+│   step 3: run_batch(batch)                                           │
+│           → ModelRunner.forward(ForwardBatch)                        │
+│             • ForwardMode = EXTEND / DECODE / MIXED                  │
+│             • DECODE: CUDA graph replay (固定 BS)                    │
+│             • EXTEND/MIXED: 原生 attention kernel                    │
+│             • AttentionBackend.forward_decode / forward_extend       │
+│             • sampling (with constrained vocab mask if any)          │
+│   step 4: process_batch_result()                                     │
+│           • write output_ids                                         │
+│           • if finished: tree_cache.insert(req.last_node, new_kv)    │
+│           • send_to_detokenizer.send_pyobj(BatchTokenIDOutput) ──┐   │
+└──────────────────────────────────────────────────────────────────│───┘
+                                                                  │
+       detokenizer_ipc_name (ZMQ PUSH/PULL)  ◄───────────────────┘
+                             │
+                             v
+┌──────────────────────────────────────────────────────────────────────┐
+│ DetokenizerManager.event_loop()  (detokenizer_manager.py:140)        │
+│   • tokenizer.batch_decode(token_ids) → strings                      │
+│   • build BatchStrOutput                                             │
+│   • send_to_tokenizer.send_pyobj(BatchStrOutput) ─── ZMQ PUSH ───┐   │
+└──────────────────────────────────────────────────────────────────│───┘
+                                                                  │
+       tokenizer_ipc_name (ZMQ PUSH/PULL)  ◄───────────────────── ┘
+                             │
+                             v
+TokenizerManager (main proc) ── SSE stream / final JSON ──&gt; HTTP Client
+</code></pre>
+</details>
+<p><strong>流水线 overlap</strong>：<code>event_loop_overlap</code>（scheduler.py:1564）让 GPU 算 batch N 的同时 CPU 准备 batch N+1，TokenizerManager 同时分词 batch N+2，DetokenizerManager 反分词 batch N−1 —— 4 进程同时活跃。</p>
+<h2 id="radixcache-复用--kv-pool-联动">RadixCache 复用 + KV pool 联动</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+flowchart TD
+    subgraph RC["RadixCache (radix_cache.py)"]
+      direction TB
+      Root((Root))
+      Root --> NA["[101,102,103] Node A<br/>value=[kv_0, kv_1, kv_2]"]
+      NA --> NB["[104] Node B<br/>value=[kv_3]"]
+      NA --> NC["[104,105] Node C<br/>value=[kv_4, kv_5]"]
+      Root --> ND["[101,102,106] Node D<br/>value=[kv_6, kv_7, kv_8]"]
+      Match["match_prefix([101,102,103,104,X])<br/>walk → A → B<br/>prefix_indices = [kv_0, kv_1, kv_2, kv_3] (device)<br/>last_node = B<br/>extend_input_len = len(input) − 4"]
+    end
+
+    subgraph KV["TokenToKVPool (memory_pool.py:789, MHA/MLA/NSA)"]
+      direction TB
+      Slots["Physical GPU K, V tensors — flat token-indexed<br/>[kv_0][kv_1][kv_2][kv_3][kv_4][kv_5][kv_6][kv_7]...<br/>⌞ Node A ⌟⌞ B ⌟⌞ C ⌟⌞ D ⌟"]
+      Ops["alloc(n) → out_cache_loc<br/>free(indices) ← eviction"]
+    end
+
+    RC -->|value pointers| KV
+
+    subgraph RP["ReqToTokenPool (memory_pool.py:128)<br/>shape [num_reqs+1, max_ctx_len] int32"]
+      direction TB
+      Rows["row i = req_pool_indices[i] = full KV index list<br/>req_0: [kv_0, kv_1, kv_2, kv_3, kv_NEW_0, kv_NEW_1, ...]<br/>req_1: [kv_6, kv_7, kv_8, kv_NEW_2, ...]"]
+      Kernel["attention kernel:<br/>k_cache[req_to_token[i, :seq_lens[i]]] = ..."]
+      Rows --> Kernel
+    end
+
+    KV -.read via gather.-> Kernel
+  </div>
+</div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│ RADIXCACHE (radix_cache.py)                                 │
+│ Root                                                        │
+│  ├─ [101, 102, 103] → Node A  (value=[kv_0, kv_1, kv_2])    │
+│  │   ├─ [104] → Node B  (value=[kv_3])                      │
+│  │   └─ [104, 105] → Node C  (value=[kv_4, kv_5])           │
+│  └─ [101, 102, 106] → Node D  (value=[kv_6, kv_7, kv_8])    │
+│                                                             │
+│  match_prefix(input_ids=[101,102,103,104,X]):               │
+│    walk tree → match A → match B → return                   │
+│      prefix_indices = [kv_0, kv_1, kv_2, kv_3]   (device)   │
+│      last_node = B                                          │
+│      extend_input_len = len(input) - 4                      │
+└─────────────────────────┬───────────────────────────────────┘
+                          │ value pointers
+                          v
+┌─────────────────────────────────────────────────────────────┐
+│ TokenToKVPool (memory_pool.py:789, MHA/MLA/NSA variants)    │
+│ Physical GPU K, V tensors, flat token-indexed:              │
+│  [kv_0] [kv_1] [kv_2] [kv_3] [kv_4] [kv_5] [kv_6] [kv_7]... │
+│   └─Node A──────┘ └─B─┘ └─C─────┘ └─D───────────────┘       │
+│                                                             │
+│ alloc(n) → returns n new token slots (out_cache_loc)        │
+│ free(indices) → returns slots after eviction                │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ ReqToTokenPool (memory_pool.py:128)                         │
+│ Shape: [num_reqs+1, max_ctx_len], int32                     │
+│ Row i = req_pool_indices[i] holds full KV index list:       │
+│   req_0: [kv_0, kv_1, kv_2, kv_3, kv_NEW_0, kv_NEW_1, ...]  │
+│   req_1: [kv_6, kv_7, kv_8, kv_NEW_2, ...]                  │
+│                                                             │
+│ 在 attention kernel 里：                                    │
+│   for i in batch:                                           │
+│     k_cache[req_to_token[i, :seq_lens[i]]] = ...            │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h2 id="投机解码eagle-2-默认">投机解码（EAGLE-2 默认）</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+flowchart TD
+    Start(["Decode step<br/>target accepted last token T_n"])
+
+    Start --> Draft["Draft model (eagle_worker.py:91)<br/>• 1 step forward<br/>• build_tree_kernel_efficient (L818)<br/>  propose topk=5 per position, K steps deep<br/>  → tree of ~K×5 draft tokens<br/>  → tree_mask + positions + retrieve_idx"]
+
+    Draft -->|draft_tokens + tree metadata| Target["Target model (single forward pass)<br/>• ForwardMode.TARGET_VERIFY<br/>• EagleVerifyInput.custom_mask = tree_mask<br/>• compute logits for ALL tree leaves in 1 fwd<br/>• sample top-1 per leaf"]
+
+    Target -->|verified_tokens| Accept["Accept prefix (longest path draft == verify)<br/>• rollback KV cache to divergence<br/>• on_verify_complete_cpu() → adaptive_spec_params<br/>  (adjusts topk / depth)<br/>• emit 1~K+1 accepted tokens"]
+
+    Accept -.next step.-> Start
+
+    classDef stage fill:#1f2530,stroke:#83c4ff,color:#e6e6e6
+    class Draft,Target,Accept stage
+  </div>
+</div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Decode step (target accepted last token T_n)
+   │
+   v
+┌─────────────────────────────────────────────────────────────┐
+│ Draft model (eagle_worker.py:91)                            │
+│  • 1 step forward                                           │
+│  • build_tree_kernel_efficient (line 818)                   │
+│    propose topk=5 candidates per position, K steps deep     │
+│    → tree of ~K×5 draft tokens                              │
+│    → tree_mask (谁能 attend 谁) + positions + retrieve_idx  │
+└────────────────────────┬────────────────────────────────────┘
+                         │ draft_tokens + tree metadata
+                         v
+┌─────────────────────────────────────────────────────────────┐
+│ Target model (single forward pass)                          │
+│  • ForwardMode.TARGET_VERIFY                                │
+│  • EagleVerifyInput.custom_mask = tree_mask                 │
+│  • compute logits for ALL tree leaves in 1 fwd              │
+│  • sample top-1 per leaf                                    │
+└────────────────────────┬────────────────────────────────────┘
+                         │ verified_tokens
+                         v
+┌─────────────────────────────────────────────────────────────┐
+│ Accept prefix (longest path where draft == verify)          │
+│  • rollback KV cache to divergence point                    │
+│  • on_verify_complete_cpu() feed adaptive controller        │
+│    (adaptive_spec_params.py adjusts topk/depth)             │
+│  • emit accepted tokens (1~K+1 per step)                    │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h2 id="pd-分离请求流">P/D 分离请求流</h2>
+<div class="mermaid-wrap">
+  <div class="mermaid">
+flowchart TD
+    Client([Client request])
+
+    Client --> P["<b>Prefill instance</b> (full SGLang scheduler)<br/>• PrefillBootstrapQueue: handshake + KV slot prealloc<br/>• Run forward (prefill only)<br/>• release_req_to_metadata_buffer()<br/>• Queue KVSender (begin transfer)"]
+
+    P --> KV["<b>KV transfer backend</b> (one of):<br/>• Mooncake — Moonshot KV store, ~80KB<br/>• NIXL — NVIDIA GPUDirect RDMA<br/>• Mori — ByteDance KV protocol, ~58KB<br/>• Ascend — Huawei NPU native<br/>• Fake — testing<br/>poll_and_all_reduce() sync across ranks"]
+
+    KV --> D["<b>Decode instance</b> (full SGLang scheduler)<br/>• DecodePreallocQueue: reserve KV<br/>• Wait for KV transfer completion<br/>• DecodeTransferQueue → WaitingQueue → RunningBatch<br/>• Skip prefill, populate forward meta<br/>• Run decode loop, stream tokens"]
+
+    D --> Client
+
+    classDef inst fill:#1f2530,stroke:#83c4ff,color:#e6e6e6
+    classDef transfer fill:#2a2a3a,stroke:#ffa657,color:#e6e6e6
+    class P,D inst
+    class KV transfer
+  </div>
+</div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Client request
+   │
+   v
+┌──────────────────────────────────────────┐
+│ Prefill instance (full SGLang scheduler) │
+│  • PrefillBootstrapQueue: handshake +    │
+│    KV slot prealloc                      │
+│  • Run forward (prefill only)            │
+│  • release_req_to_metadata_buffer()      │
+│  • Queue KVSender (begin transfer)       │
+└──────────────────┬───────────────────────┘
+                   │
+                   v
+┌──────────────────────────────────────────┐
+│ KV transfer backend (one of):            │
+│  • Mooncake (Moonshot KV store, ~80KB)   │
+│  • NIXL (NVIDIA GPUDirect RDMA)          │
+│  • Mori (ByteDance KV protocol, ~58KB)   │
+│  • Ascend (Huawei NPU native)            │
+│  • Fake (testing)                        │
+│  poll_and_all_reduce() sync across ranks │
+└──────────────────┬───────────────────────┘
+                   │
+                   v
+┌──────────────────────────────────────────┐
+│ Decode instance (full SGLang scheduler)  │
+│  • DecodePreallocQueue: reserve KV       │
+│  • Wait for KV transfer completion       │
+│  • DecodeTransferQueue → WaitingQueue    │
+│    → RunningBatch                        │
+│  • Skip prefill, populate forward meta   │
+│  • Run decode loop, stream tokens        │
+└──────────────────┬───────────────────────┘
+                   │
+                   v
+                Client
+</code></pre>
+</details>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li><strong>4 进程异步流水线</strong>：CPU 分词 / GPU 推理 / CPU 反分词彻底进程化隔离，<span class="wikilink wikilink-missing" title="未建页：zmq">zmq</span> pyobj 串联 + Scheduler 内部 <code>event_loop_overlap</code> 进一步重叠上轮 GPU 与本轮 CPU 准备 —— 任何 stage 阻塞不卡其他 stage</li>
+<li><strong><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 取代 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></strong>：vLLM 16-token block 粒度浪费太多复用机会，LLM workload 里 system prompt / few-shot / agent template 是高度共享的前缀，SGLang 用 token-level radix 树 + flat KV pool 把"任意 token 边界共享"做到极致 —— 论文里 RadixAttention 在 tree-of-thought / few-shot 场景 throughput 1.6-6.4× over vLLM</li>
+<li><strong>两级 KV pool</strong>：<code>ReqToTokenPool</code>（req → token 索引列表）+ <code>TokenToKVPool</code>（token 索引 → 物理 KV 槽位）的双跳让 radix 树叶直接指向 KV pool 位置，attention kernel 用 device-resident <code>req_to_token</code> 张量做一次 gather —— 既保留 token 级粒度，又能让 kernel 高效访存</li>
+<li><strong>Scheduler 用 Mixin 拼装</strong>：4000+ 行的 <code>scheduler.py</code> 通过 10+ 个 Mixin 把横切关注点解耦 —— open-closed 友好，新加 disagg 后端 / PP 形态不改主类。代价是新人定位某个 hook 实现要跨 8-10 个 mixin 文件</li>
+<li><strong>7 套投机解码共生</strong>：<code>BaseSpecWorker</code> + <code>spec_registry</code> 注册表让 EAGLE-2 / EAGLE-v2 / 多层 EAGLE / NGRAM / FrozenKV-MTP / DFLASH / Standalone 共存 —— 不同 workload 选最优。NGRAM 零模型成本适合 retrieval-heavy；MTP 适合 DeepSeek-V3 原生 multi-token-predict 头；EAGLE-2 适合通用模型</li>
+<li><strong><span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span> + 4 transfer backend</strong>：prefill（compute-bound）和 decode（memory-bound）独立扩容，KV 通过 RDMA / <span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span> / NIXL / Mori / Ascend 跨节点传输。<code>kv_events.py</code> 用 ZMQ 发布 KV 事件给 router / observability</li>
+<li><strong>10+ Attention 后端</strong>：<code>AttentionBackend</code> ABC + <code>attention_registry.py</code> 注册表 —— FlashInfer 默认 / FA3-4 / Triton / FlashMLA / NSA / DSV4 / FlexAttention / TorchNative / Wave / AITER / Intel-AMX，按硬件 / 模型 / 性能曲线选</li>
+<li><strong>CUDA Graph 只给 DECODE</strong>：DECODE 形状固定（batch_size × 1 token），适合预捕获 graph replay 消除 CPU launch overhead；EXTEND/MIXED 形状变化走原生 kernel。这是 SGLang 把 decode latency 压到接近 kernel-only 的关键</li>
+<li><strong>统一三大协议入口</strong>：单 backend 支持 OpenAI / Anthropic / Ollama + gRPC + 原生 Engine SDK，下游 client 无缝切换</li>
+</ul>
+<h2 id="关键组件深入radixcache核心创新">关键组件深入：RadixCache（核心创新）</h2>
+<p><strong>TreeNode</strong> (<code>mem_cache/radix_cache.py:206</code>)：<code>key: RadixKey</code>（变长 token 序列，支持 bigram 模式给 EAGLE 用）+ <code>value: torch.Tensor</code>（指向 <code>TokenToKVPool</code> 的 KV 索引张量）+ <code>children: dict[int, TreeNode]</code> + <code>lock_ref: int</code>（引用计数 &gt;0 时禁止 evict）+ <code>evicted: bool</code>（已 evict 的占位，支持增量恢复）。</p>
+<p><strong>match_prefix</strong> (line 360)：从 root walk，每层比 <code>input_ids[i:]</code> 和子节点 <code>key</code>；部分匹配时 split 节点（原节点截到匹配长度，剩余 token 移到新子节点）；返回 <code>(device_indices, last_node)</code> —— 前者是已命中 KV 索引张量（直接喂 attention kernel），后者给后续 insert 用。</p>
+<p><strong>insert</strong> (line 420)：请求完成时在 <code>req.last_node</code> 下挂新节点，<code>key = req.fill_ids[len(prefix):]</code>，<code>value = req.out_cache_loc</code>（本次 forward 新写入的 KV 槽位）；父节点 <code>lock_ref</code> 递减，允许 evict。</p>
+<p><strong>Eviction</strong> (line 560)：LRU / LFU / FIFO / SLRU / Priority 4 策略，pop <code>evictable_leaves</code> 堆顶，free 该节点 <code>value</code> 指向的 KV 槽位，递归向上 unlock。</p>
+<p><strong>vs vLLM 关键差异</strong>：vLLM BlockManager 固定 16 token block + block table，无法在 token 7 处分叉；SGLang radix 树天然支持任意 token 边界 split，<code>value</code> 是连续区间索引而非 block 列表。</p>
+<h2 id="与同类对比">与同类对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>SGLang</th>
+<th><a class="wikilink" href="../entities/vllm.html">vllm</a></th>
+<th>TensorRT-LLM</th>
+<th>TGI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>KV 复用粒度</strong></td>
+<td>token 级（<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>）</td>
+<td>16-token block（<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>）</td>
+<td>block</td>
+<td>block</td>
+</tr>
+<tr>
+<td><strong>前缀共享</strong></td>
+<td>任意分叉点自动</td>
+<td>同 block 才共享</td>
+<td>prefix cache</td>
+<td>prefix cache</td>
+</tr>
+<tr>
+<td><strong>投机解码</strong></td>
+<td>7 算法</td>
+<td>EAGLE / Medusa</td>
+<td>EAGLE / Medusa / ReDrafter</td>
+<td>speculative-decoding</td>
+</tr>
+<tr>
+<td><strong>P/D 分离</strong></td>
+<td>5 后端</td>
+<td>实验</td>
+<td>✅</td>
+<td>实验</td>
+</tr>
+<tr>
+<td><strong>Attention 后端</strong></td>
+<td>10+</td>
+<td>FlashAttn / xFormers / TorchSDPA</td>
+<td>TRT 内核</td>
+<td>FlashAttn</td>
+</tr>
+<tr>
+<td><strong>结构化输出</strong></td>
+<td>4 backend</td>
+<td>outlines</td>
+<td>有限</td>
+<td>outlines</td>
+</tr>
+<tr>
+<td><strong>多协议入口</strong></td>
+<td>OpenAI / Anthropic / Ollama / gRPC / Engine</td>
+<td>OpenAI</td>
+<td>TensorRT 原生</td>
+<td>TGI 原生</td>
+</tr>
+<tr>
+<td><strong>国产硬件</strong></td>
+<td>Ascend NPU / Wave / AITER 一等公民</td>
+<td>实验</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>前端 DSL</strong></td>
+<td>SGLang DSL（fork/gen/select）</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>典型适用</strong></td>
+<td>agent / tool-use / RAG / 结构化生成 / 多模态</td>
+<td>通用 LLM serving</td>
+<td>极致延迟</td>
+<td>HF 生态</td>
+</tr>
+</tbody>
+</table>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li>项目本体：<a class="wikilink" href="../entities/sglang.html">sglang</a></li>
+<li>核心算法：<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>（RadixCache 树）、<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>（vLLM 的对照系统）、<span class="wikilink wikilink-missing" title="未建页：speculative-decoding">speculative-decoding</span>（EAGLE / NGRAM / MTP）、<span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span></li>
+<li>同类系统：<a class="wikilink" href="../entities/vllm.html">vllm</a>（最直接对标）</li>
+<li>依赖：<span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span>（FlashInfer / FA3 / FlashMLA）、<span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span>（KV transfer 后端）、<span class="wikilink wikilink-missing" title="未建页：zmq">zmq</span>（4 进程 IPC）</li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><span class="wikilink wikilink-missing" title="未建页：speculative-decoding">speculative-decoding</span></li><li><span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span></li><li><span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-sglang-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流端到端请求生命周期">关键数据流：端到端请求生命周期</a></li><li class=""><a href="#radixcache-复用--kv-pool-联动">RadixCache 复用 + KV pool 联动</a></li><li class=""><a href="#投机解码eagle-2-默认">投机解码（EAGLE-2 默认）</a></li><li class=""><a href="#pd-分离请求流">P/D 分离请求流</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入radixcache核心创新">关键组件深入：RadixCache（核心创新）</a></li><li class=""><a href="#与同类对比">与同类对比</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  // ── Theme toggle (persist via localStorage) ───────────────────
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    const next = cur === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    localStorage.setItem("wiki-theme", next);
+    initMermaid();
+  });
+
+  // ── Mermaid init (re-runnable on theme change) ────────────────
+  function initMermaid() {
+    const isDark = (root.getAttribute("data-theme") || "dark") === "dark";
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? "dark" : "default",
+      themeVariables: isDark
+        ? { background: "#161922", primaryColor: "#1f2530", primaryTextColor: "#e6e6e6", lineColor: "#6ea8fe" }
+        : { background: "#ffffff", primaryColor: "#f3f4f7", primaryTextColor: "#1f2328", lineColor: "#0969da" },
+      flowchart: { htmlLabels: true, curve: "basis" },
+      sequence: { useMaxWidth: true, wrap: true },
+      securityLevel: "loose",
+    });
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (el.getAttribute("data-processed")) {
+        el.innerHTML = el.getAttribute("data-source");
+        el.removeAttribute("data-processed");
+      } else if (!el.getAttribute("data-source")) {
+        el.setAttribute("data-source", el.innerHTML);
+      }
+    });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  // ── TOC active highlight on scroll ─────────────────────────────
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

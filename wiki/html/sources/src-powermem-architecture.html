@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PowerMem 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-14</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>PowerMem 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-14 · 来源：powermem-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-infra</span><span class="tag">memory-layer</span><span class="tag">oceanbase</span><span class="tag">llm-agents</span><span class="tag">vector-search</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/powermem-architecture-analysis.md</code> · 仓库：https://github.com/oceanbase/powermem · 分析版本 v1.1.1（commit <code>2c83b77</code>，2026-05-13）</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/powermem.html">powermem</a> 是 <span class="wikilink wikilink-missing" title="未建页：oceanbase">oceanbase</span> 团队开源的、面向 LLM agents/apps 的 <strong>持久化记忆中间件</strong>：把对话流水线压缩成可被语义检索的长期记忆。关键手段是 <strong>向量 + 全文 + 稀疏向量 + 图谱</strong> 四路混合检索（OceanBase 原生支持）+ <strong>LLM 驱动的事实抽取/更新</strong> + <strong><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> 衰减</strong>。SDK / CLI（<code>pmem</code>）/ FastAPI 服务 + Dashboard / <a class="wikilink" href="../entities/mcp.html">mcp</a> 服务 / VS Code 扩展 / <a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a> <strong>共用同一份 <code>.env</code></strong>；默认后端是 OceanBase，也支持 pgvector / SQLite / 嵌入式 SeekDB。在 LOCOMO 长对话评测上比"塞满上下文"方案准确率 78.7% vs 52.9%、p95 1.44s vs 17.12s、token 0.9k vs 26k。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    subgraph EXT["External — Multi-Agents · Human Users"]
+        Ext["LangChain · LangGraph · Cursor · Claude Code · …"]
+    end
+
+    subgraph API["API Layer (同一份 .env / MemoryConfig)"]
+        direction LR
+        SDK["Python SDK<br/>Memory() / Async"]
+        CLI["CLI (pmem)<br/>add / search / …"]
+        HTTP["HTTP /api/v1<br/>FastAPI + Dashboard"]
+        MCP["MCP (sse/stdio)<br/>powermem-mcp"]
+    end
+
+    subgraph CORE["Core Layer (src/powermem/core/)"]
+        direction TB
+        Mem["Memory / AsyncMemory (memory.py 2178 行 — CRUD 入口)"]
+        Adapter["StorageAdapter / SubStorageAdapter — routing"]
+        IM["IntelligenceManager → IntelligentMemoryManager<br/>· ImportanceEvaluator (LLM 打分 0.0–1.0)<br/>· EbbinghausAlgorithm  R = e^(-t/S)"]
+        Tel["TelemetryManager · AuditLogger"]
+        Opt["MemoryOptimizer (后台衰减/晋升/清理)"]
+        Mem --> Adapter & IM & Tel & Opt
+        Agent2["Agent Layer (src/powermem/agent/)<br/>scope · permission · privacy"]
+        UM["User-Memory (src/powermem/user_memory/)<br/>profile + query_rewrite"]
+    end
+
+    subgraph MODEL["Model Layer (src/powermem/integrations/)"]
+        direction LR
+        LLMF["LLMFactory<br/>openai/anthropic/qwen/<br/>gemini/deepseek/zai/<br/>siliconflow/vllm/<br/>ollama/lang…"]
+        EmbF["EmbedderFactory<br/>openai/qwen/gemini/<br/>huggingface/ollama/<br/>azure_openai/bedrock/<br/>lmstudio/siliconflow/<br/>together…"]
+        RrkF["RerankFactory<br/>qwen/jina/zai/generic<br/>+ SparseEmb (qwen_sparse)"]
+    end
+
+    subgraph STORAGE["Storage Layer (src/powermem/storage/)"]
+        direction LR
+        OB["OceanBase (default)<br/>+ Embedded SeekDB<br/>+ Graph Store<br/>(oceanbase_graph.py)"]
+        PG["pgvector<br/>(PostgreSQL)"]
+        SQ["SQLite<br/>(sqlite_vector_store.py<br/>— file 单实例)"]
+        Cap["Vector (HNSW/HNSW_SQ/IVFFLAT/IVFSQ/IVFPQ)<br/>+ Full-text (jieba/ngram/ngram2/ik/beng/space)<br/>+ Sparse Vector + Graph (3-hop traversal)"]
+    end
+
+    EXT --> API --> CORE --> MODEL --> STORAGE
+
+    classDef ext fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef api fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef core fill:#14532d,stroke:#166534,color:#fff
+    classDef model fill:#5b21b6,stroke:#6d28d9,color:#fff
+    classDef store fill:#831843,stroke:#9d174d,color:#fff
+    class EXT,Ext ext
+    class API,SDK,CLI,HTTP,MCP api
+    class CORE,Mem,Adapter,IM,Tel,Opt,Agent2,UM core
+    class MODEL,LLMF,EmbF,RrkF model
+    class STORAGE,OB,PG,SQ,Cap store
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│  External Layer:  Multi-Agents · Human Users                        │
+│                   (LangChain / LangGraph / Cursor / Claude Code …)  │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  API Layer                                                          │
+│  ┌────────────┐ ┌────────────┐ ┌──────────────┐ ┌────────────────┐ │
+│  │ Python SDK │ │ CLI (pmem) │ │ HTTP /api/v1 │ │ MCP (sse/stdio)│ │
+│  │ Memory()   │ │ memory add │ │  FastAPI     │ │  powermem-mcp  │ │
+│  │ Async      │ │ search …   │ │ + Dashboard  │ │ HTTP/stream    │ │
+│  └─────┬──────┘ └─────┬──────┘ └──────┬───────┘ └────────┬───────┘ │
+│        └──────────────┴───────────────┴──────────────────┘         │
+│                              ↓ 同一份 .env / MemoryConfig          │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Core Layer  (src/powermem/core/)                                   │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │  Memory / AsyncMemory  (memory.py 2178 行,  CRUD 入口)        │  │
+│  │   ├─ StorageAdapter / SubStorageAdapter  → routing            │  │
+│  │   ├─ IntelligenceManager → IntelligentMemoryManager           │  │
+│  │   │     ├─ ImportanceEvaluator (LLM 打分 0.0-1.0)             │  │
+│  │   │     └─ EbbinghausAlgorithm  R = e^(-t/S)                  │  │
+│  │   ├─ TelemetryManager · AuditLogger                            │  │
+│  │   └─ MemoryOptimizer (后台衰减/晋升/清理)                      │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+│                              ↓                                      │
+│  Agent Layer (src/powermem/agent/) ─ scope / permission / privacy   │
+│  User-Memory (src/powermem/user_memory/) ─ profile + query_rewrite  │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Model Layer  (src/powermem/integrations/)                          │
+│  ┌─────────────────┐  ┌────────────────────┐  ┌────────────────┐   │
+│  │ LLMFactory      │  │ EmbedderFactory    │  │ RerankFactory  │   │
+│  │ openai/anthro   │  │ openai/qwen/gemini │  │ qwen/jina/zai  │   │
+│  │ pic/qwen/gemini │  │ huggingface/ollama │  │ generic        │   │
+│  │ deepseek/zai/   │  │ azure_openai/bedr  │  │                │   │
+│  │ siliconflow/vll │  │ ock/lmstudio/sili  │  │ + SparseEmb    │   │
+│  │ m/ollama/lang…  │  │ conflow/together…  │  │ (qwen_sparse)  │   │
+│  └─────────────────┘  └────────────────────┘  └────────────────┘   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               ↓
+┌─────────────────────────────────────────────────────────────────────┐
+│  Storage Layer  (src/powermem/storage/)                             │
+│  ┌────────────────┐  ┌─────────────┐  ┌──────────────────────────┐ │
+│  │ OceanBase      │  │ pgvector    │  │ SQLite (sqlite_vector_   │ │
+│  │ (default)      │  │ (PostgreSQL)│  │  store.py — file 单实例) │ │
+│  │ + Embedded     │  │             │  │                          │ │
+│  │   SeekDB       │  │             │  │                          │ │
+│  │ + Graph Store  │  │             │  │                          │ │
+│  │ (oceanbase_    │  │             │  │                          │ │
+│  │  graph.py)     │  │             │  │                          │ │
+│  └────────────────┘  └─────────────┘  └──────────────────────────┘ │
+│        Vector (HNSW/HNSW_SQ/IVFFLAT/IVFSQ/IVFPQ)                    │
+│        + Full-text (jieba/ngram/ngram2/ik/beng/space)               │
+│        + Sparse Vector + Graph (3-hop traversal)                    │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h3 id="记忆生命周期沿用官方-docsarchitectureoverviewmd-原图">记忆生命周期（沿用官方 docs/architecture/overview.md 原图）</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Input["New Information Input"]
+    Temp["Temporary Storage"]
+    Work["Working Memory"]
+    AIE["AI Intelligent Evaluation<br/>Multi-dimensional Analysis"]
+    Period["Periodicity Evaluation"]
+    Imp["Importance Evaluation"]
+
+    Mid["Medium Importance"]
+    High["High Importance"]
+    Low["Low Importance"]
+
+    RL["Reinforcement Learning"]
+    Inc["Importance Increase"]
+    LTM["Long-term Memory"]
+    Perm["Permanent Storage"]
+    KB["Knowledge Base"]
+
+    Decay["Forgetting Decay"]
+    Dec["Importance Decrease"]
+    Cleanup["Automatic Cleanup"]
+
+    Short["Short-term Memory"]
+
+    Input --> Temp --> Work --> AIE --> Period --> Imp
+    Imp --> Mid
+    Imp --> High
+    Imp --> Low
+
+    High --> RL --> Inc --> LTM --> Perm --> KB
+    Low --> Decay --> Dec --> Cleanup
+    Mid --> Short
+
+    classDef hi fill:#14532d,stroke:#166534,color:#fff
+    classDef lo fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef md fill:#1e3a8a,stroke:#1e40af,color:#fff
+    class High,RL,Inc,LTM,Perm,KB hi
+    class Low,Decay,Dec,Cleanup lo
+    class Mid,Short md
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>        New Information Input
+              ↓
+        Temporary Storage
+              ↓
+         Working Memory
+             ↓
+    AI Intelligent Evaluation / Multi-dimensional Analysis
+             ↓
+    Periodicity Evaluation
+             ↓
+     Importance Evaluation
+             ↓
+    ┌────────┴──────────────────┐
+    │                           │
+┌───┴──────┐  ┌────────-─┐  ┌──────────┐
+│ Medium   │  │   High   │  │   Low    │
+│Importance│  │Importance│  │Importance│
+└───┬──────┘  └───┬─-──-─┘  └────┬─────┘
+    │             │              │
+    │      ┌──────┴──────┐       │
+    │      │Reinforcement│       │
+    │      │  Learning   │       │
+    │      └──────┬──────┘       │
+    │      ┌──────┴──────┐       │
+    │      │ Importance  │       │
+    │      │  Increase   │       │
+    │      └──────┬──────┘       │
+    │      ┌──────┴──────┐       │
+    │      │Long-term    │       │
+    │      │   Memory    │       │
+    │      └──────┬──────┘       │
+    │      ┌──────┴──────┐       │
+    │      │  Permanent  │       │
+    │      │   Storage   │       │
+    │      └──────┬──────┘       │
+    │      ┌──────┴──────┐       │
+    │      │ Knowledge   │       │
+    │      │    Base     │       │
+    │      └─────────────┘       │
+    │                  ┌─────────┴─────────┐
+    │                  │  Forgetting Decay │
+    │                  └─────────┬─────────┘
+    │                  ┌─────────┴─────────┐
+    │                  │  Importance       │
+    │                  │   Decrease        │
+    │                  └─────────┬─────────┘
+    │                  ┌─────────┴─────────┐
+    │                  │  Automatic        │
+    │                  │    Cleanup        │
+    │                  └───────────────────┘
+┌───┴─────-─────────┐
+│  Short-term       │
+│    Memory         │
+└───────────────────┘
+</code></pre>
+</details>
+<h2 id="模块分层">模块分层</h2>
+<table>
+<thead>
+<tr>
+<th>层 / 模块</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>API · Python SDK</strong></td>
+<td>公开 <code>Memory</code> / <code>AsyncMemory</code> / <code>create_memory(auto_config())</code>；CRUD 主循环；装配所有子组件</td>
+</tr>
+<tr>
+<td><strong>API · CLI (<code>pmem</code>)</strong></td>
+<td><code>pmem memory add/search/list/delete</code>、<code>pmem config init</code>、<code>pmem shell</code> REPL</td>
+</tr>
+<tr>
+<td><strong>API · HTTP Server</strong></td>
+<td>FastAPI；启动期 lifespan 初始化 service 单例；CORS / 限流 / API key</td>
+</tr>
+<tr>
+<td><strong>API · <a class="wikilink" href="../entities/mcp.html">mcp</a></strong></td>
+<td>独立包 <code>powermem-mcp</code>（<code>uvx powermem-mcp sse</code>），sse/stdio/streamable-http 三种 transport</td>
+</tr>
+<tr>
+<td><strong>Core · Memory Engine</strong></td>
+<td>配置归一化；模块级 3-worker 线程池跑后台任务</td>
+</tr>
+<tr>
+<td><strong>Core · Intelligence</strong></td>
+<td>LLM 重要性打分；<a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> 衰减（<code>R = e^(-t/S)</code>，阈值 0.3/0.6/0.8）；离线晋升/清理；插件点</td>
+</tr>
+<tr>
+<td><strong>Core · Agent 多租户</strong></td>
+<td>5 种 scope；scope/permission/privacy/collaboration 4 个 Controller；3 种 implementation</td>
+</tr>
+<tr>
+<td><strong>Core · User Memory</strong></td>
+<td>用户档案抽取；基于档案的查询改写</td>
+</tr>
+<tr>
+<td><strong>Prompts</strong></td>
+<td>集中托管所有 LLM prompt；支持 <code>custom_*_prompt</code> 配置覆盖</td>
+</tr>
+<tr>
+<td><strong>Model · LLM</strong></td>
+<td>12 provider：openai / anthropic / qwen / gemini / deepseek / ollama / vllm / langchain / azure / siliconflow / zai / qwen_asr</td>
+</tr>
+<tr>
+<td><strong>Model · Embedder</strong></td>
+<td>15 provider + sparse：openai / qwen / gemini / vertexai / huggingface / ollama / azure_openai / aws_bedrock / lmstudio / langchain / together / siliconflow / zai / mock + sparse(qwen_sparse)</td>
+</tr>
+<tr>
+<td><strong>Model · Rerank</strong></td>
+<td>4 provider：qwen / jina / zai / generic</td>
+</tr>
+<tr>
+<td><strong>Storage · 适配层</strong></td>
+<td><code>VectorStoreBase</code> 抽象；<code>StorageAdapter</code> / <code>SubStorageAdapter</code>（sub-store 路由）；Factory 创建后端</td>
+</tr>
+<tr>
+<td><strong>Storage · <span class="wikilink wikilink-missing" title="未建页：oceanbase">oceanbase</span></strong></td>
+<td>5 种向量索引（HNSW/HNSW_SQ/IVFFLAT/IVFSQ/IVFPQ）；5 种 FTS parser；<a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a>；Snowflake ID；REPLACE INTO upsert；3-hop graph</td>
+</tr>
+<tr>
+<td><strong>Storage · pgvector / SQLite</strong></td>
+<td>PostgreSQL 中型部署 / 单机文件部署（开发测试默认）</td>
+</tr>
+<tr>
+<td><strong>Apps · <a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a></strong></td>
+<td>Go 二进制 <code>powermem-hook</code> + bash/PowerShell wrapper + <code>hooks.json</code>；HTTP 模式默认；<code>UserPromptSubmit</code> hook 自动检索注入</td>
+</tr>
+<tr>
+<td><strong>Apps · VS Code 扩展</strong></td>
+<td>"Link to AI tools" 把 PowerMem 接到 Cursor / Claude / Codex / Copilot / Windsurf</td>
+</tr>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>React 19 + TanStack Router + Tailwind 4 + Radix UI；构建产物嵌入 server wheel，挂载到 <code>/dashboard/</code></td>
+</tr>
+<tr>
+<td><strong>Benchmark</strong></td>
+<td>LOCOMO 长对话评测；<code>benchmark/server</code> 评测服务</td>
+</tr>
+<tr>
+<td><strong>Examples</strong></td>
+<td>go / langchain / langgraph / moonbit 跨语言跨框架接入示例</td>
+</tr>
+</tbody>
+</table>
+<p><strong>分层关键约束</strong>：</p>
+<ul>
+<li><strong>API 层不持状态</strong>：所有 service 在 lifespan 起点初始化为 <code>app.state.*_service</code> 单例；HTTP / CLI / SDK 都最终经过同一个 <code>Memory</code> 实例。</li>
+<li><strong>Core 与 Storage 通过 Adapter 隔离</strong>：<code>StorageAdapter</code> 持有 <code>vector_store + embedding_service + sparse_embedder_service</code>；Core 不直接调用 OceanBase SDK。新增后端只需实现 <code>VectorStoreBase</code>。</li>
+<li><strong>Intelligence 不直接改库</strong>：<a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> 把 <code>importance_score / retention_strength / next_review</code> 写进 metadata JSON 列；<code>MemoryOptimizer</code> 离线扫描决定晋升/清理。</li>
+<li><strong>Prompts 集中托管</strong>：运行时可通过 <code>custom_fact_extraction_prompt</code> / <code>custom_update_memory_prompt</code> / <code>custom_importance_evaluation_prompt</code> 覆盖。</li>
+</ul>
+<h2 id="关键数据流">关键数据流</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    subgraph ADD["写入路径 — memory.add()"]
+        direction TB
+        AU["Agent / User"]
+        MA["Memory.add()<br/>core/memory.py"]
+        L1["LLM (factory) — integrations/llm<br/>FACT_EXTRACTION_PROMPT<br/>抽取事实条目 list"]
+        IM2["IntelligenceManager<br/>· ImportanceEvaluator → 0.0~1.0<br/>· EbbinghausAlgorithm → memory_type"]
+        EB["Embedder.embed() (dense)<br/>SparseEmbedder.…() (sparse, optional)"]
+        SA["StorageAdapter<br/>_route_to_store() ← sub_stores"]
+        OB2["OceanBase VectorStore<br/>+ Graph (实体/关系)<br/>REPLACE INTO (upsert) · Snowflake ID"]
+
+        AU -- "(1) prompt + user_id/agent_id/run_id" --> MA
+        MA -- "(2) FACT_EXTRACTION_PROMPT" --> L1
+        L1 -- "(3) facts[]" --> IM2
+        IM2 -- "(4) enriched metadata" --> EB
+        EB -- "(5) vector(s)" --> SA
+        SA -- "(6) upsert" --> OB2
+    end
+
+    subgraph SEARCH["检索路径 — memory.search()"]
+        direction TB
+        Q["query"]
+        QR["UserMemory.query_rewrite (LLM 改写)"]
+        subgraph THREE["并发三路 (ThreadPoolExecutor)"]
+            direction LR
+            V["Vector search<br/>(HNSW/IVFFLAT)"]
+            F["Full-text search<br/>(jieba/ngram/ik …)"]
+            Sp["Sparse vector<br/>(qwen_sparse)"]
+        end
+        RRF["RRF (Reciprocal Rank Fusion, k=60)<br/>score = Σ w_i × 1/(k + rank_i)<br/>+ Adaptive Weight Normalization"]
+        Ebb["Ebbinghaus 衰减系数加权"]
+        Rk["Reranker (optional — qwen/jina/zai)"]
+        TopK["Top-K (heap-based · threshold filter)"]
+        Out["返回 results + scores + metadata"]
+
+        Q --> QR --> THREE --> RRF --> Ebb --> Rk --> TopK --> Out
+    end
+
+    classDef add fill:#14532d,stroke:#166534,color:#fff
+    classDef srh fill:#1e3a8a,stroke:#1e40af,color:#fff
+    class ADD,AU,MA,L1,IM2,EB,SA,OB2 add
+    class SEARCH,Q,QR,THREE,V,F,Sp,RRF,Ebb,Rk,TopK,Out srh
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌──────────────┐         (1) prompt + user_id/agent_id/run_id
+│ Agent/User   │ ───────────────────────────────┐
+└──────────────┘                                ↓
+                                      ┌──────────────────────┐
+                                      │   Memory.add()       │
+                                      │ core/memory.py       │
+                                      └──────┬───────────────┘
+                                             │ (2) FACT_EXTRACTION_PROMPT
+                                             ↓
+                                      ┌──────────────────────┐
+                                      │  LLM (factory)       │  ← integrations/llm
+                                      │  抽取事实条目 list   │
+                                      └──────┬───────────────┘
+                                             │ (3) facts[]
+                                             ↓
+                                      ┌──────────────────────┐
+                                      │ IntelligenceManager  │
+                                      │  ImportanceEvaluator │  → 0.0~1.0
+                                      │  EbbinghausAlgorithm │  → memory_type
+                                      └──────┬───────────────┘
+                                             │ (4) enriched metadata
+                                             ↓
+                                      ┌──────────────────────┐
+                                      │ Embedder.embed()     │  dense
+                                      │ SparseEmbedder.…()   │  sparse (optional)
+                                      └──────┬───────────────┘
+                                             │ (5) vector(s)
+                                             ↓
+                                      ┌──────────────────────┐
+                                      │ StorageAdapter       │
+                                      │  _route_to_store()   │  ← sub_stores
+                                      └──────┬───────────────┘
+                                             │ (6) REPLACE INTO (upsert)
+                                             ↓                Snowflake ID
+                                  ┌─────────────────────────┐
+                                  │  OceanBase VectorStore  │
+                                  │  (+ Graph: 实体/关系)   │
+                                  └─────────────────────────┘
+
+╭────────────────── 检索路径 (memory.search) ────────────────────╮
+                                                                 │
+   query ──► (1) UserMemory.query_rewrite (LLM 改写)             │
+              ↓                                                  │
+   ┌──── 并发三路 (ThreadPoolExecutor) ────┐                     │
+   │                                       │                     │
+   ▼                                       ▼                     ▼
+ Vector search          Full-text search (FTS)          Sparse vector
+ (HNSW/IVFFLAT)         (jieba/ngram/ik …)              (qwen_sparse)
+   │                                       │                     │
+   └──────────────┬────────────────────────┴─────────────────────┘
+                  ↓
+         RRF (Reciprocal Rank Fusion, k=60)
+         score = Σ weight_i * 1/(k + rank_i)
+         + Adaptive Weight Normalization (混合状态公平性修正)
+                  ↓
+         Ebbinghaus 衰减系数加权
+                  ↓
+         Reranker (optional, qwen/jina/zai)
+                  ↓
+         Top-K (heap-based, threshold filter)
+                  ↓
+         返回 results + scores + metadata
+</code></pre>
+</details>
+<p><strong>回退路径</strong>：embedder 失败 → mock <code>[0.1] * 1536</code> 向量；LLM 抽取失败 → 容错跳过单条 fact；reranker 配置失败 → 退化为纯 RRF；storage service 启动失败 → API route 抛 503。</p>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li><strong>持久记忆做成跨形态统一中间件</strong>：一个 <code>.env</code> 同时供 SDK / CLI / FastAPI / <a class="wikilink" href="../entities/mcp.html">mcp</a> / Dashboard / <a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a> / VS Code 扩展使用 —— 不复制状态给每个客户端，这是它能同时铺到 SDK / IDE / Agent 框架的关键。</li>
+<li><strong>认知科学抽象 + 数学公式解耦存储</strong>：working / short_term / long_term 三层 + <a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> <code>R = e^(-t/S)</code>。Intelligence 不直接改库，只在 metadata 写分数，<code>MemoryOptimizer</code> 离线扫描 —— 避免"每次写入都触发昂贵 LLM 调用"。</li>
+<li><strong><span class="wikilink wikilink-missing" title="未建页：oceanbase">oceanbase</span> 优先但绝不绑死</strong>：<code>VectorStoreFactory + StorageAdapter</code> 是关键解耦点；v1.1.0 引入嵌入式 SeekDB（<code>pyseekdb</code>）让用户用 OceanBase 语义但零部署。</li>
+<li><strong><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a> + 自适应权重是检索灵魂</strong>：3 路（向量/全文/稀疏）并发，<code>score = Σ w_i × 1/(60 + rank_i)</code>，<code>_normalize_weights_adaptively</code> 按实际命中路径重新归一权重，避免"全命中 doc 因权重总和大而占优"的不公平 —— 这是 LOCOMO 78.7% 准确率的算法贡献。</li>
+<li><strong>后台线程池是 perf 关键</strong>：模块级 <code>_BACKGROUND_EXECUTOR = ThreadPoolExecutor(max_workers=3)</code>；LLM 抽取前台同步，telemetry/audit/optimization 后台跑 —— 解释了 p95 = 1.44s（vs baseline 17.12s 的 11.8 倍提速）。</li>
+<li><strong>插件式 Provider 矩阵 + pydantic-settings</strong>：15 embedder + 12 LLM + 4 reranker；用户切换只改 <code>.env</code> 里的 provider —— 是它能跑通"Qwen + DashScope + OceanBase 全栈国产化"路径的工程基础。</li>
+<li><strong>Multi-agent 是组件级别</strong>：<code>scope/permission/privacy/collaboration</code> 4 个 Controller；5 种 scope（private/agent_group/user_group/public/restricted）—— 是 enterprise tenant isolation 的基建。</li>
+<li><strong>Dashboard 打包进 Python wheel</strong>：<code>pip install powermem</code> + <code>powermem-server</code> 一条命令就有完整 Web UI，无需单独部署前端。</li>
+<li><strong><a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a> 用 Go 二进制做 hook</strong>：跨平台原生编译，无 Python 依赖；<code>UserPromptSubmit</code> hook 自动检索注入 <code>additionalContext</code> —— 让 Claude Code 用户"不需要写 prompt 也能用上长期记忆"。</li>
+</ul>
+<h2 id="关键组件深入解读">关键组件深入解读</h2>
+<h3 id="storageoceanbaseoceanbasepy-的-hybrid-search-rrf-融合"><code>storage/oceanbase/oceanbase.py</code> 的 <a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a> 融合</h3>
+<p><code>_reciprocal_rank_fusion</code>（<code>oceanbase.py:1626-1740</code>）三路 RRF 累加（k=60）：</p>
+<ul>
+<li>命中已有 doc → 累加 <code>rrf_score</code>；只命中单路 → 单路得分新增 doc；</li>
+<li><code>_normalize_weights_adaptively</code> 按实际参与路径重新归一化权重；</li>
+<li>用 <code>heap</code> 维护 Top-K（避免全排序）；</li>
+<li><code>_calculate_quality_score</code> 用原始 similarity 做阈值过滤，避免 RRF 排名高但绝对相似度低的长尾噪声。</li>
+</ul>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li><a class="wikilink" href="../entities/powermem.html">powermem</a></li>
+<li><span class="wikilink wikilink-missing" title="未建页：oceanbase">oceanbase</span></li>
+<li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li>
+<li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li>
+<li><a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a></li>
+<li><a class="wikilink" href="../entities/mcp.html">mcp</a></li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><span class="wikilink wikilink-missing" title="未建页：oceanbase">oceanbase</span></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../entities/claude-code-plugin.html">claude-code-plugin</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-powermem-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class="level-3"><a href="#记忆生命周期沿用官方-docsarchitectureoverviewmd-原图">记忆生命周期（沿用官方 docs/architecture/overview.md 原图）</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#storageoceanbaseoceanbasepy-的-hybrid-search-rrf-融合">`storage/oceanbase/oceanbase.py` 的 hybrid-search-rrf 融合</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

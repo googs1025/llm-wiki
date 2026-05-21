@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claude Context 架构深度分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-12</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>Claude Context 架构深度分析</h1>
+  <p class="subtitle">2026-05-12 · 来源：claude-context-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">mcp</span><span class="tag">code-rag</span><span class="tag">claude-code</span><span class="tag">llm-infra</span><span class="tag">semantic-search</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/claude-context-architecture-analysis.md</code> · 仓库：<a href="https://github.com/zilliztech/claude-context">zilliztech/claude-context</a> · 分析版本 v0.1.13</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/claude-context.html">claude-context</a> 是 Zilliz 出品的 <a class="wikilink" href="../entities/mcp.html">MCP</a> 插件——把整个代码库通过 <a class="wikilink" href="../concepts/code-semantic-search.html">语义检索</a> "塞进" AI Agent 的上下文，让 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> / Cursor / Gemini CLI / Codex 等 Agent <strong>不必多轮"瞎找"</strong> 就能直达相关代码。</p>
+<h2 id="解决的核心痛点">解决的核心痛点</h2>
+<table>
+<thead>
+<tr>
+<th>传统做法</th>
+<th>问题</th>
+<th>Claude Context 方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>把整个目录塞进 prompt</td>
+<td>Token 爆炸</td>
+<td>向量库存储，只取 top-K</td>
+</tr>
+<tr>
+<td>Agent 多轮 grep/read</td>
+<td>慢、消耗工具调用次数</td>
+<td>一次语义查询直达</td>
+</tr>
+<tr>
+<td>仅靠关键词匹配</td>
+<td>找不到概念相关代码</td>
+<td>dense + sparse 混合检索 + RRF 重排</td>
+</tr>
+</tbody>
+</table>
+<p><strong>一句话</strong>：代码分块 → 向量化 → 存入 <span class="wikilink wikilink-missing" title="未建页：milvus">Milvus</span> → 混合检索 → 通过 MCP 暴露给 AI Agent。</p>
+<h2 id="monorepo-架构">Monorepo 架构</h2>
+<pre><code>claude-context/
+├── packages/
+│   ├── core/                 # 引擎层（纯领域逻辑）
+│   │   ├── splitter/         # AST / LangChain
+│   │   ├── embedding/        # OpenAI/Voyage/Gemini/Ollama
+│   │   ├── vectordb/         # Milvus / Milvus-REST
+│   │   ├── sync/             # Merkle DAG 增量
+│   │   └── context.ts        # 编排器
+│   ├── mcp/                  # MCP 协议适配
+│   ├── vscode-extension/
+│   └── chrome-extension/
+</code></pre>
+<p><strong>三段式分层</strong>：引擎层（core）不感知协议 / 协议层（mcp）只做转换 / 客户端独立 UI。</p>
+<h3 id="完整系统架构图">完整系统架构图</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    Client["AI Agent 客户端<br/>(Claude Code · Cursor · Gemini CLI · Codex)"]
+
+    subgraph MCP["packages/mcp — 协议适配层"]
+        direction TB
+        Idx["index.ts<br/>(4 个工具:<br/>index_codebase · search_code · clear_index · get_status)"]
+        Hdl["handlers.ts"]
+        Sync["SyncManager<br/>(5 分钟后台轮询)<br/>Snapshot Manager (~/.context/)"]
+    end
+
+    subgraph CORE["packages/core — 引擎层 / Context 编排器"]
+        direction TB
+        subgraph IF["三大接口"]
+            direction LR
+            SP["Splitter (接口)<br/>· AstSplitter (tree-sitter ×9)<br/>　↓ fallback<br/>· LangChain Splitter"]
+            EM["Embedding (抽象类)<br/>OpenAI · Voyage · Gemini · Ollama"]
+            VD["VectorDB (接口)<br/>Milvus · Milvus-RESTful"]
+        end
+        FS["FileSynchronizer + MerkleDAG<br/>(~/.context/merkle/&lt;hash&gt;.json)"]
+    end
+
+    DB["Zilliz Cloud / 本地 Milvus<br/>(dense + sparse 双向量, RRF 重排)"]
+
+    Client -- "MCP (stdio JSON-RPC)" --> MCP
+    MCP --> CORE
+    VD --> DB
+    FS -.-> VD
+
+    classDef cl fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef mc fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef co fill:#14532d,stroke:#166534,color:#fff
+    classDef db fill:#831843,stroke:#9d174d,color:#fff
+    class Client cl
+    class MCP,Idx,Hdl,Sync mc
+    class CORE,IF,SP,EM,VD,FS co
+    class DB db
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>                  ┌──────────────────────────────────────────────┐
+                  │    AI Agent 客户端 (Claude Code / Cursor /   │
+                  │              Gemini CLI / Codex)             │
+                  └────────────────────┬─────────────────────────┘
+                                       │ MCP (stdio JSON-RPC)
+                                       ▼
+            ┌──────────────────────────────────────────────────────┐
+            │         packages/mcp  (协议适配层)                    │
+            │  ┌────────────┐  ┌──────────┐  ┌──────────────────┐ │
+            │  │ index.ts   │  │ handlers │  │ SyncManager      │ │
+            │  │ (4个工具)  │  │ .ts      │  │ (5分钟后台轮询)  │ │
+            │  └─────┬──────┘  └────┬─────┘  └────────┬─────────┘ │
+            │        │ index_codebase│                 │           │
+            │        │ search_code   │ Snapshot       │           │
+            │        │ clear_index   │ Manager        │           │
+            │        │ get_status    │ (~/.context/)  │           │
+            └────────┼───────────────┼─────────────────┼───────────┘
+                     ▼               ▼                 ▼
+            ┌──────────────────────────────────────────────────────┐
+            │   packages/core  (引擎层 / Context 编排器)            │
+            │                                                       │
+            │   ┌─────────────┐  ┌──────────────┐  ┌────────────┐ │
+            │   │  Splitter   │  │  Embedding   │  │ VectorDB   │ │
+            │   │ (接口)      │  │  (抽象类)    │  │ (接口)     │ │
+            │   ├─────────────┤  ├──────────────┤  ├────────────┤ │
+            │   │ AstSplitter │  │ OpenAI       │  │ Milvus     │ │
+            │   │ (tree-      │  │ Voyage       │  │ Milvus-    │ │
+            │   │  sitter ×9) │  │ Gemini       │  │  RESTful   │ │
+            │   │     ↓ fallb │  │ Ollama       │  │            │ │
+            │   │ LangChain   │  │              │  │            │ │
+            │   │  Splitter   │  │              │  │            │ │
+            │   └─────────────┘  └──────────────┘  └─────┬──────┘ │
+            │                                              │        │
+            │   ┌─────────────────────────────────────┐   │        │
+            │   │  FileSynchronizer + MerkleDAG       │   │        │
+            │   │  (~/.context/merkle/&lt;hash&gt;.json)    │   │        │
+            │   └─────────────────────────────────────┘   │        │
+            └───────────────────────────────────────────────┼──────┘
+                                                            ▼
+                                                  ┌──────────────────┐
+                                                  │  Zilliz Cloud /  │
+                                                  │  本地 Milvus     │
+                                                  │ (dense+sparse 双 │
+                                                  │  向量, RRF 重排) │
+                                                  └──────────────────┘
+</code></pre>
+</details>
+<h2 id="三大核心流程">三大核心流程</h2>
+<h3 id="索引indexcodebase">索引（<code>indexCodebase</code>）</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    S1["1. loadIgnorePatterns()<br/>.gitignore / .contextignore"]
+    S2["2. prepareCollection()<br/>建 Milvus collection (dense + sparse)"]
+    S3["3. getCodeFiles()<br/>按扩展名 / ignore 规则递归"]
+    S4["4. processFileList() — 逐文件流式"]
+    Split["splitter.split()<br/>AST → 失败 fallback LangChain"]
+    Buf["chunkBuffer 累积到 100"]
+    Emb["embedding.embed() + vectorDB.insert()"]
+    Abrt["signal?.aborted → IndexAbortError"]
+    S5["5. FileSynchronizer.initialize()<br/>Merkle DAG 快照"]
+
+    S1 --> S2 --> S3 --> S4
+    S4 --> Split --> Buf --> Emb
+    S4 -. "abort 信号" .-> Abrt
+    Emb --> S5
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>1. loadIgnorePatterns()      .gitignore / .contextignore
+2. prepareCollection()       建 Milvus collection（dense + sparse）
+3. getCodeFiles()            按扩展名/ignore 规则递归
+4. processFileList()         逐文件流式：
+     ├─ splitter.split()     AST → 失败 fallback LangChain
+     ├─ chunkBuffer 累积到 100
+     ├─ embedding.embed() + vectorDB.insert()
+     └─ signal?.aborted → IndexAbortError
+5. FileSynchronizer.initialize()   Merkle DAG 快照
+</code></pre>
+</details>
+<p>关键常量：<code>EMBEDDING_BATCH_SIZE=100</code>、<code>CHUNK_LIMIT=450000</code>、<code>chunkSize=2500/overlap=300</code></p>
+<h3 id="检索semanticsearch">检索（<code>semanticSearch</code>）</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Q["query"]
+    D["embedding.embed() → dense"]
+    Sp["原 query → sparse"]
+    HS["vectorDB.hybridSearch(<br/>[ dense {nprobe:10}, sparse {drop_ratio:0.2} ],<br/>rerank: { strategy: 'rrf', k: 100 }<br/>)"]
+    Dedup["deduplicateResults()<br/>→ { content, path, lines, score }"]
+
+    Q --> D
+    Q --> Sp
+    D --> HS
+    Sp --> HS
+    HS --> Dedup
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>query
+  ├─► embedding.embed()   → dense
+  └─► 原 query            → sparse
+              ↓
+   vectorDB.hybridSearch(
+     [dense:{nprobe:10}, sparse:{drop_ratio:0.2}],
+     rerank:{strategy:'rrf', k:100}
+   )
+              ↓
+   deduplicateResults() → {content, path, lines, score}
+</code></pre>
+</details>
+<p>详见 <a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a>。</p>
+<h3 id="增量同步reindexbychange">增量同步（<code>reindexByChange</code>）</h3>
+<p>旧 Merkle root ≠ 新 root → <code>checkForChanges()</code> → <code>{added, removed, modified}</code> → 删向量 / 重新嵌入 → 新快照写 <code>~/.context/merkle/&lt;md5&gt;.json</code>。</p>
+<p>详见 <a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">merkle-dag-fingerprint</a>。</p>
+<h2 id="mcp-工具集4-个">MCP 工具集（4 个）</h2>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>index_codebase</code></td>
+<td>全量索引</td>
+</tr>
+<tr>
+<td><code>search_code</code></td>
+<td>自然语言查询</td>
+</tr>
+<tr>
+<td><code>clear_index</code></td>
+<td>清除（带协作式取消）</td>
+</tr>
+<tr>
+<td><code>get_indexing_status</code></td>
+<td>进度查询</td>
+</tr>
+</tbody>
+</table>
+<h2 id="关键设计决策">关键设计决策</h2>
+<table>
+<thead>
+<tr>
+<th>设计点</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Splitter / Embedding / VectorDB 三层接口</td>
+<td>多组合，避免锁死 OpenAI</td>
+</tr>
+<tr>
+<td>AST 优先，LangChain 兜底</td>
+<td>函数/类边界比固定长度更语义化</td>
+</tr>
+<tr>
+<td>Merkle DAG 文件指纹</td>
+<td>千万行 repo 增量同步</td>
+</tr>
+<tr>
+<td>Hybrid Search + RRF</td>
+<td>语义 + 精确符号双覆盖</td>
+</tr>
+<tr>
+<td>stdout 强制重定向 stderr</td>
+<td>MCP 用 stdout 传 JSON-RPC</td>
+</tr>
+<tr>
+<td>AbortSignal 协作式取消</td>
+<td>issue #199 后台仍在写"已清空"</td>
+</tr>
+<tr>
+<td>Snapshot 自愈</td>
+<td>issue #295 客户端误判触发无限重建</td>
+</tr>
+<tr>
+<td><code>CHUNK_LIMIT = 450000</code></td>
+<td>Milvus 单 collection 上限保护</td>
+</tr>
+</tbody>
+</table>
+<p>完整原则汇总：<a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a>。</p>
+<h2 id="与-claude-mem-的对照">与 claude-mem 的对照</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></th>
+<th><a class="wikilink" href="../entities/claude-context.html">claude-context</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>目标</td>
+<td>跨会话<strong>记忆</strong></td>
+<td>代码库<strong>理解</strong></td>
+</tr>
+<tr>
+<td>数据</td>
+<td>工具调用日志 → 压缩观察</td>
+<td>源代码 → AST 分块</td>
+</tr>
+<tr>
+<td>检索</td>
+<td><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></td>
+<td><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></td>
+</tr>
+<tr>
+<td>增量</td>
+<td>内容哈希去重</td>
+<td><a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">merkle-dag-fingerprint</a></td>
+</tr>
+<tr>
+<td>集成</td>
+<td>Claude Code Lifecycle Hook</td>
+<td><a class="wikilink" href="../entities/mcp.html">MCP</a> 工具</td>
+</tr>
+</tbody>
+</table>
+<p>两者都是 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">AI Agent 外挂</a> 模式的优秀样本。</p>
+<h2 id="git-演进信号">Git 演进信号</h2>
+<p>近 30 天高频改动：<code>core/src/context.ts</code>（12）、<code>mcp/src/handlers.ts</code>（10）、<code>config.ts</code>（7）、<code>sync.ts</code>（6）。</p>
+<p>最近主线：<br>
+1. 后台同步可配置化（#314）— <code>CLAUDE_CONTEXT_BACKGROUND_SYNC</code> env<br>
+2. 取消语义健壮性（#199 / #369）<br>
+3. 多 embedding provider（#366 Gemini Embedding 2）<br>
+4. 多语言支持（#367 Solidity）<br>
+5. 请求级 splitter（#363）</p>
+<p><strong>特征</strong>：接口层稳定，实现层在扩展。典型成熟期开源项目。</p>
+<h2 id="配置示例claude-code">配置示例（Claude Code）</h2>
+<pre><code class="language-bash">claude mcp add claude-context \
+  -e OPENAI_API_KEY=sk-xxx \
+  -e MILVUS_ADDRESS=your-zilliz-endpoint \
+  -e MILVUS_TOKEN=your-zilliz-key \
+  -- npx @zilliz/claude-context-mcp@latest
+</code></pre>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><span class="wikilink wikilink-missing" title="未建页：milvus">milvus</span></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../concepts/code-semantic-search.html">code-semantic-search</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">merkle-dag-fingerprint</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-claude-context-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#解决的核心痛点">解决的核心痛点</a></li><li class=""><a href="#monorepo-架构">Monorepo 架构</a></li><li class="level-3"><a href="#完整系统架构图">完整系统架构图</a></li><li class=""><a href="#三大核心流程">三大核心流程</a></li><li class="level-3"><a href="#索引indexcodebase">索引（`indexCodebase`）</a></li><li class="level-3"><a href="#检索semanticsearch">检索（`semanticSearch`）</a></li><li class="level-3"><a href="#增量同步reindexbychange">增量同步（`reindexByChange`）</a></li><li class=""><a href="#mcp-工具集4-个">MCP 工具集（4 个）</a></li><li class=""><a href="#关键设计决策">关键设计决策</a></li><li class=""><a href="#与-claude-mem-的对照">与 claude-mem 的对照</a></li><li class=""><a href="#git-演进信号">Git 演进信号</a></li><li class=""><a href="#配置示例claude-code">配置示例（Claude Code）</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>
