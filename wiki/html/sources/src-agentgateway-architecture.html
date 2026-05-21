@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>agentgateway 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-13</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>agentgateway 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-13 · 来源：agentgateway-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-infra</span><span class="tag">cloud-native</span><span class="tag">gateway</span><span class="tag">llm</span><span class="tag">mcp</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/agentgateway-architecture-analysis.md</code> · 仓库：<a href="https://github.com/agentgateway/agentgateway">agentgateway/agentgateway</a> · 分析版本 v1.2.0-alpha.2+24（HEAD <code>9ca3e04</code>）</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 是面向 AI 流量的 L7 代理：把 <strong>LLM API</strong>（OpenAI / Anthropic / Gemini / Bedrock / Vertex / Azure / Copilot）、<strong>MCP 工具调用</strong>、<strong>A2A Agent 间通信</strong> 统一在一个 Rust 数据面里，用 <a class="wikilink" href="../entities/gateway-api.html">Gateway API</a> CRD + <span class="wikilink wikilink-missing" title="未建页：xds">xDS</span> 做声明式控制面分发。本质上是「<span class="wikilink wikilink-missing" title="未建页：istio">Istio</span> 的控制面骨架 + 为 AI 协议特化的 Rust 数据面」的组合——把 mesh 经过验证的反应式配置分发、KRT 反应式表、<span class="wikilink wikilink-missing" title="未建页：hbone">HBONE</span> mTLS 隧道全套基建搬来做 AI Gateway。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    K8s[K8s API<br/>kubectl apply CRDs]
+
+    subgraph CP["CONTROL PLANE — Go (controller/)"]
+        direction TB
+        Watch["Watch Gateway / HTTPRoute<br/>+ AGPol / AGBe / AGParams"]
+        KRT["KRT collections<br/>(Istio reactive tables)"]
+        Trans["Translator<br/>K8s → xDS resource.Resource"]
+        ADS["ADS Server<br/>SotW + Delta"]
+        Deployer["Deployer<br/>Helm / Pod"]
+        Watch --> KRT --> Trans --> ADS
+        ADS <--> Deployer
+    end
+
+    subgraph DP["DATA PLANE — Rust (crates/agentgateway*)"]
+        direction TB
+        App["agentgateway-app/<br/>thin binary (signal/tracing)"]
+        Lib["agentgateway/lib"]
+        Ctrl["control/<br/>xDS AdsClient (delta)"]
+        State["state_manager + store/<br/>Stores { binds, discovery, ads }"]
+        subgraph Proxy["proxy/"]
+            Gw["gateway.rs<br/>TCP accept loop"]
+            Http["httpproxy.rs<br/>route + policy"]
+            Tcp["tcpproxy.rs"]
+            Pool["pool (connection)"]
+        end
+        HTTP["http/<br/>filters · retry · transform"]
+        Tport["transport/<br/>HBONE = mTLS HTTP/2"]
+        LLM["llm/<br/>7 providers<br/>AIProvider enum + Provider trait<br/>OpenAI-compat unify"]
+        MCP["mcp/<br/>App/Relay + upstream/<br/>stdio · HTTP · SSE · Streamable<br/>federation · CEL RBAC"]
+        A2A["a2a/<br/>classifier + URL rewriter"]
+        CEL["cel/<br/>cel-fork + celx"]
+        Tel["telemetry/<br/>OTLP + access log"]
+        Mgmt["management/<br/>admin + debug + ui"]
+        App --> Lib
+        Lib --> Ctrl & State & Proxy & HTTP & Tport & LLM & MCP & A2A & CEL & Tel & Mgmt
+    end
+
+    subgraph UI["UI — TypeScript (ui/, Next.js)"]
+        UIH["/ui/ HTTP → management → live config view"]
+    end
+
+    K8s --> Watch
+    ADS -- "gRPC DeltaAggregatedResources<br/>resource.Resource oneof (9 variants):<br/>Bind/Listener/Route/TCPRoute/Backend/<br/>Policy/Workload/Service/RouteGroup" --> Ctrl
+
+    classDef cp fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef dp fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef ui fill:#14532d,stroke:#166534,color:#fff
+    class CP,Watch,KRT,Trans,ADS,Deployer cp
+    class DP,App,Lib,Ctrl,State,Proxy,Gw,Http,Tcp,Pool,HTTP,Tport,LLM,MCP,A2A,CEL,Tel,Mgmt dp
+    class UI,UIH ui
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>                  ┌──────────────────────────────────────────────┐
+                  │  CONTROL PLANE  (Go, controller/)            │
+                  │                                              │
+   K8s API ──▶  ┌─┴────────┐   KRT collections (Istio reactive) │
+                │ Watch     │   ┌─────────────┐                  │
+                │ Gateway   │──▶│ Translator  │                  │
+                │ HTTPRoute │   │ K8s → xDS   │                  │
+                │ CRDs:     │   └──────┬──────┘                  │
+                │  AGPol    │          │                         │
+                │  AGBe     │   ┌──────▼──────┐    ┌──────────┐  │
+                │  AGParams │   │ ADS Server  │◄──▶│ Deployer │  │
+                └───────────┘   │ SotW+Delta  │    │ Helm/Pod │  │
+                  ▲             └──────┬──────┘    └──────────┘  │
+                  │                    │ gRPC                    │
+                  │ kubectl/CRD        │ DeltaAggregatedResources│
+                  └──────┐             │                         │
+                         │             ▼                         │
+   ┌────────────────────────────────────────────────────────────┘
+   │                     │ resource.Resource (oneof 9):
+   │                     │ Bind/Listener/Route/TCPRoute/Backend/
+   │                     │ Policy/Workload/Service/RouteGroup
+   │                     │
+   │  ┌──────────────────▼────────────────────────────────────┐
+   │  │ DATA PLANE (Rust, crates/agentgateway*)               │
+   │  │                                                       │
+   │  │  agentgateway-app/   ← thin binary, signal/tracing    │
+   │  │       │                                               │
+   │  │       └─▶ agentgateway/lib                            │
+   │  │             ├─ control/   xds AdsClient (delta)       │
+   │  │             ├─ state_manager + store/                 │
+   │  │             │     Stores { binds, discovery, ads }    │
+   │  │             ├─ proxy/                                 │
+   │  │             │    ├─ gateway.rs  (TCP accept loop)     │
+   │  │             │    ├─ httpproxy.rs (route + policy)     │
+   │  │             │    ├─ tcpproxy.rs                       │
+   │  │             │    └─ pool (connection)                 │
+   │  │             ├─ http/      (filters, retry, transform) │
+   │  │             ├─ transport/ (HBONE = mTLS HTTP/2)       │
+   │  │             ├─ llm/       7 providers behind          │
+   │  │             │             AIProvider enum + Provider  │
+   │  │             │             trait, OpenAI-compat unify  │
+   │  │             ├─ mcp/       App/Relay + upstream/       │
+   │  │             │             stdio|HTTP|SSE|Streamable   │
+   │  │             │             federation, CEL RBAC        │
+   │  │             ├─ a2a/       classifier + URL rewriter   │
+   │  │             ├─ cel/       crates/cel-fork + celx      │
+   │  │             ├─ telemetry/ OTLP + access log           │
+   │  │             └─ management/ admin + debug + ui         │
+   │  │                                                       │
+   │  └───────────────────────────────────────────────────────┘
+   │
+   │  ┌──────────────────────────────────────────────────────┐
+   │  │ UI (TypeScript, ui/, Next.js)                        │
+   │  │   /ui/ HTTP → management → live config view          │
+   │  └──────────────────────────────────────────────────────┘
+</code></pre>
+</details>
+<h2 id="模块分层">模块分层</h2>
+<h3 id="workspace-顶层">Workspace 顶层</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>语言</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>crates/agentgateway-app/</code></td>
+<td>Rust</td>
+<td>薄壳二进制（信号 / 日志 / panic hook）</td>
+</tr>
+<tr>
+<td><code>crates/agentgateway/</code></td>
+<td>Rust</td>
+<td>数据面主库，三协议网关都在此</td>
+</tr>
+<tr>
+<td><code>crates/xds/</code></td>
+<td>Rust</td>
+<td>xDS 客户端 + proto 绑定</td>
+</tr>
+<tr>
+<td><code>crates/hbone/</code></td>
+<td>Rust</td>
+<td>Istio HBONE（mTLS over HTTP/2 CONNECT）传输</td>
+</tr>
+<tr>
+<td><code>crates/celx/</code> + <code>crates/cel-fork/</code></td>
+<td>Rust</td>
+<td>CEL 策略求值（fork 加 HTTP 集成）</td>
+</tr>
+<tr>
+<td><code>controller/</code></td>
+<td>Go</td>
+<td>controller-runtime + ADS server + Helm deployer</td>
+</tr>
+<tr>
+<td><code>api/</code></td>
+<td>Go</td>
+<td>resource.proto 的 Go 绑定</td>
+</tr>
+<tr>
+<td><code>ui/</code></td>
+<td>TypeScript</td>
+<td>Next.js 管理 UI</td>
+</tr>
+</tbody>
+</table>
+<h3 id="数据面分层cratesagentgatewaysrc">数据面分层（<code>crates/agentgateway/src/</code>）</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>模块</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L1 配置</td>
+<td><code>control/</code> <code>config.rs</code></td>
+<td>本地 yaml + xDS client + outbound client</td>
+</tr>
+<tr>
+<td>L2 状态</td>
+<td><code>state_manager.rs</code> <code>store/</code></td>
+<td>反应式 Store 聚合 binds/discovery/ads</td>
+</tr>
+<tr>
+<td>L3 代理</td>
+<td><code>proxy/gateway.rs</code> <code>proxy/httpproxy.rs</code></td>
+<td>TCP accept → TLS → route → upstream</td>
+</tr>
+<tr>
+<td>L4 HTTP</td>
+<td><code>http/</code></td>
+<td>filter chain / retry / timeout / transform</td>
+</tr>
+<tr>
+<td>L5 协议</td>
+<td><code>llm/</code> <code>mcp/</code> <code>a2a/</code></td>
+<td>三个 AI 协议网关</td>
+</tr>
+<tr>
+<td>L6 横切</td>
+<td><code>cel/</code> <code>telemetry/</code> <code>transport/</code></td>
+<td>策略求值 / 可观测 / HBONE 隧道</td>
+</tr>
+<tr>
+<td>L7 管理</td>
+<td><code>management/</code> <code>ui.rs</code></td>
+<td>管理 HTTP / 健康 / UI 静态资源</td>
+</tr>
+</tbody>
+</table>
+<h3 id="自家-crd">自家 CRD</h3>
+<table>
+<thead>
+<tr>
+<th>CRD</th>
+<th>短名</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AgentgatewayPolicy</code></td>
+<td><code>agpol</code></td>
+<td>CEL 策略容器，挂在 Gateway / Listener / Route 上</td>
+</tr>
+<tr>
+<td><code>AgentgatewayBackend</code></td>
+<td><code>agbe</code></td>
+<td>后端配置：<code>AI</code> / <code>MCP</code> / <code>A2A</code> / <code>Static</code></td>
+</tr>
+<tr>
+<td><code>AgentgatewayParameters</code></td>
+<td>—</td>
+<td>GatewayClass 级 Pod 模板参数</td>
+</tr>
+</tbody>
+</table>
+<p>上游 <a class="wikilink" href="../entities/gateway-api.html">Gateway API</a> 直接复用：<code>Gateway</code> <code>HTTPRoute</code> <code>GRPCRoute</code> <code>TCPRoute</code> <code>TLSRoute</code> <code>GatewayClass</code> <code>ListenerSet</code> <code>InferencePool</code>。</p>
+<h2 id="关键数据流">关键数据流</h2>
+<h3 id="一次-llm-请求的端到端数据流">一次 LLM 请求的端到端数据流</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant C as Client<br/>(curl / OpenAI SDK)
+    participant GW as proxy/gateway.rs<br/>(TCP accept · TLS · HTTP framing)
+    participant HP as proxy/httpproxy.rs<br/>(route · filters · CEL · LB)
+    participant LLM as llm/mod.rs<br/>(AIProvider dispatch)
+    participant CL as client/<br/>(reqwest + hyper + HBONE)
+    participant U as Upstream LLM<br/>(api.openai.com / api.anthropic.com / …)
+
+    C->>GW: POST /v1/chat/completions (model: "gpt-4")
+    activate GW
+    Note over GW: LazyConfigAcceptor → SNI<br/>查 binds → Listener TLS<br/>rustls 终止 → hyper H1/H2
+    GW->>HP: handed off
+    deactivate GW
+
+    activate HP
+    Note over HP: 1. select_route_chain<br/>2. 取 Route + Policy[] + Backend[]<br/>3. header/retry/timeout/transform<br/>4. CEL 授权 allow|deny<br/>5. weighted_random_choice → Backend<br/>6. Backend.kind = AI{provider}
+    HP->>LLM: dispatch by AIProvider enum
+    deactivate HP
+
+    activate LLM
+    Note over LLM: provider.transform_request()<br/>openai · anthropic · gemini · bedrock · vertex · azure · copilot<br/>guardrails (pre) — regex/moderation/model-armor/...<br/>token-bucket · cost limit
+    LLM->>CL: ProviderRequest
+    deactivate LLM
+
+    activate CL
+    Note over CL: connection pool (crates/pool)<br/>若 backend 是 mesh workload → HBONE tunnel<br/>(mTLS + H2 CONNECT)<br/>否则普通 TLS / plaintext
+    CL->>U: provider-native HTTP
+    deactivate CL
+
+    activate U
+    U-->>CL: SSE stream / chunked
+    deactivate U
+
+    activate CL
+    CL-->>LLM: stream chunks
+    deactivate CL
+
+    activate LLM
+    Note over LLM: provider.transform_response()<br/>反向 schema → 统一 OpenAI 格式<br/>guardrails (post)<br/>telemetry: tokens_in/out · cost · latency<br/>access log + OTLP span
+    LLM-->>C: OpenAI-compatible SSE
+    deactivate LLM
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Client (curl / OpenAI SDK)
+  │  POST /v1/chat/completions   (model: &quot;gpt-4&quot;)
+  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ proxy/gateway.rs::run()                                         │
+│    TCP accept (multi-thread tokio runtime)                      │
+│       │                                                         │
+│       ▼ LazyConfigAcceptor                                      │
+│    Peek SNI → 查 binds 找到匹配的 Listener TLS 配置             │
+│       │                                                         │
+│       ▼                                                         │
+│    rustls TLS termination                                       │
+│       │                                                         │
+│       ▼                                                         │
+│    hyper HTTP/1.1 or H2 framing                                 │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ proxy/httpproxy.rs::proxy()                                     │
+│  1. select_route_chain()  ← 按 path / header / method 匹配      │
+│  2. 拿到 Route + Policy[] + Backend[]                           │
+│  3. http/filters 执行：header 修改 / retry / timeout / transform│
+│  4. CEL 授权（cel/ + agpol 引用的策略 IR）                      │
+│     ─ 取请求 header/body/JWT claims → 求值 → allow|deny         │
+│  5. weighted_random_choice 选 Backend                           │
+│       │                                                         │
+│       ▼                                                         │
+│  6. 识别 Backend.kind = AI{provider: OpenAI|...}                │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ llm/mod.rs → dispatch by AIProvider enum                        │
+│   provider.transform_request()                                  │
+│     ├─ openai.rs   passthrough（已是 OpenAI 格式）              │
+│     ├─ anthropic.rs OpenAI → Anthropic messages                 │
+│     ├─ gemini.rs   OpenAI → Gemini generateContent              │
+│     ├─ bedrock.rs  OpenAI → AWS SigV4 + Bedrock invoke          │
+│     ├─ vertex.rs   gcp_auth + OpenAI → Vertex                   │
+│     ├─ azure.rs    OpenAI → Azure OpenAI endpoint               │
+│     └─ copilot.rs  GitHub Copilot                               │
+│   guardrails (pre-flight)                                       │
+│     regex / moderation / model-armor / content-safety / webhook │
+│   token-bucket / cost limit                                     │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ client/  →  reqwest+hyper                                       │
+│   ─ 走 connection pool (crates/pool)                            │
+│   ─ 走 HBONE tunnel  ?  (若 backend 是 mesh workload，          │
+│       transport/hbone：mTLS+H2 CONNECT 隧道)                    │
+│   ─ 否则普通 TLS / plaintext                                    │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+   Upstream LLM provider (api.openai.com / api.anthropic.com / ...)
+       │
+       ▼ 响应（流式 SSE / chunked）
+┌─────────────────────────────────────────────────────────────────┐
+│ provider.transform_response()                                   │
+│   ─ 反向 schema 转换 → 统一 OpenAI 格式                         │
+│   ─ guardrails (post-flight)                                    │
+│   ─ telemetry: tokens_in / tokens_out / cost / latency          │
+│   ─ access log + OTLP span                                      │
+└──────┬──────────────────────────────────────────────────────────┘
+       │
+       ▼
+   Client receives OpenAI-compatible SSE stream
+</code></pre>
+</details>
+<h3 id="控制面--数据面-配置分发">控制面 → 数据面 配置分发</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    K["kubectl apply<br/>Gateway / HTTPRoute / agpol / agbe.yaml"]
+    Watch["controller-runtime watch<br/>→ KRT collection mutate"]
+    Trans["Translator: K8s objs → resource.Resource oneof"]
+    subgraph RES["resource.Resource (oneof 9 variants)"]
+        direction TB
+        R1[Bind — TCP listen addr]
+        R2[Listener — TLS / SNI / protocol]
+        R3[Route — HTTP route + filters]
+        R4[TCPRoute]
+        R5[Backend — AI / MCP / A2A / Service / Static]
+        R6[Policy — CEL IR + transform + retry + ratelimit]
+        R7[RouteGroup]
+        R8[Workload / Service<br/>Istio Address 兼容]
+    end
+    ADS["ADS Server (gRPC)<br/>controller/pkg/xds/server.go<br/>DeltaAggregatedDiscoveryService"]
+    Client["agentgateway / control / AdsClient"]
+    State["state_manager + Stores<br/>{ binds, discovery }"]
+    Rebuild["proxy/gateway<br/>重建 Listener / Route 索引"]
+
+    K --> Watch --> Trans --> RES --> ADS
+    ADS -- "Delta xDS (增量、单连接)" --> Client
+    Client -- apply --> State
+    State -- 触发 --> Rebuild
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>kubectl apply Gateway/HTTPRoute/agpol/agbe.yaml
+      │
+      ▼
+controller-runtime watch → KRT collection mutate
+      │
+      ▼
+Translator: K8s objs → resource.Resource oneof
+   ├─ Bind          (TCP listen addr)
+   ├─ Listener      (TLS / SNI / protocol)
+   ├─ Route         (HTTP route + filters)
+   ├─ TCPRoute
+   ├─ Backend       (AI / MCP / A2A / Service / Static)
+   ├─ Policy        (CEL IR + transform + retry + ratelimit)
+   ├─ RouteGroup
+   └─ Workload/Service (Istio Address 兼容)
+      │
+      ▼
+ADS Server (gRPC, controller/pkg/xds/server.go)
+   DeltaAggregatedDiscoveryService
+      │
+      ▼ Delta xDS（增量）
+agentgateway/control/AdsClient
+      │
+      ▼ apply
+state_manager + Stores { binds, discovery }
+      │
+      ▼ 触发
+proxy/gateway 重建 Listener / Route 索引
+</code></pre>
+</details>
+<p>xDS 资源类型只有两种：<br>
+- <code>istio.workload.Address</code> —— 兼容 <span class="wikilink wikilink-missing" title="未建页：istio">Istio</span> ambient mesh 的 workload/service 发现<br>
+- <code>agentgateway.dev.resource.Resource</code> —— 主资源 oneof（9 个变体覆盖整个数据面状态）</p>
+<p><strong>只用 Delta ADS</strong>，单连接复用，不每种资源一个 stream。</p>
+<h3 id="一次-mcp-工具调用">一次 MCP 工具调用</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Client["MCP Client<br/>(Cursor · Claude Desktop · OpenAI Responses API)"]
+    Router["mcp/router.rs<br/>按 session id 路由到对应上游"]
+    Handler["mcp/handler.rs<br/>工具列表 federation (merge_tools)<br/>多个上游 tools/list 合并<br/>+ CEL RBAC 过滤 (mcp/rbac.rs)"]
+    subgraph UP["mcp/upstream/"]
+        direction LR
+        Stdio["stdio.rs"]
+        SHTTP["streamablehttp.rs"]
+        SSE["sse.rs"]
+        OAPI["openapi.rs<br/>(OpenAPI → MCP 自动桥接)"]
+    end
+    Server["Upstream MCP server<br/>或 OpenAPI endpoint"]
+
+    Client -- "JSON-RPC over stdio · HTTP Streamable · SSE" --> Router
+    Router --> Handler
+    Handler -- "tools/call" --> UP
+    UP --> Server
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>MCP Client (Cursor / Claude Desktop / OpenAI Responses API)
+  │ JSON-RPC over stdio | HTTP Streamable | SSE
+  ▼
+mcp/router.rs  ── 路由层根据 session id 找到对应的上游
+  │
+  ▼
+mcp/handler.rs  ── 工具列表 federation（merge_tools）
+  │     │
+  │     └─ 多个 upstream MCP server 的 tools/list 合并
+  │        + CEL RBAC 过滤（mcp/rbac.rs）
+  │
+  ▼ tools/call
+mcp/upstream/{stdio.rs | streamablehttp.rs | sse.rs | openapi.rs}
+  │
+  ▼
+Upstream MCP server / OpenAPI endpoint
+</code></pre>
+</details>
+<p>下游 transport：HTTP Streamable / SSE / stdio。上游 transport：同三种 + <code>openapi.rs</code> 把任何 OpenAPI spec 自动桥接成 MCP tools（无需上游侧改造）。federation 通过 <code>handler.rs::merge_tools()</code> 合并多个 MCP server 的工具集，命名空间用 <code>__</code> 前缀避冲突，CEL RBAC 按 client identity 过滤可见性。</p>
+<h3 id="a2aagent-to-agent">A2A（Agent-to-Agent）</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Client["Agent Client"]
+    A2A["a2a/mod.rs<br/>拦截 Agent Card 发现请求<br/>透传上游，重写响应 URL<br/>把 upstream 真实地址 → gateway 自身地址"]
+    Up["Upstream Agent"]
+    Followup["之后所有 Agent 调用<br/>都走回 gateway<br/>→ 自然拿到 policy / observability"]
+
+    Client -- "HTTP GET /.well-known/agent-card.json" --> A2A
+    A2A --> Up
+    A2A --> Followup
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Agent Client
+  │ HTTP GET /.well-known/agent-card.json
+  ▼
+a2a/mod.rs  ── 拦截 Agent Card 发现请求
+  │  ─ 透传上游，但 *重写响应里的 URL*
+  │    把 upstream 真实地址换成 gateway 自身地址
+  │  ─ 之后所有 Agent 调用都走回 gateway，自然拿到 policy/observability
+</code></pre>
+</details>
+<p>A2A 是三协议里最轻的——核心就 URL 重写。Google A2A 协议把入口放在 Agent Card well-known endpoint，gateway 控制了发现，就控制了所有后续调用。</p>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li><strong>沿用 <span class="wikilink wikilink-missing" title="未建页：istio">Istio</span> 的基建做 AI Gateway</strong>：Gateway API + KRT collections + xDS + HBONE 全套复用，控制面是 Istio 的影子结构。开发团队（Solo.io / Istio 系）选择不重新发明轮子，把 mesh 经过验证的反应式配置分发 + 反应式表建模 + mTLS 隧道搬来，<strong>只把数据面替换成「专为 AI 协议优化的 Rust 代理」</strong>。Day 1 即获得完整 mesh 兼容性 + 控制面/数据面可独立替换的解耦能力。</li>
+<li><strong>三协议共享同一条 pipeline</strong>：LLM / MCP / A2A 在数据面共享 Route / Policy / Backend / CEL 求值的同一条管道，差别只在 <code>Backend.kind</code> 决定走哪个 provider 适配器。带来单一策略语言 + 统一观测 + 统一 mTLS。</li>
+<li><strong>CEL 作为策略 IR</strong>：所有授权 / 转换 / 速率限制都被编译成 <span class="wikilink wikilink-missing" title="未建页：cel">CEL</span> 表达式存到 <code>Policy.spec.expression</code>，运行时由 Rust 数据面解释执行。controller 不预编译，避免 Go/Rust CEL 实现差异。用 <code>cel-fork + celx</code> 是因为原生 cel-rust 缺与 HTTP 请求对象的深度集成。</li>
+<li><strong>凭据托管堵 prompt injection</strong>：与 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 的 Higress 凭据托管哲学一致——LLM provider 真凭据（OpenAI key / AWS IAM / GCP service account）放在 backend secret，gateway 在请求时注入，Agent / 业务端只面对 gateway 自己的认证（JWT / API key / mTLS）。Agent 即使被注入也偷不到真凭据。详见 <a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a>。</li>
+<li><strong>控制面 / 数据面通过 proto 解耦</strong>：Go controller + Rust 数据面只用 <code>resource.Resource</code> proto 通信，可独立演进。未来能换掉任一端（Crossplane 直产 xDS / envoy 实现 agentgateway proto 扩展）。</li>
+<li><strong>两个 tokio runtime 拆分热路径</strong>：main runtime 跑控制面（admin HTTP / xDS / reload），worker runtime 跑数据面 accept，避免控制面任务抢占 worker 影响 P99。</li>
+<li><strong>OpenAI 兼容 API 做统一前门</strong>：客户端代码零改造接 7 个 LLM provider；非 OpenAI 特性（Gemini 多模态、Bedrock 私有模型）通过扩展字段暴露。</li>
+</ul>
+<h2 id="关键组件深入llm-provider-适配器">关键组件深入：LLM Provider 适配器</h2>
+<p><code>crates/agentgateway/src/llm/</code> 是数据面最厚的协议适配层。统一抽象骨架：</p>
+<pre><code class="language-rust">enum AIProvider {
+    OpenAI, Anthropic, Gemini, Bedrock, Vertex, Azure, Copilot,
+}
+
+trait Provider {
+    async fn transform_request(&amp;self, req: OpenAIRequest) -&gt; ProviderRequest;
+    async fn transform_response(&amp;self, resp: ProviderResponse) -&gt; OpenAIResponse;
+    async fn stream_chunk(&amp;self, chunk: Bytes) -&gt; OpenAIChunk;
+}
+</code></pre>
+<p>外部统一暴露 <strong>OpenAI 兼容 API</strong>（<code>/v1/chat/completions</code> / <code>/v1/embeddings</code>），内部 dispatch 到 provider 双向翻译。</p>
+<p><strong>Guardrails</strong> —— LLM 流量特有的内容审查，pre-flight / post-flight 双向，支持 regex / OpenAI Moderation / AWS Bedrock Guardrails / Google Model Armor / Azure Content Safety / 自定义 webhook，每 backend 按声明顺序串成 chain。</p>
+<p><strong>负载均衡</strong> —— 跨副本走 <strong>two-random-choice</strong>（tail-latency 比 round-robin 稳）；跨 model alias 走 weighted random。</p>
+<h2 id="与-hiclaw--agent-sandbox-的关系">与 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> / <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 的关系</h2>
+<ul>
+<li><strong>跟 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 是不同层次互补</strong>：HiClaw 在应用层做 Agent 协作（Matrix IM + Worker CRD），agentgateway 在基础设施层做 AI 流量代理。HiClaw 的 Worker 跑用户代码访问 LLM / MCP 时，理论上可以让 agentgateway 当出口代理，由 agentgateway 接管凭据 / 审计 / guardrails。</li>
+<li><strong>跟 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 拼成 AI 平台底盘</strong>：agent-sandbox 做 Agent <strong>运行时隔离</strong>（Pod + gVisor / Kata + NetworkPolicy），agentgateway 做 Agent <strong>出口流量治理</strong>（LLM / MCP / A2A）。两者并集 = AI 工作负载完整的"运行 + 通信"治理面。NetworkPolicy 限制 Sandbox Pod 出口只能走 agentgateway，强制所有 AI 流量过 policy + guardrails + 审计。</li>
+</ul>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart LR
+    subgraph Platform["AI Platform Day 0"]
+        direction LR
+        Sandbox["Sandbox (gVisor pod)<br/>Agent code runs here<br/>NetworkPolicy 拒绝直连云元数据"]
+        AGW["agentgateway<br/>route LLM / MCP / A2A<br/>· CEL policy<br/>· Guardrails<br/>· Credential inject"]
+        Sandbox --> AGW
+    end
+    Upstream["api.openai.com<br/>api.anthropic.com<br/>…"]
+    AGW --> Upstream
+
+    classDef sb fill:#14532d,stroke:#166534,color:#fff
+    classDef gw fill:#7c2d12,stroke:#9a3412,color:#fff
+    class Sandbox sb
+    class AGW gw
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌──────────────────────────────────────────────────────┐
+│  AI Platform Day 0                                   │
+│                                                      │
+│  ┌─────────────────────┐    ┌──────────────────────┐ │
+│  │ Sandbox             │    │ agentgateway         │ │
+│  │ (gVisor pod)        │───▶│ (route LLM/MCP/A2A)  │ │
+│  │  Agent code runs    │    │  ─ CEL policy        │ │
+│  │  here, NetworkPolicy│    │  ─ Guardrails        │ │
+│  │  denies直连云元数据 │    │  ─ Credential inject │ │
+│  └─────────────────────┘    └──────────┬───────────┘ │
+│                                        │             │
+└────────────────────────────────────────┼─────────────┘
+                                         ▼
+                            api.openai.com / api.anthropic.com / ...
+</code></pre>
+</details>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> —— 项目主页</li>
+<li><a class="wikilink" href="../entities/mcp.html">mcp</a> —— MCP 协议（agentgateway MCP gateway 的协议基础）</li>
+<li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a> —— K8s Gateway API（agentgateway 控制面 API 基础）</li>
+<li><span class="wikilink wikilink-missing" title="未建页：xds">xds</span> —— xDS 协议（控制面 → 数据面分发）</li>
+<li><span class="wikilink wikilink-missing" title="未建页：hbone">hbone</span> —— Istio HBONE 隧道（agentgateway 跟 mesh 互操作）</li>
+<li><span class="wikilink wikilink-missing" title="未建页：cel">cel</span> —— Common Expression Language（agentgateway 策略 IR）</li>
+<li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span> —— Istio（agentgateway 控制面骨架来源）</li>
+<li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> —— 应用层 Agent 协作平台（互补关系）</li>
+<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> —— K8s SIG 的 AI Agent 运行时隔离（互补关系）</li>
+<li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> —— Agent 外挂设计原则</li>
+<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a> —— Agent 凭据零暴露模式</li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><span class="wikilink wikilink-missing" title="未建页：cel">cel</span></li><li><span class="wikilink wikilink-missing" title="未建页：xds">xds</span></li><li><span class="wikilink wikilink-missing" title="未建页：hbone">hbone</span></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-agentgateway-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class="level-3"><a href="#workspace-顶层">Workspace 顶层</a></li><li class="level-3"><a href="#数据面分层cratesagentgatewaysrc">数据面分层（`crates/agentgateway/src/`）</a></li><li class="level-3"><a href="#自家-crd">自家 CRD</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#一次-llm-请求的端到端数据流">一次 LLM 请求的端到端数据流</a></li><li class="level-3"><a href="#控制面--数据面-配置分发">控制面 → 数据面 配置分发</a></li><li class="level-3"><a href="#一次-mcp-工具调用">一次 MCP 工具调用</a></li><li class="level-3"><a href="#a2aagent-to-agent">A2A（Agent-to-Agent）</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入llm-provider-适配器">关键组件深入：LLM Provider 适配器</a></li><li class=""><a href="#与-hiclaw--agent-sandbox-的关系">与 HiClaw / agent-sandbox 的关系</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el, i) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

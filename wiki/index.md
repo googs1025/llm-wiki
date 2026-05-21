@@ -10,9 +10,6 @@ date: 2026-05-12
 ### 云原生
 - [[kubernetes]] — 容器编排平台，云原生核心（5 篇源文件）
 - [[argocd]] — Kubernetes GitOps 持续交付工具
-- [[gvisor]] — Google 出品的用户态内核容器隔离运行时
-- [[kata-containers]] — OpenInfra 出品的轻量 microVM 容器运行时
-- [[istio]] — CNCF 服务网格（agentgateway 复用其 KRT / xDS / HBONE 基建）
 - [[gateway-api]] — K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）
 
 ### AI Agent / LLM Infra
@@ -21,15 +18,15 @@ date: 2026-05-12
 - [[claude-agent-sdk]] — `@anthropic-ai/claude-agent-sdk`，Agent 编程 SDK
 - [[claude-context]] — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
-- [[milvus]] — 开源向量数据库（dense + sparse + RRF）
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
 - [[agentgateway]] — Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）
 - [[powermem]] — OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
-- [[oceanbase]] — 蚂蚁集团开源的企业级分布式数据库（PowerMem 默认后端，原生向量 + FTS + 图）
 - [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
 - [[vllm]] — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）
 - [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
+- [[nanobot]] — HKUDS 出品的极简个人 AI Agent 框架（Python，事件驱动 8 态状态机 + 17 渠道 + 7 厂商 + MCP）
+- [[agentmemory]] — Rohit Ghumare 出品的本地化跨 Agent 记忆服务（TS + iii-engine + SQLite，三流 RRF + 零 LLM 默认 + 12 hooks + 53 MCP tools + 实时 viewer）
 
 ## 概念 (Concepts)
 
@@ -37,12 +34,6 @@ date: 2026-05-12
 - [[gitops]] — 以 Git 为单一事实来源的运维方法论
 - [[ai-ops]] — AI/LLM 增强运维（告警分诊、根因分析）
 - [[cloud-native-security]] — 云原生安全实践与趋势
-- [[k8s-operator]] — K8s Operator 模式（CRD + reconcile loop）
-- [[k8s-crd]] — CustomResourceDefinition 扩展点
-- [[network-policy]] — K8s NetworkPolicy（L3/L4 网络隔离）
-- [[xds]] — Envoy/Istio 配置发现协议族（agentgateway 控制面分发协议）
-- [[hbone]] — Istio mTLS over HTTP/2 CONNECT 隧道
-- [[cel]] — Google Common Expression Language（agentgateway 策略 IR）
 
 ### Agent 记忆 / 设计模式
 - [[agent-memory]] — Agent 长期记忆领域综述
@@ -81,6 +72,8 @@ date: 2026-05-12
 - [[src-agentgateway-architecture]] — agentgateway 架构（v1.2.0-alpha.2，Istio 系骨架 + Rust 数据面，LLM/MCP/A2A 三协议 AI Gateway）
 - [[src-powermem-architecture]] — PowerMem 架构（v1.1.1，OceanBase 持久化记忆中间件，向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
 - [[src-dynamo-architecture]] — NVIDIA Dynamo 架构（v1.2.0，数据中心级 LLM 推理编排层，分离式 P/D + KV 感知路由 + 四级 KV 缓存 KVBM + SLA 自动扩缩）
+- [[src-nanobot-architecture]] — nanobot 架构（v0.2.0，HKUDS 个人 AI Agent 框架，8 态状态机 + 17 渠道 + Fallback Provider + Mid-turn 注入）
+- [[src-agentmemory-architecture]] — agentmemory 架构（v0.9.21，本地化跨 Agent 记忆服务，iii-engine 总线 + BM25+Vector+Graph 三流 RRF + 12 hooks + 53 MCP tools，零 LLM 压缩默认）
 
 ## 分析 (Analysis)
 
@@ -96,7 +89,7 @@ _暂无条目_
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
 - ingress-nginx — 已退役的 K8s 入口控制器
-- service-mesh — 服务网格（Istio/Cilium/Envoy，istio 已建页）
+- service-mesh — 服务网格（Istio/Cilium/Envoy）
 - containerd — 容器运行时
 - prometheus — 监控系统
 - serverless-wasm — Serverless 与 WebAssembly

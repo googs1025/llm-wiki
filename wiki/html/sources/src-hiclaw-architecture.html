@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HiClaw 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-15</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>HiClaw 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-15 · 来源：hiclaw-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">architecture</span><span class="tag">k8s-operator</span><span class="tag">multi-agent</span><span class="tag">ai-infra</span><span class="tag">agent-platform</span><span class="tag">embedded-k8s</span><span class="tag">kine</span><span class="tag">supervisord</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/hiclaw-architecture-analysis.md</code> · 仓库：<a href="https://github.com/agentscope-ai/HiClaw">agentscope-ai/HiClaw</a> · 分析版本 v1.1.0 (HEAD <code>e21ac83</code>)</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 是把 <span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span> 模式套到 AI Agent 运维上的多 Agent 协作平台——用 4 个 CRD（<code>Worker</code> / <code>Team</code> / <code>Human</code> / <code>Manager</code>）声明 Agent，controller 把每个 Agent 落成"容器 + <span class="wikilink wikilink-missing" title="未建页：matrix-protocol">Matrix</span> IM 用户 + <span class="wikilink wikilink-missing" title="未建页：higress">Higress</span> consumer"三位一体；人类、Manager、Workers 全在同一组 Matrix 房间里协作；真实 LLM API key 永远不落到 Worker，只发 consumer key（<a class="wikilink" href="../concepts/agent-credential-isolation.html">凭据零暴露</a>）。一行 <code>curl | bash</code> 装到 Docker，或 <code>helm install</code> 到 K8s，二者形态对齐。</p>
+<h2 id="核心架构图">核心架构图</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    subgraph USER["用户接入面 (IM-First)"]
+        EW["Element Web (http://localhost:18088)"]
+        MC["any Matrix client (mobile)"]
+    end
+
+    subgraph CTRL["控制平面 — hiclaw-controller (Go)"]
+        direction TB
+        App["cmd/controller/main.go → internal/app/App<br/>initInfraClients · initBackends · initServiceLayer · initReconcilers<br/>initFieldIndexers · initAuth · initHTTPServer"]
+        subgraph REC["4 个 CRD Reconciler (controller-runtime)"]
+            direction LR
+            W["Worker"]
+            T["Team"]
+            H["Human"]
+            M["Manager"]
+        end
+        Prov["internal/service/provisioner.go (1154 行)<br/>· Matrix admin API (user / room / membership)<br/>· Higress gateway auth (consumer key, MCP route)<br/>· Credentials store (refresh, delete, bootstrap admin token)<br/>· AccessResolver (object-storage / ai-gateway scope)"]
+        Back["internal/backend/{docker,kubernetes}.go<br/>WorkerBackend 接口"]
+        HTTP["HTTP API (server/http.go) ← hiclaw CLI<br/>运行模式: startEmbedded (kine etcd:2379, in-binary mgr)<br/>或 startInCluster (KUBECONFIG)"]
+        App --> REC --> Prov --> Back
+        App --> HTTP
+    end
+
+    subgraph DATA["数据 / 执行平面 (容器层)"]
+        direction TB
+        Mgr["Manager 容器 (一个)<br/>manager/agent/<br/>· SOUL.md / TOOLS.md<br/>· 12 个管理 skill<br/>· workers-registry.json"]
+        Wkr["Worker 容器 (N 个，按 CR 数量)<br/>runtime 三选一: openclaw-base / copaw / hermes<br/>共同套件:<br/>· mcporter-servers.json (MCP 路由)<br/>· soul / identity / skills (Worker 人格)<br/>· bridge.py (Matrix sync, 仅 Python runtime)"]
+    end
+
+    subgraph INFRA["基础设施"]
+        direction LR
+        Tw["Tuwunel<br/>(Matrix server)<br/>房间 / 用户 / 消息"]
+        Hi["Higress AI Gateway<br/>(LLM/MCP/OSS 凭据全部托管)"]
+        Mi["MinIO<br/>(Worker 共享文件系统<br/>跨 Agent 协作)"]
+    end
+
+    USER -- "Matrix 协议 (E2E)" --> CTRL
+    CTRL -- "container exec" --> DATA
+    Mgr -- "hiclaw CLI" --> HTTP
+    DATA --> INFRA
+    USER -.-> Tw
+
+    classDef u fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef c fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef d fill:#14532d,stroke:#166534,color:#fff
+    classDef i fill:#5b21b6,stroke:#6d28d9,color:#fff
+    class USER,EW,MC u
+    class CTRL,App,REC,W,T,H,M,Prov,Back,HTTP c
+    class DATA,Mgr,Wkr d
+    class INFRA,Tw,Hi,Mi i
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌──────────────────────────  用户接入面（IM-First）  ──────────────────────────┐
+│                                                                                │
+│       Element Web (http://localhost:18088)  ←──  any Matrix client (mobile)    │
+│                              │                                                  │
+└──────────────────────────────┼──────────────────────────────────────────────────┘
+                               │ Matrix 协议（E2E）
+                               ▼
+┌────────────────────────  控制平面（hiclaw-controller, Go）  ─────────────────────┐
+│  cmd/controller/main.go → internal/app/App                                       │
+│  ┌─────────────────────────────────────────────────────────────────────────┐    │
+│  │  initInfraClients  initBackends  initServiceLayer  initReconcilers       │    │
+│  │  initFieldIndexers initAuth      initHTTPServer                          │    │
+│  └─────────────────────────────────────────────────────────────────────────┘    │
+│                                                                                  │
+│  4 个 CRD Reconciler（controller-runtime）                                       │
+│   ┌──────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐                              │
+│   │ Worker   │ │ Team   │ │ Human    │ │ Manager  │  (api/v1beta1/types.go)      │
+│   └────┬─────┘ └────┬───┘ └────┬─────┘ └────┬─────┘                              │
+│        └────────────┴──────────┴────────────┘                                    │
+│                    │ ProvisionWorker / DeprovisionWorker                          │
+│                    ▼                                                              │
+│        internal/service/provisioner.go (1154 行)                                  │
+│        ├─ Matrix admin API     (创建/删除 user, 创建/退出 room, 邀请成员)         │
+│        ├─ Higress gateway auth (consumer key, MCP route)                          │
+│        ├─ Credentials store    (refresh, delete, bootstrap admin token)           │
+│        └─ AccessResolver       (object-storage / ai-gateway scope 解析)           │
+│                    │                                                              │
+│                    ▼                                                              │
+│        internal/backend/{docker,kubernetes}.go  (WorkerBackend 接口)              │
+│                    │                                                              │
+│  HTTP API (server/http.go) ←─── hiclaw CLI (cmd/hiclaw/main.go)                  │
+│  运行模式：startEmbedded(kine etcd:2379, in-binary mgr) 或 startInCluster(KUBECONFIG)│
+└──────────────────────────────────────────────────────────────────────────────────┘
+                               │ container exec
+                               ▼
+┌─────────────────────  数据/执行平面（容器层）  ───────────────────────────────────┐
+│                                                                                    │
+│  Manager 容器（一个）             Worker 容器（N 个，按 CR 数量）                  │
+│  ┌──────────────────┐             ┌─────────────────────────────────────────────┐ │
+│  │ manager/agent/   │  Matrix     │ runtime 三选一：                             │ │
+│  │  SOUL.md /       │ ◀────────▶ │   • openclaw-base/  (Claude-Code 类)         │ │
+│  │  TOOLS.md /      │             │   • copaw/   (QwenPaw, Python)              │ │
+│  │  12 个管理 skill │             │   • hermes/  (autonomous coding, Python)     │ │
+│  │  workers-        │             │ 共同套件：                                   │ │
+│  │  registry.json   │             │   • mcporter-servers.json (MCP 路由)         │ │
+│  └────────┬─────────┘             │   • soul/identity/skills (Worker 人格)       │ │
+│           │ hiclaw CLI            │   • bridge.py (Matrix sync, 仅 Python runtime)│ │
+│           ▼                       └────┬────────────────────────────────────────┘ │
+│   controller HTTP API                  │                                          │
+└────────────────────────────────────────┼──────────────────────────────────────────┘
+                                         │
+              ┌──────────────────────────┼──────────────────────────┐
+              ▼                          ▼                          ▼
+   ┌──────────────────┐       ┌────────────────────┐      ┌────────────────────┐
+   │ Tuwunel          │       │ Higress AI Gateway │      │ MinIO              │
+   │ (Matrix server)  │       │ (LLM/MCP/OSS 凭据  │      │ (Worker 共享文件   │
+   │ 房间/用户/消息   │       │ 全部托管在网关侧)  │      │ 系统，跨 Agent 协作)│
+   └──────────────────┘       └────────────────────┘      └────────────────────┘
+
+           Helm chart (helm/hiclaw/) 在 K8s 上把上面 4 个组件一并部署
+           install/hiclaw-install.sh / .ps1 在 Docker 单机上等价部署
+</code></pre>
+</details>
+<h2 id="四个-crd">四个 CRD</h2>
+<table>
+<thead>
+<tr>
+<th>CRD</th>
+<th>表达什么</th>
+<th>关键 Spec 字段</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Worker</code></td>
+<td>单个 AI Agent</td>
+<td><code>model</code> · <code>runtime</code>（openclaw/copaw/hermes）· <code>image</code> · <code>soul</code> · <code>skills</code> · <code>mcpServers</code> · <code>package</code>（<code>file://</code> / <code>http(s)://</code> / <code>nacos://</code>）· <code>expose</code> · <code>accessEntries</code> · <code>state</code>（Running/Sleeping/Stopped）</td>
+</tr>
+<tr>
+<td><code>Team</code></td>
+<td>一组 Worker + Leader + 房间策略</td>
+<td><code>leader</code> · <code>workers</code> · <code>peerMentions</code> · <code>channelPolicy</code> · <code>admin</code></td>
+</tr>
+<tr>
+<td><code>Manager</code></td>
+<td>系统唯一的管家 Agent</td>
+<td>model / runtime / soul / skills（含 12 个管理 skill）</td>
+</tr>
+<tr>
+<td><code>Human</code></td>
+<td>管理员的 Matrix 身份</td>
+<td>matrixUserID · channel scope</td>
+</tr>
+</tbody>
+</table>
+<h2 id="模块分层简版">模块分层（简版）</h2>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CRD 定义</strong></td>
+<td><code>api/v1beta1/types.go</code>，仅依赖 <code>k8s.io/apimachinery</code>，不引用任何 internal 包</td>
+</tr>
+<tr>
+<td><strong>应用骨架</strong></td>
+<td><code>internal/app/App</code> 用 7-step init 串行装配，扩展只需 append <code>{name, initFn}</code></td>
+</tr>
+<tr>
+<td><strong>CR Reconciler</strong></td>
+<td>Worker / Team / Human / Manager 4 套，仅做编排，<strong>绝不</strong>直接调外部 API</td>
+</tr>
+<tr>
+<td><strong>服务编排</strong></td>
+<td><code>internal/service/provisioner.go</code>（1154 行，脏活集中地，<span class="wikilink wikilink-missing" title="未建页：k8s-operator">reconcile</span> 的大半在这里）</td>
+</tr>
+<tr>
+<td><strong>容器后端</strong></td>
+<td><code>WorkerBackend</code> 接口 + <code>docker.go</code> / <code>kubernetes.go</code> 两个实现，按 config 选</td>
+</tr>
+<tr>
+<td><strong>基础设施集成</strong></td>
+<td><code>internal/{matrix,gateway,oss,credprovider,accessresolver}/</code> 分别封装 Tuwunel / Higress / MinIO / 阿里云凭据 / 模板解析</td>
+</tr>
+<tr>
+<td><strong>运行模式</strong></td>
+<td><code>startEmbedded</code>（<code>k3s-io/kine</code> SQLite-backed etcd 在 127.0.0.1:2379 + 内嵌 mgr）或 <code>startInCluster</code>（标准 KUBECONFIG）</td>
+</tr>
+<tr>
+<td><strong>Manager Agent</strong></td>
+<td><code>manager/agent/</code> 容器化 orchestrator，12 个管理 skill + <code>workers-registry.json</code>，通过 <code>hiclaw</code> CLI 操作 controller</td>
+</tr>
+<tr>
+<td><strong>Worker runtime</strong></td>
+<td>OpenClaw（<a class="wikilink" href="../entities/claude-code.html">claude-code</a> 系，Dockerfile only）· QwenPaw（Python，<code>copaw/</code>）· Hermes（Python，autonomous coding）</td>
+</tr>
+<tr>
+<td><strong>部署</strong></td>
+<td><code>helm/hiclaw/</code>（K8s）/ <code>install/hiclaw-install.{sh,ps1}</code>（Docker 单机），二者部署形态对齐</td>
+</tr>
+</tbody>
+</table>
+<h2 id="嵌入式模式docker-单机容器内部结构">嵌入式模式（Docker 单机）容器内部结构</h2>
+<p><code>curl | bash</code> 装出来的「Docker 模式」并不是一个容器，而是<strong>一个基础设施容器 + N 个被它创建的 Agent sibling 容器</strong>。两者镜像和职责完全不同：</p>
+<table>
+<thead>
+<tr>
+<th>容器</th>
+<th>镜像 / Dockerfile</th>
+<th>谁启动</th>
+<th>包含什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hiclaw-controller</code></td>
+<td><code>hiclaw-controller/Dockerfile.embedded</code>，基于 <code>higress/all-in-one</code></td>
+<td>用户 <code>docker run</code>（或安装脚本）</td>
+<td>Higress + Tuwunel + MinIO + Element Web/nginx + <code>hiclaw-controller</code> Go 进程 + <code>kube-apiserver</code> 子进程 + kine（嵌在 controller 进程里）</td>
+</tr>
+<tr>
+<td><code>hiclaw-manager</code></td>
+<td><code>manager/Dockerfile</code>，基于 <code>openclaw-base</code></td>
+<td>controller 的 <code>ManagerReconciler</code> 通过 <code>docker.sock</code> 创建</td>
+<td>仅 Manager Agent 进程（OpenClaw / CoPaw）+ <code>hiclaw</code> CLI，<strong>不包含任何基础设施</strong></td>
+</tr>
+<tr>
+<td><code>worker-*</code></td>
+<td>OpenClaw / CoPaw / Hermes 任一 worker 镜像</td>
+<td>同上，由 <code>WorkerReconciler</code> 按 CR 创建</td>
+<td>单个 Worker Agent，bridge.py 通过 consumer key 接入 Matrix</td>
+</tr>
+</tbody>
+</table>
+<h3 id="hiclaw-controller-内部进程树supervisord-管理"><code>hiclaw-controller</code> 内部进程树（supervisord 管理）</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    P["PID 1 — supervisord"]
+    MinioP["minio<br/>MinIO Server (:9000 / 控制台 :9001)"]
+    Tuw["tuwunel<br/>Matrix Homeserver"]
+    APIs["start-apiserver.sh<br/>Higress 自带 apiserver (file storage, :18443)<br/>→ apiserver --storage file --file-root-dir /data"]
+    HCtl["start-controller.sh<br/>Higress Controller"]
+    Pilot["start-pilot.sh<br/>Istio Pilot (Higress 用)<br/>→ pilot-discovery"]
+    GW["start-gateway.sh<br/>Higress Gateway<br/>higress-proxy-start.sh<br/>· supercronic<br/>· pilot-agent → envoy<br/>AI Gateway 数据面 (:8080)"]
+    Con["start-console.sh<br/>Higress Console (:8001)<br/>java -jar higress-console.jar"]
+    Nx["nginx (master/worker)<br/>Element Web 静态文件 (:18088)"]
+    Mc["start-mc-mirror.sh<br/>MinIO Client 同步守护"]
+    HCt["hiclaw-controller<br/>Go controller 主进程 (:8090 HTTP API)<br/>↳ kube-apiserver (由 controller fork, :6443)<br/>　etcd 后端 = 进程内嵌 kine<br/>　证书/token 在 /data/hiclaw-controller/pki/"]
+
+    P --> MinioP & Tuw & APIs & HCtl & Pilot & GW & Con & Nx & Mc & HCt
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>PID 1  supervisord
+├── minio                                  ← MinIO Server (:9000 / 控制台 :9001)
+├── tuwunel                                ← Matrix Homeserver
+├── start-apiserver.sh                     ← Higress 自带 apiserver (file storage, :18443)
+│   └── apiserver --storage file --file-root-dir /data
+├── start-controller.sh                    ← Higress Controller
+├── start-pilot.sh                         ← Istio Pilot (Higress 用)
+│   └── pilot-discovery
+├── start-gateway.sh                       ← Higress Gateway
+│   └── higress-proxy-start.sh
+│       ├── supercronic
+│       └── pilot-agent ── envoy           ← AI Gateway 数据面 (:8080)
+├── start-console.sh                       ← Higress Console (:8001)
+│   └── java -jar higress-console.jar
+├── nginx (master/worker)                  ← Element Web 静态文件 (:18088)
+├── start-mc-mirror.sh                     ← MinIO Client 同步守护
+└── hiclaw-controller                      ← Go controller 主进程 (:8090 HTTP API)
+    └── kube-apiserver                     ← 由 controller fork (:6443)
+                                             etcd 后端 = 进程内嵌 kine
+                                             证书/token 在 /data/hiclaw-controller/pki/
+</code></pre>
+</details>
+<blockquote>
+<p>关键点：<code>kube-apiserver</code> (PID = controller 的子进程) 与 Higress 自带的 <code>apiserver</code>（监听 18443，给 Istio Pilot 用的 file-storage 简易 apiserver）<strong>不是一个东西</strong>。前者是真 K8s API（用 6443），后者是 Higress 内部配置存储，互不读取对方数据。</p>
+</blockquote>
+<h3 id="嵌入式-k8s-的本质只搬控制面不搬节点">嵌入式 K8s 的本质：只搬控制面，不搬节点</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart LR
+    subgraph REAL["真 K8s 集群"]
+        direction TB
+        R1["kube-apiserver"]
+        R2["etcd"]
+        R3["kube-controller-mgr"]
+        R4["kube-scheduler"]
+        R5["kubelet / CNI / CRI"]
+    end
+    subgraph EMB["hiclaw-controller 容器内"]
+        direction TB
+        E1["kube-apiserver (:6443, --bind-address=127.0.0.1)"]
+        E2["kine (SQLite, /data 落盘, 嵌在 hiclaw-controller 进程里)"]
+        E3["hiclaw-controller 自己充当 4 个 CRD 的 reconciler"]
+        E4["(无 Pod 概念)"]
+        E5["workload 走宿主机 docker.sock 起 sibling 容器"]
+    end
+
+    R1 -- "✅ 搬" --> E1
+    R2 -- "✅ 搬" --> E2
+    R3 -- "❌ 不搬" --> E3
+    R4 -- "❌ 不搬" --> E4
+    R5 -- "❌ 不搬" --> E5
+
+    classDef real fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef emb fill:#7c2d12,stroke:#9a3412,color:#fff
+    class REAL,R1,R2,R3,R4,R5 real
+    class EMB,E1,E2,E3,E4,E5 emb
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>真 K8s 集群                   hiclaw-controller 容器内
+─────────────                ────────────────────────
+kube-apiserver       ✅  →   kube-apiserver (:6443, --bind-address=127.0.0.1)
+etcd                 ✅  →   kine (SQLite, /data 落盘，嵌在 hiclaw-controller 进程里)
+kube-controller-mgr  ❌      ← hiclaw-controller 自己充当 4 个 CRD 的 reconciler
+kube-scheduler       ❌      ← 没有 Pod 概念
+kubelet / CNI / CRI  ❌      ← workload 走宿主机 docker.sock 起 sibling 容器
+</code></pre>
+</details>
+<p>K8s 在这里只承担两件事：<strong>CRD 存储</strong>（<code>Worker / Manager / Team / Human</code> 当 K8s 资源写入 kine）+ <strong>声明式 watch/reconcile 接口</strong>（controller-runtime 标准模式）。真正的 workload 容器<strong>不在 K8s 里跑</strong>，而是 <code>backend.DockerBackend</code> 通过宿主机 <code>/var/run/docker.sock</code> 直接 <code>docker create</code>——和 K8s 模式（<code>HICLAW_RUNTIME=k8s</code>）共用同一份 controller 代码、同一套 CRD，只切 backend 实现，零分叉。</p>
+<h3 id="为什么-kubectl-在容器外不通">为什么 <code>kubectl</code> 在容器外不通</h3>
+<p>读完上面就能理解三个限制：</p>
+<ol>
+<li><code>kube-apiserver --bind-address=127.0.0.1</code>（<code>internal/apiserver/embedded.go:102</code>），端口未对外暴露；</li>
+<li>controller 直接构造 <code>rest.Config</code> 内存对象，<strong>不写 kubeconfig 文件</strong>（<code>embedded.go:128-134</code>）；</li>
+<li>容器里<strong>没有装 <code>kubectl</code></strong>，因为日常运维设计入口是 <code>hiclaw</code> CLI——controller 启动时 <code>bootstrapAdminCLIToken</code> 已经把长期 admin token 写入 <code>/var/run/hiclaw/cli-token</code>，<code>docker exec hiclaw-controller hiclaw get worker</code> 直接可用，省掉 TLS + token 链路。</li>
+</ol>
+<p>要直接调 K8s API（应急场景），凭证在容器内的位置是：</p>
+<pre><code>/data/hiclaw-controller/admin-token       ← Bearer token（system:masters 组）
+/data/hiclaw-controller/pki/ca.crt        ← API server CA
+/data/hiclaw-controller/pki/token.csv     ← apiserver 的静态 token 表
+</code></pre>
+<p><code>curl</code> 一行验证 CRD 数据存在：</p>
+<pre><code class="language-bash">TOKEN=$(docker exec hiclaw-controller cat /data/hiclaw-controller/admin-token)
+docker exec hiclaw-controller curl -s --cacert /data/hiclaw-controller/pki/ca.crt \
+  -H &quot;Authorization: Bearer $TOKEN&quot; \
+  https://127.0.0.1:6443/apis/hiclaw.io/v1beta1/managers | jq '.items[].metadata.name'
+</code></pre>
+<h2 id="关键数据流建一个-worker-端到端">关键数据流：建一个 Worker 端到端</h2>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TD
+    Admin["管理员 (Element Web 中)<br/>发送 Matrix 消息: '帮我建一个 Go 代码评审 Worker'"]
+    Mgr["Manager Agent 容器 (manager/agent)<br/>· 加载 worker-management skill (TOOLS.md 路由)<br/>· 决定参数 (model / runtime / soul / skills / mcp-servers)<br/>· 调 hiclaw CLI: hiclaw worker create --name go-review …"]
+    CLI["hiclaw CLI (cmd/hiclaw/main.go) — HTTP POST → controller server/http.go"]
+    Write["写入 Worker CR<br/>(embedded: kine sqlite / in-cluster: etcd)"]
+    Watch["controller-runtime watch 触发<br/>worker_controller.Reconcile()"]
+
+    P1["[1] Provisioner.ProvisionWorker(ctx, req)<br/>· Matrix admin API → 创建 user @go-review:hiclaw.local<br/>· Matrix admin API → 创建 1on1 房间，邀请管理员 + Manager<br/>· Higress apig API → 注册 consumer + 颁发 consumer key<br/>· AccessResolver → 解析 AccessEntries 模板 (${self.name}…)<br/>　→ 调 credprovider 申请 MinIO 桶权限<br/>· Credentials store → 写入 secret + 设 refresh 时刻"]
+    P2["[2] WorkerBackend.CreateWorker(spec)<br/>docker.go 或 kubernetes.go (依 config)<br/>→ 挂载 PodTemplate + 环境变量 + soul/identity/skills 卷<br/>→ 启动 Worker 容器"]
+    P3["[3] member_reconcile.go<br/>把 Worker Matrix user 加入相关 Team 房间 (如有)"]
+    P4["[4] 更新 Worker.Status<br/>Phase = Running<br/>MatrixUserID = '@go-review:hiclaw.local'<br/>RoomID = '!abc...:hiclaw.local'<br/>ContainerState = 'running'<br/>ExposedPorts = […]   (若 Spec.Expose 有端口)"]
+
+    Boot["Worker 容器启动后<br/>· Python runtime (copaw/hermes): bridge.py 用 consumer key 登录 Matrix，订阅自己的房间<br/>· OpenClaw runtime: 宿主 Claude Code 自带 hook 完成同等动作"]
+    Done["管理员立刻在 Element Web 看到 @go-review 出现并打招呼<br/>后续的代码评审请求可直接 @"]
+
+    Admin --> Mgr --> CLI --> Write --> Watch
+    Watch --> P1 --> P2 --> P3 --> P4 --> Boot --> Done
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>管理员（Element Web 中）
+      │ 发送 Matrix 消息：&quot;帮我建一个 Go 代码评审 Worker&quot;
+      ▼
+Manager Agent 容器（manager/agent）
+      │ 加载 worker-management skill (TOOLS.md 路由)
+      │ 决定参数（model / runtime / soul / skills / mcp-servers）
+      │ 调 hiclaw CLI: `hiclaw worker create --name go-review …`
+      ▼
+hiclaw CLI (cmd/hiclaw/main.go) ── HTTP POST ──▶ controller server/http.go
+                                                       │
+                                                       ▼
+                                                 写入 Worker CR
+                                          (embedded: kine sqlite / in-cluster: etcd)
+      ┌─────────────── controller-runtime watch 触发 ───────────────┐
+      ▼
+worker_controller.Reconcile()
+      │
+      ├─[1] Provisioner.ProvisionWorker(ctx, req):
+      │      Matrix admin API → 创建 user @go-review:hiclaw.local
+      │      Matrix admin API → 创建 1on1 房间，邀请管理员 + Manager
+      │      Higress apig API → 注册 consumer + 颁发 consumer key
+      │      AccessResolver  → 解析 AccessEntries 模板（${self.name}…）
+      │                       → 调 credprovider 申请 MinIO 桶权限
+      │      Credentials store → 写入 secret + 设 refresh 时刻
+      │
+      ├─[2] WorkerBackend.CreateWorker(spec):
+      │      docker.go 或 kubernetes.go（依 config）
+      │      → 把 PodTemplate + 环境变量 + soul/identity/skills 卷挂上
+      │      → 启动 Worker 容器
+      │
+      ├─[3] member_reconcile.go：
+      │      把 Worker Matrix user 加入相关 Team 房间（如有）
+      │
+      └─[4] 更新 Worker.Status：
+            Phase = Running
+            MatrixUserID = &quot;@go-review:hiclaw.local&quot;
+            RoomID       = &quot;!abc...:hiclaw.local&quot;
+            ContainerState = &quot;running&quot;
+            ExposedPorts   = [...]   ← 若 Spec.Expose 有端口
+      │
+      ▼
+Worker 容器启动后：
+   - Python runtime (copaw/hermes)：bridge.py 用 consumer key 登录 Matrix，订阅自己的房间
+   - OpenClaw runtime：宿主 Claude Code 自带 hook 完成同等动作
+      │
+      ▼
+管理员立刻在 Element Web 看到 @go-review 出现并打招呼；后续的代码评审请求可直接 @
+</code></pre>
+</details>
+<h3 id="稳态通信信道">稳态通信信道</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart LR
+    W["Worker 容器"]
+    HG["Higress AI Gateway<br/>(凭据托管)"]
+    LLM["LLM provider"]
+    MCP["MCP server<br/>(external 或 in-cluster)"]
+    Tw["Tuwunel<br/>(Matrix)"]
+    Mi["MinIO<br/>(大文件)"]
+    Hu["Human (Element Web)"]
+    Wo["其他 Worker"]
+    Mg["Manager 容器<br/>(内含 hiclaw CLI)"]
+    Ctrl["controller"]
+    KV["etcd / kine"]
+
+    W -- "consumer key" --> HG -- "真实 API key" --> LLM
+    W -- "consumer key → route" --> HG -- "route" --> MCP
+    W <--> Tw
+    Wo <--> Tw
+    Hu <--> Tw
+    W -- "大文件 (节省 token)" --> Mi
+    Wo -- "大文件" --> Mi
+    Mg -- "HTTP" --> Ctrl -- "CR write" --> KV
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>Worker → LLM:    Worker 容器 ─consumer key→ Higress AI Gateway ─真实 API key→ LLM provider
+Worker ↔ Worker: 双方都加入同一 Matrix 房间，消息走 Tuwunel；大文件落 MinIO（节省 token）
+Worker ↔ Human:  Matrix 房间（管理员是房间成员，可以随时介入）
+Worker → 工具:    Worker 容器 ─consumer key→ Higress ─route→ MCP server（external 或 in-cluster）
+Manager → 控制器: Manager 容器内的 hiclaw CLI ─HTTP→ controller ─CR write→ etcd/kine
+</code></pre>
+</details>
+<h2 id="设计决策与哲学">设计决策与哲学</h2>
+<ul>
+<li>
+<p><strong><a class="wikilink" href="../concepts/declarative-agent-management.html">声明式 Agent 运维</a></strong>：Agent 是 CR 不是对象。免费拿到 K8s 的 declarative / reconcile / self-healing / RBAC——这是 HiClaw 与 <span class="wikilink wikilink-missing" title="未建页：langgraph">langgraph</span> / <span class="wikilink wikilink-missing" title="未建页：autogen">autogen</span> / <span class="wikilink wikilink-missing" title="未建页：crewai">crewai</span> 这类「代码中编排 Agent」框架的根本不同。</p>
+</li>
+<li>
+<p><strong>IM 协议作为协作平面 lingua franca</strong>：选 <span class="wikilink wikilink-missing" title="未建页：matrix-protocol">Matrix</span> 而非自研 Web UI/事件总线——每个 Agent 是 IM 用户，每场协作是 IM 房间，人类天然是房间成员，<strong>可观测性与人在回路同时拿到</strong>，避免两个大坑。代价：所有 Agent 都要做 Matrix 适配。</p>
+</li>
+<li>
+<p><strong><a class="wikilink" href="../concepts/agent-credential-isolation.html">凭据零暴露</a></strong>：Worker 永远拿不到真实 API key / GitHub PAT / OSS AK，只持 <span class="wikilink wikilink-missing" title="未建页：higress">Higress</span> consumer key。结果：<a class="wikilink" href="../entities/mcp.html">MCP</a> 工具市场和 skills 市场可以大胆装载社区作品——即便 Worker 被 prompt injection 攻陷，攻击者拿到的也只是可被即时 revoke 的 consumer key。</p>
+</li>
+<li>
+<p><strong>运行时三选一可插</strong>：<code>WorkerSpec.Runtime</code> 字段切换 OpenClaw（<a class="wikilink" href="../entities/claude-code.html">claude-code</a> 系）/ QwenPaw（Qwen Code 系，省钱）/ Hermes（autonomous coding agent，自主）。最近 commit <code>d3e33e8</code> 把默认 runtime 从 OpenClaw 切到 QwenPaw，价格敏感倾向明显。</p>
+</li>
+<li>
+<p><strong>容器后端双轨</strong>：<code>WorkerBackend</code> 接口 + <code>docker.go</code> / <code>kubernetes.go</code> 两实现，让"单机 Docker Desktop 跑 5 个 Worker"与"K8s 集群跑 500 个 Worker"共用同一 controller 二进制。</p>
+</li>
+<li>
+<p><strong>嵌入式 K8s（<span class="wikilink wikilink-missing" title="未建页：kine">kine</span> + 内嵌 controller-manager）</strong>：单机模式跑 kine（SQLite-backed etcd）+ 同进程的 controller-manager，于 127.0.0.1:2379。<strong>用户感觉装了 Docker，骨子里是 K8s API</strong>——CRD / Reconcile / Helm 在无真 K8s 环境也成立。</p>
+</li>
+<li>
+<p><strong>schema-less 模板字段</strong>：<code>AccessEntry.Scope</code> 用 <code>*apiextensionsv1.JSON</code> 而非严格 struct，支持 <code>${self.name}</code> / <code>${self.kind}</code> / <code>${self.namespace}</code> 运行期变量。CRD 不绑死特定 cloud provider；解析延迟到 <code>accessresolver</code>。</p>
+</li>
+<li>
+<p><strong><code>hiclaw</code> CLI 注入 Manager / Worker 容器</strong>：Manager Agent 不引用 Go SDK，通过 fork CLI 操作 controller HTTP API——让 skill（markdown 文档）可以直接生成 <code>hiclaw worker create …</code> 这种命令字符串。</p>
+</li>
+<li>
+<p><strong><a class="wikilink" href="../entities/mcp.html">MCP</a> via <span class="wikilink wikilink-missing" title="未建页：nacos">Nacos</span> 包市场</strong>：Worker 能力通过 <code>WorkerSpec.Package</code> 字段（<code>nacos://</code> / <code>http(s)://</code> / <code>file://</code>）按需加载。Manager 侧的 <code>hiclaw-find-worker</code> skill 就是做 Nacos 搜索 + 导入。Worker 模板像 docker 镜像一样可分发。</p>
+</li>
+</ul>
+<h2 id="关键组件深入provisioner">关键组件深入：Provisioner</h2>
+<p><code>internal/service/provisioner.go</code>（1154 行 / 29 公开方法）是 controller 的脏活集中地，可分三组：</p>
+<ol>
+<li><strong>Matrix 编排</strong>（<code>ProvisionWorker</code> / <code>ProvisionTeamRooms</code> / <code>EnsureRoomMember</code> / <code>ReconcileRoomMembership</code> …）——通过 Tuwunel admin API 完成 user / room / membership / alias 全生命周期；<code>MatrixUserID(name)</code> 与 <code>roomAliasLocalpart(kind, name)</code> 是命名规则集中点，保证幂等。</li>
+<li><strong>Higress 凭据</strong>（<code>EnsureManagerGatewayAuth</code> / <code>EnsureWorkerGatewayAuth</code> / <code>RefreshCredentials</code> / <code>DeleteCredentials</code>）——用 <code>alibabacloud-go/apig-20240327/v6</code> 在 Higress 上为每个 Agent 注册 consumer + key。</li>
+<li><strong>Manager 引导</strong>（<code>IsManagerLLMAuthReady</code> / <code>IsManagerJoinedDM</code> / <code>SendManagerWelcomeMessage</code>）——容器首启时检查 Manager 是否就绪 + 投递欢迎语（按 <code>language</code> / <code>timezone</code> 渲染）。</li>
+</ol>
+<p><strong>横向拆分时机已到</strong>：按 Matrix / Higress / Credentials / Manager-bootstrap 四个域拆到独立文件，<code>Provisioner</code> 退化为外观。</p>
+<h2 id="与同类对比">与同类对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></th>
+<th><span class="wikilink wikilink-missing" title="未建页：autogen">autogen</span></th>
+<th><span class="wikilink wikilink-missing" title="未建页：langgraph">langgraph</span></th>
+<th><span class="wikilink wikilink-missing" title="未建页：crewai">crewai</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>形态</td>
+<td>K8s operator + 容器化</td>
+<td>Python library</td>
+<td>Python library</td>
+<td>Python library</td>
+</tr>
+<tr>
+<td>Agent 表达</td>
+<td>CR (YAML)</td>
+<td>Python class</td>
+<td>StateGraph node</td>
+<td>Crew/Agent class</td>
+</tr>
+<tr>
+<td>部署单元</td>
+<td>Pod / Container</td>
+<td>进程</td>
+<td>进程</td>
+<td>进程</td>
+</tr>
+<tr>
+<td>协作面</td>
+<td>Matrix 房间</td>
+<td>In-process bus</td>
+<td>StateGraph 边</td>
+<td>Crew 内调度</td>
+</tr>
+<tr>
+<td>人在回路</td>
+<td>默认（房间成员）</td>
+<td>需自接 UI</td>
+<td>需自接 UI</td>
+<td>需自接 UI</td>
+</tr>
+<tr>
+<td>凭据模型</td>
+<td>网关托管</td>
+<td>Agent 持真 key</td>
+<td>Agent 持真 key</td>
+<td>Agent 持真 key</td>
+</tr>
+<tr>
+<td>跨 Agent 文件</td>
+<td>MinIO 桶</td>
+<td>自实现</td>
+<td>自实现</td>
+<td>自实现</td>
+</tr>
+</tbody>
+</table>
+<p>最大差异：<strong>HiClaw 把 Agent 当 K8s 一等公民资源</strong>，所以是"可被 reconcile 自愈 / 可被 helm 上线 / 可被 RBAC 限定"的东西。其余框架本质是"在你进程里跑一段 Python"，做企业级运维要重头补。代价：学习曲线高、每 Worker 一个容器有 RAM / 镜像开销。</p>
+<h2 id="演进信号">演进信号</h2>
+<ul>
+<li>近 30 天最活跃：<code>install/hiclaw-install.sh</code>（20）· <code>internal/service/provisioner.go</code>（12）· <code>api/v1beta1/types.go</code>（12）· <code>internal/config/config.go</code>（11）→ 主线是"装上 / 升级体验" + "controller 核心模型稳定"</li>
+<li>关键 PR：<code>#780</code> 默认 runtime → QwenPaw · <code>#749</code> <code>--keep-all</code> 升级 · <code>#783</code> <code>helm uninstall</code> 残留清理 · <code>#785</code> manager 容器 API 对齐 controller <code>/api/v1</code> · <code>#798</code> <code>error()</code> 多行安全</li>
+<li>v1.0 → v1.1 阶段，下一步看点：Hermes runtime 主线化、多租户 RBAC、kine → 真 etcd 平滑迁移工具</li>
+</ul>
+<h2 id="相关页面">相关页面</h2>
+<ul>
+<li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li>
+<li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li>
+<li><span class="wikilink wikilink-missing" title="未建页：higress">higress</span> · <span class="wikilink wikilink-missing" title="未建页：matrix-protocol">matrix-protocol</span> · <a class="wikilink" href="../entities/mcp.html">mcp</a> · <span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li>
+<li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li>
+<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li>
+<li><span class="wikilink wikilink-missing" title="未建页：autogen">autogen</span> · <span class="wikilink wikilink-missing" title="未建页：langgraph">langgraph</span> · <span class="wikilink wikilink-missing" title="未建页：crewai">crewai</span></li>
+</ul>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><span class="wikilink wikilink-missing" title="未建页：higress">higress</span></li><li><span class="wikilink wikilink-missing" title="未建页：matrix-protocol">matrix-protocol</span></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><span class="wikilink wikilink-missing" title="未建页：kine">kine</span></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-hiclaw-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#四个-crd">四个 CRD</a></li><li class=""><a href="#模块分层简版">模块分层（简版）</a></li><li class=""><a href="#嵌入式模式docker-单机容器内部结构">嵌入式模式（Docker 单机）容器内部结构</a></li><li class="level-3"><a href="#hiclaw-controller-内部进程树supervisord-管理">`hiclaw-controller` 内部进程树（supervisord 管理）</a></li><li class="level-3"><a href="#嵌入式-k8s-的本质只搬控制面不搬节点">嵌入式 K8s 的本质：只搬控制面，不搬节点</a></li><li class="level-3"><a href="#为什么-kubectl-在容器外不通">为什么 `kubectl` 在容器外不通</a></li><li class=""><a href="#关键数据流建一个-worker-端到端">关键数据流：建一个 Worker 端到端</a></li><li class="level-3"><a href="#稳态通信信道">稳态通信信道</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入provisioner">关键组件深入：Provisioner</a></li><li class=""><a href="#与同类对比">与同类对比</a></li><li class=""><a href="#演进信号">演进信号</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>

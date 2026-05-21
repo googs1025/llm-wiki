@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>claude-mem 架构与设计思路分析 · llm-wiki</title>
+  <link rel="stylesheet" href="../../html-assets/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">wiki · sources</span>
+  <span class="spacer"></span>
+  <span class="meta">2026-05-12</span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<div class="layout">
+  <main class="content">
+
+  <h1>claude-mem 架构与设计思路分析</h1>
+  <p class="subtitle">2026-05-12 · 来源：claude-mem-architecture-analysis.md</p>
+  <div class="tags"><span class="tag">agent-memory</span><span class="tag">claude-code</span><span class="tag">architecture</span><span class="tag">llm-infra</span></div>
+
+  <blockquote>
+<p>原文：<code>raw/claude-mem-architecture-analysis.md</code> · 仓库：<a href="https://github.com/thedotmack/claude-mem">thedotmack/claude-mem</a> · 分析版本 v13.1.0</p>
+</blockquote>
+<h2 id="一句话定位">一句话定位</h2>
+<p><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 是给 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> 装上"长期记忆"的开源插件——通过宿主的 6 个 Lifecycle Hook <strong>无侵入采集</strong>工具调用，用 <a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a> 异步压缩成结构化"观察 (observation)"，存进本地 SQLite + Chroma 双索引；下次开会话时自动检索相关历史并注入上下文。</p>
+<h2 id="核心架构三层">核心架构（三层）</h2>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>组件</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>边缘层</strong></td>
+<td><code>bun-runner.js</code> + 6 个 hook handler</td>
+<td>轻量 stdin 接力，<strong>禁止做 AI 推理</strong></td>
+</tr>
+<tr>
+<td><strong>后台层</strong></td>
+<td>Worker Service (Express daemon, 端口 <code>37700 + uid%100</code>) + BullMQ</td>
+<td>异步压缩、入库、向量同步</td>
+</tr>
+<tr>
+<td><strong>存储层</strong></td>
+<td>SQLite (FTS5 全文) + Chroma (向量)</td>
+<td>双索引</td>
+</tr>
+</tbody>
+</table>
+<p>详见 <a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a>。</p>
+<h3 id="完整架构图">完整架构图</h3>
+<div class="mermaid-wrap"><div class="mermaid">
+flowchart TB
+    subgraph CC["CLAUDE CODE 运行时"]
+        direction TB
+        subgraph HOOKS["事件钩子 — plugin/hooks/hooks.json 注册的 6 个 Lifecycle 钩子"]
+            direction LR
+            H1["SessionStart"]
+            H2["UserPromptSub"]
+            H3["PreToolUse(Read)"]
+            H4["PostToolUse"]
+        end
+        Bun["bun-runner.js<br/>轻量 stdin 接力 → 派发 worker-service 子命令"]
+        HOOKS --> Bun
+    end
+
+    subgraph WS["Worker Service — Express daemon"]
+        direction TB
+        WSrv["src/services/worker-service.ts<br/>端口: 37700 + (uid % 100) · PID: ~/.claude-mem/worker.pid"]
+        Routes["路由层 (7 组 Routes)<br/>/api/context/* · /api/sessions/* · /api/observations<br/>/api/search/* · /api/memory/save · /api/chroma/status · /v1/*"]
+        Prov["Providers<br/>Claude / Gemini / OR<br/>(Agent SDK 调用)"]
+        RP["ResponseProcessor<br/>XML → Observation<br/>事务批量入库"]
+        CS["ChromaSync<br/>向量同步 + watermark 回填"]
+        WSrv --> Routes
+        Prov --> RP --> CS
+    end
+
+    SQ["SQLite — ~/.claude-mem/.db<br/>observations / FTS5 · sessions / prompts"]
+    Ch["Chroma 向量库 — ~/.claude-mem/chroma<br/>语义检索"]
+
+    subgraph CONS["消费者"]
+        direction LR
+        Sk["mem-search Skill<br/>3 层搜索协议<br/>search → timeline → get_observations"]
+        UI["Viewer UI (React)<br/>SSE 流式渲染<br/>时间线 / 观察列表"]
+    end
+
+    CC -- "HTTP / 进程派发" --> WS
+    RP --> SQ
+    CS --> Ch
+    SQ --> Sk
+    SQ --> UI
+    Ch --> Sk
+    Ch --> UI
+
+    classDef cc fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef ws fill:#7c2d12,stroke:#9a3412,color:#fff
+    classDef st fill:#14532d,stroke:#166534,color:#fff
+    classDef cn fill:#5b21b6,stroke:#6d28d9,color:#fff
+    class CC,HOOKS,H1,H2,H3,H4,Bun cc
+    class WS,WSrv,Routes,Prov,RP,CS ws
+    class SQ,Ch st
+    class CONS,Sk,UI cn
+</div></div>
+<details class="ascii"><summary>原 ASCII 图</summary>
+<pre><code>┌─────────────────────────  CLAUDE CODE 运行时  ─────────────────────────┐
+│                                                                          │
+│  事件钩子（plugin/hooks/hooks.json 注册的 6 个 Lifecycle 钩子）           │
+│  ┌────────────┐ ┌──────────────┐ ┌────────────────┐ ┌─────────────┐    │
+│  │SessionStart│ │UserPromptSub │ │PreToolUse(Read)│ │PostToolUse  │    │
+│  └─────┬──────┘ └──────┬───────┘ └────────┬───────┘ └──────┬──────┘    │
+│        │               │                  │                │           │
+│        ▼               ▼                  ▼                ▼           │
+│   bun-runner.js（轻量 stdin 接力 → 派发 worker-service 子命令）           │
+└─────────────────────────────┬───────────────────────────────────────────┘
+                              │ HTTP / 进程派发
+                              ▼
+┌────────────────────  Worker Service (Express daemon)  ────────────────────┐
+│  src/services/worker-service.ts                                            │
+│  端口: 37700 + (uid % 100)  •  PID: ~/.claude-mem/worker.pid               │
+│                                                                            │
+│  路由层（7 组 Routes）                                                     │
+│   /api/context/*   /api/sessions/*   /api/observations                     │
+│   /api/search/*    /api/memory/save  /api/chroma/status   /v1/*            │
+│                                                                            │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────────┐    │
+│  │ Providers        │  │ ResponseProcessor│  │ ChromaSync           │    │
+│  │ Claude/Gemini/OR │→ │ XML→Observation  │→ │ 向量同步 + watermark │    │
+│  │ (Agent SDK 调用) │  │ 事务批量入库     │  │ 回填                  │    │
+│  └──────────────────┘  └────────┬─────────┘  └──────────┬───────────┘    │
+└─────────────────────────────────┼────────────────────────┼────────────────┘
+                                  ▼                        ▼
+                       ┌────────────────────┐   ┌────────────────────┐
+                       │ SQLite             │   │ Chroma 向量库      │
+                       │ ~/.claude-mem/.db  │   │ ~/.claude-mem/chroma│
+                       │ observations / FTS5│   │ 语义检索           │
+                       │ sessions / prompts │   │                    │
+                       └─────────┬──────────┘   └─────────┬──────────┘
+                                 └─────────┬──────────────┘
+                                           │
+                          ┌────────────────┴────────────────┐
+                          ▼                                 ▼
+                ┌──────────────────┐               ┌──────────────────┐
+                │ mem-search Skill │               │ Viewer UI (React)│
+                │ 3 层搜索协议     │               │ SSE 流式渲染     │
+                │ search→timeline  │               │ 时间线/观察列表  │
+                │ →get_observations│               │                  │
+                └──────────────────┘               └──────────────────┘
+</code></pre>
+</details>
+<h2 id="六个生命周期钩子">六个生命周期钩子</h2>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>触发</th>
+<th>Handler</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Setup</td>
+<td>插件初始化</td>
+<td><code>version-check.js</code></td>
+<td>版本兼容性</td>
+</tr>
+<tr>
+<td><strong>SessionStart</strong></td>
+<td>启动/clear/compact</td>
+<td><code>context.ts</code></td>
+<td>启 worker + <strong>注入历史上下文</strong></td>
+</tr>
+<tr>
+<td><strong>UserPromptSubmit</strong></td>
+<td>用户提交 prompt</td>
+<td><code>session-init.ts</code></td>
+<td>创建 session + 触发语义搜索</td>
+</tr>
+<tr>
+<td>PreToolUse(Read)</td>
+<td>读文件前</td>
+<td><code>file-context.ts</code></td>
+<td>查当前文件相关观察</td>
+</tr>
+<tr>
+<td><strong>PostToolUse</strong></td>
+<td>任何工具调用后</td>
+<td><code>observation.ts</code></td>
+<td>入队等待压缩</td>
+</tr>
+<tr>
+<td>Stop</td>
+<td>会话结束</td>
+<td><code>summarize.ts</code></td>
+<td>生成会话摘要</td>
+</tr>
+</tbody>
+</table>
+<h2 id="五步闭环">五步闭环</h2>
+<ol>
+<li><strong>捕获</strong>：Hook → <code>bun-runner.js</code> → worker handler → POST 给本地 worker</li>
+<li><strong>入队</strong>：写 outbox（Postgres）或 SQLite 暂存，BullMQ 调度</li>
+<li><strong>AI 压缩</strong>：<code>ProviderObservationGenerator</code> 调 Agent SDK，把 tool log 压成 XML 观察</li>
+<li><strong>解析存储</strong>：<code>sdk/parser.ts</code> → <code>MemoryItem</code> schema → 事务写入 SQLite + 异步推 Chroma</li>
+<li><strong>注入回流</strong>：<code>SessionStart</code> 预检索 → system 消息；或 <code>mem-search</code> Skill 按需查询</li>
+</ol>
+<h2 id="六大可移植设计模式">六大可移植设计模式</h2>
+<ol>
+<li><strong>生命周期钩子采集</strong> — 任何有 before/after tool_use 钩子的 runtime 都能挂</li>
+<li><strong>边缘轻量 + 后台 AI 重活</strong> — 用户交互路径上绝不做 AI 推理</li>
+<li><strong>三层搜索协议</strong> — <code>search → timeline → get_observations</code>，详见 <a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li>
+<li><strong>AI 作为压缩器</strong> — 详见 <a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li>
+<li><strong>session_id 双轨制</strong> — <code>contentSessionId</code>（会话）vs <code>memorySessionId</code>（记忆线）</li>
+<li><strong>Outbox + 内容哈希去重</strong> — AI 生成非确定，必须去重；outbox 让重试不丢消息</li>
+</ol>
+<h2 id="memoryitem-schema">MemoryItem Schema</h2>
+<pre><code class="language-typescript">{
+  kind: 'observation' | 'summary' | 'prompt' | 'manual',
+  type: string,
+  title: string,
+  narrative: string,       // 自然语言叙述
+  facts: string[],         // 离散事实点
+  concepts: string[],      // 抽象概念标签
+  filesRead: string[],
+  filesModified: string[]
+}
+</code></pre>
+<blockquote>
+<p>[!note] 关键洞察<br>
+别只存"对话历史"，先压缩成"事实/概念/读写文件"等可索引字段；语义搜索叠在结构化层之上。</p>
+</blockquote>
+<h2 id="多-profile-隔离">多 Profile 隔离</h2>
+<pre><code class="language-bash">export CLAUDE_MEM_DATA_DIR=&quot;$HOME/.claude-mem-work&quot;
+export CLAUDE_MEM_WORKER_PORT=37800
+</code></pre>
+<p>所有路径（DB、Chroma、日志、PID）从 env 派生，shell 级隔离。</p>
+<h2 id="演进信号">演进信号</h2>
+<p>近 30 天最活跃：<code>worker-service.cjs</code>（88 次）、<code>mcp-server.cjs</code>（75 次）。PR #2383 把 worker 重写为 <strong>server-beta</strong>：事件管道 + Postgres + MCP + Docker + 团队审计。趋势是从「单机插件」→「团队后台服务」，但 <code>runtime-selector.ts</code> 保留单机 SQLite 回退。</p>
+<h2 id="关键文件索引">关键文件索引</h2>
+<table>
+<thead>
+<tr>
+<th>关注点</th>
+<th>路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>钩子注册</td>
+<td><code>plugin/hooks/hooks.json</code></td>
+</tr>
+<tr>
+<td>Hook 派发</td>
+<td><code>plugin/scripts/bun-runner.js</code></td>
+</tr>
+<tr>
+<td>Worker 入口</td>
+<td><code>src/services/worker-service.ts</code></td>
+</tr>
+<tr>
+<td>Provider 抽象</td>
+<td><code>src/sdk/{Claude,Gemini,OpenRouter}Provider.ts</code></td>
+</tr>
+<tr>
+<td>XML 解析</td>
+<td><code>src/sdk/parser.ts</code></td>
+</tr>
+<tr>
+<td>上下文构建</td>
+<td><code>src/services/context/ContextBuilder.ts</code></td>
+</tr>
+<tr>
+<td>压缩 Prompt</td>
+<td><code>src/sdk/prompts.ts</code></td>
+</tr>
+<tr>
+<td>搜索 Skill</td>
+<td><code>plugin/skills/mem-search/SKILL.md</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="最小可行落地抄作业-5-步">最小可行落地（抄作业 5 步）</h2>
+<p>给任何 Agent 加记忆的最小套路：</p>
+<ol>
+<li><strong>采集</strong>：tool callback 里 <code>record_event(event)</code> 塞 SQLite outbox</li>
+<li><strong>压缩</strong>：cron/worker 跑 <code>compress_batch()</code>，喂给便宜模型（Haiku / Gemini Flash）输出 <code>{title, narrative, facts[], concepts[]}</code> JSON</li>
+<li><strong>双索引</strong>：SQLite FTS5 + 向量库</li>
+<li><strong>注册搜索工具</strong>：<code>search_memory(query)</code>，描述写"用户提到过去/上次时调用"</li>
+<li><strong>会话启动预检索</strong>：基于"项目路径 + 最近活跃概念"拼 system prompt 前缀</li>
+</ol>
+
+  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+
+  <div class="footer">
+    🦊 llm-wiki · sources · <a href="../../sources/src-claude-mem-architecture.md">查看 Markdown 源</a>
+  </div>
+  </main>
+
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构三层">核心架构（三层）</a></li><li class="level-3"><a href="#完整架构图">完整架构图</a></li><li class=""><a href="#六个生命周期钩子">六个生命周期钩子</a></li><li class=""><a href="#五步闭环">五步闭环</a></li><li class=""><a href="#六大可移植设计模式">六大可移植设计模式</a></li><li class=""><a href="#memoryitem-schema">MemoryItem Schema</a></li><li class=""><a href="#多-profile-隔离">多 Profile 隔离</a></li><li class=""><a href="#演进信号">演进信号</a></li><li class=""><a href="#关键文件索引">关键文件索引</a></li><li class=""><a href="#最小可行落地抄作业-5-步">最小可行落地（抄作业 5 步）</a></li></ul></aside>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+
+  function initMermaid() {
+    const theme = root.getAttribute("data-theme") === "light" ? "default" : "dark";
+    document.querySelectorAll(".mermaid").forEach((el) => {
+      if (!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute("data-processed");
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({ startOnLoad: false, theme, securityLevel: "loose", flowchart: { htmlLabels: true } });
+    mermaid.run({ querySelector: ".mermaid" });
+  }
+  initMermaid();
+
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+    initMermaid();
+  });
+
+  const tocLinks = document.querySelectorAll(".toc a");
+  const headings = Array.from(document.querySelectorAll("h2[id], h3[id]"));
+  function updateActive() {
+    let active = headings[0];
+    for (const h of headings) {
+      if (h.getBoundingClientRect().top - 100 <= 0) active = h;
+    }
+    if (!active) return;
+    tocLinks.forEach((a) =>
+      a.classList.toggle("active", a.getAttribute("href") === "#" + active.id)
+    );
+  }
+  window.addEventListener("scroll", updateActive, { passive: true });
+  updateActive();
+</script>
+
+</body>
+</html>
