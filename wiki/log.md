@@ -63,3 +63,7 @@ date: 2026-04-22
 ## [2026-05-21] ingest | agentmemory 架构（v0.9.21）
 
 Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine（钉 v0.11.2）+ SQLite，三流（BM25+Vector+Graph）RRF 检索 + 零 LLM 启发式压缩默认 + 12 个 Claude Code hooks + 53 MCP tools（默认仅暴露 8）+ 124 REST endpoints + 实时 viewer。关键设计：iii-engine 强制总线 / 向量维度守卫（不匹配拒绝启动）/ Context injection 默认关（#143 token 杀手）/ 多层记忆（32+ KV scope + Ebbinghaus 衰减）。与 claude-mem / powermem 互为镜像（同问题三种实现）。
+
+## [2026-06-01] ingest | AgentCube 架构
+
+来源：volcano-sh/agentcube HEAD `208da32`（2026-06-01）。`ingest-codebase` skill Codex 版首次实战产出。新建 raw 文件 + wiki source 页 + [[agentcube]] 实体页，并按用户要求重点补充与 [[agent-sandbox]] 的结合关系。核心洞察：(1) AgentCube 不是替代 agent-sandbox，而是把 `Sandbox` / `SandboxClaim` / `SandboxTemplate` / `SandboxWarmPool` 包成 `AgentRuntime` / `CodeInterpreter` + Router + WorkloadManager + SDK 的会话编排层；(2) Router/WorkloadManager 分平面：Router 走 `x-agentcube-session-id` 做高频反向代理，WorkloadManager 负责 K8s 创建、Ready 等待、entrypoint probe 和 GC；(3) CodeInterpreter 的 `warmPoolSize` 直接驱动 agent-sandbox WarmPool，首次调用创建 `SandboxClaim` 领取预热 Pod；(4) PicoD 用 HTTP + Router-signed JWT 替代 SSH，当前代码安全模型已从旧文档的"客户端私钥签名"演进到 Router→PicoD trust chain；(5) Redis/ValKey 只做 session registry，不做复杂任务队列。
