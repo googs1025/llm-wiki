@@ -77,6 +77,7 @@ date: 2026-05-12
 - [[src-nanobot-architecture]] — nanobot 架构（v0.2.0，HKUDS 个人 AI Agent 框架，8 态状态机 + 17 渠道 + Fallback Provider + Mid-turn 注入）
 - [[src-agentmemory-architecture]] — agentmemory 架构（v0.9.21，本地化跨 Agent 记忆服务，iii-engine 总线 + BM25+Vector+Graph 三流 RRF + 12 hooks + 53 MCP tools，零 LLM 压缩默认）
 - [[src-skypilot-architecture]] — SkyPilot 架构（HEAD `55b9185`，AI/ML 多云算力控制平面，YAML/SDK → API server → Optimizer → CloudVmRayBackend → provider/控制器）
+- [[src-agentscope-architecture]] — AgentScope 架构（HEAD `e129177`，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）
 
 ## 分析 (Analysis)
 
@@ -104,6 +105,7 @@ _暂无条目_
 - rego / opa — OPA 策略语言，对照 CEL 设计
 
 ### AI Agent / LLM Infra
+- agentscope — 阿里通义实验室 AgentScope 2.0 多 Agent 应用框架（事件流 ReAct、Toolkit/MCP/Skill、Workspace/offload、FastAPI 多租户服务）
 - skypilot — AI/ML 多云算力控制平面（统一 YAML/SDK，跨 Kubernetes / Slurm / 公有云做 GPU 资源选择、failover、managed jobs、serve）
 - bullmq — Node.js 任务队列（claude-mem 后台压缩调度）
 - chroma — 开源向量数据库（claude-mem 使用）
