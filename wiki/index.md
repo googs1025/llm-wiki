@@ -79,6 +79,8 @@ date: 2026-05-12
 - [[src-skypilot-architecture]] — SkyPilot 架构（HEAD `55b9185`，AI/ML 多云算力控制平面，YAML/SDK → API server → Optimizer → CloudVmRayBackend → provider/控制器）
 - [[src-ai-agent-frameworks-stars]] — AI Agent Frameworks Star 项目清单（109 个项目，个人 Agent / coding agent → Agent framework → MCP/gateway → Skills/memory → cloud-native runtime）
 - [[src-agentscope-architecture]] — AgentScope 架构（HEAD `e129177`，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）
+- [[src-k8s-gpu-device-plugins-stars]] — K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）
+- [[src-k8s-core-controllers-stars]] — K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）
 
 ## 分析 (Analysis)
 
@@ -91,6 +93,10 @@ _暂无条目_
 以下实体/概念在文章中被提及但尚未建页：
 
 ### 云原生
+- k8s-gpu-device-stack — Kubernetes GPU/异构设备资源层项目地图（device plugin、GPU Operator、vGPU/GPU sharing、DRA、CDI、DCGM/NVML、fake GPU）
+- k8s-core-controller-map — Kubernetes controller/operator 项目地图（client-go、controller-runtime、kubebuilder、CRD/webhook、调度、多集群、可观测）
+- controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链
+- dra / cdi / gpu-sharing — Kubernetes 下一代设备资源分配、容器设备声明和 GPU sharing 方向
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
 - ingress-nginx — 已退役的 K8s 入口控制器
