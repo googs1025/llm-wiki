@@ -81,6 +81,8 @@ date: 2026-05-12
 - [[src-agentscope-architecture]] — AgentScope 架构（HEAD `e129177`，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）
 - [[src-k8s-gpu-device-plugins-stars]] — K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）
 - [[src-k8s-core-controllers-stars]] — K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）
+- [[src-nemoclaw-architecture]] — NVIDIA NemoClaw 架构（HEAD `3c0340a`，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）
+- [[src-openshell-architecture]] — NVIDIA OpenShell 架构（HEAD `97986d9`，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）
 
 ## 分析 (Analysis)
 
@@ -113,6 +115,7 @@ _暂无条目_
 
 ### AI Agent / LLM Infra
 - ai-agent-frameworks-map — AI Agent Frameworks 项目地图（OpenClaw/Claude Code/OpenCode/LangChain/LangGraph/Dify/AgentScope/MCP/Skills/Memory/Agent runtime）
+- nemoclaw / openshell / nvidia — NVIDIA OpenShell sandbox 与 NemoClaw host-side 编排层
 - openclaw / opencode / openclaude / hermes-agent — 个人 Agent、coding agent 与 Agent OS 代表项目
 - agent-skills — Agent 能力包模式（Markdown + scripts + workflow，可迁移到 Claude Code / Codex / OpenCode）
 - langchain / langgraph / dify / agentscope / eino / adk — Agent framework 与 workflow runtime 代表项目
