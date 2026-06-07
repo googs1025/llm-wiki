@@ -17,6 +17,7 @@ date: 2026-05-12
 - [[claude-mem]] — 给 Claude Code 装上长期记忆的开源插件
 - [[claude-agent-sdk]] — `@anthropic-ai/claude-agent-sdk`，Agent 编程 SDK
 - [[claude-context]] — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent
+- [[milvus]] — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
@@ -24,6 +25,7 @@ date: 2026-05-12
 - [[agentgateway]] — Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）
 - [[powermem]] — OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
 - [[agent-recall]] — 本地优先的 MCP-native Agent 记忆库（SQLite + scope hierarchy + AI briefing）
+- [[memsearch]] — Zilliz 出品的跨平台 AI coding agent 语义记忆系统（Markdown source-of-truth + Milvus hybrid search + progressive recall）
 - [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
 - [[vllm]] — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）
 - [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
@@ -78,6 +80,7 @@ date: 2026-05-12
 - [[src-nanobot-architecture]] — nanobot 架构（v0.2.0，HKUDS 个人 AI Agent 框架，8 态状态机 + 17 渠道 + Fallback Provider + Mid-turn 注入）
 - [[src-agentmemory-architecture]] — agentmemory 架构（v0.9.21，本地化跨 Agent 记忆服务，iii-engine 总线 + BM25+Vector+Graph 三流 RRF + 12 hooks + 53 MCP tools，零 LLM 压缩默认）
 - [[src-agent-recall-architecture]] — agent-recall 架构（HEAD `dcf21b5`，本地优先 MCP-native Agent 记忆库，SQLite + scope hierarchy + bitemporal slots + AI briefing cache）
+- [[src-memsearch-architecture]] — memsearch 架构（v0.4.6 / HEAD `018a85f`，跨平台 AI coding agent 语义记忆，Markdown source-of-truth + Milvus dense/BM25/RRF + search→expand→transcript）
 - [[src-skypilot-architecture]] — SkyPilot 架构（HEAD `55b9185`，AI/ML 多云算力控制平面，YAML/SDK → API server → Optimizer → CloudVmRayBackend → provider/控制器）
 - [[src-ai-agent-frameworks-stars]] — AI Agent Frameworks Star 项目清单（109 个项目，个人 Agent / coding agent → Agent framework → MCP/gateway → Skills/memory → cloud-native runtime）
 - [[src-agentscope-architecture]] — AgentScope 架构（HEAD `e129177`，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）
