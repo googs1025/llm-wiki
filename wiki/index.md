@@ -94,6 +94,9 @@ date: 2026-05-12
 ## 分析 (Analysis)
 
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
+- [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
+- [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
+- [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
 
 ---
 
@@ -121,7 +124,6 @@ date: 2026-05-12
 - rego / opa — OPA 策略语言，对照 CEL 设计
 
 ### AI Agent / LLM Infra
-- ai-agent-frameworks-map — AI Agent Frameworks 项目地图（OpenClaw/Claude Code/OpenCode/LangChain/LangGraph/Dify/AgentScope/MCP/Skills/Memory/Agent runtime）
 - nemoclaw / openshell / nvidia — NVIDIA OpenShell sandbox 与 NemoClaw host-side 编排层
 - openclaw / opencode / openclaude / hermes-agent — 个人 Agent、coding agent 与 Agent OS 代表项目
 - agent-skills — Agent 能力包模式（Markdown + scripts + workflow，可迁移到 Claude Code / Codex / OpenCode）
