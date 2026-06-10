@@ -4,3 +4,5 @@
 .idea/
 .superpowers/
 .worktrees/
+__pycache__/
+*.pyc
