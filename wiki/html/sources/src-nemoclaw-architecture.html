@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>NemoClaw 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-05 · 来源：nemoclaw-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span></div>
+  <header class="page-header">
+    <h1>NemoClaw 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-05 · 来源：nemoclaw-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/nemoclaw-architecture-analysis.md</code> · 仓库：https://github.com/NVIDIA/NemoClaw · 分析版本 HEAD <code>3c0340a</code></p>
@@ -90,7 +92,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -139,7 +141,7 @@
 <td>OpenShell sandbox 资产、policy preset、runtime scripts、unit/e2e/e2e-scenario 验证矩阵。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>核心分层约束是"薄命令 + 厚编排 + 纯规划 + 外部边界适配"。这与 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> 里的接口化、边界清晰、可迁移能力包方向一致，也和 <a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a> 的凭证边界设计相互呼应。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <h3 id="onboard-主流程">Onboard 主流程</h3>
@@ -296,7 +298,7 @@
 <li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenClaw">OpenClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenClaw">OpenClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-nemoclaw-architecture.md">查看 Markdown 源</a>

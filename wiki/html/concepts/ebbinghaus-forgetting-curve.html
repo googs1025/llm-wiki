@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Ebbinghaus 遗忘曲线</h1>
-  <p class="subtitle">2026-05-14 · 来源：powermem-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">agent-memory</span><span class="tag">memory-decay</span><span class="tag">cognitive-science</span></div>
+  <header class="page-header">
+    <h1>Ebbinghaus 遗忘曲线</h1>
+    <p class="page-meta">2026-05-14 · 来源：powermem-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">agent-memory</span><span class="tag">memory-decay</span><span class="tag">cognitive-science</span></div>
+  </header>
 
   <p>德国心理学家 <strong>Hermann Ebbinghaus</strong>（1885）通过自身实验得出的记忆衰减经验曲线。在 LLM agent 记忆框架里被改造为 <strong>三层记忆 + 数学衰减 + 强化反馈</strong> 的算法基座，<a class="wikilink" href="../entities/powermem.html">powermem</a> 是当前最完整的工程实现。</p>
 <h2 id="数学模型">数学模型</h2>
@@ -37,7 +39,7 @@
 <p>衰减是 <strong>指数式</strong> 的：刚记完忘得快，多次复习后衰减率降低 —— 这正是间隔重复（spaced repetition）的理论根基。</p>
 <h2 id="工程映射三层记忆--三阈值">工程映射：三层记忆 + 三阈值</h2>
 <p>PowerMem 在 <code>intelligence/ebbinghaus_algorithm.py</code> 里把曲线参数化（默认值）：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>参数</th>
@@ -82,7 +84,7 @@
 <td>复习时间表（1h / 6h / 1d / 3d / 1w）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="完整生命周期powermem-实现">完整生命周期（PowerMem 实现）</h2>
 <pre><code>        New Information
               ↓
@@ -116,7 +118,7 @@
 <li><strong>跨项目可复用</strong>：MemoryOS、Letta（前 MemGPT）、claude-mem 等都用了类似抽象，但 PowerMem 是把它做成"可配置 4 参数 + 3 阈值"的工程化最彻底的版本。</li>
 </ul>
 <h2 id="同类实现对照">同类实现对照</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>框架</th>
@@ -151,7 +153,7 @@
 <td>学术原型</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="相关页面">相关页面</h2>
 <ul>
 <li>工程实现：<a class="wikilink" href="../entities/powermem.html">powermem</a> → <code>intelligence/ebbinghaus_algorithm.py</code></li>
@@ -160,7 +162,7 @@
 <li>间隔重复（spaced repetition）的认知科学根基 —— Anki、SuperMemo 同源</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/ebbinghaus-forgetting-curve.md">查看 Markdown 源</a>

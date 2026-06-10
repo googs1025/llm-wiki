@@ -21,13 +21,15 @@
 <div class="layout">
   <main class="content">
 
-  <h1>混合检索与 RRF 重排</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-context-architecture</p>
-  <div class="tags"><span class="tag">semantic-search</span><span class="tag">retrieval</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>混合检索与 RRF 重排</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-context-architecture</p>
+    <div class="tags"><span class="tag">semantic-search</span><span class="tag">retrieval</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>并行跑多种召回 + 用 RRF（Reciprocal Rank Fusion）公式合并排名的检索模式。<a class="wikilink" href="../entities/claude-context.html">claude-context</a> 的核心检索机制。</p>
 <h2 id="为什么单一检索不够">为什么单一检索不够</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>检索类型</th>
@@ -52,7 +54,7 @@
 <td>改写一字就废</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>任何单一信号都有盲区</strong> —— 并集召回 + 智能合并 &gt; 任何单一策略。</p>
 <h2 id="hybrid-search-在-claude-context-的实现">Hybrid Search 在 claude-context 的实现</h2>
 <pre><code class="language-ts">vectorDB.hybridSearch({
@@ -76,7 +78,7 @@
 - 多路同时命中得分翻倍，单路命中也有分（不会 0 分丢失）</p>
 <h2 id="应用到-agent-记忆--rag-的检索">应用到 Agent 记忆 / RAG 的检索</h2>
 <p>代码以外的场景同样适用，建议并行跑：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>信号</th>
@@ -101,7 +103,7 @@
 <td>业务约束（项目、用户、标签）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>最后 RRF 合并即可。这是企业级 RAG 的标配。</p>
 <h2 id="与三层搜索协议的关系">与三层搜索协议的关系</h2>
 <p><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a> 解决<strong>返回多少</strong>（先 ID + 摘要，再按需取详情），hybrid + RRF 解决<strong>怎么找到</strong>（多信号并集）。两者正交、可叠加：</p>
@@ -113,7 +115,7 @@
 <li><a class="wikilink" href="../sources/src-claude-context-architecture.html">src-claude-context-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/code-semantic-search.html">code-semantic-search</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../entities/milvus.html">milvus</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/code-semantic-search.html">code-semantic-search</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../entities/milvus.html">milvus</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/hybrid-search-rrf.md">查看 Markdown 源</a>

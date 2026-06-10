@@ -21,14 +21,16 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Claude Code</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture、src-claude-context-architecture</p>
-  <div class="tags"><span class="tag">ai-agent</span><span class="tag">claude</span><span class="tag">cli-tool</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>Claude Code</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture、src-claude-context-architecture</p>
+    <div class="tags"><span class="tag">ai-agent</span><span class="tag">claude</span><span class="tag">cli-tool</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>Anthropic 出品的命令行 AI Agent，运行在终端中，通过工具调用（Read / Edit / Bash / Grep 等）协助软件工程任务。</p>
 <h2 id="与-claude-mem-的关系">与 claude-mem 的关系</h2>
 <p>Claude Code 作为<strong>宿主 runtime</strong>，向插件暴露 6 个 Lifecycle Hook：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>Hook</th>
@@ -61,7 +63,7 @@
 <td>会话结束</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 通过注册这些 hook 实现无侵入的事件采集。Hook 必须返回 exit 0（否则 Windows Terminal 会累积标签页）。</p>
 <h2 id="关键限制">关键限制</h2>
 <ul>
@@ -81,7 +83,7 @@
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/claude-code.md">查看 Markdown 源</a>

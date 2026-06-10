@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>LLM Inference / Serving 项目地图</h1>
-  <p class="subtitle">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars</p>
-  <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">project-map</span><span class="tag">ai-infra</span></div>
+  <header class="page-header">
+    <h1>LLM Inference / Serving 项目地图</h1>
+    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars</p>
+    <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">project-map</span><span class="tag">ai-infra</span></div>
+  </header>
 
   <p>这页把当前知识库里的 LLM 推理与 serving 相关材料横向整理。核心结论：LLM serving 已经从“单机推理引擎优化”演进成多层系统工程：KV cache 管理、batch 调度、P/D 分离、KV-aware routing、多级 offload、SLA 扩缩、GPU 资源调度和多云控制面都在同一条链路上。</p>
 <pre><code>Client API / OpenAI-compatible protocol
@@ -41,7 +43,7 @@ cluster orchestration: P/D pools, routing, KV transfer, autoscaling
 infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observability
 </code></pre>
 <h2 id="一句话分层">一句话分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>项目 / 概念</th>
@@ -76,9 +78,9 @@ infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observabilit
 <td>GPU 资源基础设施</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="横向对比">横向对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -163,9 +165,9 @@ infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observabilit
 <td>只管资源，不管模型执行</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="架构交叉矩阵">架构交叉矩阵</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>交叉模式</th>
@@ -210,7 +212,7 @@ infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observabilit
 <td>不只是跑得快，还要按 SLA、成本和容量调度</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="核心设计轴">核心设计轴</h2>
 <h3 id="1-kv-cache从内存优化到系统接口">1. KV cache：从内存优化到系统接口</h3>
 <p>LLM serving 的很多架构分歧都来自 KV cache：</p>
@@ -370,7 +372,7 @@ cluster / managed job / serve
 <li>autoscaler decision 和 provider capacity error。</li>
 </ul>
 <h2 id="设计分型">设计分型</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>分型</th>
@@ -405,9 +407,9 @@ cluster / managed job / serve
 <td>device plugin、DRA、GPU sharing、observability</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="选型建议">选型建议</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>目标</th>
@@ -442,7 +444,7 @@ cluster / managed job / serve
 <td>device plugin、GPU Operator、DRA/CDI、DCGM/GPUd</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="当前知识库缺口">当前知识库缺口</h2>
 <ul>
 <li>还缺少独立的 <a class="wikilink" href="../entities/vllm.html">vllm</a> 架构 source 页，当前主要来自 entity 和 SGLang 对照。</li>
@@ -463,7 +465,7 @@ cluster / managed job / serve
 <li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-inference-serving-project-map.md">查看 Markdown 源</a>

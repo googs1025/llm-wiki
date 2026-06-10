@@ -21,14 +21,16 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Disaggregated Serving</h1>
-  <p class="subtitle">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span></div>
+  <header class="page-header">
+    <h1>Disaggregated Serving</h1>
+    <p class="page-meta">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span></div>
+  </header>
 
   <p>把 LLM 推理的 <strong>prefill（首 token 计算）</strong> 与 <strong>decode（后续 token 流式生成）</strong> 拆到独立的 GPU 池中分别扩缩的部署模式。<a class="wikilink" href="../entities/dynamo.html">NVIDIA Dynamo</a> 把它做成默认架构，<a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> / TensorRT-LLM 都开始实验性支持。</p>
 <h2 id="为什么要分离">为什么要分离</h2>
 <p>Prefill 和 decode 的负载特征完全不同：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>阶段</th>
@@ -54,7 +56,7 @@
 <td>ITL（inter-token latency）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>聚合模式（同一 GPU 同时跑 prefill 和 decode）会让两阶段互相干扰：<br>
 - 大 prefill 来一发，正在 decode 的请求被挤出，ITL 抖动<br>
 - 小 prefill 来很多发，GPU 算力没用满<br>
@@ -98,7 +100,7 @@
 <li>上位概念：<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/disaggregated-serving.md">查看 Markdown 源</a>

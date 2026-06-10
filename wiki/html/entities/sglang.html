@@ -21,15 +21,17 @@
 <div class="layout">
   <main class="content">
 
-  <h1>SGLang</h1>
-  <p class="subtitle">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">entity</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">oss</span></div>
+  <header class="page-header">
+    <h1>SGLang</h1>
+    <p class="page-meta">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">entity</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">oss</span></div>
+  </header>
 
   <p><strong>LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。</strong> Apache 2.0，Python 3.10+，主仓库 <a href="https://github.com/sgl-project/sglang">github.com/sgl-project/sglang</a>，活跃主线（HEAD <code>50f4058</code> 时分析）。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>把 LLM 推理引擎的<strong>所有"差异化轴"</strong>做到接近开源极致：<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 取代 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV 复用做到 token 级；4 进程异步流水线 + Scheduler 内 overlap 把 GPU 利用率拉到 95%+；7 套投机解码 + 5 KV transfer backend + 10+ attention backend + 4 grammar backend 全部可插拔；统一 OpenAI / Anthropic / Ollama 协议入口。论文里还提出"SGLang DSL"（fork / gen / select）做结构化生成的前端编译。</p>
 <h2 id="关键能力">关键能力</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -90,7 +92,7 @@
 <td>SGLang DSL（fork / gen / select）—— 编译到 RadixCache 友好的执行计划</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="接入形态">接入形态</h2>
 <ul>
 <li><strong>HTTP server</strong>：<code>python -m sglang.launch_server --model-path ...</code> → FastAPI/uvicorn 默认 8000 端口；推荐用 <code>sglang serve</code> CLI</li>
@@ -109,7 +111,7 @@
 <li><strong>国产硬件一等公民</strong>：Ascend NPU 不是 fallback 路径，专门有 disagg/ascend、 attention/ascend、<code>platforms/ascend</code>，跟 NVIDIA 路径并行</li>
 </ul>
 <h2 id="工程数据">工程数据</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>指标</th>
@@ -138,7 +140,7 @@
 <td>4 进程异步 + Scheduler overlap → 单 GPU 占用 95%+</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="学术与起源">学术与起源</h2>
 <ul>
 <li><strong>来源论文</strong>：Zheng et al., <em>"SGLang: Efficient Execution of Structured Language Model Programs"</em> (NeurIPS 2024) —— 论文里 RadixAttention + SGLang DSL 是核心贡献</li>
@@ -154,7 +156,7 @@
 <li>相关概念：<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>（vLLM 的对照系统）</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><span class="wikilink wikilink-missing" title="未建页：speculative-decoding">speculative-decoding</span></li><li><span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span></li><li><span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span></li><li><span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><span class="wikilink wikilink-missing" title="未建页：speculative-decoding">speculative-decoding</span></li><li><span class="wikilink wikilink-missing" title="未建页：prefill-decode-disaggregation">prefill-decode-disaggregation</span></li><li><span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span></li><li><span class="wikilink wikilink-missing" title="未建页：mooncake">mooncake</span></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/sglang.md">查看 Markdown 源</a>

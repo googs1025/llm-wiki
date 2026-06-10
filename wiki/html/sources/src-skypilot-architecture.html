@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>SkyPilot 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-02 · 来源：skypilot-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-infra</span><span class="tag">gpu</span><span class="tag">kubernetes</span><span class="tag">serving</span></div>
+  <header class="page-header">
+    <h1>SkyPilot 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-02 · 来源：skypilot-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-infra</span><span class="tag">gpu</span><span class="tag">kubernetes</span><span class="tag">serving</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/skypilot-architecture-analysis.md</code> · 仓库：<a href="https://github.com/googs1025/skypilot">googs1025/skypilot</a> · 分析版本 master HEAD <code>55b9185</code>（2026-06-01）</p>
@@ -88,7 +90,7 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -133,7 +135,7 @@
 <td>admin policy、server plugins、RBAC 扩展、Prometheus metrics、usage telemetry、外部故障源。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>关键约束是：<code>Task</code>/<code>Resources</code> 只表达用户需求，不做云 API 调用；<code>Cloud</code> 类描述能力和候选资源，不直接成为长期状态对象；<code>provision/*</code> 做具体生命周期；<code>CloudVmRayBackend</code> 负责把 optimizer 选出的 launchable resources 落到远端 runtime；API server 负责请求排队和鉴权，不把所有重任务塞在 FastAPI event loop 上。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <h3 id="sky-launch-主链路"><code>sky launch</code> 主链路</h3>
@@ -228,7 +230,7 @@ sky serve up ────────▶│ SkyServe controller     │
 <li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-skypilot-architecture.md">查看 Markdown 源</a>

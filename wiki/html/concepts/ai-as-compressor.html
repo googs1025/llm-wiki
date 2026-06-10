@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>AI 作为压缩器</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span><span class="tag">token-economy</span></div>
+  <header class="page-header">
+    <h1>AI 作为压缩器</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span><span class="tag">token-economy</span></div>
+  </header>
 
   <blockquote>
 <p>把 LLM 当"信息浓缩器"而不是"问答器"——压缩 token 成本换后续检索效率。</p>
@@ -46,7 +48,7 @@
 后续 N 次会话检索（持续收益）
 </code></pre>
 <h2 id="经济学逻辑">经济学逻辑</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -76,7 +78,7 @@
 <td>易（短小可拼）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><strong>核心洞察</strong>：压缩是一次性付费、永久收益的操作。每多一次检索，回报就翻一倍。</p>
 <h2 id="为什么便宜模型够用">为什么便宜模型够用</h2>
 <p>压缩任务的特点：</p>
@@ -111,7 +113,7 @@
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/ai-as-compressor.md">查看 Markdown 源</a>

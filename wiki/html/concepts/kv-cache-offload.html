@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>KV Cache Offload（KV 多级缓存）</h1>
-  <p class="subtitle">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">memory-hierarchy</span></div>
+  <header class="page-header">
+    <h1>KV Cache Offload（KV 多级缓存）</h1>
+    <p class="page-meta">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">memory-hierarchy</span></div>
+  </header>
 
   <p>把 LLM KV 缓存按访问频率分布在 <strong>GPU 显存 → CPU pinned → 本地 NVMe → 远端对象存储</strong> 多级存储层上，自动升降级，扩展 effective context length 超出单 GPU 显存上限的方法论。</p>
 <h2 id="为什么需要多级">为什么需要多级</h2>
@@ -93,7 +95,7 @@
 <li>上位概念：<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/kv-cache-offload.md">查看 Markdown 源</a>

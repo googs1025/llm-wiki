@@ -21,13 +21,15 @@
 <div class="layout">
   <main class="content">
 
-  <h1>代码语义检索</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-context-architecture</p>
-  <div class="tags"><span class="tag">code-rag</span><span class="tag">semantic-search</span><span class="tag">llm-infra</span><span class="tag">design-pattern</span></div>
+  <header class="page-header">
+    <h1>代码语义检索</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-context-architecture</p>
+    <div class="tags"><span class="tag">code-rag</span><span class="tag">semantic-search</span><span class="tag">llm-infra</span><span class="tag">design-pattern</span></div>
+  </header>
 
   <p>让 AI Agent <strong>不必多轮 grep/read</strong> 就能在大型代码库中直达相关片段的工程方法。由 <a class="wikilink" href="../entities/claude-context.html">claude-context</a> 验证。</p>
 <h2 id="与传统方案对比">与传统方案对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>方案</th>
@@ -52,7 +54,7 @@
 <td>一次查询直达目标</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="标准管道">标准管道</h2>
 <pre><code>源代码
    ↓ Splitter (AST → 字符兜底)
@@ -78,7 +80,7 @@ AST 失败时不应抛错卡死整个 pipeline，而应自动 fallback 到字符
 <h3 id="3-增量同步">3. 增量同步</h3>
 <p>代码库不是静态的——每次修改都全量重建索引不现实。用内容指纹（<a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">Merkle DAG</a>）只重建变化的文件。</p>
 <h2 id="关键超参数">关键超参数</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>参数</th>
@@ -108,7 +110,7 @@ AST 失败时不应抛错卡死整个 pipeline，而应自动 fallback 到字符
 <td>向量库单 collection 上限保护</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="与-agent-记忆检索的关系">与 Agent 记忆检索的关系</h2>
 <p>代码语义检索 ≈ <a class="wikilink" href="../concepts/agent-memory.html">Agent 记忆</a>检索的<strong>特化形式</strong>：</p>
 <ul>
@@ -128,7 +130,7 @@ AST 失败时不应抛错卡死整个 pipeline，而应自动 fallback 到字符
 <li><a class="wikilink" href="../sources/src-claude-context-architecture.html">src-claude-context-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">merkle-dag-fingerprint</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/merkle-dag-fingerprint.html">merkle-dag-fingerprint</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/code-semantic-search.md">查看 Markdown 源</a>

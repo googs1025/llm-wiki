@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>agentmemory 架构与设计思路分析</h1>
-  <p class="subtitle">2026-05-21 · 来源：agentmemory-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">agent-memory</span><span class="tag">hybrid-search</span><span class="tag">mcp</span></div>
+  <header class="page-header">
+    <h1>agentmemory 架构与设计思路分析</h1>
+    <p class="page-meta">2026-05-21 · 来源：agentmemory-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">agent-memory</span><span class="tag">hybrid-search</span><span class="tag">mcp</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/agentmemory-architecture-analysis.md</code> · 仓库：https://github.com/rohitg00/agentmemory · 分析版本 v0.9.21</p>
@@ -80,7 +82,7 @@
                           └─────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -129,7 +131,7 @@
 <td>LongMemEval / Coding-Life 评测脚本 + 内部 metrics-store + self-correct + validator</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>关键约束（源自 <code>AGENTS.md</code>）：</p>
 <ul>
 <li><strong>iii-engine 是强制总线</strong>：所有函数注册都走 <code>sdk.registerFunction</code> / <code>sdk.trigger</code>，禁止绕过 iii-sdk 用独立 SQLite 或进程内替代方案。</li>
@@ -300,7 +302,7 @@ process.on(&quot;SIGINT&quot; | &quot;SIGTERM&quot;, shutdown)
 <li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a> — Agent 长期记忆领域综述</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-agentmemory-architecture.md">查看 Markdown 源</a>

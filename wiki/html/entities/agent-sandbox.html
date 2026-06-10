@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>agent-sandbox</h1>
-  <p class="subtitle">2026-05-13 · 来源：agent-sandbox-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">k8s-operator</span><span class="tag">agent-runtime</span><span class="tag">ai-infra</span><span class="tag">sig-apps</span></div>
+  <header class="page-header">
+    <h1>agent-sandbox</h1>
+    <p class="page-meta">2026-05-13 · 来源：agent-sandbox-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">k8s-operator</span><span class="tag">agent-runtime</span><span class="tag">ai-infra</span><span class="tag">sig-apps</span></div>
+  </header>
 
   <p><code>kubernetes-sigs/agent-sandbox</code> 是 <strong>K8s SIG Apps 官方孵化</strong>的 Sandbox CRD + controller。把 AI Agent runtime 那种"长寿命、有状态、单实例、可暂停、有稳定身份"的容器形态建模成第一类 K8s 资源——比 Deployment（无状态副本）和 StatefulSet（编号 Pod）都更精准。<strong>隔离机制完全委托给标准 K8s 原语</strong>（<span class="wikilink wikilink-missing" title="未建页：gvisor">gvisor</span> / <span class="wikilink wikilink-missing" title="未建页：kata-containers">kata-containers</span> / <span class="wikilink wikilink-missing" title="未建页：network-policy">network-policy</span>），controller 只做生命周期编排。</p>
 <p>详细架构见 <a class="wikilink" href="../sources/src-agent-sandbox-architecture.html">src-agent-sandbox-architecture</a>。</p>
@@ -47,7 +49,7 @@
 <li>[ ] examples 子目录的导读（17 个，需要按"入门 / 隔离 / 集成"分类）</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><span class="wikilink wikilink-missing" title="未建页：gvisor">gvisor</span></li><li><span class="wikilink wikilink-missing" title="未建页：kata-containers">kata-containers</span></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><span class="wikilink wikilink-missing" title="未建页：gvisor">gvisor</span></li><li><span class="wikilink wikilink-missing" title="未建页：kata-containers">kata-containers</span></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/agent-sandbox.md">查看 Markdown 源</a>

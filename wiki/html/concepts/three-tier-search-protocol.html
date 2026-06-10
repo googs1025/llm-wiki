@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>三层搜索协议</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">design-pattern</span><span class="tag">token-economy</span></div>
+  <header class="page-header">
+    <h1>三层搜索协议</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">design-pattern</span><span class="tag">token-economy</span></div>
+  </header>
 
   <p>让 Agent 在记忆库中检索时<strong>避免上下文爆炸</strong>的设计模式。由 <a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 的 <code>mem-search</code> Skill 实现。</p>
 <h2 id="协议三层">协议三层</h2>
@@ -37,7 +39,7 @@ get_observations(ids)  → 仅取筛选后的 ID 全文
 <p><strong>永远先返低 token 摘要，让模型筛选后再取详情。</strong></p>
 <p>朴素做法：一次返回所有匹配结果的全文 → 单次查询可能吃掉数千 token，命中 10 条无关结果就废了一半上下文。</p>
 <p>三层协议做法：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>阶段</th>
@@ -66,7 +68,7 @@ get_observations(ids)  → 仅取筛选后的 ID 全文
 <td>真正读细节</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>相比一次性全文返回，省 10x token。</p>
 <h2 id="为什么-agent-能自主调用">为什么 Agent 能自主调用</h2>
 <p>claude-mem 把这套协议注册成 Skill（<code>plugin/skills/mem-search/SKILL.md</code>），描述里写明触发时机。Claude 在判断"用户问到过去"时会自主决定调用——SKILL.md 的描述文案艺术决定了触发精度。</p>
@@ -78,7 +80,7 @@ get_observations(ids)  → 仅取筛选后的 ID 全文
 <li>工具调用结果分级（先返摘要，模型按需 expand）</li>
 </ul>
 <h2 id="与朴素-rag-的对比">与朴素 RAG 的对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -108,13 +110,13 @@ get_observations(ids)  → 仅取筛选后的 ID 全文
 <td>中</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="参考">参考</h2>
 <ul>
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/three-tier-search-protocol.md">查看 Markdown 源</a>

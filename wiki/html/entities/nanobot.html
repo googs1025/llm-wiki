@@ -21,15 +21,17 @@
 <div class="layout">
   <main class="content">
 
-  <h1>nanobot</h1>
-  <p class="subtitle">2026-05-20 · 来源：src-nanobot-architecture.md</p>
-  <div class="tags"><span class="tag">ai-agent</span><span class="tag">llm</span><span class="tag">python</span><span class="tag">chat-bot</span><span class="tag">mcp</span><span class="tag">entity</span></div>
+  <header class="page-header">
+    <h1>nanobot</h1>
+    <p class="page-meta">2026-05-20 · 来源：src-nanobot-architecture.md</p>
+    <div class="tags"><span class="tag">ai-agent</span><span class="tag">llm</span><span class="tag">python</span><span class="tag">chat-bot</span><span class="tag">mcp</span><span class="tag">entity</span></div>
+  </header>
 
   <blockquote>
 <p>HKUDS 出品的极简个人 AI Agent 框架。Claude Code / Codex / OpenClaw 风格的轻量级长跑 Agent。</p>
 </blockquote>
 <h2 id="核心数据">核心数据</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>字段</th>
@@ -70,7 +72,7 @@
 <td><code>from nanobot import Nanobot; Nanobot.from_config().run(msg)</code></td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="它解决什么问题">它解决什么问题</h2>
 <p>把"个人聊天机器人 + 长跑 AI Agent"这件事压成一个<strong>能看懂、能改</strong>的小内核：</p>
 <ol>
@@ -94,7 +96,7 @@
 <li><strong>能力即上下文</strong>：skills / memory / heartbeat / dream 都是注入 system prompt 的 Markdown 文件，而非编排层 — 体现 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> 的「Markdown is the universal interface」。</li>
 </ul>
 <h2 id="重要依赖">重要依赖</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>依赖</th>
@@ -135,7 +137,7 @@
 <td>交互式 OAuth 登录（GitHub Copilot / ...）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="内置-skills">内置 Skills</h2>
 <p><code>clawhub · cron · github · image-generation · long-goal · memory · my · skill-creator · summarize · tmux · weather</code></p>
 <p>每个 skill 是 workspace 下一个 markdown 目录，包含 description + 操作 prompt + 可选工具，按需被 LLM 通过 skill 列表选择激活。</p>
@@ -150,7 +152,7 @@
 <li><strong>WebUI</strong>：编译后的 SPA 随 wheel 发布，通过 WebSocket channel 服务。</li>
 </ul>
 <h2 id="与同类对比">与同类对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -197,7 +199,7 @@
 <td>代码继承</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="设计灵感">设计灵感</h2>
 <p>README 明确说"inspired by Claude Code / Codex / OpenClaw"。最直接的影子：<br>
 - Skills + Memory + AGENTS.md / SOUL.md / USER.md / TOOLS.md 的工作区约定 ← <a class="wikilink" href="../entities/claude-code.html">claude-code</a> 的 CLAUDE.md 系<br>
@@ -213,7 +215,7 @@
 <li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> — 9 条设计原则中"pkgutil 自动发现"和"Markdown 即接口"在此体现</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/nanobot.md">查看 Markdown 源</a>

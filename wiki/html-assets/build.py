@@ -260,9 +260,11 @@ SHELL = """<!doctype html>
 <div class="layout">
   <main class="content">
 
-  <h1>{title}</h1>
-  {subtitle_html}
-  {tags_html}
+  <header class="page-header">
+    <h1>{title}</h1>
+    {subtitle_html}
+    {tags_html}
+  </header>
 
   {body_html}
 
@@ -346,7 +348,12 @@ def render_related(items: list[str], resolver: Resolver, from_cat: str | None) -
                 f'<li><span class="wikilink wikilink-missing" title="未建页：{htmllib.escape(target)}">'
                 f'{htmllib.escape(target)}</span></li>'
             )
-    return f'<h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul>{"".join(lis)}</ul>'
+    return (
+        '<section class="related-panel" aria-labelledby="related-frontmatter">'
+        '<h2 id="related-frontmatter">相关页面</h2>'
+        f'<ul>{"".join(lis)}</ul>'
+        '</section>'
+    )
 
 
 def render_subtitle(fm: Frontmatter) -> str:
@@ -358,7 +365,7 @@ def render_subtitle(fm: Frontmatter) -> str:
         parts.append(f"来源：{srcs}")
     if not parts:
         return ""
-    return f'<p class="subtitle">{" · ".join(parts)}</p>'
+    return f'<p class="page-meta">{" · ".join(parts)}</p>'
 
 
 # ── Page builder ─────────────────────────────────────────────────
@@ -396,6 +403,7 @@ def build_page(page: Page, resolver: Resolver) -> str:
 
     # Drop the first <h1> if present; we render our own
     body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
+    body_html = re.sub(r"(<table>.*?</table>)", r'<div class="table-wrap">\1</div>', body_html, flags=re.DOTALL)
 
     toc = extract_toc(page.body_md)
     toc_html = render_toc(toc)
@@ -669,6 +677,7 @@ def build_site_index(resolver: Resolver) -> str:
     converter = md.Markdown(extensions=["fenced_code", "tables", "attr_list", "sane_lists"], output_format="html5")
     body_html = converter.convert(body_with_ids)
     body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
+    body_html = re.sub(r"(<table>.*?</table>)", r'<div class="table-wrap">\1</div>', body_html, flags=re.DOTALL)
     descriptions = extract_index_descriptions(body_html)
 
     # All pages for search index

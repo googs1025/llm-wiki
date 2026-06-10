@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>PagedAttention</h1>
-  <p class="subtitle">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span></div>
+  <header class="page-header">
+    <h1>PagedAttention</h1>
+    <p class="page-meta">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span></div>
+  </header>
 
   <p><a class="wikilink" href="../entities/vllm.html">vllm</a> 论文（Kwon et al., SOSP 2023）提出的 <strong>block 级 KV 缓存管理机制</strong>。把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache，<strong>16 token 为一个 block</strong>，每个请求用 <strong>block table</strong> 记录"逻辑序列位置 → 物理 block"映射。</p>
 <h2 id="核心思想">核心思想</h2>
@@ -73,7 +75,7 @@ PagedAttention:
 <li>同类对比：<a class="wikilink" href="../entities/sglang.html">sglang</a> 架构详解 → <a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/paged-attention.md">查看 Markdown 源</a>

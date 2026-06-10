@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>OpenShell 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-05 · 来源：openshell-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span><span class="tag">security</span></div>
+  <header class="page-header">
+    <h1>OpenShell 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-05 · 来源：openshell-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span><span class="tag">security</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/openshell-architecture-analysis.md</code> · 仓库：https://github.com/NVIDIA/OpenShell · 分析版本 HEAD <code>97986d9</code></p>
@@ -90,7 +92,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -127,7 +129,7 @@
 <td>provider discovery、credential 注入、OpenAI/Anthropic/NVIDIA 等模型路由；sandbox 内 <code>inference.local</code> 不走普通 OPA network policy。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>OpenShell 的分层约束很强：Gateway owns desired state，Supervisor owns runtime enforcement。Gateway 不做 agent egress 的 per-request 裁决，真正的 <a class="wikilink" href="../concepts/cloud-native-security.html">安全</a> enforcement 放在 sandbox 内，那里能看到进程身份、文件系统、网络命名空间、TLS 流和 runtime credentials。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <pre><code>┌──────────────┐
@@ -209,7 +211,7 @@
 <li><a class="wikilink" href="../entities/vllm.html">vllm</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：NVIDIA">NVIDIA</span></li><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：NVIDIA">NVIDIA</span></li><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-openshell-architecture.md">查看 Markdown 源</a>

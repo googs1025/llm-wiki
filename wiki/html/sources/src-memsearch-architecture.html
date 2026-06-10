@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>memsearch 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-07 · 来源：memsearch-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">agent-memory</span><span class="tag">llm-infra</span><span class="tag">zilliz</span><span class="tag">milvus</span></div>
+  <header class="page-header">
+    <h1>memsearch 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-07 · 来源：memsearch-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">agent-memory</span><span class="tag">llm-infra</span><span class="tag">zilliz</span><span class="tag">milvus</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/memsearch-architecture-analysis.md</code> · 仓库：https://github.com/zilliztech/memsearch · 分析版本 v0.4.6 / HEAD <code>018a85f</code></p>
@@ -63,7 +65,7 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -104,7 +106,7 @@
 <td>defaults → global config → project config → CLI flags，支持 <code>env:VAR</code></td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>分层边界是：平台插件负责把宿主会话变成 Markdown 和 anchor；Python core 不理解某个宿主的 transcript 格式，只处理 Markdown → chunks → <a class="wikilink" href="../entities/milvus.html">Milvus</a> → search/expand。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <h3 id="1-捕获与索引">1. 捕获与索引</h3>
@@ -192,7 +194,7 @@ Maintenance task hashes recent memory markdown
 <p><code>MemSearch</code> 是核心编排器：扫描 Markdown、切 chunk、计算新旧 chunk 差集、只 embedding 新 chunk、删除 stale chunk。embedding 前会剥掉 HTML comments，避免 session/turn/transcript path 污染向量；但 Milvus 里保留原始 content，方便 <code>expand</code> 和 transcript drill-down。</p>
 <p><code>MilvusStore</code> 是检索关键：collection 里同时有 <code>embedding</code> dense vector、<code>content</code> analyzer field、BM25 生成的 <code>sparse_vector</code> 和 source/heading/line metadata。搜索时 dense 和 BM25 两路并发请求，再用 RRF 融合。</p>
 <h2 id="与同类关系">与同类关系</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -232,7 +234,7 @@ Maintenance task hashes recent memory markdown
 <td>viewer/context injection/tools</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><a class="wikilink" href="../entities/memsearch.html">memsearch</a> 和 <a class="wikilink" href="../entities/claude-context.html">claude-context</a> 都来自 Zilliz，并共享 Milvus hybrid retrieval 的技术路径；区别是 claude-context 解决“当前代码库理解”，memsearch 解决“过去会话记忆”。</p>
 <h2 id="相关页面">相关页面</h2>
 <ul>
@@ -248,7 +250,7 @@ Maintenance task hashes recent memory markdown
 <li><a class="wikilink" href="../entities/powermem.html">powermem</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/memsearch.html">memsearch</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/milvus.html">milvus</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/agent-recall.html">agent-recall</a></li><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/memsearch.html">memsearch</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/milvus.html">milvus</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/agent-recall.html">agent-recall</a></li><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-memsearch-architecture.md">查看 Markdown 源</a>

@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Agent Memory 项目地图</h1>
-  <p class="subtitle">2026-06-09 · 来源：src-claude-mem-architecture、src-powermem-architecture、src-agentmemory-architecture、src-agent-recall-architecture、src-memsearch-architecture、src-tencentdb-agent-memory-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">project-map</span><span class="tag">ai-agent</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>Agent Memory 项目地图</h1>
+    <p class="page-meta">2026-06-09 · 来源：src-claude-mem-architecture、src-powermem-architecture、src-agentmemory-architecture、src-agent-recall-architecture、src-memsearch-architecture、src-tencentdb-agent-memory-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">project-map</span><span class="tag">ai-agent</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>这页把当前已摄入的 memory 相关项目横向整理。核心结论：这些项目不是在做同一件事，而是在同一个问题空间里选择了不同的事实源、宿主入口、压缩成本、检索治理边界和上下文注入策略。</p>
 <p>从工程架构看，Agent Memory 不是一个“向量库 + top-k 搜索”的问题，而是一条完整的数据管线：</p>
@@ -50,7 +52,7 @@ context governance: token budget / prompt cache / evidence trace / scope
 <li><strong>注入边界</strong>：什么内容可以自动进入 prompt，什么内容必须让 Agent 主动搜索下钻。</li>
 </ul>
 <h2 id="一句话分层">一句话分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>项目</th>
@@ -90,9 +92,9 @@ context governance: token budget / prompt cache / evidence trace / scope
 <td>同时处理长期 persona/scene memory 和短期工具日志压缩</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="横向对比">横向对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -214,10 +216,10 @@ context governance: token budget / prompt cache / evidence trace / scope
 <td>管线复杂、宿主偏 OpenClaw/Hermes</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="架构交叉矩阵">架构交叉矩阵</h2>
 <p>这些项目经常“看起来不同，底层同构”。真正可复用的是工程模式，而不是某个具体后端。</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>交叉模式</th>
@@ -267,7 +269,7 @@ context governance: token budget / prompt cache / evidence trace / scope
 <td>默认不自动塞大量上下文，或者只注入轻量 hint/briefing；用户需要时再 search/expand</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h3 id="交叉-1hook-插件和后台服务的边界">交叉 1：Hook 插件和后台服务的边界</h3>
 <p><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a>、<a class="wikilink" href="../entities/agentmemory.html">agentmemory</a>、<a class="wikilink" href="../entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a> 都把 hook 设计得很薄：</p>
 <pre><code>hook receives stdin JSON
@@ -310,7 +312,7 @@ swallow errors or return lightweight context
 <p><a class="wikilink" href="../entities/powermem.html">powermem</a> 是最企业化的检索栈：vector + FTS + sparse + graph，再做 RRF、衰减加权、rerank。<a class="wikilink" href="../entities/agentmemory.html">agentmemory</a> 是本地轻量版本：in-process BM25 + Float32Array vector + graph BFS。<a class="wikilink" href="../entities/memsearch.html">memsearch</a> 把 dense 和 BM25 都放进 Milvus。<a class="wikilink" href="../entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a> 在 SQLite 路径用 FTS/vector/RRF，在 TCVDB 路径用 native hybridSearch。</p>
 <h2 id="memory-写入方式的区别">Memory 写入方式的区别</h2>
 <p>写入方式决定了 memory 的质量上限。检索再强，也救不了错误写入、噪声写入和越权写入。</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>写入类型</th>
@@ -371,7 +373,7 @@ swallow errors or return lightweight context
 <td>node_id、原文、摘要必须能互相追踪</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h3 id="1-被动事件捕获覆盖率高治理成本也高">1. 被动事件捕获：覆盖率高，治理成本也高</h3>
 <p><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 的写路径是典型模式：</p>
 <pre><code>PostToolUse / UserPromptSubmit / Stop
@@ -690,7 +692,7 @@ L3 Persona persona.md + scene navigation
 </ul>
 <p><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a> 的 viewer、metrics、index persistence，<a class="wikilink" href="../entities/powermem.html">powermem</a> 的 Dashboard/audit/telemetry，<a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 的 worker service/viewer，都是在补这个运维面。Agent Memory 如果没有可观测性，很快会变成“模型偶尔想起一些不知道哪里来的东西”。</p>
 <h2 id="设计分型">设计分型</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>分型</th>
@@ -737,7 +739,7 @@ L3 Persona persona.md + scene navigation
 <td>长期 persona + 短期 offload 合一</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>这些分型可以组合。例如一个理想的 coding agent memory 可能采用：</p>
 <ul>
 <li><a class="wikilink" href="../entities/memsearch.html">memsearch</a> 的 Markdown truth 和 progressive recall。</li>
@@ -756,7 +758,7 @@ L3 Persona persona.md + scene navigation
 <li>最后做自动注入和 LLM 压缩。</li>
 </ol>
 <h2 id="选型建议">选型建议</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>你的目标</th>
@@ -796,7 +798,7 @@ L3 Persona persona.md + scene navigation
 <td>L0-L3 pipeline、offload refs/MMD、prompt cache 分层注入</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="当前知识库缺口">当前知识库缺口</h2>
 <ul>
 <li>还缺少一篇“<a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a> 2026 项目分型”概念扩展，把以上项目抽象成 taxonomy。</li>
@@ -820,7 +822,7 @@ L3 Persona persona.md + scene navigation
 <li><a class="wikilink" href="../entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/agent-recall.html">agent-recall</a></li><li><a class="wikilink" href="../entities/memsearch.html">memsearch</a></li><li><a class="wikilink" href="../entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/agent-recall.html">agent-recall</a></li><li><a class="wikilink" href="../entities/memsearch.html">memsearch</a></li><li><a class="wikilink" href="../entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/agent-memory-project-map.md">查看 Markdown 源</a>

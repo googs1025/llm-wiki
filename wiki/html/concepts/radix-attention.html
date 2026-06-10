@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>RadixAttention</h1>
-  <p class="subtitle">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">prefix-sharing</span></div>
+  <header class="page-header">
+    <h1>RadixAttention</h1>
+    <p class="page-meta">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">prefix-sharing</span></div>
+  </header>
 
   <p><a class="wikilink" href="../entities/sglang.html">sglang</a> 论文（Zheng et al., NeurIPS 2024）提出的 <strong>token 级 KV 缓存复用机制</strong>。用 <strong>radix 树</strong> + <strong>两级 KV pool</strong> 实现"任意 token 边界都能 split &amp; share"，相比 <a class="wikilink" href="../entities/vllm.html">vllm</a> 的 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>（16 token block 粒度），在 system prompt / few-shot / tree-of-thought / agent template 等长共享前缀的场景下吞吐量 <strong>1.6-6.4×</strong>。</p>
 <h2 id="核心数据结构">核心数据结构</h2>
@@ -70,7 +72,7 @@ return (device_indices, last_node)
 <p>4 策略：LRU / LFU / FIFO / SLRU / Priority。<br>
 evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>value</code> 指向的 KV 槽位 → 递归向上 unlock。<code>lock_ref &gt; 0</code> 的节点跳过（保护 in-flight 请求）。</p>
 <h2 id="vs-paged-attention-关键差异">vs <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 关键差异</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -115,7 +117,7 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 <td>通用 serving 显著（vs HF transformers）</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="工程要点">工程要点</h2>
 <ul>
 <li><strong>radix 树是 lock-free 的</strong>：单 Scheduler 进程独占，不需要锁</li>
@@ -132,7 +134,7 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 <li>架构详解：<a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/radix-attention.md">查看 Markdown 源</a>

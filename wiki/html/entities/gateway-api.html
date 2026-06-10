@@ -21,15 +21,17 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Kubernetes Gateway API</h1>
-  <p class="subtitle">2026-05-14 · 来源：agentgateway-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">gateway</span><span class="tag">api</span></div>
+  <header class="page-header">
+    <h1>Kubernetes Gateway API</h1>
+    <p class="page-meta">2026-05-14 · 来源：agentgateway-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">gateway</span><span class="tag">api</span></div>
+  </header>
 
   <blockquote>
 <p>Stub — 待充实</p>
 </blockquote>
 <p>K8s SIG-Network 的<strong>新一代入口 API</strong>，取代 Ingress。设计为更具表达力、可扩展、面向角色（infrastructure provider / cluster operator / application developer 三层职责分离）。核心资源族：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>资源</th>
@@ -62,7 +64,7 @@
 <td>跨 namespace 引用授权</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="在-agentgateway-中的使用">在 <a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 中的使用</h2>
 <p>agentgateway 直接复用上游 Gateway API 资源做路由声明，<em>不</em> fork、<em>不</em> 改 Gateway API 本体。扩展能力放在引用型自家 CRD：<br>
 - <code>AgentgatewayPolicy</code> 挂在 Gateway / Listener / Route 上做 CEL 策略<br>
@@ -77,7 +79,7 @@
 <li>[ ] 写 InferencePool 与 AI 推理调度</li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/gateway-api.md">查看 Markdown 源</a>

@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>AgentScope 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-02 · 来源：agentscope-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">multi-agent</span><span class="tag">mcp</span><span class="tag">agent-service</span></div>
+  <header class="page-header">
+    <h1>AgentScope 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-02 · 来源：agentscope-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">multi-agent</span><span class="tag">mcp</span><span class="tag">agent-service</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/agentscope-architecture-analysis.md</code> · 仓库：<a href="https://github.com/agentscope-ai/agentscope">agentscope-ai/agentscope</a> · 分析版本 main HEAD <code>e129177</code>（2026-06-01）</p>
@@ -61,7 +63,7 @@
 └──────────────────────────┘ └──────────────────────────┘ └──────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -98,7 +100,7 @@
 <td>把慢工具 offload 到后台，结果完成后重新注入上下文；用 APScheduler 驱动定时 agent run。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>这个分层的关键约束是：<code>Agent</code> 只依赖抽象接口，不直接关心 provider SDK、Docker/E2B 细节、Redis 存储或 FastAPI 请求对象。服务层通过 <code>get_agent()</code> 每次从 storage/session/workspace 重新组装一个 Agent，Agent 内部再用统一事件流表达执行过程。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <pre><code>┌────────────┐
@@ -196,7 +198,7 @@ ChatService.stream_chat
 <li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-agentscope-architecture.md">查看 Markdown 源</a>
