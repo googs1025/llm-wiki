@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>AI Agent Frameworks 项目地图</h1>
-  <p class="subtitle">2026-06-09 · 来源：src-ai-agent-frameworks-stars、src-agentscope-architecture、src-nanobot-architecture、src-hiclaw-architecture、src-agentgateway-architecture、src-agent-sandbox-architecture、src-agentcube-architecture、src-claude-context-architecture</p>
-  <div class="tags"><span class="tag">ai-agent</span><span class="tag">agent-framework</span><span class="tag">project-map</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>AI Agent Frameworks 项目地图</h1>
+    <p class="page-meta">2026-06-09 · 来源：src-ai-agent-frameworks-stars、src-agentscope-architecture、src-nanobot-architecture、src-hiclaw-architecture、src-agentgateway-architecture、src-agent-sandbox-architecture、src-agentcube-architecture、src-claude-context-architecture</p>
+    <div class="tags"><span class="tag">ai-agent</span><span class="tag">agent-framework</span><span class="tag">project-map</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>这页把当前知识库里 AI Agent framework / coding agent / Agent OS / MCP / skills / memory / runtime 相关材料整理成一张工程地图。核心结论：Agent 生态已经明显分层，不再是“哪个框架能调工具”这么简单。</p>
 <pre><code>End-user agents / coding agents
@@ -38,7 +40,7 @@ Runtime / sandbox / cloud-native substrate
 </code></pre>
 <p>如果说 <a class="wikilink" href="../analysis/agent-memory-project-map.html">agent-memory-project-map</a> 关注“Agent 如何记住”，<a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a> 关注“Agent 如何安全运行”，这页关注的是“Agent 工程生态如何分层组合”。</p>
 <h2 id="分层地图">分层地图</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层</th>
@@ -78,9 +80,9 @@ Runtime / sandbox / cloud-native substrate
 <td>隔离、会话编排、K8s、多云算力</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="横向对比">横向对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -139,7 +141,7 @@ Runtime / sandbox / cloud-native substrate
 <td>隔离、凭据、网络、恢复</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="生态信号">生态信号</h2>
 <p>来自 <a class="wikilink" href="../sources/src-ai-agent-frameworks-stars.html">src-ai-agent-frameworks-stars</a> 的 109 个项目可以归纳出几条趋势：</p>
 <ul>
@@ -182,7 +184,7 @@ AgentState + storage + SSE
 <h3 id="hiclawagent-平台化和声明式运维"><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a>：Agent 平台化和声明式运维</h3>
 <p><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 代表“Agent 是 K8s 资源”的路线。它用 Worker/Team/Human/Manager CRD 表达多 Agent 系统，用 Matrix 作为协作平面，用 Higress 托管真实凭据。</p>
 <p>它和 Python framework 的差异很大：</p>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -222,7 +224,7 @@ AgentState + storage + SSE
 <td>应用自己补</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>它说明企业级 Agent 平台不会停留在 SDK 层，最终会进入 controller、网关、IM、对象存储和权限系统。</p>
 <h3 id="agentgatewayagent-流量基础设施"><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a>：Agent 流量基础设施</h3>
 <p><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 说明 Agent 生态需要独立的数据面。它统一 LLM API、MCP tools 和 A2A 通信，复用 Gateway API / xDS / CEL / HBONE 等云原生治理模式。</p>
@@ -312,7 +314,7 @@ LLM decides when to invoke
 <h3 id="6-产品入口和工程底座经常错位">6. 产品入口和工程底座经常错位</h3>
 <p>用户看到的是 Claude Code/OpenClaw/nanobot；工程底座却是 MCP、skills、memory、sandbox、gateway、observability。项目地图的价值就是把这些层分开，避免拿“最终产品”和“底层原语”直接比较。</p>
 <h2 id="设计分型">设计分型</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>分型</th>
@@ -367,9 +369,9 @@ LLM decides when to invoke
 <td>sandbox、session、credential、network</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="选型建议">选型建议</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>目标</th>
@@ -419,7 +421,7 @@ LLM decides when to invoke
 <td>source-of-truth、hybrid search、context injection</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="当前知识库缺口">当前知识库缺口</h2>
 <ul>
 <li>还缺少 OpenClaw、OpenCode、Hermes、LangGraph、Dify、Eino、ADK、FastMCP、Anthropic Skills 的深入 source 页。</li>
@@ -427,29 +429,15 @@ LLM decides when to invoke
 <li>还缺少 Skills 项目地图，专门比较 Anthropic Skills、Codex skills、agent-skills、code-review/architecture/finance skills。</li>
 <li>还缺少 Agent observability/eval 地图，整理 Langfuse、AgentOps、OpenJudge、trace viewer、token tracker。</li>
 </ul>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li>
-<li><a class="wikilink" href="../entities/mcp.html">mcp</a></li>
-<li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li>
-<li><a class="wikilink" href="../analysis/agent-memory-project-map.html">agent-memory-project-map</a></li>
-<li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a></li>
-<li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li>
-<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li>
-<li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li>
-<li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li>
-<li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li>
-<li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../analysis/agent-memory-project-map.html">agent-memory-project-map</a></li><li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../analysis/agent-memory-project-map.html">agent-memory-project-map</a></li><li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/nanobot.html">nanobot</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/ai-agent-frameworks-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#分层地图">分层地图</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#生态信号">生态信号</a></li><li class=""><a href="#关键项目剖面">关键项目剖面</a></li><li class="level-3"><a href="#src-agentscope-architectureagentscope生产-agent-应用框架">src-agentscope-architecture|AgentScope：生产 Agent 应用框架</a></li><li class="level-3"><a href="#nanobot小内核个人-agent">nanobot：小内核个人 Agent</a></li><li class="level-3"><a href="#hiclawagent-平台化和声明式运维">HiClaw：Agent 平台化和声明式运维</a></li><li class="level-3"><a href="#agentgatewayagent-流量基础设施">agentgateway：Agent 流量基础设施</a></li><li class="level-3"><a href="#agent-sandbox--agentcubeagent-执行基座">agent-sandbox / agentcube：Agent 执行基座</a></li><li class="level-3"><a href="#memory--context-layer独立产品层">Memory / context layer：独立产品层</a></li><li class=""><a href="#设计轴">设计轴</a></li><li class="level-3"><a href="#1-libraryruntimeproduct-是三种不同形态">1. Library、runtime、product 是三种不同形态</a></li><li class="level-3"><a href="#2-mcp-是协议层不是-agent-框架">2. MCP 是协议层，不是 Agent 框架</a></li><li class="level-3"><a href="#3-skills-正在替代一部分插件代码">3. Skills 正在替代一部分插件代码</a></li><li class="level-3"><a href="#4-observability-和-eval-会成为框架边界">4. Observability 和 eval 会成为框架边界</a></li><li class="level-3"><a href="#5-cloud-native-runtime-会吞掉本地-demo边界">5. Cloud-native runtime 会吞掉“本地 demo”边界</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-agent-loop-和工具权限必须解耦">1. Agent loop 和工具权限必须解耦</a></li><li class="level-3"><a href="#2-人类确认要进入状态机">2. 人类确认要进入状态机</a></li><li class="level-3"><a href="#3-多-agent-协作不能只靠-in-process-bus">3. 多 Agent 协作不能只靠 in-process bus</a></li><li class="level-3"><a href="#4-跨-agent-可迁移能力需要文件协议">4. 跨 Agent 可迁移能力需要文件协议</a></li><li class="level-3"><a href="#5-上下文层会越来越独立">5. 上下文层会越来越独立</a></li><li class="level-3"><a href="#6-产品入口和工程底座经常错位">6. 产品入口和工程底座经常错位</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#分层地图">分层地图</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#生态信号">生态信号</a></li><li class=""><a href="#关键项目剖面">关键项目剖面</a></li><li class="level-3"><a href="#src-agentscope-architectureagentscope生产-agent-应用框架">src-agentscope-architecture|AgentScope：生产 Agent 应用框架</a></li><li class="level-3"><a href="#nanobot小内核个人-agent">nanobot：小内核个人 Agent</a></li><li class="level-3"><a href="#hiclawagent-平台化和声明式运维">HiClaw：Agent 平台化和声明式运维</a></li><li class="level-3"><a href="#agentgatewayagent-流量基础设施">agentgateway：Agent 流量基础设施</a></li><li class="level-3"><a href="#agent-sandbox--agentcubeagent-执行基座">agent-sandbox / agentcube：Agent 执行基座</a></li><li class="level-3"><a href="#memory--context-layer独立产品层">Memory / context layer：独立产品层</a></li><li class=""><a href="#设计轴">设计轴</a></li><li class="level-3"><a href="#1-libraryruntimeproduct-是三种不同形态">1. Library、runtime、product 是三种不同形态</a></li><li class="level-3"><a href="#2-mcp-是协议层不是-agent-框架">2. MCP 是协议层，不是 Agent 框架</a></li><li class="level-3"><a href="#3-skills-正在替代一部分插件代码">3. Skills 正在替代一部分插件代码</a></li><li class="level-3"><a href="#4-observability-和-eval-会成为框架边界">4. Observability 和 eval 会成为框架边界</a></li><li class="level-3"><a href="#5-cloud-native-runtime-会吞掉本地-demo边界">5. Cloud-native runtime 会吞掉“本地 demo”边界</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-agent-loop-和工具权限必须解耦">1. Agent loop 和工具权限必须解耦</a></li><li class="level-3"><a href="#2-人类确认要进入状态机">2. 人类确认要进入状态机</a></li><li class="level-3"><a href="#3-多-agent-协作不能只靠-in-process-bus">3. 多 Agent 协作不能只靠 in-process bus</a></li><li class="level-3"><a href="#4-跨-agent-可迁移能力需要文件协议">4. 跨 Agent 可迁移能力需要文件协议</a></li><li class="level-3"><a href="#5-上下文层会越来越独立">5. 上下文层会越来越独立</a></li><li class="level-3"><a href="#6-产品入口和工程底座经常错位">6. 产品入口和工程底座经常错位</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li></ul></aside>
 </div>
 
 <script>

@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>AgentCube 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-01 · 来源：agentcube-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">code-interpreter</span><span class="tag">kubernetes</span><span class="tag">volcano</span><span class="tag">agent-sandbox</span><span class="tag">serverless</span></div>
+  <header class="page-header">
+    <h1>AgentCube 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-01 · 来源：agentcube-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">code-interpreter</span><span class="tag">kubernetes</span><span class="tag">volcano</span><span class="tag">agent-sandbox</span><span class="tag">serverless</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/agentcube-architecture-analysis.md</code> · 仓库：https://github.com/volcano-sh/agentcube · 分析版本 HEAD <code>208da32</code>（2026-06-01）</p>
@@ -86,7 +88,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -127,7 +129,7 @@
 <td>Helm 安装 Router/WorkloadManager/CRDs/SPIRE；E2E 覆盖 CodeInterpreter、WarmPool、<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 安装和 session 生命周期。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="关键数据流">关键数据流</h2>
 <h3 id="无-session-的首次调用">无 session 的首次调用</h3>
 <pre><code>Client / SDK
@@ -223,7 +225,7 @@ WorkloadManager sees Sandbox Ready -&gt; PodIP -&gt; entrypoints -&gt; session s
 </li>
 </ul>
 <h2 id="与-agent-sandbox-的结合方式">与 agent-sandbox 的结合方式</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>维度</th>
@@ -273,7 +275,7 @@ WorkloadManager sees Sandbox Ready -&gt; PodIP -&gt; entrypoints -&gt; session s
 <td>Router JWT、可选 WorkloadManager auth、可选 SPIFFE/mTLS</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>结合后的层次可以概括成：</p>
 <pre><code>Developer API / SDK
       │
@@ -301,22 +303,15 @@ Kubernetes Pod / RuntimeClass / NetworkPolicy / Service
 <li><strong>WorkloadManager 目前承担两种职责</strong>：既是 HTTP control plane，又跑 controller-runtime manager 和 GC。规模变大后可能会拆成 API server / reconciler / GC 三个部署单元。</li>
 <li><strong>agent-sandbox 版本偏早</strong>：依赖 <code>v0.1.1</code>，而本 wiki 之前分析的是 <code>v0.4.5+11</code>。AgentCube 当前锁定的 API 可能需要跟随 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 后续 v1alpha1 演进。</li>
 </ul>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li>
-<li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li>
-<li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li>
-<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-agentcube-architecture.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#无-session-的首次调用">无 session 的首次调用</a></li><li class="level-3"><a href="#codeinterpreter-warmpool-路径">CodeInterpreter WarmPool 路径</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#与-agent-sandbox-的结合方式">与 agent-sandbox 的结合方式</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#workloadmanager从-agentcube-crd-到-agent-sandbox-crd">WorkloadManager：从 AgentCube CRD 到 agent-sandbox CRD</a></li><li class=""><a href="#风险与演进信号">风险与演进信号</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#无-session-的首次调用">无 session 的首次调用</a></li><li class="level-3"><a href="#codeinterpreter-warmpool-路径">CodeInterpreter WarmPool 路径</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#与-agent-sandbox-的结合方式">与 agent-sandbox 的结合方式</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#workloadmanager从-agentcube-crd-到-agent-sandbox-crd">WorkloadManager：从 AgentCube CRD 到 agent-sandbox CRD</a></li><li class=""><a href="#风险与演进信号">风险与演进信号</a></li></ul></aside>
 </div>
 
 <script>

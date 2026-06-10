@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>agentmemory 架构与设计思路分析</h1>
-  <p class="subtitle">2026-05-21 · 来源：agentmemory-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">agent-memory</span><span class="tag">hybrid-search</span><span class="tag">mcp</span></div>
+  <header class="page-header">
+    <h1>agentmemory 架构与设计思路分析</h1>
+    <p class="page-meta">2026-05-21 · 来源：agentmemory-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">agent-memory</span><span class="tag">hybrid-search</span><span class="tag">mcp</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/agentmemory-architecture-analysis.md</code> · 仓库：https://github.com/rohitg00/agentmemory · 分析版本 v0.9.21</p>
@@ -80,7 +82,7 @@
                           └─────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -129,7 +131,7 @@
 <td>LongMemEval / Coding-Life 评测脚本 + 内部 metrics-store + self-correct + validator</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>关键约束（源自 <code>AGENTS.md</code>）：</p>
 <ul>
 <li><strong>iii-engine 是强制总线</strong>：所有函数注册都走 <code>sdk.registerFunction</code> / <code>sdk.trigger</code>，禁止绕过 iii-sdk 用独立 SQLite 或进程内替代方案。</li>
@@ -285,29 +287,15 @@ process.on(&quot;SIGINT&quot; | &quot;SIGTERM&quot;, shutdown)
 <p><code>HybridSearch.tripleStreamSearch(query, limit, entityHints?)</code> 三流并行：BM25 同步取 <code>limit * 2</code>；Vector 异步 <code>embed(query)</code> 失败则降级 BM25-only；Graph 用 <code>extractEntitiesFromQuery</code> 或传入 <code>entityHints</code>，BFS 深度 2。顶 5 个 vector 结果做 "expansion search"（用 obsId 做相似度扩散，找邻居）。<code>searchWithExpansion(query, limit, expansion)</code> 把 query reformulations × 三流并行做 <code>Promise.all</code>，再用 <code>combinedScore</code> 去重最大值。</p>
 <h3 id="srcstateschemats--kv-scope-总线"><code>src/state/schema.ts</code> — KV scope 总线</h3>
 <p><code>KV</code> 是 <code>const</code> 对象，既有固定 key（<code>mem:sessions</code> / <code>mem:memories</code> / <code>mem:audit</code>）又有函数形式（<code>observations(sessionId)</code> / <code>teamShared(teamId)</code> / <code>embeddings(obsId)</code>）。这种"函数化 key"模式让一个 KV scope 能横向分片到 sessionId / teamId / userId，避免单 scope 无限增长。<code>generateId(prefix)</code> 用 <code>ts.toString(36) + uuid.slice(0,12)</code> 生成时间排序友好的 ID；<code>fingerprintId(prefix, content)</code> 用 sha256 前 16 字符做内容寻址（content-addressable dedup）；<code>jaccardSimilarity()</code> 给 dedup 提供回退方案。</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a> — 项目实体页（这是该实体的源摘要）</li>
-<li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> — 同类项目（专一 Claude Code，进程内 chroma + bullmq）</li>
-<li><a class="wikilink" href="../entities/powermem.html">powermem</a> — 同类项目（OceanBase 后端，四路检索 + Ebbinghaus）</li>
-<li><a class="wikilink" href="../entities/claude-context.html">claude-context</a> — 互补项目（代码语义检索 MCP）</li>
-<li><a class="wikilink" href="../entities/claude-code.html">claude-code</a> — 12 个 Hook 集成的主要 Agent</li>
-<li><a class="wikilink" href="../entities/mcp.html">mcp</a> — 53 个 MCP tool 的协议基础</li>
-<li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a> — 三流 RRF 检索方法论</li>
-<li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a> — Hook → Compress → Index → Inject 闭环</li>
-<li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> — 强度衰减 + 周期 sweep 的理论基础</li>
-<li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a> — 与 agentmemory 默认零 LLM 压缩的取舍对照</li>
-<li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a> — Agent 长期记忆领域综述</li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agentmemory.html">agentmemory</a></li><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-agentmemory-architecture.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#ingest写路径">Ingest（写路径）</a></li><li class="level-3"><a href="#recall读路径">Recall（读路径）</a></li><li class="level-3"><a href="#boot-启动序列">Boot 启动序列</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#srcstatehybrid-searchts--检索核心">`src/state/hybrid-search.ts` — 检索核心</a></li><li class="level-3"><a href="#srcstateschemats--kv-scope-总线">`src/state/schema.ts` — KV scope 总线</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#ingest写路径">Ingest（写路径）</a></li><li class="level-3"><a href="#recall读路径">Recall（读路径）</a></li><li class="level-3"><a href="#boot-启动序列">Boot 启动序列</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#srcstatehybrid-searchts--检索核心">`src/state/hybrid-search.ts` — 检索核心</a></li><li class="level-3"><a href="#srcstateschemats--kv-scope-总线">`src/state/schema.ts` — KV scope 总线</a></li></ul></aside>
 </div>
 
 <script>

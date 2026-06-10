@@ -21,13 +21,15 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Model Context Protocol (MCP)</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-context-architecture、src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">protocol</span><span class="tag">ai-agent</span><span class="tag">claude</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>Model Context Protocol (MCP)</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-context-architecture、src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">protocol</span><span class="tag">ai-agent</span><span class="tag">claude</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>Anthropic 推出的 AI Agent <strong>工具/资源/Skill 接入协议</strong>，基于 JSON-RPC over stdio（或 SSE）。让任意 Agent 客户端（Claude Code / Cursor / Gemini CLI / Codex）通过统一协议加载第三方工具。</p>
 <h2 id="角色">角色</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>端</th>
@@ -47,7 +49,7 @@
 <td>启动 server 子进程，转发 LLM 的工具调用请求</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="在本知识库中的应用">在本知识库中的应用</h2>
 <ul>
 <li><a class="wikilink" href="../entities/claude-context.html">claude-context</a> —— 通过 MCP 暴露 4 个代码检索工具（<code>index_codebase</code> / <code>search_code</code> / <code>clear_index</code> / <code>get_indexing_status</code>）</li>
@@ -72,7 +74,7 @@ console.log = (...args) =&gt; process.stderr.write('[LOG] ' + args.join(' ') + '
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/mcp.md">查看 Markdown 源</a>

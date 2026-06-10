@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>KV Cache Offload（KV 多级缓存）</h1>
-  <p class="subtitle">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">memory-hierarchy</span></div>
+  <header class="page-header">
+    <h1>KV Cache Offload（KV 多级缓存）</h1>
+    <p class="page-meta">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">memory-hierarchy</span></div>
+  </header>
 
   <p>把 LLM KV 缓存按访问频率分布在 <strong>GPU 显存 → CPU pinned → 本地 NVMe → 远端对象存储</strong> 多级存储层上，自动升降级，扩展 effective context length 超出单 GPU 显存上限的方法论。</p>
 <h2 id="为什么需要多级">为什么需要多级</h2>
@@ -86,21 +88,15 @@
 - 多一层调度逻辑（什么时候升 / 什么时候降）<br>
 - 不命中时延迟跳到 µs / ms / 秒级<br>
 - 跨层传输需要高速互联或对应硬件（GDS / RDMA）</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li>旗舰实现：<a class="wikilink" href="../entities/dynamo.html">dynamo</a> KVBM（<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> "KVBM 四级层次"节）</li>
-<li>协同概念：<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>、<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>、<a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li>
-<li>上位概念：<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/kv-cache-offload.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么需要多级">为什么需要多级</a></li><li class=""><a href="#四级层次dynamodynamo-kvbm-实现为参考">四级层次（dynamo|Dynamo KVBM 实现为参考）</a></li><li class=""><a href="#关键机制">关键机制</a></li><li class=""><a href="#与-paged-attentionpagedattention--radix-attentionradixattention-的关系">与 paged-attention|PagedAttention / radix-attention|RadixAttention 的关系</a></li><li class=""><a href="#与-disaggregated-servingdisaggregated-serving-的协同">与 disaggregated-serving|Disaggregated Serving 的协同</a></li><li class=""><a href="#收益与代价">收益与代价</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么需要多级">为什么需要多级</a></li><li class=""><a href="#四级层次dynamodynamo-kvbm-实现为参考">四级层次（dynamo|Dynamo KVBM 实现为参考）</a></li><li class=""><a href="#关键机制">关键机制</a></li><li class=""><a href="#与-paged-attentionpagedattention--radix-attentionradixattention-的关系">与 paged-attention|PagedAttention / radix-attention|RadixAttention 的关系</a></li><li class=""><a href="#与-disaggregated-servingdisaggregated-serving-的协同">与 disaggregated-serving|Disaggregated Serving 的协同</a></li><li class=""><a href="#收益与代价">收益与代价</a></li></ul></aside>
 </div>
 
 <script>

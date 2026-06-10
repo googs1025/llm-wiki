@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>事件驱动的记忆管道</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">architecture</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>事件驱动的记忆管道</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">architecture</span><span class="tag">design-pattern</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>给 AI Agent 加长期记忆的核心架构模式：<strong>「事件采集 → AI 压缩 → 双索引存储 → 反向注入」</strong> 的闭环。</p>
 <p>由 <a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 实践验证，可移植到任何有生命周期 hook 的 Agent runtime。</p>
@@ -65,7 +67,7 @@ SQLite (FTS5) + 向量库
 <li><strong>按需查询</strong>：用户问"上次怎么做的"时，<a class="wikilink" href="../concepts/three-tier-search-protocol.html">三层搜索协议</a> 通过注册的 Skill 自动触发</li>
 </ul>
 <h2 id="关键设计原则">关键设计原则</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>原则</th>
@@ -98,7 +100,7 @@ SQLite (FTS5) + 向量库
 <td><code>&lt;private&gt;</code> 标签在 hook 层剥离，零信任</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <h2 id="可迁移到的-runtime">可迁移到的 Runtime</h2>
 <p>任何有 before/after tool_use 钩子的 Agent runtime：</p>
 <ul>
@@ -112,7 +114,7 @@ SQLite (FTS5) + 向量库
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/event-driven-memory-pipeline.md">查看 Markdown 源</a>

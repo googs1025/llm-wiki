@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>claude-mem</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">claude-code</span><span class="tag">open-source</span><span class="tag">llm-infra</span></div>
+  <header class="page-header">
+    <h1>claude-mem</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">claude-code</span><span class="tag">open-source</span><span class="tag">llm-infra</span></div>
+  </header>
 
   <p>给 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> 装上长期记忆的开源插件（v13.1.0, 仓库 thedotmack/claude-mem）。</p>
 <h2 id="解决的问题">解决的问题</h2>
@@ -53,7 +55,7 @@
 <li><a class="wikilink" href="../entities/mcp.html">MCP</a> — Skill / 远程模式</li>
 </ul>
 <h2 id="部署模式">部署模式</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>模式</th>
@@ -73,7 +75,7 @@
 <td>团队共享 + 审计</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>通过 <code>runtime-selector.ts</code> 在两种模式间切换，保留单机回退。</p>
 <h2 id="演进方向">演进方向</h2>
 <p>从「单机插件」演化到「团队可共享的后台服务」（PR #2383）。</p>
@@ -82,7 +84,7 @@
 <li>完整分析：<a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-agent-sdk.html">claude-agent-sdk</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/claude-mem.md">查看 Markdown 源</a>

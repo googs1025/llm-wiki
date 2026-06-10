@@ -21,13 +21,15 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Agent 长期记忆</h1>
-  <p class="subtitle">2026-05-12 · 来源：src-claude-mem-architecture</p>
-  <div class="tags"><span class="tag">agent-memory</span><span class="tag">llm-infra</span><span class="tag">design-pattern</span></div>
+  <header class="page-header">
+    <h1>Agent 长期记忆</h1>
+    <p class="page-meta">2026-05-12 · 来源：src-claude-mem-architecture</p>
+    <div class="tags"><span class="tag">agent-memory</span><span class="tag">llm-infra</span><span class="tag">design-pattern</span></div>
+  </header>
 
   <p>让 AI Agent 跨会话保留上下文的设计领域。核心矛盾：<strong>LLM 上下文窗口有限 + 对话历史天然噪声大 + 用户期望"上次说过的事这次还记得"</strong>。</p>
 <h2 id="基础形态对比">基础形态对比</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>方案</th>
@@ -56,7 +58,7 @@
 <td>实现成本高，但精度和 token 效率最好</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> 采用第三种。</p>
 <h2 id="关键设计要点">关键设计要点</h2>
 <h3 id="1-记忆生命周期--会话生命周期">1. 记忆生命周期 ≠ 会话生命周期</h3>
@@ -93,7 +95,7 @@
 <li><a class="wikilink" href="../sources/src-claude-mem-architecture.html">src-claude-mem-architecture</a></li>
 </ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/three-tier-search-protocol.html">three-tier-search-protocol</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/agent-memory.md">查看 Markdown 源</a>

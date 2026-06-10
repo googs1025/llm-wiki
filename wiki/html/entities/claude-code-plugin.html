@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>Claude Code 插件机制</h1>
-  <p class="subtitle">2026-05-14 · 来源：powermem-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">entity</span><span class="tag">claude-code</span><span class="tag">plugin-system</span><span class="tag">stub</span></div>
+  <header class="page-header">
+    <h1>Claude Code 插件机制</h1>
+    <p class="page-meta">2026-05-14 · 来源：powermem-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">entity</span><span class="tag">claude-code</span><span class="tag">plugin-system</span><span class="tag">stub</span></div>
+  </header>
 
   <p><a class="wikilink" href="../entities/claude-code.html">claude-code</a> 的官方插件机制 —— 通过 <code>--plugin-dir</code> 加载，结构为 <code>.claude-plugin/plugin.json</code> + <code>hooks/</code> + <code>skills/</code> + <code>.mcp.json</code>。<strong>HTTP hook + MCP server + Skill</strong> 三种扩展通道。</p>
 <blockquote>
@@ -43,22 +45,15 @@
 <li>默认 HTTP 模式 → <code>POST /api/v1/memories</code>；可选 MCP 模式 → 通过 <a class="wikilink" href="../entities/mcp.html">mcp</a> 工具</li>
 <li>提供 <code>/memory-powermem:remember</code> + <code>/memory-powermem:recall</code> 两个 skill</li>
 </ul>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li>平台：<a class="wikilink" href="../entities/claude-code.html">claude-code</a></li>
-<li>参考实现：<a class="wikilink" href="../entities/powermem.html">powermem</a>、<a class="wikilink" href="../sources/src-powermem-architecture.html">src-powermem-architecture</a></li>
-<li>同类项目：<a class="wikilink" href="../entities/claude-mem.html">claude-mem</a>（独立 npm 包，与 powermem 插件功能重叠但定位不同 —— claude-mem 是独立 agent 记忆，powermem 插件只是接入层）</li>
-<li>工具协议：<a class="wikilink" href="../entities/mcp.html">mcp</a></li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/claude-code-plugin.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#速读powermem-插件做了什么">速读：powermem 插件做了什么</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#速读powermem-插件做了什么">速读：powermem 插件做了什么</a></li></ul></aside>
 </div>
 
 <script>

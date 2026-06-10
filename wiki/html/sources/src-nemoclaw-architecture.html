@@ -21,9 +21,11 @@
 <div class="layout">
   <main class="content">
 
-  <h1>NemoClaw 架构与设计思路分析</h1>
-  <p class="subtitle">2026-06-05 · 来源：nemoclaw-architecture-analysis.md</p>
-  <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span></div>
+  <header class="page-header">
+    <h1>NemoClaw 架构与设计思路分析</h1>
+    <p class="page-meta">2026-06-05 · 来源：nemoclaw-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">architecture</span><span class="tag">ai-agent</span><span class="tag">sandbox</span></div>
+  </header>
 
   <blockquote>
 <p>原文：<code>raw/nemoclaw-architecture-analysis.md</code> · 仓库：https://github.com/NVIDIA/NemoClaw · 分析版本 HEAD <code>3c0340a</code></p>
@@ -90,7 +92,7 @@
 └──────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
-<table>
+<div class="table-wrap"><table>
 <thead>
 <tr>
 <th>层 / 模块</th>
@@ -139,7 +141,7 @@
 <td>OpenShell sandbox 资产、policy preset、runtime scripts、unit/e2e/e2e-scenario 验证矩阵。</td>
 </tr>
 </tbody>
-</table>
+</table></div>
 <p>核心分层约束是"薄命令 + 厚编排 + 纯规划 + 外部边界适配"。这与 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> 里的接口化、边界清晰、可迁移能力包方向一致，也和 <a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a> 的凭证边界设计相互呼应。</p>
 <h2 id="关键数据流">关键数据流</h2>
 <h3 id="onboard-主流程">Onboard 主流程</h3>
@@ -282,28 +284,15 @@
 <p><code>src/lib/onboard.ts</code> 是复杂度中心，但它更像 coordinator：初始化运行模式、校验 sandbox 名、获取 consent、抢 lock、加载/创建 session、迁移 legacy credentials，再顺序调用 preflight/gateway/provider/sandbox/agent/policy 状态处理器。近期 git 历史显示维护方向是在保留一个端到端入口的同时，把巨型分支拆成 FSM result 和可测试状态模块。</p>
 <h3 id="messaging-manifest-compiler">Messaging manifest compiler</h3>
 <p>Messaging compiler 对每个 channel manifest 做 input resolution、credential availability、enrollment/reachability hook，然后 fan out 成 credential binding、network policy、agent render、build step、state update 和 health check。Applier 接受 serializable <code>SandboxMessagingPlan</code>，说明 plan 是跨 host/OpenShell/sandbox 边界传递的 contract，而不是运行时对象。</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li>
-<li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li>
-<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li>
-<li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li>
-<li><a class="wikilink" href="../entities/vllm.html">vllm</a></li>
-<li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li>
-<li><span class="wikilink wikilink-missing" title="未建页：NVIDIA">NVIDIA</span></li>
-<li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li>
-<li><span class="wikilink wikilink-missing" title="未建页：OpenClaw">OpenClaw</span></li>
-<li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li>
-</ul>
 
-  <h2 id="related-frontmatter">相关页面（来自 frontmatter）</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenClaw">OpenClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li></ul>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：OpenClaw">OpenClaw</span></li><li><span class="wikilink wikilink-missing" title="未建页：Hermes">Hermes</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-nemoclaw-architecture.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#onboard-主流程">Onboard 主流程</a></li><li class="level-3"><a href="#messaging-channel-编译与应用">Messaging channel 编译与应用</a></li><li class="level-3"><a href="#推理路由与凭证边界">推理路由与凭证边界</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#onboard-编排器">Onboard 编排器</a></li><li class="level-3"><a href="#messaging-manifest-compiler">Messaging manifest compiler</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class="level-3"><a href="#onboard-主流程">Onboard 主流程</a></li><li class="level-3"><a href="#messaging-channel-编译与应用">Messaging channel 编译与应用</a></li><li class="level-3"><a href="#推理路由与凭证边界">推理路由与凭证边界</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#onboard-编排器">Onboard 编排器</a></li><li class="level-3"><a href="#messaging-manifest-compiler">Messaging manifest compiler</a></li></ul></aside>
 </div>
 
 <script>
