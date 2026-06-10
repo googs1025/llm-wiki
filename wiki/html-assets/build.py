@@ -575,6 +575,7 @@ def parse_recent_updates(limit: int = 8) -> list[dict[str, str]]:
                 "href": "log.html",
             }
         )
+    updates.sort(key=lambda entry: entry["date"], reverse=True)
     return updates[:limit]
 
 
