@@ -44,6 +44,53 @@ CATEGORY_LABELS = {
     "analysis": "分析",
 }
 
+TOPIC_GROUPS = [
+    {
+        "title": "AI Agent / Memory",
+        "description": "长期记忆、MCP、coding agent、Agent framework 与个人 AI 工具链。",
+        "tags": {"agent-memory", "ai-agent", "mcp", "claude-code", "agent-framework"},
+        "preferred": {
+            "agent-memory-project-map",
+            "ai-agent-frameworks-map",
+            "agent-memory",
+            "claude-code",
+        },
+    },
+    {
+        "title": "Agent Runtime / Sandbox",
+        "description": "Agent 会话编排、沙箱隔离、凭据托管、网关治理和多 Agent 协作。",
+        "tags": {"agent-runtime", "agent-sandbox", "sandbox", "multi-agent", "ai-gateway"},
+        "preferred": {
+            "agent-runtime-sandbox-project-map",
+            "agent-sandbox",
+            "agentgateway",
+            "agent-credential-isolation",
+        },
+    },
+    {
+        "title": "LLM Inference / Serving",
+        "description": "推理服务、KV cache、PagedAttention、RadixAttention 和多云 GPU 编排。",
+        "tags": {"llm-inference", "llm-serving", "kv-cache", "ai-infra", "gpu"},
+        "preferred": {
+            "llm-inference-serving-project-map",
+            "llm-inference",
+            "paged-attention",
+            "radix-attention",
+        },
+    },
+    {
+        "title": "Kubernetes / Cloud Native",
+        "description": "Kubernetes、GitOps、controller/operator、GPU 资源栈、安全和可观测。",
+        "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator"},
+        "preferred": {
+            "kubernetes",
+            "gitops",
+            "argocd",
+            "cloud-native-security",
+        },
+    },
+]
+
 
 # ── Frontmatter ──────────────────────────────────────────────────
 FRONTMATTER_RE = re.compile(r"\A[^\n]*?---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -477,6 +524,70 @@ def collect_page_meta(descriptions: dict[str, str] | None = None) -> list[PageMe
     return pages
 
 
+def build_topic_groups(pages: list[PageMeta]) -> list[dict[str, object]]:
+    by_stem = {p.stem: p for p in pages}
+    groups: list[dict[str, object]] = []
+    for cfg in TOPIC_GROUPS:
+        tagset = cfg["tags"]
+        preferred_stems = cfg["preferred"]
+        matches = [
+            p for p in pages
+            if tagset.intersection(set(p.tags))
+            or any(token in p.title.lower() for token in tagset)
+            or p.stem in preferred_stems
+        ]
+        unique: dict[str, PageMeta] = {p.href: p for p in matches}
+        ordered = [by_stem[s] for s in preferred_stems if s in by_stem]
+        ordered.extend(
+            sorted(
+                (p for p in unique.values() if p.stem not in preferred_stems),
+                key=lambda p: (p.category != "analysis", p.title.lower()),
+            )
+        )
+        groups.append(
+            {
+                "title": cfg["title"],
+                "description": cfg["description"],
+                "count": len(unique),
+                "links": ordered[:4],
+            }
+        )
+    return groups
+
+
+LOG_ENTRY_RE = re.compile(r"^## \[(?P<date>\d{4}-\d{2}-\d{2})\]\s+(?P<kind>[^|]+)\|\s*(?P<title>.+)$")
+
+
+def parse_recent_updates(limit: int = 8) -> list[dict[str, str]]:
+    log_path = WIKI / "log.md"
+    if not log_path.exists():
+        return []
+    updates: list[dict[str, str]] = []
+    for line in log_path.read_text(encoding="utf-8").splitlines():
+        m = LOG_ENTRY_RE.match(line.strip())
+        if not m:
+            continue
+        updates.append(
+            {
+                "date": m.group("date"),
+                "kind": m.group("kind").strip(),
+                "title": m.group("title").strip(),
+                "href": "log.html",
+            }
+        )
+    return updates[:limit]
+
+
+def build_site_stats(pages: list[PageMeta]) -> list[tuple[str, int]]:
+    return [
+        ("全部页面", len(pages)),
+        ("实体", sum(1 for p in pages if p.category == "entities")),
+        ("概念", sum(1 for p in pages if p.category == "concepts")),
+        ("源文件", sum(1 for p in pages if p.category == "sources")),
+        ("分析", sum(1 for p in pages if p.category == "analysis")),
+    ]
+
+
 def build_site_index(resolver: Resolver) -> str:
     """Generate wiki/html/index.html — mirrors wiki/index.md structure with search."""
     index_md = (WIKI / "index.md").read_text(encoding="utf-8")
@@ -493,6 +604,9 @@ def build_site_index(resolver: Resolver) -> str:
 
     # All pages for search index
     pages = collect_page_meta(descriptions)
+    topic_groups = build_topic_groups(pages)
+    site_stats = build_site_stats(pages)
+    recent_updates = parse_recent_updates()
     search_index = [
         {
             "title": p.title,
