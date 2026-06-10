@@ -24,6 +24,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
+from html.parser import HTMLParser
 from pathlib import Path
 
 import markdown as md
@@ -397,18 +398,58 @@ def should_write(dst: Path, force: bool) -> bool:
 
 
 # ── Site index page ──────────────────────────────────────────────
-INDEX_LINK_DESC_RE = re.compile(
-    r'<a class="wikilink" href="(?P<href>[^"]+)">(?P<label>[^<]+)</a>\s*—\s*(?P<desc>[^<\n]+)'
-)
+class IndexDescriptionParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.descriptions: dict[str, str] = {}
+        self._in_li = False
+        self._href: str | None = None
+        self._text_parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attrs_dict = dict(attrs)
+        if tag == "li":
+            self._in_li = True
+            self._href = None
+            self._text_parts = []
+            return
+        if tag == "a" and self._in_li and self._href is None:
+            classes = (attrs_dict.get("class") or "").split()
+            href = attrs_dict.get("href")
+            if "wikilink" in classes and href:
+                self._href = href
+
+    def handle_data(self, data: str) -> None:
+        if self._in_li:
+            self._text_parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag != "li" or not self._in_li:
+            return
+        text = re.sub(r"\s+", " ", "".join(self._text_parts)).strip()
+        if self._href and "—" in text:
+            _, desc = text.split("—", 1)
+            self.descriptions[htmllib.unescape(self._href)] = desc.strip()
+        self._in_li = False
+        self._href = None
+        self._text_parts = []
 
 
 def extract_index_descriptions(index_html: str) -> dict[str, str]:
-    descriptions: dict[str, str] = {}
-    for m in INDEX_LINK_DESC_RE.finditer(index_html):
-        href = htmllib.unescape(m.group("href"))
-        desc = htmllib.unescape(m.group("desc")).strip()
-        descriptions[href] = desc
-    return descriptions
+    parser = IndexDescriptionParser()
+    parser.feed(index_html)
+    parser.close()
+    return parser.descriptions
+
+
+def escape_script_json(json_text: str) -> str:
+    return (
+        json_text.replace("&", "\\u0026")
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("\u2028", "\\u2028")
+        .replace("\u2029", "\\u2029")
+    )
 
 
 def collect_page_meta(descriptions: dict[str, str] | None = None) -> list[PageMeta]:
@@ -464,7 +505,7 @@ def build_site_index(resolver: Resolver) -> str:
         }
         for p in pages
     ]
-    search_json = json.dumps(search_index, ensure_ascii=False)
+    search_json = escape_script_json(json.dumps(search_index, ensure_ascii=False))
 
     extra_head = f"""<style>
   .search-box {{
@@ -509,13 +550,21 @@ def build_site_index(resolver: Resolver) -> str:
   const out = document.getElementById("search-results");
   function search(q) {{
     q = q.trim().toLowerCase();
-    if (!q) {{ out.innerHTML = ""; return; }}
+    if (!q) {{ out.replaceChildren(); return; }}
     const hits = SEARCH_INDEX.filter(e =>
       e.title.toLowerCase().includes(q) || e.tags.join(",").toLowerCase().includes(q)
     ).slice(0, 30);
-    out.innerHTML = hits.map(e =>
-      `<li><a class="wikilink" href="${{e.href}}">${{e.title}}</a><small>${{e.category}} · ${{e.tags.join(",")}}</small></li>`
-    ).join("");
+    out.replaceChildren(...hits.map(e => {{
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.className = "wikilink";
+      link.setAttribute("href", e.href);
+      link.textContent = e.title;
+      const meta = document.createElement("small");
+      meta.textContent = `${{e.category}} · ${{e.tags.join(",")}}`;
+      li.append(link, meta);
+      return li;
+    }}));
   }}
   input.addEventListener("input", e => search(e.target.value));
 </script>
