@@ -187,14 +187,14 @@ main.content {
   color: var(--fg-muted);
   text-decoration: none;
   display: block;
-  padding: 2px 0;
+  padding: 2px 0 2px 6px;
 }
 .toc a:hover { color: var(--accent); }
-.toc a.active { color: var(--accent); font-weight: 500; }
 .toc a.active {
+  color: var(--accent);
+  font-weight: 500;
   background: var(--accent-soft);
   border-radius: 6px;
-  padding-left: 6px;
 }
 
 /* ── Home ───────────────────────────────────────────────────────── */
@@ -288,6 +288,7 @@ main.content {
 }
 
 .topic-card {
+  min-width: 0;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -298,13 +299,16 @@ main.content {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .topic-card h2 {
+  min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
   font-size: 17px;
+  overflow-wrap: anywhere;
 }
 
 .topic-card-head span {
@@ -327,12 +331,14 @@ main.content {
 
 .topic-links a,
 .inline-links a {
+  min-width: 0;
   min-height: 30px;
   display: inline-flex;
   align-items: center;
   padding: 4px 9px;
   border-radius: 999px;
   background: var(--accent-soft);
+  overflow-wrap: anywhere;
 }
 
 .home-panels {
@@ -342,14 +348,14 @@ main.content {
   margin: 28px 0;
 }
 
-.panel {
+.home-panels > .panel {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px;
 }
 
-.panel h2 {
+.home-panels > .panel h2 {
   margin-top: 0;
 }
 
