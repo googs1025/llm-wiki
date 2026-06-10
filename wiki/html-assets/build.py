@@ -49,45 +49,45 @@ TOPIC_GROUPS = [
         "title": "AI Agent / Memory",
         "description": "长期记忆、MCP、coding agent、Agent framework 与个人 AI 工具链。",
         "tags": {"agent-memory", "ai-agent", "mcp", "claude-code", "agent-framework"},
-        "preferred": {
+        "preferred": (
             "agent-memory-project-map",
             "ai-agent-frameworks-map",
             "agent-memory",
             "claude-code",
-        },
+        ),
     },
     {
         "title": "Agent Runtime / Sandbox",
         "description": "Agent 会话编排、沙箱隔离、凭据托管、网关治理和多 Agent 协作。",
         "tags": {"agent-runtime", "agent-sandbox", "sandbox", "multi-agent", "ai-gateway"},
-        "preferred": {
+        "preferred": (
             "agent-runtime-sandbox-project-map",
             "agent-sandbox",
             "agentgateway",
             "agent-credential-isolation",
-        },
+        ),
     },
     {
         "title": "LLM Inference / Serving",
         "description": "推理服务、KV cache、PagedAttention、RadixAttention 和多云 GPU 编排。",
         "tags": {"llm-inference", "llm-serving", "kv-cache", "ai-infra", "gpu"},
-        "preferred": {
+        "preferred": (
             "llm-inference-serving-project-map",
             "llm-inference",
             "paged-attention",
             "radix-attention",
-        },
+        ),
     },
     {
         "title": "Kubernetes / Cloud Native",
         "description": "Kubernetes、GitOps、controller/operator、GPU 资源栈、安全和可观测。",
         "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator"},
-        "preferred": {
+        "preferred": (
             "kubernetes",
             "gitops",
             "argocd",
             "cloud-native-security",
-        },
+        ),
     },
 ]
 
@@ -530,17 +530,18 @@ def build_topic_groups(pages: list[PageMeta]) -> list[dict[str, object]]:
     for cfg in TOPIC_GROUPS:
         tagset = cfg["tags"]
         preferred_stems = cfg["preferred"]
+        preferred_set = set(preferred_stems)
         matches = [
             p for p in pages
             if tagset.intersection(set(p.tags))
             or any(token in p.title.lower() for token in tagset)
-            or p.stem in preferred_stems
+            or p.stem in preferred_set
         ]
         unique: dict[str, PageMeta] = {p.href: p for p in matches}
         ordered = [by_stem[s] for s in preferred_stems if s in by_stem]
         ordered.extend(
             sorted(
-                (p for p in unique.values() if p.stem not in preferred_stems),
+                (p for p in unique.values() if p.stem not in preferred_set),
                 key=lambda p: (p.category != "analysis", p.title.lower()),
             )
         )
