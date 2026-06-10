@@ -595,6 +595,68 @@ def build_site_stats(pages: list[PageMeta]) -> list[tuple[str, int]]:
     ]
 
 
+def esc(value: object) -> str:
+    return htmllib.escape(str(value), quote=True)
+
+
+def render_stat_strip(stats: list[tuple[str, int]]) -> str:
+    return '<div class="stats-strip">' + "".join(
+        f'<div class="stat"><strong>{count}</strong><span>{esc(label)}</span></div>'
+        for label, count in stats
+    ) + "</div>"
+
+
+def render_topic_grid(topic_groups: list[dict[str, object]]) -> str:
+    cards = []
+    for group in topic_groups:
+        links = group["links"]
+        link_html = "".join(
+            f'<a href="{esc(p.href)}">{esc(p.title)}</a>'
+            for p in links
+        )
+        cards.append(
+            '<section class="topic-card">'
+            f'<div class="topic-card-head"><h2>{esc(group["title"])}</h2>'
+            f'<span>{esc(group["count"])} pages</span></div>'
+            f'<p>{esc(group["description"])}</p>'
+            f'<div class="topic-links">{link_html}</div>'
+            '</section>'
+        )
+    return '<div class="topic-grid">' + "".join(cards) + "</div>"
+
+
+def render_recent_updates(updates: list[dict[str, str]]) -> str:
+    if not updates:
+        return ""
+    items = "".join(
+        '<li>'
+        f'<time>{esc(item["date"])}</time>'
+        f'<a href="{esc(item["href"])}">{esc(item["title"])}</a>'
+        f'<span>{esc(item["kind"])}</span>'
+        '</li>'
+        for item in updates
+    )
+    return f'<section class="panel recent-updates"><h2>最近更新</h2><ul>{items}</ul></section>'
+
+
+def render_reading_paths(topic_groups: list[dict[str, object]]) -> str:
+    items = []
+    for group in topic_groups:
+        first_links = group["links"][:3]
+        links = " ".join(
+            f'<a href="{esc(p.href)}">{esc(p.title)}</a>'
+            for p in first_links
+        )
+        items.append(
+            '<li>'
+            f'<strong>{esc(group["title"])}</strong>'
+            f'<p>{esc(group["description"])}</p>'
+            f'<div class="inline-links">{links}</div>'
+            '</li>'
+        )
+    return '<section class="panel reading-paths"><h2>推荐阅读路径</h2><ol>' + "".join(items) + "</ol></section>"
+
+
 def build_site_index(resolver: Resolver) -> str:
     """Generate wiki/html/index.html — mirrors wiki/index.md structure with search."""
     index_md = (WIKI / "index.md").read_text(encoding="utf-8")
@@ -628,42 +690,32 @@ def build_site_index(resolver: Resolver) -> str:
     ]
     search_json = escape_script_json(json.dumps(search_index, ensure_ascii=False))
 
-    extra_head = f"""<style>
-  .search-box {{
-    margin: 16px 0 24px;
-    display: flex;
-    gap: 8px;
-  }}
-  .search-box input {{
-    flex: 1;
-    padding: 10px 14px;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--fg);
-    outline: none;
-  }}
-  .search-box input:focus {{ border-color: var(--accent); }}
-  #search-results {{
-    margin: 16px 0 0;
-    padding: 0;
-    list-style: none;
-  }}
-  #search-results li {{
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-  }}
-  #search-results li small {{ color: var(--fg-dim); margin-left: 8px; }}
-  #search-results:empty {{ display: none; }}
-</style>"""
+    extra_head = ""
 
     extra_body = f"""
-<div class="search-box">
-  <input id="search-input" type="search" placeholder="搜索全站标题 / 标签 …" autocomplete="off" />
+<section class="home-hero">
+  <div>
+    <h1>llm-wiki</h1>
+    <p class="subtitle">个人 LLM / AI Agent / 云原生 / 推理基础设施知识库。</p>
+  </div>
+  {render_stat_strip(site_stats)}
+</section>
+
+<section class="home-search">
+  <label class="sr-only" for="search-input">搜索全站标题、标签、分类和描述</label>
+  <input id="search-input" type="search" placeholder="搜索标题、标签、主题、项目" autocomplete="off" />
+  <ul id="search-results"></ul>
+</section>
+
+<section class="home-section">
+  <h2>主题入口</h2>
+  {render_topic_grid(topic_groups)}
+</section>
+
+<div class="home-panels">
+  {render_reading_paths(topic_groups)}
+  {render_recent_updates(recent_updates)}
 </div>
-<ul id="search-results"></ul>
 
 <script>
   const SEARCH_INDEX = {search_json};
@@ -672,23 +724,40 @@ def build_site_index(resolver: Resolver) -> str:
   function search(q) {{
     q = q.trim().toLowerCase();
     if (!q) {{ out.replaceChildren(); return; }}
-    const hits = SEARCH_INDEX.filter(e =>
-      e.title.toLowerCase().includes(q) || e.tags.join(",").toLowerCase().includes(q)
-    ).slice(0, 30);
-    out.replaceChildren(...hits.map(e => {{
+    const hits = SEARCH_INDEX.filter(e => {{
+      const tags = (e.tags || []).join(" ");
+      return [e.title, e.category, e.categoryLabel, tags, e.description]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    }}).slice(0, 30);
+    const nodes = [];
+    for (const e of hits) {{
       const li = document.createElement("li");
       const link = document.createElement("a");
       link.className = "wikilink";
       link.setAttribute("href", e.href);
       link.textContent = e.title;
       const meta = document.createElement("small");
-      meta.textContent = `${{e.category}} · ${{e.tags.join(",")}}`;
+      const tags = (e.tags || []).slice(0, 4).join(", ");
+      meta.textContent = `${{e.categoryLabel}} · ${{tags}}`;
       li.append(link, meta);
-      return li;
-    }}));
+      if (e.description) {{
+        const description = document.createElement("p");
+        description.textContent = e.description;
+        li.append(description);
+      }}
+      nodes.push(li);
+    }}
+    out.replaceChildren(...nodes);
   }}
   input.addEventListener("input", e => search(e.target.value));
 </script>
+
+<section class="full-index" id="full-index">
+  <h2>完整索引</h2>
+  {body_html}
+</section>
 """
 
     page_html = f"""<!doctype html>
@@ -714,12 +783,7 @@ def build_site_index(resolver: Resolver) -> str:
 <div class="layout">
   <main class="content">
 
-  <h1>🦊 llm-wiki</h1>
-  <p class="subtitle">个人 LLM / 云原生 / Agent 知识库 · 全站静态渲染 · 暗 / 亮主题切换</p>
-
   {extra_body}
-
-  {body_html}
 
   <div class="footer">
     🦊 llm-wiki · 由 <code>wiki/html-assets/build.py</code> 自动生成
