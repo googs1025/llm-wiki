@@ -562,21 +562,26 @@ def parse_recent_updates(limit: int = 8) -> list[dict[str, str]]:
     log_path = WIKI / "log.md"
     if not log_path.exists():
         return []
-    updates: list[dict[str, str]] = []
-    for line in log_path.read_text(encoding="utf-8").splitlines():
+    indexed_updates: list[tuple[str, int, dict[str, str]]] = []
+    for line_index, line in enumerate(log_path.read_text(encoding="utf-8").splitlines()):
         m = LOG_ENTRY_RE.match(line.strip())
         if not m:
             continue
-        updates.append(
-            {
-                "date": m.group("date"),
-                "kind": m.group("kind").strip(),
-                "title": m.group("title").strip(),
-                "href": "log.html",
-            }
+        date = m.group("date")
+        indexed_updates.append(
+            (
+                date,
+                line_index,
+                {
+                    "date": date,
+                    "kind": m.group("kind").strip(),
+                    "title": m.group("title").strip(),
+                    "href": "log.html",
+                },
+            )
         )
-    updates.sort(key=lambda entry: entry["date"], reverse=True)
-    return updates[:limit]
+    indexed_updates.sort(key=lambda entry: (entry[0], entry[1]), reverse=True)
+    return [update for _, _, update in indexed_updates[:limit]]
 
 
 def build_site_stats(pages: list[PageMeta]) -> list[tuple[str, int]]:
