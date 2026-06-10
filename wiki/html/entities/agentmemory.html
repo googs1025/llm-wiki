@@ -116,20 +116,6 @@
 <li><code>unhandledRejection</code> 顶层 60s 节流吞掉异常，可能掩盖真正的 bug</li>
 <li>添加一个 MCP tool 需同步 7 处文件（AGENTS.md 列出），PR 漏改风险高</li>
 </ul>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><a class="wikilink" href="../sources/src-agentmemory-architecture.html">src-agentmemory-architecture</a> — 完整架构源摘要</li>
-<li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a> — 领域综述</li>
-<li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a> — 单 Agent 版同类</li>
-<li><a class="wikilink" href="../entities/powermem.html">powermem</a> — 数据库后端同类</li>
-<li><a class="wikilink" href="../entities/claude-context.html">claude-context</a> — 互补项目（代码检索 MCP）</li>
-<li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a> — Hook → Compress → Index → Inject 范式</li>
-<li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a> — 三流 RRF 方法论</li>
-<li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a> — 衰减理论</li>
-<li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a> — 哲学对照</li>
-<li><a class="wikilink" href="../entities/claude-code.html">claude-code</a> — 12 hooks 主要消费者</li>
-<li><a class="wikilink" href="../entities/mcp.html">mcp</a> — 53 个 tool 的协议基础</li>
-</ul>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/claude-mem.html">claude-mem</a></li><li><a class="wikilink" href="../entities/powermem.html">powermem</a></li><li><a class="wikilink" href="../entities/claude-context.html">claude-context</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../concepts/agent-memory.html">agent-memory</a></li><li><a class="wikilink" href="../concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a></li><li><a class="wikilink" href="../concepts/hybrid-search-rrf.html">hybrid-search-rrf</a></li><li><a class="wikilink" href="../concepts/ebbinghaus-forgetting-curve.html">ebbinghaus-forgetting-curve</a></li><li><a class="wikilink" href="../concepts/ai-as-compressor.html">ai-as-compressor</a></li></ul></section>
 
@@ -138,7 +124,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#解决的问题">解决的问题</a></li><li class=""><a href="#核心特征">核心特征</a></li><li class=""><a href="#架构骨架">架构骨架</a></li><li class=""><a href="#与-claude-mem--powermem-的关系">与 claude-mem / powermem 的关系</a></li><li class=""><a href="#关键依赖">关键依赖</a></li><li class=""><a href="#已知限制">已知限制</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#解决的问题">解决的问题</a></li><li class=""><a href="#核心特征">核心特征</a></li><li class=""><a href="#架构骨架">架构骨架</a></li><li class=""><a href="#与-claude-mem--powermem-的关系">与 claude-mem / powermem 的关系</a></li><li class=""><a href="#关键依赖">关键依赖</a></li><li class=""><a href="#已知限制">已知限制</a></li></ul></aside>
 </div>
 
 <script>

@@ -92,13 +92,6 @@
 - 多一跳网络传输（KV blocks），需要高速互联（NVLink/RDMA）才划算<br>
 - 路由复杂度上升（要选两次 worker）<br>
 - 故障域增加（prefill worker 死了，decode worker 收不到 KV）</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li>旗舰实现：<a class="wikilink" href="../entities/dynamo.html">dynamo</a>、<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a></li>
-<li>兼容 backend：<a class="wikilink" href="../entities/vllm.html">vllm</a>、<a class="wikilink" href="../entities/sglang.html">sglang</a></li>
-<li>协同概念：<a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>（KV 在多级存储间流动）、<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>（KV-aware 路由配套）</li>
-<li>上位概念：<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li>
-</ul>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section>
 
@@ -107,7 +100,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么要分离">为什么要分离</a></li><li class=""><a href="#关键工程问题kv-怎么传">关键工程问题：KV 怎么传</a></li><li class=""><a href="#dynamodynamo-中的实现">dynamo|Dynamo 中的实现</a></li><li class=""><a href="#收益与代价">收益与代价</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么要分离">为什么要分离</a></li><li class=""><a href="#关键工程问题kv-怎么传">关键工程问题：KV 怎么传</a></li><li class=""><a href="#dynamodynamo-中的实现">dynamo|Dynamo 中的实现</a></li><li class=""><a href="#收益与代价">收益与代价</a></li></ul></aside>
 </div>
 
 <script>

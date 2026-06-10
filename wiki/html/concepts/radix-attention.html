@@ -127,12 +127,6 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 </ul>
 <h2 id="出处">出处</h2>
 <p>Zheng et al., <em>"SGLang: Efficient Execution of Structured Language Model Programs"</em>, NeurIPS 2024。</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li>工程实现：<a class="wikilink" href="../entities/sglang.html">sglang</a> → <code>mem_cache/radix_cache.py</code></li>
-<li>对照算法：<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>（<a class="wikilink" href="../entities/vllm.html">vllm</a> 的 KV 管理）</li>
-<li>架构详解：<a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a></li>
-</ul>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
 
@@ -141,7 +135,7 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心数据结构">核心数据结构</a></li><li class="level-3"><a href="#treenode">TreeNode</a></li><li class="level-3"><a href="#两级-kv-pool">两级 KV pool</a></li><li class=""><a href="#核心算法">核心算法</a></li><li class="level-3"><a href="#match_prefixinput_ids">match_prefix(input_ids)</a></li><li class="level-3"><a href="#insertreq">insert(req)</a></li><li class="level-3"><a href="#eviction">Eviction</a></li><li class=""><a href="#vs-paged-attention-关键差异">vs paged-attention 关键差异</a></li><li class=""><a href="#工程要点">工程要点</a></li><li class=""><a href="#出处">出处</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心数据结构">核心数据结构</a></li><li class="level-3"><a href="#treenode">TreeNode</a></li><li class="level-3"><a href="#两级-kv-pool">两级 KV pool</a></li><li class=""><a href="#核心算法">核心算法</a></li><li class="level-3"><a href="#match_prefixinput_ids">match_prefix(input_ids)</a></li><li class="level-3"><a href="#insertreq">insert(req)</a></li><li class="level-3"><a href="#eviction">Eviction</a></li><li class=""><a href="#vs-paged-attention-关键差异">vs paged-attention 关键差异</a></li><li class=""><a href="#工程要点">工程要点</a></li><li class=""><a href="#出处">出处</a></li></ul></aside>
 </div>
 
 <script>

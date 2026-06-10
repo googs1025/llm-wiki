@@ -390,8 +390,17 @@ class PageMeta:
     description: str = ""
 
 
+RELATED_SECTION_RE = re.compile(r"^##\s+相关页面\s*$.*?(?=^##\s+|\Z)", re.MULTILINE | re.DOTALL)
+
+
+def strip_markdown_related_section(body: str) -> str:
+    """Use frontmatter related links as the single generated related panel."""
+    return RELATED_SECTION_RE.sub("", body).rstrip() + "\n"
+
+
 def build_page(page: Page, resolver: Resolver) -> str:
-    body_with_ids = inject_heading_ids(page.body_md)
+    body_md = strip_markdown_related_section(page.body_md) if page.fm.related else page.body_md
+    body_with_ids = inject_heading_ids(body_md)
     body_with_links = rewrite_wikilinks(body_with_ids, resolver, from_cat=page.category if page.category != "ROOT" else None)
 
     # Markdown → HTML
@@ -405,7 +414,7 @@ def build_page(page: Page, resolver: Resolver) -> str:
     body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
     body_html = re.sub(r"(<table>.*?</table>)", r'<div class="table-wrap">\1</div>', body_html, flags=re.DOTALL)
 
-    toc = extract_toc(page.body_md)
+    toc = extract_toc(body_md)
     toc_html = render_toc(toc)
 
     is_root = page.category == "ROOT"

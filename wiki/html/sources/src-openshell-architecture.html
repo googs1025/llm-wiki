@@ -200,16 +200,6 @@
 <h3 id="supervisor-relay-与-sandbox-proxy">Supervisor Relay 与 Sandbox Proxy</h3>
 <p>OpenShell 的 connect/exec/file sync 不走 Gateway 直接拨 sandbox，而是由 Supervisor 先向 Gateway 建立 gRPC session。Gateway 想打开 relay 时，先等待 session，登记 pending channel，再向 Supervisor 发 <code>RelayOpen</code>；Supervisor 用 <code>RelayStream</code> 首帧 claim channel。这个顺序避免反向连接先到而 Gateway 还没有等待者的竞态。</p>
 <p>Proxy 是数据面的核心：先解析 CONNECT，<code>inference.local:443</code> 进入 inference interception；其他目标先做进程身份绑定和 OPA policy evaluation，再做 SSRF 防护、TLS/L7 inspection、credential rewrite 或 raw relay。L7 和 inference 都在 L4 allow 之后发生，<code>tls: skip</code> 则显式退回 raw tunnel。</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li>
-<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li>
-<li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li>
-<li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li>
-<li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li>
-<li><a class="wikilink" href="../entities/mcp.html">mcp</a></li>
-<li><a class="wikilink" href="../entities/vllm.html">vllm</a></li>
-</ul>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><span class="wikilink wikilink-missing" title="未建页：OpenShell">OpenShell</span></li><li><span class="wikilink wikilink-missing" title="未建页：NVIDIA">NVIDIA</span></li><li><span class="wikilink wikilink-missing" title="未建页：NemoClaw">NemoClaw</span></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
 
@@ -218,7 +208,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#gateway-compute-runtime">Gateway Compute Runtime</a></li><li class="level-3"><a href="#supervisor-relay-与-sandbox-proxy">Supervisor Relay 与 Sandbox Proxy</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#模块分层">模块分层</a></li><li class=""><a href="#关键数据流">关键数据流</a></li><li class=""><a href="#设计决策与哲学">设计决策与哲学</a></li><li class=""><a href="#关键组件深入解读">关键组件深入解读</a></li><li class="level-3"><a href="#gateway-compute-runtime">Gateway Compute Runtime</a></li><li class="level-3"><a href="#supervisor-relay-与-sandbox-proxy">Supervisor Relay 与 Sandbox Proxy</a></li></ul></aside>
 </div>
 
 <script>

@@ -88,12 +88,6 @@
 - 多一层调度逻辑（什么时候升 / 什么时候降）<br>
 - 不命中时延迟跳到 µs / ms / 秒级<br>
 - 跨层传输需要高速互联或对应硬件（GDS / RDMA）</p>
-<h2 id="相关页面">相关页面</h2>
-<ul>
-<li>旗舰实现：<a class="wikilink" href="../entities/dynamo.html">dynamo</a> KVBM（<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> "KVBM 四级层次"节）</li>
-<li>协同概念：<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>、<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>、<a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li>
-<li>上位概念：<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li>
-</ul>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section>
 
@@ -102,7 +96,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么需要多级">为什么需要多级</a></li><li class=""><a href="#四级层次dynamodynamo-kvbm-实现为参考">四级层次（dynamo|Dynamo KVBM 实现为参考）</a></li><li class=""><a href="#关键机制">关键机制</a></li><li class=""><a href="#与-paged-attentionpagedattention--radix-attentionradixattention-的关系">与 paged-attention|PagedAttention / radix-attention|RadixAttention 的关系</a></li><li class=""><a href="#与-disaggregated-servingdisaggregated-serving-的协同">与 disaggregated-serving|Disaggregated Serving 的协同</a></li><li class=""><a href="#收益与代价">收益与代价</a></li><li class=""><a href="#相关页面">相关页面</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#为什么需要多级">为什么需要多级</a></li><li class=""><a href="#四级层次dynamodynamo-kvbm-实现为参考">四级层次（dynamo|Dynamo KVBM 实现为参考）</a></li><li class=""><a href="#关键机制">关键机制</a></li><li class=""><a href="#与-paged-attentionpagedattention--radix-attentionradixattention-的关系">与 paged-attention|PagedAttention / radix-attention|RadixAttention 的关系</a></li><li class=""><a href="#与-disaggregated-servingdisaggregated-serving-的协同">与 disaggregated-serving|Disaggregated Serving 的协同</a></li><li class=""><a href="#收益与代价">收益与代价</a></li></ul></aside>
 </div>
 
 <script>
