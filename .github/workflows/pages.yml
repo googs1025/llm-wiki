@@ -3,6 +3,7 @@ name: Deploy wiki to GitHub Pages
 on:
   push:
     branches: [main]
+    # Rebuild Pages when wiki content or the Pages workflow changes.
     paths:
       - "wiki/**"
       - ".github/workflows/pages.yml"
