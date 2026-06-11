@@ -63,6 +63,14 @@ When the user asks a question:
 3. Cite wiki sources in the answer with `See [[Page Name]]`.
 4. If the answer has long-term value, ask whether it should be saved under `wiki/analysis/`.
 
+For project understanding, architecture comparison, or technology selection questions:
+
+- Re-check the relevant GitHub repositories before analysis, even when wiki pages or source summaries already exist.
+- Prefer primary evidence from the current repository: README, docs, architecture diagrams, package/module layout, examples, config files, recent releases/tags, and notable recent commits.
+- Compare multiple existing projects side by side when useful, focusing on architecture boundaries, core abstractions, control/data flow, storage/runtime dependencies, extension points, operational model, maturity, and trade-offs.
+- Make the selection guidance explicit: best fit, avoid-if conditions, migration/adoption cost, and what to verify next.
+- Distinguish fresh GitHub observations from older ingested source notes when they differ or when confidence depends on current repository state.
+
 ## Lint Workflow
 
 When the user asks for a health check, inspect these items:
