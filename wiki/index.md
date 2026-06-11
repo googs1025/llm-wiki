@@ -97,6 +97,14 @@ date: 2026-05-12
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
 - [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
+- [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
+- [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）
+- [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
+- [[llm-serving-engine-selection-map]] — LLM Serving / 推理引擎选型地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack）
+- [[mcp-gateway-tooling-map]] — MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）
+- [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）
+- [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）
+- [[agent-framework-programming-model-map]] — Agent Framework 编程模型对比地图（LangGraph / LangChain / Dify / AgentScope / Eino / ADK / AutoGen / CrewAI）
 
 ---
 
