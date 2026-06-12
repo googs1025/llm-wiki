@@ -28,6 +28,10 @@
   </header>
 
   <p>本页是 <a class="wikilink" href="../analysis/github-stars-ingest-candidates.html">github-stars-ingest-candidates</a> 的 GitHub 当前状态复核底稿。2026-06-12 通过 GitHub API 重新读取 P0-P2 项目的描述、stars、最近 push、主语言、license 和 topics，并把它们作为 <a class="wikilink" href="../analysis/github-stars-backlog-implementation-map.html">github-stars-backlog-implementation-map</a> 的事实输入。每个项目的原始核验结果已逐一保存到 <code>raw/github-stars-p*-*.md</code>。</p>
+<blockquote>
+<p>[!note] Snapshot 与架构分析的区别<br>
+<code>raw/github-stars-p*-*.md</code> 是 GitHub 元数据快照，只记录仓库当前状态，不是源码架构分析。正式 <code>$ingest-codebase</code> 产物统一在 <code>raw/&lt;slug&gt;-architecture-analysis.md</code>、<code>wiki/sources/src-&lt;slug&gt;-architecture.md</code> 和 <code>wiki/html/sources/src-&lt;slug&gt;-architecture.html</code>。例如 <code>raw/github-stars-p1-semantic-router.md</code> 对应的正式分析是 <code>raw/semantic-router-architecture-analysis.md</code> 与 <a class="wikilink" href="../sources/src-semantic-router-architecture.html">src-semantic-router-architecture</a>。</p>
+</blockquote>
 <p>它不是新的 backlog。它的作用是把“候选项目”变成可比较的当前项目剖面，供后续按专题理解架构边界和选型差异。</p>
 <h2 id="raw-快照文件">Raw 快照文件</h2>
 <h3 id="p0">P0</h3>

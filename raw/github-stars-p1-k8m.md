@@ -20,3 +20,13 @@
 ## Wiki use
 
 Use this as the raw current-state snapshot for lightweight Kubernetes AI dashboard products. Future ingest should inspect permission control, MCP surface, multi-cluster model, and anomaly detection path.
+
+## Formal architecture ingest
+
+This file is only the GitHub metadata snapshot: repository identity, stars, language, license, topics, and latest activity at the time of capture. The source-code architecture analysis has been completed separately.
+
+- Raw source-code analysis: `raw/k8m-architecture-analysis.md`
+- Wiki source page: `wiki/sources/src-k8m-architecture.md`
+- Generated HTML page: `wiki/html/sources/src-k8m-architecture.html`
+
+Use the `*-architecture-analysis.md` file when you need implementation details, module boundaries, data/control flow, and same-category architecture comparison. Use this `github-stars-*` file only when you need the original GitHub current-state snapshot.

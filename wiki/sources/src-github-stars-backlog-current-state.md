@@ -10,6 +10,9 @@ related: [[github-stars-backlog-implementation-map]], [[github-stars-ingest-cand
 
 本页是 [[github-stars-ingest-candidates]] 的 GitHub 当前状态复核底稿。2026-06-12 通过 GitHub API 重新读取 P0-P2 项目的描述、stars、最近 push、主语言、license 和 topics，并把它们作为 [[github-stars-backlog-implementation-map]] 的事实输入。每个项目的原始核验结果已逐一保存到 `raw/github-stars-p*-*.md`。
 
+> [!note] Snapshot 与架构分析的区别
+> `raw/github-stars-p*-*.md` 是 GitHub 元数据快照，只记录仓库当前状态，不是源码架构分析。正式 `$ingest-codebase` 产物统一在 `raw/<slug>-architecture-analysis.md`、`wiki/sources/src-<slug>-architecture.md` 和 `wiki/html/sources/src-<slug>-architecture.html`。例如 `raw/github-stars-p1-semantic-router.md` 对应的正式分析是 `raw/semantic-router-architecture-analysis.md` 与 [[src-semantic-router-architecture]]。
+
 它不是新的 backlog。它的作用是把“候选项目”变成可比较的当前项目剖面，供后续按专题理解架构边界和选型差异。
 
 ## Raw 快照文件

@@ -20,3 +20,13 @@
 ## Wiki use
 
 Use this as the raw current-state snapshot for single-binary Kubernetes dashboard + AI integration. Future ingest should inspect dashboard architecture, AI assistant boundary, local deployment, and auth/RBAC handling.
+
+## Formal architecture ingest
+
+This file is only the GitHub metadata snapshot: repository identity, stars, language, license, topics, and latest activity at the time of capture. The source-code architecture analysis has been completed separately.
+
+- Raw source-code analysis: `raw/kubewall-architecture-analysis.md`
+- Wiki source page: `wiki/sources/src-kubewall-architecture.md`
+- Generated HTML page: `wiki/html/sources/src-kubewall-architecture.html`
+
+Use the `*-architecture-analysis.md` file when you need implementation details, module boundaries, data/control flow, and same-category architecture comparison. Use this `github-stars-*` file only when you need the original GitHub current-state snapshot.
