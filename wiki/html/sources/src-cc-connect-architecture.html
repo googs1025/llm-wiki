@@ -31,7 +31,7 @@
 <p>原文：<code>raw/cc-connect-architecture-analysis.md</code> · 仓库：https://github.com/chenhg5/cc-connect · 分析版本 HEAD <code>c53f545</code>（2026-06-10）</p>
 </blockquote>
 <h2 id="一句话定位">一句话定位</h2>
-<p>把本地 AI coding agent 连接到飞书、钉钉、Slack、Telegram、Discord、企业微信等消息平台的 Go bridge。它的核心是 Engine 把 platform message 转成 agent session 输入，并把 agent event/usage/attachment 转回聊天平台。 这页和 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> <span class="wikilink wikilink-missing" title="未建页：codex">codex</span> <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> <span class="wikilink wikilink-missing" title="未建页：open-cowork">open-cowork</span> 形成对比，重点帮助理解项目边界和选型位置。</p>
+<p>把本地 AI coding agent 连接到飞书、钉钉、Slack、Telegram、Discord、企业微信等消息平台的 Go bridge。它的核心是 Engine 把 platform message 转成 agent session 输入，并把 agent event/usage/attachment 转回聊天平台。 这页和 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> <a class="wikilink" href="../entities/codex.html">codex</a> <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> <a class="wikilink" href="../entities/open-cowork.html">open-cowork</a> 形成对比，重点帮助理解项目边界和选型位置。</p>
 <h2 id="核心架构图">核心架构图</h2>
 <pre><code>┌──────────────── Messaging Platforms ────────────────┐
 │ Feishu / Slack / Telegram / DingTalk / Discord / ... │
@@ -139,7 +139,7 @@
 <h2 id="选型提示">选型提示</h2>
 <p>如果你在快速理解或选型，先判断它是“执行任务的 agent/runtime”、“观察与计量工具”、“消息/插件 bridge”，还是“Kubernetes/GPU 控制面”。同一条 star 列表里的项目经常解决的是相邻但不同的问题：比如 trace viewer 不能替代 remote control bridge，GPU Operator 也不能替代 DRA driver 或 device plugin 的分配路径。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><span class="wikilink wikilink-missing" title="未建页：codex">codex</span></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><span class="wikilink wikilink-missing" title="未建页：open-cowork">open-cowork</span></li><li><a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/codex.html">codex</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/open-cowork.html">open-cowork</a></li><li><a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-cc-connect-architecture.md">查看 Markdown 源</a>

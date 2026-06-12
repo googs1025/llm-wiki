@@ -31,7 +31,7 @@
 <p>原文：<code>raw/k8s-device-plugin-architecture-analysis.md</code> · 仓库：https://github.com/NVIDIA/k8s-device-plugin · 分析版本 HEAD <code>8688949</code>（2026-06-10）</p>
 </blockquote>
 <h2 id="一句话定位">一句话定位</h2>
-<p>NVIDIA 官方 Kubernetes device plugin，把节点上的 GPU/MIG/vGPU 发现为 kubelet extended resources，并在 Allocate 阶段通过 env、volume-mounts 或 CDI annotations 把设备传给容器。它是 GPU 暴露的基础层，上层 GPU Operator/HAMi/DRA 都会和它形成互补或替代关系。 这页和 <a class="wikilink" href="../entities/kubernetes.html">kubernetes</a> <span class="wikilink wikilink-missing" title="未建页：cdi">cdi</span> <span class="wikilink wikilink-missing" title="未建页：gpu-sharing">gpu-sharing</span> <span class="wikilink wikilink-missing" title="未建页：k8s-gpu-device-stack">k8s-gpu-device-stack</span> 形成对比，重点帮助理解项目边界和选型位置。</p>
+<p>NVIDIA 官方 Kubernetes device plugin，把节点上的 GPU/MIG/vGPU 发现为 kubelet extended resources，并在 Allocate 阶段通过 env、volume-mounts 或 CDI annotations 把设备传给容器。它是 GPU 暴露的基础层，上层 GPU Operator/HAMi/DRA 都会和它形成互补或替代关系。 这页和 <a class="wikilink" href="../entities/kubernetes.html">kubernetes</a> <a class="wikilink" href="../concepts/cdi.html">cdi</a> <a class="wikilink" href="../concepts/gpu-sharing.html">gpu-sharing</a> <span class="wikilink wikilink-missing" title="未建页：k8s-gpu-device-stack">k8s-gpu-device-stack</span> 形成对比，重点帮助理解项目边界和选型位置。</p>
 <h2 id="核心架构图">核心架构图</h2>
 <pre><code>┌────────────────── NVIDIA GPU Node ──────────────────┐
 │ NVML / CUDA / Tegra / VFIO / MIG / IMEX / MPS         │
@@ -138,7 +138,7 @@
 <h2 id="选型提示">选型提示</h2>
 <p>如果你在快速理解或选型，先判断它是“执行任务的 agent/runtime”、“观察与计量工具”、“消息/插件 bridge”，还是“Kubernetes/GPU 控制面”。同一条 star 列表里的项目经常解决的是相邻但不同的问题：比如 trace viewer 不能替代 remote control bridge，GPU Operator 也不能替代 DRA driver 或 device plugin 的分配路径。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><span class="wikilink wikilink-missing" title="未建页：cdi">cdi</span></li><li><span class="wikilink wikilink-missing" title="未建页：gpu-sharing">gpu-sharing</span></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-gpu-device-stack">k8s-gpu-device-stack</span></li><li><span class="wikilink wikilink-missing" title="未建页：dra">dra</span></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../concepts/cdi.html">cdi</a></li><li><a class="wikilink" href="../concepts/gpu-sharing.html">gpu-sharing</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-gpu-device-stack">k8s-gpu-device-stack</span></li><li><span class="wikilink wikilink-missing" title="未建页：dra">dra</span></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-k8s-device-plugin-architecture.md">查看 Markdown 源</a>

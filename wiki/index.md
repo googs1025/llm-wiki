@@ -12,26 +12,61 @@ date: 2026-05-12
 - [[argocd]] — Kubernetes GitOps 持续交付工具
 - [[gateway-api]] — K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）
 
-### AI Agent / LLM Infra
+### Coding Agent / Agent 生态
 - [[claude-code]] — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制
-- [[claude-mem]] — 给 Claude Code 装上长期记忆的开源插件
 - [[claude-agent-sdk]] — `@anthropic-ai/claude-agent-sdk`，Agent 编程 SDK
+- [[codex]] — OpenAI Codex CLI，Rust terminal coding agent（approval/sandbox/AGENTS.md/patch 工具链）
+- [[codex-plugin-cc]] — Claude Code 插件形式接入 Codex 的 broker/review gate
+- [[open-cowork]] — Electron desktop agent host（Skills/MCP + WSL2/Lima sandbox + GUI/IM control）
+- [[claude-tap]] — 本地 AI coding agent trace proxy/viewer
+- [[cc-connect]] — 把本地 coding agent 接入飞书/Slack/Telegram 等消息平台的 Go bridge
+- [[tokscale]] — Rust 本地 token usage analytics
+- [[loongsuite-pilot]] — Alibaba 多 Agent AI coding telemetry collector（hooks/SQLite/session/trace → JSONL/SLS/HTTP/OTLP）
+- [[nanobot]] — HKUDS 出品的极简个人 AI Agent 框架（Python，事件驱动 8 态状态机 + 17 渠道 + 7 厂商 + MCP）
+
+### Agent Runtime / Memory
+- [[claude-mem]] — 给 Claude Code 装上长期记忆的开源插件
 - [[claude-context]] — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent
-- [[milvus]] — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
 - [[agentcube]] — Volcano 社区 AI Agent / Code Interpreter 会话编排层（基于 agent-sandbox 的 Router + WorkloadManager + WarmPool）
 - [[agentgateway]] — Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）
+- [[agentscope-runtime]] — AgentScope Runtime，生产化 Agent-as-a-Service 运行时（FastAPI AgentApp + Runner + sandbox/deployers）
+- [[oceanbase]] — PowerMem 优先集成的分布式数据库/检索后端
 - [[powermem]] — OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
+- [[mem0]] — 通用 AI memory layer（SDK/server/OpenMemory/MCP/agent plugins）
 - [[agent-recall]] — 本地优先的 MCP-native Agent 记忆库（SQLite + scope hierarchy + AI briefing）
 - [[memsearch]] — Zilliz 出品的跨平台 AI coding agent 语义记忆系统（Markdown source-of-truth + Milvus hybrid search + progressive recall）
 - [[tencentdb-agent-memory]] — 腾讯云出品的 OpenClaw / Hermes Agent 记忆插件（L0→L3 分层长期记忆 + Mermaid context offload + SQLite/TCVDB hybrid search）
+- [[agentmemory]] — Rohit Ghumare 出品的本地化跨 Agent 记忆服务（TS + iii-engine + SQLite，三流 RRF + 零 LLM 默认）
+
+### LLM Serving / AI Gateway
 - [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
 - [[vllm]] — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）
 - [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
-- [[nanobot]] — HKUDS 出品的极简个人 AI Agent 框架（Python，事件驱动 8 态状态机 + 17 渠道 + 7 厂商 + MCP）
-- [[agentmemory]] — Rohit Ghumare 出品的本地化跨 Agent 记忆服务（TS + iii-engine + SQLite，三流 RRF + 零 LLM 默认 + 12 hooks + 53 MCP tools + 实时 viewer）
+- [[aibrix]] — vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）
+- [[llm-d]] — CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
+- [[kagent]] — Cloud Native agentic AI 操作层（Go control plane + Python/ADK packages + Kubernetes/DevOps tools）
+- [[gateway-api-inference-extension]] — Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）
+- [[semantic-router]] — vLLM Semantic Router，system-level intelligent router（Go/Rust bindings + dashboard/operator）
+- [[routellm]] — 成本/质量 LLM routing 的算法与评测基线
+- [[kserve]] — Kubernetes 标准化 model serving 平台（InferenceService + LLMISvc/LocalModel/controllers/webhooks/router）
+- [[gpustack]] — GPU cluster manager / model serving platform（server/worker/scheduler/gateway）
+- [[ome]] — Open Model Engine，K8s model serving operator（CRD/controller + runtime selector + accelerator configs）
+- [[kubeai]] — Kubernetes AI inference operator（Model CRD + OpenAI-compatible proxy/autoscaler/loader）
+
+### Kubernetes GPU / Device
+- [[hami]] — Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）
+- [[dra-driver-nvidia-gpu]] — NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）
+- [[gpu-operator]] — NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）
+- [[k8s-device-plugin]] — NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）
+
+### Code Intelligence / Repo Wiki
+- [[milvus]] — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval
+- [[code-review-graph]] — local-first code intelligence graph（Python package + CLI/MCP + VSCode extension）
+- [[deepwiki-open]] — open-source DeepWiki/repo wiki generator（Next.js UI + Python API/tools + LiteLLM）
+- [[llm-wiki]] — 当前个人知识库项目（raw/source/entity/concept/analysis 可链接知识图谱）
 
 ## 概念 (Concepts)
 
@@ -39,6 +74,10 @@ date: 2026-05-12
 - [[gitops]] — 以 Git 为单一事实来源的运维方法论
 - [[ai-ops]] — AI/LLM 增强运维（告警分诊、根因分析）
 - [[cloud-native-security]] — 云原生安全实践与趋势
+- [[kubernetes-dra]] — Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径
+- [[cdi]] — Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec
+- [[device-plugin]] — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制
+- [[gpu-sharing]] — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式
 
 ### Agent 记忆 / 设计模式
 - [[agent-memory]] — Agent 长期记忆领域综述
@@ -46,22 +85,32 @@ date: 2026-05-12
 - [[three-tier-search-protocol]] — 三层搜索协议（防上下文爆炸）
 - [[ai-as-compressor]] — AI 作为压缩器的设计哲学
 - [[ebbinghaus-forgetting-curve]] — `R = e^(-t/S)` 数学模型驱动 working/short/long 三层记忆衰减与晋升（PowerMem 核心）
+- [[agent-runtime-substrate]] — 高密度 agent-like workload substrate（worker pool / actor / sandbox / wake routing）
+- [[agent-delegation]] — 把本地 coding agent 委派给插件、消息平台或托管平台的任务分发模式
 
-### 检索 / RAG
+### 检索 / Code Intelligence
 - [[code-semantic-search]] — 代码语义检索方法论
 - [[hybrid-search-rrf]] — Dense + Sparse + RRF 重排混合检索
 - [[merkle-dag-fingerprint]] — 内容指纹做增量同步
+- [[code-graph]] — 从仓库构建符号/依赖/调用图并服务 review、Graph RAG、影响面分析
+- [[repo-wiki-generation]] — 自动把代码仓库生成可问答 wiki 的 pipeline
 
-### Agent 工程
+### Agent 工程 / Observability
 - [[ai-agent-plugin-patterns]] — AI Agent 外挂的 9 条设计原则（迁移检查表）
 - [[declarative-agent-management]] — 用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）
 - [[agent-credential-isolation]] — Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key
+- [[coding-agent-observability]] — coding agent 请求、工具、session、trace、usage、成本和运行状态的可观测性
+- [[token-usage-observability]] — 跨模型、client、workspace 汇总 token、cache、reasoning 和成本
 
 ### LLM 推理 / Serving
 - [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
 - [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
 - [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 默认架构）
 - [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
+- [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
+- [[ai-gateway]] — 面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面
+- [[inference-routing]] — 按 KV cache、语义、成本、模型质量、负载做推理请求路由
+- [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
 
 ## 源文件摘要 (Sources)
 
@@ -124,6 +173,7 @@ date: 2026-05-12
 - [[src-claude-tap-architecture]] — claude-tap 架构（HEAD `a11231b`，本地 AI coding agent trace proxy/viewer：reverse/forward proxy + SQLite trace + live/export viewer）
 - [[src-cc-connect-architecture]] — cc-connect 架构（HEAD `c53f545`，把 Claude Code/Codex/Gemini/Pi 等本地 coding agent 接到飞书/Slack/Telegram 等消息平台的 Go bridge）
 - [[src-tokscale-architecture]] — Tokscale 架构（HEAD `aebe4ea`，Rust 本地 token usage analytics：session scanner + parser + rayon aggregation + multi-source pricing + TUI/JSON）
+- [[src-loongsuite-pilot-architecture]] — LoongSuite Pilot 架构（HEAD `e936fb0`，Alibaba 多 Agent AI coding telemetry collector：hooks/SQLite/session/trace → JSONL/SLS/HTTP/OTLP）
 - [[src-hami-architecture]] — HAMi 架构（HEAD `5dca58e`，Kubernetes 异构 GPU sharing/vGPU：webhook + scheduler extender + device plugin + 多厂商 device abstraction）
 - [[src-dra-driver-nvidia-gpu-architecture]] — DRA Driver for NVIDIA GPUs 架构（HEAD `749a743`，Kubernetes DRA NVIDIA driver：ResourceClaim/ResourceSlice + NodePrepare + dynamic MIG/VFIO + ComputeDomain）
 - [[src-gpu-operator-architecture]] — NVIDIA GPU Operator 架构（HEAD `0219120`，GPU 软件栈 Kubernetes Operator：ClusterPolicy/NVIDIADriver + state renderer + operands lifecycle）
@@ -160,7 +210,6 @@ date: 2026-05-12
 - k8s-gpu-device-stack — Kubernetes GPU/异构设备资源层项目地图（device plugin、GPU Operator、vGPU/GPU sharing、DRA、CDI、DCGM/NVML、fake GPU）
 - k8s-core-controller-map — Kubernetes controller/operator 项目地图（client-go、controller-runtime、kubebuilder、CRD/webhook、调度、多集群、可观测）
 - controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链
-- dra / cdi / gpu-sharing — Kubernetes 下一代设备资源分配、容器设备声明和 GPU sharing 方向
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
 - ingress-nginx — 已退役的 K8s 入口控制器
