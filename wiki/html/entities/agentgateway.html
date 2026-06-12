@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-14</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,14 +23,11 @@
 
   <header class="page-header">
     <h1>agentgateway</h1>
-    <p class="page-meta">2026-05-14 · 来源：agentgateway-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：agentgateway-architecture-analysis.md</p>
     <div class="tags"><span class="tag">ai-gateway</span><span class="tag">llm</span><span class="tag">mcp</span><span class="tag">a2a</span><span class="tag">rust</span><span class="tag">kubernetes</span></div>
   </header>
 
-  <blockquote>
-<p>Stub — 待充实</p>
-</blockquote>
-<p>Solo.io / Istio 系出品的 <strong>AI-native L7 网关</strong>（Apache 2.0）。把三种 AI 流量统一在一个 Rust 数据面里：</p>
+  <p>Solo.io / Istio 系出品的 <strong>AI-native L7 网关</strong>（Apache 2.0）。把三种 AI 流量统一在一个 Rust 数据面里：</p>
 <ul>
 <li><strong>LLM Gateway</strong>：OpenAI / Anthropic / Gemini / Bedrock / Vertex / Azure / Copilot 七家 provider 统一为 OpenAI 兼容 API + guardrails</li>
 <li><strong>MCP Gateway</strong>：stdio / HTTP Streamable / SSE 三种 transport + OpenAPI 自动转 MCP 工具 + 多 MCP server federation</li>
@@ -50,13 +47,107 @@
 <li><strong>跟 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 互补</strong>：前者出口流量治理，后者运行时隔离，并集 = AI 工作负载完整治理面</li>
 </ol>
 <p>详见 <a class="wikilink" href="../sources/src-agentgateway-architecture.html">src-agentgateway-architecture</a>。</p>
-<h2 id="todo">TODO</h2>
+<h2 id="llm-provider-适配器对照">LLM provider 适配器对照</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>请求侧职责</th>
+<th>响应侧职责</th>
+<th>典型差异</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OpenAI / OpenAI-compatible</td>
+<td>作为内部标准格式，基本透传</td>
+<td>返回 OpenAI-compatible SSE / JSON</td>
+<td>其他 provider 多向它收敛</td>
+</tr>
+<tr>
+<td>Anthropic</td>
+<td>OpenAI messages → Anthropic messages / tools</td>
+<td>Anthropic event stream → OpenAI chunk</td>
+<td>thinking/tool schema/stream event 名称不同</td>
+</tr>
+<tr>
+<td>Gemini / Vertex</td>
+<td>OpenAI chat → generateContent / Vertex endpoint</td>
+<td>Gemini candidates → OpenAI choices</td>
+<td>project/location/auth 和多模态字段不同</td>
+</tr>
+<tr>
+<td>Bedrock</td>
+<td>OpenAI chat → Bedrock invoke，叠加 AWS SigV4</td>
+<td>Bedrock body/stream → OpenAI-compatible</td>
+<td>AWS auth、model id、区域化 endpoint</td>
+</tr>
+<tr>
+<td>Azure OpenAI</td>
+<td>OpenAI schema + Azure deployment endpoint</td>
+<td>Azure OpenAI response → OpenAI-compatible</td>
+<td>deployment 名称、api-version、endpoint path</td>
+</tr>
+<tr>
+<td>Copilot</td>
+<td>适配 GitHub Copilot provider 入口</td>
+<td>统一成 OpenAI-compatible</td>
+<td>认证和可用模型集合不同</td>
+</tr>
+</tbody>
+</table></div>
+<p>agentgateway 的关键不是“支持更多 provider”本身，而是把 provider 差异压到 <code>AIProvider</code> / <code>Provider</code> trait 后面。上层 HTTPRoute、Policy、Backend、CEL、telemetry 不需要知道具体 provider 细节。</p>
+<h2 id="mcp-federation-与-cel-rbac">MCP federation 与 CEL RBAC</h2>
+<p>MCP Gateway 把多个 MCP server 聚合到一个入口。设计重点是命名空间和授权：</p>
 <ul>
-<li>[ ] 写 LLM provider 适配器的完整对照表（请求 / 响应 / streaming 差异）</li>
-<li>[ ] 写 MCP federation 的命名空间策略与 CEL RBAC 实战</li>
-<li>[ ] 写跟 LiteLLM / OpenRouter / Portkey 的对比</li>
-<li>[ ] 写部署 walkthrough（with kueue / cilium / Gateway API examples）</li>
+<li>transport 层支持 stdio / HTTP Streamable / SSE，上游协议差异由 <code>mcp/upstream</code> 吸收；</li>
+<li>federation 时要避免工具名冲突，通常需要按 server 或 route 分命名空间；</li>
+<li>权限不应散落在工具实现里，而应在 gateway route / policy 层用 <span class="wikilink wikilink-missing" title="未建页：cel">cel</span> 表达式做统一判定；</li>
+<li>agent 只拿 gateway 侧身份，后端 MCP server 的真实凭据仍由 gateway 管。</li>
 </ul>
+<p>这和 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 的 worker consumer key 模式一致：Agent 能调用哪些工具，由网关侧 consumer、route 和 policy 决定，而不是由 prompt 里的自觉性决定。</p>
+<h2 id="和同类-ai-gateway-的边界">和同类 AI Gateway 的边界</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>主要定位</th>
+<th>agentgateway 的差异</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LiteLLM</td>
+<td>Python LLM proxy / provider adapter</td>
+<td>agentgateway 更偏 Rust 数据面 + Gateway API/xDS/mesh 集成</td>
+</tr>
+<tr>
+<td>OpenRouter</td>
+<td>托管模型路由服务</td>
+<td>agentgateway 是可自托管 infra 组件，控制面和策略在用户集群里</td>
+</tr>
+<tr>
+<td>Portkey</td>
+<td>托管/企业 LLM gateway</td>
+<td>agentgateway 更云原生，强调 CRD、mesh、MCP/A2A</td>
+</tr>
+<tr>
+<td>Envoy AI Gateway</td>
+<td>Envoy Gateway 上的 GenAI gateway</td>
+<td>agentgateway 不复用 Envoy 数据面，而是自写 Rust 数据面并同时覆盖 LLM/MCP/A2A</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="部署-walkthrough-速记">部署 walkthrough 速记</h2>
+<ol>
+<li>安装 Gateway API CRD 与 agentgateway 自家 CRD。</li>
+<li>部署 controller，它 watch <code>Gateway</code> / <code>HTTPRoute</code> / <code>AgentgatewayPolicy</code> / <code>AgentgatewayBackend</code>。</li>
+<li>创建 <code>GatewayClass</code> 与 <code>Gateway</code>，由 <code>AgentgatewayParameters</code> 控制 dataplane 部署参数。</li>
+<li>创建 <code>AgentgatewayBackend</code>，把 AI/MCP/A2A 后端和 secret 挂进去。</li>
+<li>用 <code>HTTPRoute.backendRef</code> 指向 backend，并用 <code>AgentgatewayPolicy</code> 加鉴权、限流、转换或 CEL RBAC。</li>
+<li>dataplane 通过 xDS 增量接收配置，开始处理 LLM / MCP / A2A 流量。</li>
+</ol>
+<p>如果需要运行时隔离，把 Agent 容器放在 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> / <a class="wikilink" href="../entities/agentcube.html">agentcube</a> 一类 substrate 上；如果需要 LLM serving endpoint picking，把入口和 <a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a> / <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 对齐。</p>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><span class="wikilink wikilink-missing" title="未建页：xds">xds</span></li><li><span class="wikilink wikilink-missing" title="未建页：hbone">hbone</span></li><li><span class="wikilink wikilink-missing" title="未建页：cel">cel</span></li><li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li></ul></section>
 
@@ -65,7 +156,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#架构骨架">架构骨架</a></li><li class=""><a href="#核心设计哲学">核心设计哲学</a></li><li class=""><a href="#todo">TODO</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#架构骨架">架构骨架</a></li><li class=""><a href="#核心设计哲学">核心设计哲学</a></li><li class=""><a href="#llm-provider-适配器对照">LLM provider 适配器对照</a></li><li class=""><a href="#mcp-federation-与-cel-rbac">MCP federation 与 CEL RBAC</a></li><li class=""><a href="#和同类-ai-gateway-的边界">和同类 AI Gateway 的边界</a></li><li class=""><a href="#部署-walkthrough-速记">部署 walkthrough 速记</a></li></ul></aside>
 </div>
 
 <script>

@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-13</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,37 +23,113 @@
 
   <header class="page-header">
     <h1>声明式 Agent 管理</h1>
-    <p class="page-meta">2026-05-13 · 来源：hiclaw-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：hiclaw-architecture-analysis.md、agent-sandbox-architecture-analysis.md、agentcube-architecture-analysis.md</p>
     <div class="tags"><span class="tag">k8s-operator</span><span class="tag">multi-agent</span><span class="tag">agent-platform</span><span class="tag">design-pattern</span></div>
   </header>
 
-  <blockquote>
-<p>Stub — 待充实</p>
-</blockquote>
-<p>把 <span class="wikilink wikilink-missing" title="未建页：k8s-operator">Kubernetes Operator 模式</span>套到 AI Agent 运维上的设计哲学：<strong>Agent 是资源（CR），不是对象（class）</strong>。</p>
+  <p>把 <span class="wikilink wikilink-missing" title="未建页：k8s-operator">Kubernetes Operator 模式</span>套到 AI Agent 运维上的设计哲学：<strong>Agent 是资源（CR），不是对象（class）</strong>。</p>
 <p>由 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 在 2026 年开源时首次清晰展现：</p>
 <ul>
 <li>Agent 用 CRD 声明（YAML），不是用 Python class 编排</li>
 <li>controller 持续 reconcile，让 actual state（容器、IM 房间、网关 consumer）向 desired state（CR）收敛</li>
 <li>免费获得 K8s 的 self-healing / 多副本 / RBAC / Helm 上线下线 / kubectl 操作面</li>
-<li>与 <span class="wikilink wikilink-missing" title="未建页：langgraph">langgraph</span> / <span class="wikilink wikilink-missing" title="未建页：autogen">autogen</span> / <span class="wikilink wikilink-missing" title="未建页：crewai">crewai</span> 这类"在你自己进程里跑 Python"的框架根本不同——后者要做企业级运维需重头补</li>
+<li>与 LangGraph / AutoGen / CrewAI 这类"在你自己进程里跑 Python"的框架根本不同——后者要做企业级运维需重头补</li>
 </ul>
-<h2 id="todo">TODO</h2>
+<h2 id="kubernetes-resource-model-对应">Kubernetes Resource Model 对应</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>K8s 模型</th>
+<th>Agent 管理类比</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spec</code></td>
+<td>期望 Agent 能力</td>
+<td>model、runtime、tools、skills、权限、协作关系</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>实际运行状态</td>
+<td>容器状态、IM 身份、room id、gateway consumer、ready/error</td>
+</tr>
+<tr>
+<td><code>reconcile</code></td>
+<td>自愈循环</td>
+<td>外部资源被删或漂移后重新创建/修正</td>
+</tr>
+<tr>
+<td><code>OwnerReference</code></td>
+<td>生命周期归属</td>
+<td>Team 删除时清理成员或 session 资源</td>
+</tr>
+<tr>
+<td>finalizer</td>
+<td>有序清理</td>
+<td>先删 gateway consumer、Matrix user、storage，再删 CR</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="代表项目">代表项目</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>声明式对象</th>
+<th>负责层级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></td>
+<td><code>Worker</code> / <code>Team</code> / <code>Human</code> / <code>Manager</code></td>
+<td>多 Agent 协作、IM 平面、凭据网关、容器后端</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></td>
+<td><code>Sandbox</code> / <code>SandboxClaim</code> / <code>SandboxTemplate</code> / <code>SandboxWarmPool</code></td>
+<td>有状态单实例 Agent runtime 原语</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/agentcube.html">agentcube</a></td>
+<td><code>AgentRuntime</code> / <code>CodeInterpreter</code></td>
+<td>把 agent-sandbox 包成会话、Router、PicoD、WarmPool API</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/kagent.html">kagent</a></td>
+<td>agentic DevOps/K8s 操作入口</td>
+<td>更偏“用 Agent 操作 K8s”，不是底层 runtime CRD</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="什么时候适合">什么时候适合</h2>
 <ul>
-<li>[ ] 补充：除 HiClaw 外其它声明式 Agent 系统（如 Agentic Framework on K8s 各家方案）</li>
-<li>[ ] 解释：与 Kubernetes Resource Model 的精确对应（Worker = Pod、Team = Deployment、Manager = Daemon？）</li>
-<li>[ ] 写"反模式"：什么时候不该这么做（轻量级、单进程编排的场景）</li>
-<li>[ ] 加链接到 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> 的对应原则</li>
+<li>Agent 是长寿命、有状态、有身份的运行单元；</li>
+<li>需要多人/多 Agent 协作和可审计生命周期；</li>
+<li>需要 RBAC、namespace、多租户、Helm/GitOps 交付；</li>
+<li>需要自愈、滚动升级、资源配额、网络/存储策略；</li>
+<li>需要把 Agent 与 gateway、storage、IM、sandbox 等外部资源绑定。</li>
 </ul>
+<h2 id="什么时候是反模式">什么时候是反模式</h2>
+<ul>
+<li>只是在一个 Python 进程里编排短生命周期 workflow；</li>
+<li>目标是本地个人自动化，不需要多租户或运维控制面；</li>
+<li>Agent 没有持久身份、状态、权限或外部资源；</li>
+<li>团队还没准备好 Kubernetes operator 的调试和发布复杂度。</li>
+</ul>
+<h2 id="与插件设计原则的关系">与插件设计原则的关系</h2>
+<p>声明式 Agent 管理把 <a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> 里的“接口化”和“宿主边界”推到集群级：Agent 能力不是散落在 prompt、脚本和环境变量里，而是被 CRD、policy、secret、gateway backend 和 controller 状态明确表达。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/kagent.html">kagent</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/declarative-agent-management.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#todo">TODO</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#kubernetes-resource-model-对应">Kubernetes Resource Model 对应</a></li><li class=""><a href="#代表项目">代表项目</a></li><li class=""><a href="#什么时候适合">什么时候适合</a></li><li class=""><a href="#什么时候是反模式">什么时候是反模式</a></li><li class=""><a href="#与插件设计原则的关系">与插件设计原则的关系</a></li></ul></aside>
 </div>
 
 <script>

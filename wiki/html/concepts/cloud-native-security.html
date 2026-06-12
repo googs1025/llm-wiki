@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-04-22</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>云原生安全</h1>
-    <p class="page-meta">2026-04-22 · 来源：ai-vulnerability-discovery.md、k8s-v1.36-sneak-peek.md</p>
+    <p class="page-meta">2026-06-12 · 来源：ai-vulnerability-discovery.md、k8s-v1.36-sneak-peek.md</p>
     <div class="tags"><span class="tag">security</span><span class="tag">kubernetes</span><span class="tag">cloud-native</span><span class="tag">ai</span></div>
   </header>
 
@@ -40,21 +40,50 @@
 <li>移除 <code>gitRepo</code> Volume（root 提权风险）</li>
 <li>详见 <a class="wikilink" href="../sources/src-k8s-v1.36-sneak-peek.html">src-k8s-v1.36-sneak-peek</a></li>
 </ul>
-<h2 id="待补充">待补充</h2>
+<h2 id="service-mesh--gateway-安全">Service Mesh / Gateway 安全</h2>
+<p>Service Mesh 和 Gateway 安全的核心是把身份、流量策略和凭据边界从应用代码里抽出来：</p>
 <ul>
-<li>Service Mesh 安全（Istio/Cilium mTLS）</li>
-<li>供应链安全（Sigstore、SBOM）</li>
-<li>运行时安全（Falco、Tetragon）</li>
+<li>mTLS 让服务间调用绑定 workload identity，而不是只依赖网络位置；</li>
+<li>L7 policy 能按 host/path/header/JWT claims 做授权；</li>
+<li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a> 提供更明确的入口角色分层，减少 Ingress annotation 漂移；</li>
+<li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 这类 AI Gateway 把 LLM/MCP/A2A 出口流量纳入统一鉴权、限流、审计和 <a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a>。</li>
 </ul>
+<p>AI Agent 场景下，mesh/gateway 的价值更高：Agent prompt 和工具调用不可完全信任，凭据、出口路由和 tool permission 应由网关策略兜住。</p>
+<h2 id="供应链安全">供应链安全</h2>
+<p>云原生供应链安全关注“镜像、依赖、构建和部署声明是否可信”：</p>
+<ul>
+<li>SBOM 记录镜像/包内依赖，方便漏洞影响面分析；</li>
+<li>签名和 provenance 证明镜像来自可信构建流程；</li>
+<li>admission policy 在部署前检查镜像签名、基础镜像、capabilities、root 用户、hostPath 等；</li>
+<li>GitOps 环境下，集群实际状态应能回溯到 Git commit 和审计记录。</li>
+</ul>
+<p>对 AI infra 来说，还要额外关注模型权重、adapter、prompt/skill 包、MCP server 包的来源。Agent 能动态加载技能或工具时，供应链边界不只在容器镜像，也在工具市场和技能市场。</p>
+<h2 id="runtime-security">Runtime Security</h2>
+<p>运行时安全解决“已经跑起来后发生了什么”：</p>
+<ul>
+<li>syscall / eBPF 监控用于发现异常进程、文件、网络行为；</li>
+<li>gVisor / Kata / microVM 提供更强隔离，适合运行不可信 Agent 代码；</li>
+<li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 把 gVisor、Kata、NetworkPolicy 等隔离机制委托给 PodTemplate，让用户按风险选择运行时；</li>
+<li>Falco/Tetragon 这类工具适合做 runtime detection，但需要和 workload identity、namespace、owner reference 关联，才知道异常来自哪个 Agent 或任务。</li>
+</ul>
+<h2 id="agent-特有风险">Agent 特有风险</h2>
+<p>AI Agent 把云原生安全问题放大了：</p>
+<ul>
+<li>prompt injection 可能诱导 Agent 调用高危工具；</li>
+<li>MCP / skill 市场扩大了供应链和权限面；</li>
+<li>长期运行的 Agent 有状态、有凭据、有文件系统，不能当作普通短任务；</li>
+<li>观测日志可能包含 prompt、tool result、代码片段和 secret，需要 content policy 与 mask。</li>
+</ul>
+<p>因此 Agent workload 推荐组合：<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 做运行隔离，<a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> / Gateway 做出口和凭据，<a class="wikilink" href="../entities/loongsuite-pilot.html">loongsuite-pilot</a> / trace 工具做审计与脱敏观测。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/cloud-native-security.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前趋势">当前趋势</a></li><li class="level-3"><a href="#ai-与漏洞发现">AI 与漏洞发现</a></li><li class="level-3"><a href="#k8s-v136-安全强化">K8s v1.36 安全强化</a></li><li class=""><a href="#待补充">待补充</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前趋势">当前趋势</a></li><li class="level-3"><a href="#ai-与漏洞发现">AI 与漏洞发现</a></li><li class="level-3"><a href="#k8s-v136-安全强化">K8s v1.36 安全强化</a></li><li class=""><a href="#service-mesh--gateway-安全">Service Mesh / Gateway 安全</a></li><li class=""><a href="#供应链安全">供应链安全</a></li><li class=""><a href="#runtime-security">Runtime Security</a></li><li class=""><a href="#agent-特有风险">Agent 特有风险</a></li></ul></aside>
 </div>
 
 <script>

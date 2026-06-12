@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-16</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,40 +23,82 @@
 
   <header class="page-header">
     <h1>LLM Inference</h1>
-    <p class="page-meta">2026-05-16 · 来源：dynamo-architecture-analysis.md</p>
-    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">stub</span></div>
+    <p class="page-meta">2026-06-12 · 来源：dynamo-architecture-analysis.md、vllm-architecture-analysis.md、sglang-architecture-analysis.md、llm-d-architecture-analysis.md、aibrix-architecture-analysis.md、kserve-architecture-analysis.md</p>
+    <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span></div>
   </header>
 
-  <blockquote>
-<p>[!note] Stub<br>
-占位页。LLM 推理是 vLLM/SGLang/Dynamo 等条目的上位概念，待后续主题摄入时扩写。</p>
-</blockquote>
-<p>LLM 推理（inference / serving）指把训练好的大语言模型部署成在线服务，对外提供 token 生成 API。核心挑战：高吞吐、低延迟、长 context、多并发、成本。</p>
-<h2 id="todo">TODO</h2>
-<p>待后续摄入主题：<br>
-- prefill vs decode 两阶段计算图<br>
-- continuous batching / inflight batching<br>
-- speculative decoding（投机解码）家族<br>
-- chunked prefill<br>
-- LoRA serving<br>
-- multi-modal serving<br>
-- 量化推理（FP8 / INT4 / AWQ / GPTQ）</p>
-<h2 id="已建相关页">已建相关页</h2>
+  <p>LLM 推理（inference / serving）指把训练好的大语言模型部署成在线服务，对外提供 token 生成 API。核心挑战：高吞吐、低延迟、长 context、多并发、成本。</p>
+<h2 id="系统分层">系统分层</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>代表项目</th>
+<th>关注点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>推理引擎</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+<td>KV cache 管理、batching、scheduler、kernel、模型加载</td>
+</tr>
+<tr>
+<td>数据中心编排</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+<td>P/D 分离、KV transfer/offload、router、planner、operator</td>
+</tr>
+<tr>
+<td>K8s serving stack</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a>, <a class="wikilink" href="../entities/kserve.html">kserve</a>, <a class="wikilink" href="../entities/kubeai.html">kubeai</a>, <a class="wikilink" href="../entities/ome.html">ome</a>, <a class="wikilink" href="../entities/gpustack.html">gpustack</a></td>
+<td>CRD/operator、gateway、autoscaling、endpoint picking、GPU 资源</td>
+</tr>
+<tr>
+<td>路由 / 网关</td>
+<td><a class="wikilink" href="../entities/semantic-router.html">semantic-router</a>, <a class="wikilink" href="../entities/routellm.html">routellm</a>, <a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>, <a class="wikilink" href="../concepts/ai-gateway.html">ai-gateway</a></td>
+<td>模型选择、endpoint picking、成本/质量/语义/KV-aware routing</td>
+</tr>
+<tr>
+<td>硬件资源层</td>
+<td><a class="wikilink" href="../entities/hami.html">hami</a>, <a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a>, <a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a>, <a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a></td>
+<td>GPU discovery、device plugin、DRA/CDI、sharing/vGPU/MIG</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="核心技术主题">核心技术主题</h2>
+<h3 id="prefill-vs-decode">Prefill vs Decode</h3>
+<p>Prefill 负责把 prompt/context 一次性编码成 KV cache，算力密集、吞吐敏感；Decode 每步生成一个 token，延迟敏感、状态持续时间长。<a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a> 把两者拆到不同 GPU 池中分别扩缩，是 <a class="wikilink" href="../entities/dynamo.html">dynamo</a>、<a class="wikilink" href="../entities/llm-d.html">llm-d</a> 等系统的主线。</p>
+<h3 id="batching">Batching</h3>
+<p>Continuous batching / inflight batching 让不同请求在 token step 之间动态进出 batch，避免传统 fixed batch 的尾部浪费。它是 <a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 这类 engine 的吞吐基础。</p>
+<h3 id="kv-cache">KV cache</h3>
+<p>长上下文和多轮对话让 KV cache 成为一等资源。<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 用分页思想降低碎片，<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 用 radix tree 加速 prefix 复用，<a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a> 把 KV 在 GPU/CPU/SSD/远端之间迁移。到了 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> / <a class="wikilink" href="../entities/llm-d.html">llm-d</a>，KV cache 还会反过来影响路由和调度。</p>
+<h3 id="chunked-prefill">Chunked Prefill</h3>
+<p>Chunked prefill 把长 prompt 的 prefill 切块，与 decode 请求交错执行，减少长 prompt 阻塞短请求。它常和 prefix cache、P/D 分离、batch scheduler 一起出现。</p>
+<h3 id="speculative-decoding">Speculative Decoding</h3>
+<p>Speculative decoding 用小模型或 draft head 先猜 token，再由大模型验证，目标是降低每个生成 token 的大模型前向次数。工程代价是调度、显存、accept rate 和模型兼容性变复杂。</p>
+<h3 id="lora--adapter-serving">LoRA / Adapter Serving</h3>
+<p>LoRA serving 让一个 base model 同时服务多个轻量 adapter，关键问题是 adapter 加载、batch 内 adapter 混排、cache 隔离和多租户权限。<a class="wikilink" href="../entities/aibrix.html">aibrix</a> 等 K8s serving 项目会把它放到模型生命周期和 gateway 层一起处理。</p>
+<h3 id="multi-modal-serving">Multi-modal Serving</h3>
+<p>VLM / speech / embedding / rerank 等任务把输入预处理、processor、tokenizer、模型 runtime 和输出格式变得更复杂。<a class="wikilink" href="../entities/kubeai.html">kubeai</a> 这类 operator 会把 LLM/VLM/embedding/speech 纳入同一 Model CRD。</p>
+<h3 id="quantization">Quantization</h3>
+<p>FP8 / INT4 / AWQ / GPTQ 等量化路线降低显存和带宽压力，但会影响 kernel 支持、精度、吞吐和 serving 兼容性。选型时要看 engine 是否原生支持目标量化格式，以及 GPU 架构是否匹配。</p>
+<h2 id="选型入口">选型入口</h2>
 <ul>
-<li>工程实现：<a class="wikilink" href="../entities/vllm.html">vllm</a>、<a class="wikilink" href="../entities/sglang.html">sglang</a>、<a class="wikilink" href="../entities/dynamo.html">dynamo</a></li>
-<li>KV 管理：<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>、<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>、<a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li>
-<li>部署架构：<a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li>
-<li>架构详解：<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a></li>
+<li>只优化单机吞吐：优先看 <a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a>。</li>
+<li>需要 P/D 分离、KV transfer、数据中心级编排：看 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> / <a class="wikilink" href="../entities/llm-d.html">llm-d</a>。</li>
+<li>需要 Kubernetes model serving API：看 <a class="wikilink" href="../entities/kserve.html">kserve</a> / <a class="wikilink" href="../entities/kubeai.html">kubeai</a> / <a class="wikilink" href="../entities/ome.html">ome</a>。</li>
+<li>需要多租户平台和 GPU 集群管理：看 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> / <a class="wikilink" href="../entities/gpustack.html">gpustack</a>。</li>
+<li>需要路由模型或 endpoint：看 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>、<a class="wikilink" href="../entities/semantic-router.html">semantic-router</a>、<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/llm-inference.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#todo">TODO</a></li><li class=""><a href="#已建相关页">已建相关页</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#系统分层">系统分层</a></li><li class=""><a href="#核心技术主题">核心技术主题</a></li><li class="level-3"><a href="#prefill-vs-decode">Prefill vs Decode</a></li><li class="level-3"><a href="#batching">Batching</a></li><li class="level-3"><a href="#kv-cache">KV cache</a></li><li class="level-3"><a href="#chunked-prefill">Chunked Prefill</a></li><li class="level-3"><a href="#speculative-decoding">Speculative Decoding</a></li><li class="level-3"><a href="#lora--adapter-serving">LoRA / Adapter Serving</a></li><li class="level-3"><a href="#multi-modal-serving">Multi-modal Serving</a></li><li class="level-3"><a href="#quantization">Quantization</a></li><li class=""><a href="#选型入口">选型入口</a></li></ul></aside>
 </div>
 
 <script>

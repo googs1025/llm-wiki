@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-13</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>agent-sandbox</h1>
-    <p class="page-meta">2026-05-13 · 来源：agent-sandbox-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：agent-sandbox-architecture-analysis.md</p>
     <div class="tags"><span class="tag">k8s-operator</span><span class="tag">agent-runtime</span><span class="tag">ai-infra</span><span class="tag">sig-apps</span></div>
   </header>
 
@@ -32,22 +32,121 @@
 <h2 id="关键事实">关键事实</h2>
 <ul>
 <li>仓库：<a href="https://github.com/kubernetes-sigs/agent-sandbox">kubernetes-sigs/agent-sandbox</a></li>
-<li>版本：v0.4.5+11（HEAD <code>e1d8898</code>，2026-04-23 左右）</li>
+<li>当前核验：GitHub API 显示 main 最近 push <code>2026-06-11</code>，最新稳定 tag <code>v0.4.6</code>，另有 <code>v0.5.0rc1</code></li>
+<li>本 wiki 架构分析版本：v0.4.5+11（HEAD <code>e1d8898</code>，2026-04-23 左右）</li>
 <li>主要语言：Go 1.26.2，模块 <code>sigs.k8s.io/agent-sandbox</code></li>
 <li>4 个 CRD：核心 <code>Sandbox</code> (agents.x-k8s.io) + 扩展 <code>SandboxClaim</code> / <code>SandboxTemplate</code> / <code>SandboxWarmPool</code> (extensions.agents.x-k8s.io)</li>
 <li>治理：K8s SIG Apps 孵化项目，遵循 <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/">Kubernetes Resource Model</a> 范式</li>
 <li>SDK：Go + Python（codegen 生成） + 标准 K8s clientset/informer/lister</li>
-<li>17 个 example：hello-world / kata-gke / openclaw / hermes / langchain / jupyter / vscode / chrome / HPA / Kueue / Cilium policy ...</li>
+<li>examples 目录当前超过 20 个：quickstart / hello-world / kata-gke / openclaw / hermes / langchain / jupyter / vscode / chrome / HPA / Kueue / Cilium/NetworkPolicy / MCP / Ray / Python SDK 等</li>
 </ul>
 <h2 id="与-hiclaw-的关系">与 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 的关系</h2>
 <p>互补不竞争——agent-sandbox 是<strong>基础设施层</strong>（提供"安全运行 1 个有状态 Agent 容器"原语），HiClaw 是<strong>应用层</strong>（提供"管 N 个 Agent 协作 + IM 平面 + 凭据网关"）。理论上 HiClaw 的 Worker runtime 完全可以跑在 agent-sandbox 之上。</p>
-<h2 id="todo">TODO</h2>
+<h2 id="与-hiclaw-的完整对比">与 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 的完整对比</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>agent-sandbox</th>
+<th><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>层级</td>
+<td>Runtime substrate / CRD 原语</td>
+<td>多 Agent 协作平台</td>
+</tr>
+<tr>
+<td>核心对象</td>
+<td>Sandbox、Claim、Template、WarmPool</td>
+<td>Worker、Team、Human、Manager</td>
+</tr>
+<tr>
+<td>协作模型</td>
+<td>不管 IM / team / manager</td>
+<td>Matrix 房间 + Manager/Worker/Human</td>
+</tr>
+<tr>
+<td>凭据模型</td>
+<td>由 PodTemplate / 用户环境决定</td>
+<td>Gateway consumer key + 真凭据托管</td>
+</tr>
+<tr>
+<td>隔离模型</td>
+<td>委托 gVisor/Kata/NetworkPolicy/PodTemplate</td>
+<td>依赖容器后端，可进一步叠 agent-sandbox</td>
+</tr>
+<tr>
+<td>启动优化</td>
+<td>WarmPool / Template / suspend-resume</td>
+<td>Worker lifecycle + runtime package</td>
+</tr>
+<tr>
+<td>典型用户</td>
+<td>平台工程师、runtime 基座维护者</td>
+<td>Agent 平台/协作产品维护者</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="gke-kata-walkthrough-速记">GKE Kata walkthrough 速记</h2>
+<ol>
+<li>准备支持 Kata/gVisor 的 GKE 或兼容集群。</li>
+<li>安装 agent-sandbox CRD/controller。</li>
+<li>创建带 runtimeClass / securityContext / volume / network policy 的 <code>SandboxTemplate</code>。</li>
+<li>可选创建 <code>SandboxWarmPool</code>，预热若干 Pod。</li>
+<li>用户创建 <code>SandboxClaim</code>，controller 从 WarmPool 领取或新建 Sandbox。</li>
+<li>Sandbox Ready 后，通过 service / SDK / router 访问容器内 agent 或工具。</li>
+<li>空闲后 scale to zero / suspend，保留 PVC 状态，后续 resume。</li>
+</ol>
+<p>这个流程说明它的关键不是“创建 Pod”，而是把单实例、有状态、可暂停、可领取的 Agent 容器变成可声明和可复用的资源。</p>
+<h2 id="v05--beta-路线">v0.5 / beta 路线</h2>
+<p>roadmap 当前显示几条主线：</p>
 <ul>
-<li>[ ] 跟 <a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 做完整"基础设施 vs 应用层" 对比表（含部署、隔离、协作模型）</li>
-<li>[ ] 写一份"从 0 到一个 Sandbox 跑起来"的 GKE Kata walkthrough</li>
-<li>[ ] 补充：v0.5 / v1beta1 升级路线（roadmap.md 显示有计划）</li>
-<li>[ ] examples 子目录的导读（17 个，需要按"入门 / 隔离 / 集成"分类）</li>
+<li>API 与 runtime 解耦，走 portable backend / common proto；</li>
+<li>SandboxTemplate / WarmPool rolling update；</li>
+<li>router 成为 first-class 项目组件；</li>
+<li>auto suspend/resume、scale-to-zero、TFFI 延迟优化；</li>
+<li>智能 WarmPool 选择和 claim latency 优化；</li>
+<li>alpha → beta API versioning；</li>
+<li>TypeScript SDK、MCP server、Ray / LangChain / CrewAI / kAgent 集成。</li>
 </ul>
+<p>这意味着 v0.5 之后的重点会从“CRD 能跑”走向“多后端、低延迟、SDK、router、生产指标”。</p>
+<h2 id="examples-导读">examples 导读</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入门</td>
+<td><code>quickstart</code>, <code>hello-world-sandbox</code>, <code>python-sdk-quickstart</code></td>
+</tr>
+<tr>
+<td>隔离 / runtime</td>
+<td><code>kata-gke-sandbox</code>, <code>chrome-sandbox</code>, <code>sandboxed-tools</code>, <code>sandbox-ksa</code>, <code>policy</code></td>
+</tr>
+<tr>
+<td>Agent / framework</td>
+<td><code>openclaw-sandbox</code>, <code>hermes-agent</code>, <code>langchain</code>, <code>gemini-cu-sandbox</code>, <code>code-interpreter-agent-on-adk</code></td>
+</tr>
+<tr>
+<td>扩缩 / 调度</td>
+<td><code>hpa-swp-scaling</code>, <code>kueue-agent-sandbox</code>, <code>manual-pdb</code></td>
+</tr>
+<tr>
+<td>网络策略</td>
+<td><code>composing-sandbox-nw-policies</code>, <code>mcp-server-sandbox</code></td>
+</tr>
+<tr>
+<td>工具型环境</td>
+<td><code>jupyterlab</code>, <code>vscode-sandbox</code>, <code>aio-sandbox</code>, <code>analytics-tool</code>, <code>python-runtime-sandbox</code>, <code>ray-integration</code></td>
+</tr>
+</tbody>
+</table></div>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><span class="wikilink wikilink-missing" title="未建页：k8s-operator">k8s-operator</span></li><li><span class="wikilink wikilink-missing" title="未建页：gvisor">gvisor</span></li><li><span class="wikilink wikilink-missing" title="未建页：kata-containers">kata-containers</span></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li></ul></section>
 
@@ -56,7 +155,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#关键事实">关键事实</a></li><li class=""><a href="#与-hiclaw-的关系">与 HiClaw 的关系</a></li><li class=""><a href="#todo">TODO</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#关键事实">关键事实</a></li><li class=""><a href="#与-hiclaw-的关系">与 HiClaw 的关系</a></li><li class=""><a href="#与-hiclaw-的完整对比">与 HiClaw 的完整对比</a></li><li class=""><a href="#gke-kata-walkthrough-速记">GKE Kata walkthrough 速记</a></li><li class=""><a href="#v05--beta-路线">v0.5 / beta 路线</a></li><li class=""><a href="#examples-导读">examples 导读</a></li></ul></aside>
 </div>
 
 <script>

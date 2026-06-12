@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-02</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>AgentCube</h1>
-    <p class="page-meta">2026-06-02 · 来源：agentcube-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：agentcube-architecture-analysis.md</p>
     <div class="tags"><span class="tag">ai-agent</span><span class="tag">code-interpreter</span><span class="tag">kubernetes</span><span class="tag">volcano</span><span class="tag">agent-sandbox</span><span class="tag">serverless</span></div>
   </header>
 
@@ -32,10 +32,11 @@
 <h2 id="关键事实">关键事实</h2>
 <ul>
 <li>仓库：<a href="https://github.com/volcano-sh/agentcube">volcano-sh/agentcube</a></li>
-<li>版本：HEAD <code>208da32</code>（2026-06-01）</li>
-<li>阶段：Proposal / Early Design，README 明确标注仍在早期设计期</li>
-<li>主要语言：Go，模块 <code>github.com/volcano-sh/agentcube</code></li>
-<li>核心依赖：<code>sigs.k8s.io/agent-sandbox v0.1.1</code></li>
+<li>当前核验：GitHub API 显示 main 最近 push <code>2026-06-12</code>，已有 tag <code>v0.1.0</code></li>
+<li>本 wiki 架构分析版本：HEAD <code>208da32</code>（2026-06-01）</li>
+<li>阶段：已从 Proposal 进入早期 release，但 API 仍需按上游 agent-sandbox 演进持续核验</li>
+<li>主要语言：Go 1.24.4，模块 <code>github.com/volcano-sh/agentcube</code></li>
+<li>核心依赖：<code>sigs.k8s.io/agent-sandbox v0.1.1</code>（当前 main 的 <code>go.mod</code> 仍如此）</li>
 <li>2 个 AgentCube CRD：<code>AgentRuntime</code> 与 <code>CodeInterpreter</code></li>
 <li>主要组件：Router、WorkloadManager、PicoD、Redis / ValKey session registry</li>
 </ul>
@@ -56,12 +57,45 @@
 <li>会话路径：Router 从 session registry 解析 <code>sessionId -&gt; endpoint</code>，后续请求不再走 K8s reconcile，而是直接代理到 PicoD 或 Agent 服务。</li>
 </ul>
 <p>这个分层让 agent-sandbox 继续专注"安全、有状态、可回收的单实例容器"，AgentCube 则负责"用户请求如何变成一个可复用的 AI / Code session"。</p>
-<h2 id="todo">TODO</h2>
+<h2 id="agent-sandbox-api-兼容性">agent-sandbox API 兼容性</h2>
+<p>AgentCube 当前已发布 <code>v0.1.0</code>，但仍依赖 <code>sigs.k8s.io/agent-sandbox v0.1.1</code>。这意味着它和当前 agent-sandbox <code>v0.4.6</code> / <code>v0.5.0rc1</code> 之间可能存在 API 追赶成本：</p>
 <ul>
-<li>[ ] 等 AgentCube 发布 tagged release 后补充版本差异与 CRD 稳定性。</li>
-<li>[ ] 跟 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> v0.4.x 对比 API 兼容性，确认当前 <code>v0.1.1</code> 依赖升级成本。</li>
-<li>[ ] 做一份 CodeInterpreter warm pool 请求时序图，从 Router 到 SandboxClaim 再到 PicoD。</li>
+<li><code>SandboxTemplate</code> / <code>SandboxWarmPool</code> 字段可能需要适配新版本 rolling update / backend 解耦；</li>
+<li>claim / warm pool 的 status 和 owner reference 语义可能变化；</li>
+<li>router/session registry 依赖 Sandbox Ready、endpoint、port 等状态字段，升级时要重点回归；</li>
+<li>AgentCube 的 <code>CodeInterpreter.warmPoolSize</code> 是对 agent-sandbox WarmPool 的上层封装，上游 API 变动会直接影响这一功能。</li>
 </ul>
+<p>选型上，AgentCube 当前适合作为“agent-sandbox 上层应用 API”的设计参考；生产采用前应先验证它是否已跟上目标 agent-sandbox 版本。</p>
+<h2 id="codeinterpreter-warm-pool-请求时序">CodeInterpreter warm pool 请求时序</h2>
+<pre><code>Client request
+  │  POST /sessions or /execute
+  ▼
+AgentCube Router
+  │  check x-agentcube-session-id
+  │  miss → ask WorkloadManager
+  ▼
+WorkloadManager
+  │  CodeInterpreter.warmPoolSize &gt; 0 ?
+  │
+  ├─ warm path:
+  │    create SandboxClaim
+  │      │
+  │      ▼
+  │    agent-sandbox controller assigns prewarmed Sandbox
+  │
+  └─ cold path:
+       create Sandbox directly from template
+         │
+         ▼
+  wait Sandbox Ready + entrypoint TCP probe
+         │
+         ▼
+  write sessionId → endpoint into Redis / ValKey
+         │
+         ▼
+Router reverse proxy → PicoD `/api/execute` / `/api/files`
+</code></pre>
+<p>这条路径把高频请求和低频 K8s reconcile 分开：首次 miss 需要控制面介入，后续同一 session 直接由 Router 查 registry 并代理到 PicoD。</p>
 
   <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../sources/src-agentcube-architecture.html">src-agentcube-architecture</a></li></ul></section>
 
@@ -70,7 +104,7 @@
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#关键事实">关键事实</a></li><li class=""><a href="#架构定位">架构定位</a></li><li class=""><a href="#与-agent-sandbox-的结合">与 agent-sandbox 的结合</a></li><li class=""><a href="#todo">TODO</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#关键事实">关键事实</a></li><li class=""><a href="#架构定位">架构定位</a></li><li class=""><a href="#与-agent-sandbox-的结合">与 agent-sandbox 的结合</a></li><li class=""><a href="#agent-sandbox-api-兼容性">agent-sandbox API 兼容性</a></li><li class=""><a href="#codeinterpreter-warm-pool-请求时序">CodeInterpreter warm pool 请求时序</a></li></ul></aside>
 </div>
 
 <script>
