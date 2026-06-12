@@ -930,6 +930,11 @@ GRAPH_PAGE_SCRIPT = r"""
   const viewport = document.getElementById("graph-viewport");
   const searchInput = document.getElementById("graph-search");
   const resetButton = document.getElementById("graph-reset");
+  const focusButton = document.getElementById("graph-focus");
+  const zoomInButton = document.getElementById("graph-zoom-in");
+  const zoomOutButton = document.getElementById("graph-zoom-out");
+  const fitButton = document.getElementById("graph-fit");
+  const workbench = document.querySelector(".graph-workbench");
   const inspector = document.getElementById("graph-inspector");
   const totals = document.getElementById("graph-totals");
   const categoryButtons = Array.from(document.querySelectorAll("[data-graph-category]"));
@@ -953,6 +958,7 @@ GRAPH_PAGE_SCRIPT = r"""
   let panY = 0;
   let drag = null;
   let panning = null;
+  let focusMode = true;
   const positionsReady = new Set();
   const initialFocus = new URLSearchParams(window.location.search).get("focus");
   if (initialFocus && nodeById.has(initialFocus)) {
@@ -1007,7 +1013,7 @@ GRAPH_PAGE_SCRIPT = r"""
   function seedPositions(nodes) {
     const rect = svg.getBoundingClientRect();
     const width = Math.max(rect.width, 720);
-    const height = Math.max(rect.height, 460);
+    const height = Math.max(rect.height, 620);
     const lanes = Array.from(categories);
     const laneWidth = width / Math.max(lanes.length, 1);
     const ordered = [...nodes].sort((a, b) => (b.degree - a.degree) || a.title.localeCompare(b.title));
@@ -1018,7 +1024,7 @@ GRAPH_PAGE_SCRIPT = r"""
       const row = Math.floor(index / Math.max(lanes.length, 1));
       const jitter = ((index * 37) % 100) / 100;
       node.x = laneWidth * lane + laneWidth * (0.32 + jitter * 0.36);
-      node.y = 78 + (row * 67 + jitter * 36) % Math.max(height - 120, 240);
+      node.y = 92 + (row * 92 + jitter * 48) % Math.max(height - 180, 360);
       positionsReady.add(node.id);
     });
   }
@@ -1027,19 +1033,19 @@ GRAPH_PAGE_SCRIPT = r"""
     seedPositions(nodes);
     const rect = svg.getBoundingClientRect();
     const width = Math.max(rect.width, 720);
-    const height = Math.max(rect.height, 460);
+    const height = Math.max(rect.height, 620);
     const links = edges.map((edge) => [nodeById.get(edge.source), nodeById.get(edge.target)]);
 
-    for (let step = 0; step < 130; step += 1) {
-      const alpha = 1 - step / 130;
+    for (let step = 0; step < 170; step += 1) {
+      const alpha = 1 - step / 170;
       for (let i = 0; i < nodes.length; i += 1) {
         const a = nodes[i];
         for (let j = i + 1; j < nodes.length; j += 1) {
           const b = nodes[j];
           let dx = (a.x || 0) - (b.x || 0);
           let dy = (a.y || 0) - (b.y || 0);
-          let distance = Math.max(Math.sqrt(dx * dx + dy * dy), 14);
-          const force = (900 / (distance * distance)) * alpha;
+          let distance = Math.max(Math.sqrt(dx * dx + dy * dy), 18);
+          const force = (1800 / (distance * distance)) * alpha;
           dx /= distance;
           dy /= distance;
           a.x += dx * force;
@@ -1053,8 +1059,8 @@ GRAPH_PAGE_SCRIPT = r"""
         const dx = (target.x || 0) - (source.x || 0);
         const dy = (target.y || 0) - (source.y || 0);
         const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
-        const ideal = 90 + Math.min((source.degree + target.degree) * 3, 50);
-        const force = (distance - ideal) * 0.018 * alpha;
+        const ideal = 122 + Math.min((source.degree + target.degree) * 4, 72);
+        const force = (distance - ideal) * 0.014 * alpha;
         const nx = dx / distance;
         const ny = dy / distance;
         source.x += nx * force;
@@ -1068,8 +1074,8 @@ GRAPH_PAGE_SCRIPT = r"""
         const laneX = width * ((lane + 0.5) / Math.max(categories.size, 1));
         node.x += (laneX - node.x) * 0.012 * alpha;
         node.y += (height / 2 - node.y) * 0.006 * alpha;
-        node.x = Math.max(24, Math.min(width - 24, node.x));
-        node.y = Math.max(24, Math.min(height - 24, node.y));
+        node.x = Math.max(42, Math.min(width - 42, node.x));
+        node.y = Math.max(42, Math.min(height - 42, node.y));
       }
     }
   }
@@ -1084,8 +1090,47 @@ GRAPH_PAGE_SCRIPT = r"""
     viewport.setAttribute("transform", `translate(${panX} ${panY}) scale(${scale})`);
   }
 
+  function fitView() {
+    if (!visibleNodes.length) {
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      applyTransform();
+      return;
+    }
+    const rect = svg.getBoundingClientRect();
+    const minX = Math.min(...visibleNodes.map((node) => node.x || 0));
+    const maxX = Math.max(...visibleNodes.map((node) => node.x || 0));
+    const minY = Math.min(...visibleNodes.map((node) => node.y || 0));
+    const maxY = Math.max(...visibleNodes.map((node) => node.y || 0));
+    const padding = focusMode ? 72 : 48;
+    const graphWidth = Math.max(maxX - minX, 1);
+    const graphHeight = Math.max(maxY - minY, 1);
+    scale = Math.min(
+      1.2,
+      Math.max(
+        0.5,
+        Math.min((rect.width - padding * 2) / graphWidth, (rect.height - padding * 2) / graphHeight)
+      )
+    );
+    panX = (rect.width - graphWidth * scale) / 2 - minX * scale;
+    panY = (rect.height - graphHeight * scale) / 2 - minY * scale;
+    applyTransform();
+  }
+
+  function zoomBy(multiplier) {
+    const rect = svg.getBoundingClientRect();
+    const px = rect.width / 2;
+    const py = rect.height / 2;
+    const nextScale = Math.min(2.8, Math.max(0.42, scale * multiplier));
+    panX = px - (px - panX) * (nextScale / scale);
+    panY = py - (py - panY) * (nextScale / scale);
+    scale = nextScale;
+    applyTransform();
+  }
+
   function nodeRadius(node) {
-    return 5 + Math.min(Math.sqrt(Math.max(node.degree, 1)) * 2.4, 11);
+    return 6 + Math.min(Math.sqrt(Math.max(node.degree, 1)) * 2.6, 13);
   }
 
   function drawPositions() {
@@ -1149,7 +1194,7 @@ GRAPH_PAGE_SCRIPT = r"""
       .join("")}</div>`;
   }
 
-  function render() {
+  function render(options = {}) {
     const current = getVisibleData();
     visibleNodes = current.nodes;
     visibleEdges = current.edges;
@@ -1202,7 +1247,7 @@ GRAPH_PAGE_SCRIPT = r"""
       circle.setAttribute("fill", colorByCategory[node.category] || "#82b4ff");
       group.append(circle);
 
-      if (node.degree >= 5 || selectedId === node.id || highlightedId === node.id) {
+      if (node.degree >= 8 || selectedId === node.id || highlightedId === node.id) {
         const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
         label.setAttribute("x", nodeRadius(node) + 7);
         label.setAttribute("y", 4);
@@ -1233,9 +1278,13 @@ GRAPH_PAGE_SCRIPT = r"""
     }
 
     drawPositions();
-    applyTransform();
     totals.textContent = `${visibleNodes.length} 个页面 · ${visibleEdges.length} 条关系`;
     renderInspector(selectedId);
+    if (options.fit) {
+      fitView();
+    } else {
+      applyTransform();
+    }
   }
 
   categoryButtons.forEach((button) => {
@@ -1248,11 +1297,11 @@ GRAPH_PAGE_SCRIPT = r"""
       }
       button.classList.toggle("is-active", activeCategories.has(category));
       button.setAttribute("aria-pressed", activeCategories.has(category) ? "true" : "false");
-      render();
+      render({ fit: true });
     });
   });
 
-  searchInput.addEventListener("input", render);
+  searchInput.addEventListener("input", () => render({ fit: true }));
   resetButton.addEventListener("click", () => {
     searchInput.value = "";
     selectedId = null;
@@ -1266,8 +1315,20 @@ GRAPH_PAGE_SCRIPT = r"""
     scale = 1;
     panX = 0;
     panY = 0;
-    render();
+    render({ fit: true });
   });
+
+  focusButton.addEventListener("click", () => {
+    focusMode = !focusMode;
+    workbench.classList.toggle("is-focus", focusMode);
+    focusButton.textContent = focusMode ? "显示详情" : "专注看图";
+    focusButton.setAttribute("aria-pressed", focusMode ? "true" : "false");
+    window.requestAnimationFrame(() => render({ fit: true }));
+  });
+
+  zoomInButton.addEventListener("click", () => zoomBy(1.18));
+  zoomOutButton.addEventListener("click", () => zoomBy(0.84));
+  fitButton.addEventListener("click", fitView);
 
   svg.addEventListener("pointerdown", (event) => {
     if (event.target !== svg) return;
@@ -1302,14 +1363,17 @@ GRAPH_PAGE_SCRIPT = r"""
     const rect = svg.getBoundingClientRect();
     const px = event.clientX - rect.left;
     const py = event.clientY - rect.top;
-    const nextScale = Math.min(2.2, Math.max(0.55, scale * (event.deltaY > 0 ? 0.92 : 1.08)));
+    const nextScale = Math.min(2.8, Math.max(0.42, scale * (event.deltaY > 0 ? 0.92 : 1.08)));
     panX = px - (px - panX) * (nextScale / scale);
     panY = py - (py - panY) * (nextScale / scale);
     scale = nextScale;
     applyTransform();
   }, { passive: false });
 
-  render();
+  workbench.classList.add("is-focus");
+  focusButton.textContent = "显示详情";
+  focusButton.setAttribute("aria-pressed", "true");
+  render({ fit: true });
 })();
 """
 
@@ -1355,6 +1419,7 @@ def build_graph_page(graph_data: dict[str, object]) -> str:
     <div class="graph-filters" aria-label="分类过滤">
       {category_buttons}
     </div>
+    <button id="graph-focus" type="button" aria-pressed="true">显示详情</button>
     <button id="graph-reset" type="button">重置</button>
   </section>
 
@@ -1362,7 +1427,11 @@ def build_graph_page(graph_data: dict[str, object]) -> str:
     <div class="graph-canvas-wrap">
       <div class="graph-canvas-head">
         <span id="graph-totals"></span>
-        <span>滚轮缩放 · 拖动画布 · 双击节点打开页面</span>
+        <div class="graph-canvas-actions" aria-label="图谱视图控制">
+          <button id="graph-zoom-out" type="button" aria-label="缩小">−</button>
+          <button id="graph-fit" type="button">适配</button>
+          <button id="graph-zoom-in" type="button" aria-label="放大">＋</button>
+        </div>
       </div>
       <svg id="knowledge-graph" role="img" aria-label="llm-wiki 页面关系图">
         <g id="graph-viewport"></g>
