@@ -20,3 +20,13 @@
 ## Wiki use
 
 Use this as the raw current-state snapshot for managed coding-agent teammate products. Future ingest should inspect task assignment, progress tracking, skill composition, worker isolation, and persistence model.
+
+## Formal architecture ingest
+
+This file is only the GitHub metadata snapshot: repository identity, stars, language, license, topics, and latest activity at the time of capture. The source-code architecture analysis has been completed separately.
+
+- Raw source-code analysis: `raw/multica-architecture-analysis.md`
+- Wiki source page: `wiki/sources/src-multica-architecture.md`
+- Generated HTML page: `wiki/html/sources/src-multica-architecture.html`
+
+Use the `*-architecture-analysis.md` file when you need implementation details, module boundaries, data/control flow, and same-category architecture comparison. Use this `github-stars-*` file only when you need the original GitHub current-state snapshot.

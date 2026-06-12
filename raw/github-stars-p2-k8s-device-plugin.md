@@ -20,3 +20,13 @@
 ## Wiki use
 
 Use this as the raw current-state snapshot for NVIDIA Kubernetes device plugin. Future ingest should inspect device discovery, allocation, MIG/sharing configuration, CDI strategy, and relation to GPU Operator.
+
+## Formal architecture ingest
+
+This file is only the GitHub metadata snapshot: repository identity, stars, language, license, topics, and latest activity at the time of capture. The source-code architecture analysis has been completed separately.
+
+- Raw source-code analysis: `raw/k8s-device-plugin-architecture-analysis.md`
+- Wiki source page: `wiki/sources/src-k8s-device-plugin-architecture.md`
+- Generated HTML page: `wiki/html/sources/src-k8s-device-plugin-architecture.html`
+
+Use the `*-architecture-analysis.md` file when you need implementation details, module boundaries, data/control flow, and same-category architecture comparison. Use this `github-stars-*` file only when you need the original GitHub current-state snapshot.

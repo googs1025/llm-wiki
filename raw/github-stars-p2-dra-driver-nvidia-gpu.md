@@ -20,3 +20,13 @@
 ## Wiki use
 
 Use this as the raw current-state snapshot for Kubernetes DRA GPU driver. Future ingest should inspect ResourceClaim flow, CDI integration, scheduler interaction, and relationship to NVIDIA device plugin.
+
+## Formal architecture ingest
+
+This file is only the GitHub metadata snapshot: repository identity, stars, language, license, topics, and latest activity at the time of capture. The source-code architecture analysis has been completed separately.
+
+- Raw source-code analysis: `raw/dra-driver-nvidia-gpu-architecture-analysis.md`
+- Wiki source page: `wiki/sources/src-dra-driver-nvidia-gpu-architecture.md`
+- Generated HTML page: `wiki/html/sources/src-dra-driver-nvidia-gpu-architecture.html`
+
+Use the `*-architecture-analysis.md` file when you need implementation details, module boundaries, data/control flow, and same-category architecture comparison. Use this `github-stars-*` file only when you need the original GitHub current-state snapshot.

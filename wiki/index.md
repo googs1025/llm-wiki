@@ -89,6 +89,45 @@ date: 2026-05-12
 - [[src-k8s-gpu-device-plugins-stars]] — K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）
 - [[src-k8s-core-controllers-stars]] — K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）
 - [[src-github-stars-backlog-current-state]] — GitHub Stars P0-P2 当前状态核验（39 个项目，runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU）
+- [[src-substrate-architecture]] — Agent Substrate 架构（HEAD `a3f4474`，K8s 上的高密度 agent-like workload substrate：WorkerPool/ActorTemplate + Redis/ValKey actor 状态 + Envoy 唤醒路由 + atelet/ateom gVisor snapshot）
+- [[src-agentscope-runtime-architecture]] — AgentScope Runtime 架构（HEAD `22072fd`，生产化 Agent-as-a-Service：FastAPI AgentApp + Runner + protocol adapters + sandbox manager + K8s/serverless deployers；仓库 README 已标注能力并入 AgentScope 2.0，后续更多是迁移参考）
+- [[src-mem0-architecture]] — mem0 架构（HEAD `2c796d1`，通用 AI memory layer：Python SDK + TS SDK + self-host server/OpenMemory + MCP/CLI/agent plugins；核心检索走 ADD-only fact extraction、entity linking、BM25/semantic/entity fusion）
+- [[src-reme-architecture]] — ReMe 架构（HEAD `f458566`，AgentScope 生态 memory kit：ReMeLight 文件记忆 + vector/service pipeline + personal/task/tool/working memory summarization/retrieval）
+- [[src-codex-architecture]] — OpenAI Codex CLI 架构（HEAD `bf667c7`，Rust terminal coding agent：CLI/TUI/app-server/MCP/core crates + approval/sandbox/AGENTS.md/context/patch 工具链）
+- [[src-pi-architecture]] — Pi Agent Harness 架构（HEAD `3f44d3e`，TypeScript monorepo：unified LLM provider API + agent core/tool loop + coding-agent CLI + TUI；默认不提供强权限隔离，建议外部 sandbox）
+- [[src-oh-my-pi-architecture]] — oh-my-pi 架构（HEAD `12290e0`，Pi fork 的重工具 coding-agent harness：32 tools、LSP/DAP、hashline edit、browser/web_search、subagents、memory、native Rust core）
+- [[src-multica-architecture]] — Multica 架构（HEAD `99afb82`，managed agents platform：Next.js board + Go/Chi backend + PostgreSQL/pgvector + local daemon runtimes，把 Claude Code/Codex/Pi 等 CLI 包成可分配任务的 teammate）
+- [[src-open-cowork-architecture]] — Open Cowork 架构（HEAD `8e60460`，Electron desktop agent host：Claude/OpenAI-compatible chat + Skills/MCP + WSL2/Lima sandbox + GUI automation + Feishu/Slack remote control）
+- [[src-aibrix-architecture]] — AIBrix 架构（HEAD `ac2c161`，vLLM 生态 K8s GenAI inference infrastructure：gateway/routing、PodAutoscaler、ModelAdapter、KV cache/event sync、LoRA、distributed inference、GPU failure detection）
+- [[src-llm-d-architecture]] — llm-d 架构（HEAD `2734681`，CNCF Sandbox 分布式 LLM inference serving stack：Router/EPP + InferencePool + model server + KV cache management + P/D disaggregation + autoscaling/batch guides）
+- [[src-llm-d-router-architecture]] — llm-d Router 架构（HEAD `a0173a7`，LLM-aware inference entry point：Envoy/ext-proc + Endpoint Picker(EPP) + filters/scorers/scrapers + InferenceObjective/ModelRewrite + P/D sidecar）
+- [[src-llm-d-kv-cache-architecture]] — llm-d KV Cache 架构（HEAD `26e2b6f`，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）
+- [[src-kagent-architecture]] — kagent 架构（HEAD `feb8cf9`，Cloud Native agentic AI：Go control plane + Python/ADK packages + Helm/UI/tools，把 Kubernetes/DevOps 工作流包装成 agentic 操作层）
+- [[src-kubectl-ai-architecture]] — kubectl-ai 架构（HEAD `08cf256`，kubectl 入口的 Kubernetes AI assistant：Go CLI + agent/session/journal + built-in bash/kubectl tools + MCP server mode）
+- [[src-k8m-architecture]] — k8m 架构（HEAD `718e894`，Mini Kubernetes AI Dashboard：Go backend + UI + plugins/MCP + 多集群/权限/异常检测入口）
+- [[src-kubewall-architecture]] — kubewall 架构（HEAD `fd575ff`，single-binary Kubernetes dashboard：Go backend + client + charts，把 AI integration 作为 dashboard 增强而非主 agent loop）
+- [[src-gateway-api-inference-extension-architecture]] — Gateway API Inference Extension 架构（HEAD `974d27c`，Kubernetes Gateway API 推理扩展：InferencePool API + EPP/LWEPP + conformance/benchmarking，标准化 inference endpoint picking）
+- [[src-ai-gateway-architecture]] — Envoy AI Gateway 架构（HEAD `9a4b02c`，Envoy Gateway 上的 GenAI gateway：CRD/controller + extproc + provider translators + rate limit/auth/redaction/MCP proxy）
+- [[src-kgateway-architecture]] — kgateway 架构（HEAD `1560573`，cloud-native API/AI Gateway：Gateway API controller + Envoy xDS + plugins/policies/SDS，AI Gateway 是其能力分支）
+- [[src-higress-architecture]] — Higress 架构（HEAD `2897c1e`，AI Native API Gateway：Envoy/Istio/control plane + WASM plugins + model-router/MCP/credential governance，HiClaw 背景依赖）
+- [[src-semantic-router-architecture]] — vLLM Semantic Router 架构（HEAD `9893c2c`，system-level intelligent router：Go/Rust bindings + semantic decision/config + dashboard/operator/deploy recipes；仓库 241MB，分析聚焦源码核心）
+- [[src-routellm-architecture]] — RouteLLM 架构（HEAD `0b64fda`，成本/质量 LLM routing 基线：Python routers/evals/benchmarks；最近活跃停在 2024-08，适合作算法参考）
+- [[src-plano-architecture]] — Plano 架构（HEAD `2e38f7f`，AI-native proxy/data plane：Rust crates + CLI + config + skills，面向 model routing、guardrails、agent orchestration）
+- [[src-gpustack-architecture]] — GPUStack 架构（HEAD `05d56cd`，GPU cluster manager/model serving platform：Python server/worker/scheduler/gateway + vLLM/SGLang 编排 + observability/docs）
+- [[src-ome-architecture]] — OME 架构（HEAD `e91ed23`，Open Model Engine：K8s operator for model serving，CRD/controller + model-agent/ome-agent + runtime selector + accelerator configs）
+- [[src-kserve-architecture]] — KServe 架构（HEAD `ccf1d3d`，Kubernetes 标准化 model serving 平台：InferenceService + LLMISvc/LocalModel + controllers/webhooks/router；仓库 360MB，分析聚焦 control plane/API）
+- [[src-kubeai-architecture]] — KubeAI 架构（HEAD `1fe298d`，AI inference operator：Model CRD + OpenAI server/model proxy + model autoscaler + loader，覆盖 LLM/VLM/embedding/speech）
+- [[src-code-review-graph-architecture]] — code-review-graph 架构（HEAD `b72413c`，local-first code intelligence graph：Python package + CLI/MCP tools + VSCode extension + skills，面向 review/change understanding）
+- [[src-gitnexus-architecture]] — GitNexus 架构（HEAD `14397dd`，browser-side repo knowledge graph + Graph RAG + taint analysis：web app/shared/core/plugins，偏交互式代码理解）
+- [[src-deepwiki-open-architecture]] — deepwiki-open 架构（HEAD `16f35a0`，open-source DeepWiki/repo wiki generator：Next.js UI + Python API/tools + LiteLLM multi-provider routing，把 repo 自动生成可问答 wiki）
+- [[src-codex-plugin-cc-architecture]] — Codex Plugin for Claude Code 架构（HEAD `807e03a`，Claude Code 插件形式接入 Codex：slash command + app-server broker + job state + review gate）
+- [[src-claude-tap-architecture]] — claude-tap 架构（HEAD `a11231b`，本地 AI coding agent trace proxy/viewer：reverse/forward proxy + SQLite trace + live/export viewer）
+- [[src-cc-connect-architecture]] — cc-connect 架构（HEAD `c53f545`，把 Claude Code/Codex/Gemini/Pi 等本地 coding agent 接到飞书/Slack/Telegram 等消息平台的 Go bridge）
+- [[src-tokscale-architecture]] — Tokscale 架构（HEAD `aebe4ea`，Rust 本地 token usage analytics：session scanner + parser + rayon aggregation + multi-source pricing + TUI/JSON）
+- [[src-hami-architecture]] — HAMi 架构（HEAD `5dca58e`，Kubernetes 异构 GPU sharing/vGPU：webhook + scheduler extender + device plugin + 多厂商 device abstraction）
+- [[src-dra-driver-nvidia-gpu-architecture]] — DRA Driver for NVIDIA GPUs 架构（HEAD `749a743`，Kubernetes DRA NVIDIA driver：ResourceClaim/ResourceSlice + NodePrepare + dynamic MIG/VFIO + ComputeDomain）
+- [[src-gpu-operator-architecture]] — NVIDIA GPU Operator 架构（HEAD `0219120`，GPU 软件栈 Kubernetes Operator：ClusterPolicy/NVIDIADriver + state renderer + operands lifecycle）
+- [[src-k8s-device-plugin-architecture]] — NVIDIA k8s-device-plugin 架构（HEAD `8688949`，官方 GPU device plugin：NVML/CUDA discovery + kubelet gRPC + env/volume/CDI Allocate）
 - [[src-nemoclaw-architecture]] — NVIDIA NemoClaw 架构（HEAD `3c0340a`，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）
 - [[src-openshell-architecture]] — NVIDIA OpenShell 架构（HEAD `97986d9`，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）
 - [[src-ai-infra-learning-cn-stars]] — AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）
