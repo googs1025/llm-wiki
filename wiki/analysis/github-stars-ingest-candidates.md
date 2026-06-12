@@ -3,12 +3,15 @@ title: GitHub Stars 下一批摄入候选清单
 tags: [github-stars, project-map, backlog, selection]
 date: 2026-06-12
 sources: [github-stars-googs1025-2026-06-12, src-ai-agent-frameworks-stars, src-k8s-gpu-device-plugins-stars, src-k8s-core-controllers-stars]
-related: [[ai-agent-frameworks-map]], [[agent-runtime-sandbox-selection-map]], [[agent-memory-selection-matrix]], [[llm-serving-engine-selection-map]], [[mcp-gateway-tooling-map]], [[code-semantic-search-rag-map]]
+related: [[github-stars-backlog-implementation-map]], [[src-github-stars-backlog-current-state]], [[ai-agent-frameworks-map]], [[agent-runtime-sandbox-selection-map]], [[agent-memory-selection-matrix]], [[llm-serving-engine-selection-map]], [[mcp-gateway-tooling-map]], [[code-semantic-search-rag-map]]
 ---
 
 # GitHub Stars 下一批摄入候选清单
 
 本页整理 2026-06-12 通过 GitHub API 复核 `googs1025` starred repositories 后，值得进入 `llm-wiki` 的 P0-P2 候选项目。这里是 **摄入 backlog**，不是完整架构结论；真正写入 `wiki/sources/` 前仍要逐仓库重新看 README、docs、目录结构、近期 commit/release，并区分 GitHub 当前状态与既有 wiki 旧结论。
+
+> [!note] 实现状态
+> 这份 backlog 已经落地为正式分析页 [[github-stars-backlog-implementation-map]]，并新增 GitHub 当前状态核验底稿 [[src-github-stars-backlog-current-state]]。本页保留原始候选优先级；实际选型、分层和项目差异以后以实现地图为准。
 
 ## P0：优先摄入
 

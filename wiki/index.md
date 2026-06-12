@@ -88,6 +88,7 @@ date: 2026-05-12
 - [[src-agentscope-architecture]] — AgentScope 架构（HEAD `e129177`，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）
 - [[src-k8s-gpu-device-plugins-stars]] — K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）
 - [[src-k8s-core-controllers-stars]] — K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）
+- [[src-github-stars-backlog-current-state]] — GitHub Stars P0-P2 当前状态核验（39 个项目，runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU）
 - [[src-nemoclaw-architecture]] — NVIDIA NemoClaw 架构（HEAD `3c0340a`，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）
 - [[src-openshell-architecture]] — NVIDIA OpenShell 架构（HEAD `97986d9`，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）
 - [[src-ai-infra-learning-cn-stars]] — AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）
@@ -107,6 +108,7 @@ date: 2026-05-12
 - [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）
 - [[agent-framework-programming-model-map]] — Agent Framework 编程模型对比地图（LangGraph / LangChain / Dify / AgentScope / Eino / ADK / AutoGen / CrewAI）
 - [[github-stars-ingest-candidates]] — GitHub Stars 下一批摄入候选清单（P0-P2：agent-substrate / AgentScope Runtime / mem0 / Codex / llm-d / AI Gateway / K8s GPU 等）
+- [[github-stars-backlog-implementation-map]] — GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
 
 ---
@@ -153,5 +155,5 @@ date: 2026-05-12
 - k8s-operator — Kubernetes Operator 模式（HiClaw 控制平面骨架）
 - kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
 - autogen / langgraph / crewai — 多 Agent 框架同类对比项
-- github-stars-ingest-candidates — 下一批 GitHub Stars 摄入候选项目：agent-substrate/substrate、agentscope-runtime、mem0、ReMe、Codex、Pi、oh-my-pi、multica、open-cowork、aibrix、llm-d、K8s AI assistant、AI Gateway、Code Graph、GPU/DRA 等（详见 [[github-stars-ingest-candidates]]）
+- github-stars-ingest-candidates — 下一批 GitHub Stars 摄入候选项目：agent-substrate/substrate、agentscope-runtime、mem0、ReMe、Codex、Pi、oh-my-pi、multica、open-cowork、aibrix、llm-d、K8s AI assistant、AI Gateway、Code Graph、GPU/DRA 等（已实现为 [[github-stars-backlog-implementation-map]]，原候选清单见 [[github-stars-ingest-candidates]]）
 - ai-infra-learning-cn — 中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 [[ai-infra-learning-cn-map]]）
