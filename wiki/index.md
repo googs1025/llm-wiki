@@ -105,6 +105,7 @@ date: 2026-05-12
 - [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）
 - [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）
 - [[agent-framework-programming-model-map]] — Agent Framework 编程模型对比地图（LangGraph / LangChain / Dify / AgentScope / Eino / ADK / AutoGen / CrewAI）
+- [[github-stars-ingest-candidates]] — GitHub Stars 下一批摄入候选清单（P0-P2：agent-substrate / AgentScope Runtime / mem0 / Codex / llm-d / AI Gateway / K8s GPU 等）
 
 ---
 
@@ -150,3 +151,4 @@ date: 2026-05-12
 - k8s-operator — Kubernetes Operator 模式（HiClaw 控制平面骨架）
 - kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
 - autogen / langgraph / crewai — 多 Agent 框架同类对比项
+- github-stars-ingest-candidates — 下一批 GitHub Stars 摄入候选项目：agent-substrate/substrate、agentscope-runtime、mem0、ReMe、Codex、Pi、oh-my-pi、multica、open-cowork、aibrix、llm-d、K8s AI assistant、AI Gateway、Code Graph、GPU/DRA 等（详见 [[github-stars-ingest-candidates]]）
