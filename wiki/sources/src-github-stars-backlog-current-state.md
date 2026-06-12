@@ -2,15 +2,65 @@
 title: GitHub Stars P0-P2 当前状态核验
 tags: [github-stars, project-map, selection, ai-infra]
 date: 2026-06-12
-sources: [github-stars-googs1025-2026-06-12]
+sources: [github-stars-p0-p2-raw-snapshots-2026-06-12]
 related: [[github-stars-backlog-implementation-map]], [[github-stars-ingest-candidates]], [[agent-runtime-sandbox-selection-map]], [[agent-memory-selection-matrix]], [[coding-agent-selection-map]], [[llm-serving-engine-selection-map]], [[mcp-gateway-tooling-map]], [[code-semantic-search-rag-map]]
 ---
 
 # GitHub Stars P0-P2 当前状态核验
 
-本页是 [[github-stars-ingest-candidates]] 的 GitHub 当前状态复核底稿。2026-06-12 通过 GitHub API 重新读取 P0-P2 项目的描述、stars、最近 push、主语言、license 和 topics，并把它们作为 [[github-stars-backlog-implementation-map]] 的事实输入。
+本页是 [[github-stars-ingest-candidates]] 的 GitHub 当前状态复核底稿。2026-06-12 通过 GitHub API 重新读取 P0-P2 项目的描述、stars、最近 push、主语言、license 和 topics，并把它们作为 [[github-stars-backlog-implementation-map]] 的事实输入。每个项目的原始核验结果已逐一保存到 `raw/github-stars-p*-*.md`。
 
 它不是新的 backlog。它的作用是把“候选项目”变成可比较的当前项目剖面，供后续按专题理解架构边界和选型差异。
+
+## Raw 快照文件
+
+### P0
+
+- `raw/github-stars-p0-agent-substrate-substrate.md`
+- `raw/github-stars-p0-agentscope-runtime.md`
+- `raw/github-stars-p0-mem0.md`
+- `raw/github-stars-p0-reme.md`
+- `raw/github-stars-p0-openai-codex.md`
+- `raw/github-stars-p0-pi.md`
+- `raw/github-stars-p0-oh-my-pi.md`
+- `raw/github-stars-p0-multica.md`
+- `raw/github-stars-p0-open-cowork.md`
+- `raw/github-stars-p0-aibrix.md`
+- `raw/github-stars-p0-llm-d.md`
+- `raw/github-stars-p0-llm-d-router.md`
+- `raw/github-stars-p0-llm-d-kv-cache.md`
+
+### P1
+
+- `raw/github-stars-p1-kagent.md`
+- `raw/github-stars-p1-kubectl-ai.md`
+- `raw/github-stars-p1-k8m.md`
+- `raw/github-stars-p1-kubewall.md`
+- `raw/github-stars-p1-gateway-api-inference-extension.md`
+- `raw/github-stars-p1-envoy-ai-gateway.md`
+- `raw/github-stars-p1-kgateway.md`
+- `raw/github-stars-p1-higress.md`
+- `raw/github-stars-p1-semantic-router.md`
+- `raw/github-stars-p1-routellm.md`
+- `raw/github-stars-p1-plano.md`
+- `raw/github-stars-p1-gpustack.md`
+- `raw/github-stars-p1-ome.md`
+- `raw/github-stars-p1-kserve.md`
+- `raw/github-stars-p1-kubeai.md`
+- `raw/github-stars-p1-code-review-graph.md`
+- `raw/github-stars-p1-gitnexus.md`
+- `raw/github-stars-p1-deepwiki-open.md`
+
+### P2
+
+- `raw/github-stars-p2-codex-plugin-cc.md`
+- `raw/github-stars-p2-claude-tap.md`
+- `raw/github-stars-p2-cc-connect.md`
+- `raw/github-stars-p2-tokscale.md`
+- `raw/github-stars-p2-hami.md`
+- `raw/github-stars-p2-dra-driver-nvidia-gpu.md`
+- `raw/github-stars-p2-gpu-operator.md`
+- `raw/github-stars-p2-k8s-device-plugin.md`
 
 ## P0 项目
 
