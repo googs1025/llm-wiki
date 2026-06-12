@@ -18,32 +18,25 @@
 </header>
 
 <main class="graph-page">
-  <section class="graph-header">
-    <div>
-      <h1>知识图谱</h1>
-      <p class="subtitle">从所有 wiki 页面中的 <code>[[wikilink]]</code> 和 frontmatter <code>related</code> 自动生成，用来快速看项目、实体和概念之间的连接。</p>
-    </div>
-    <a class="button-link" href="./index.html">返回索引</a>
-  </section>
-
-  <section class="graph-toolbar" aria-label="图谱筛选">
-    <label class="sr-only" for="graph-search">搜索页面、标签、分类和描述</label>
-    <input id="graph-search" type="search" placeholder="搜索项目、概念、标签" autocomplete="off" />
-    <div class="graph-filters" aria-label="分类过滤">
-      <button type="button" class="graph-filter is-active" data-graph-category="entities" aria-pressed="true"><span class="graph-filter-dot graph-filter-entities"></span>实体<small>50</small></button><button type="button" class="graph-filter is-active" data-graph-category="concepts" aria-pressed="true"><span class="graph-filter-dot graph-filter-concepts"></span>概念<small>32</small></button><button type="button" class="graph-filter is-active" data-graph-category="sources" aria-pressed="true"><span class="graph-filter-dot graph-filter-sources"></span>源文件<small>68</small></button><button type="button" class="graph-filter is-active" data-graph-category="analysis" aria-pressed="true"><span class="graph-filter-dot graph-filter-analysis"></span>分析<small>15</small></button>
-    </div>
-    <button id="graph-focus" type="button" aria-pressed="true">显示详情</button>
-    <button id="graph-reset" type="button">重置</button>
-  </section>
-
   <section class="graph-workbench">
     <div class="graph-canvas-wrap">
       <div class="graph-canvas-head">
-        <span id="graph-totals"></span>
+        <div class="graph-tools-primary">
+          <strong>知识图谱</strong>
+          <span id="graph-totals"></span>
+          <label class="sr-only" for="graph-search">搜索页面、标签、分类和描述</label>
+          <input id="graph-search" type="search" placeholder="搜索项目、概念、标签" autocomplete="off" />
+        </div>
+        <div class="graph-filters" aria-label="分类过滤">
+          <button type="button" class="graph-filter is-active" data-graph-category="entities" aria-pressed="true"><span class="graph-filter-dot graph-filter-entities"></span>实体<small>50</small></button><button type="button" class="graph-filter is-active" data-graph-category="concepts" aria-pressed="true"><span class="graph-filter-dot graph-filter-concepts"></span>概念<small>32</small></button><button type="button" class="graph-filter is-active" data-graph-category="sources" aria-pressed="true"><span class="graph-filter-dot graph-filter-sources"></span>源文件<small>68</small></button><button type="button" class="graph-filter is-active" data-graph-category="analysis" aria-pressed="true"><span class="graph-filter-dot graph-filter-analysis"></span>分析<small>15</small></button>
+        </div>
         <div class="graph-canvas-actions" aria-label="图谱视图控制">
+          <button id="graph-details" type="button" aria-pressed="false">详情</button>
+          <button id="graph-reset" type="button">重置</button>
           <button id="graph-zoom-out" type="button" aria-label="缩小">−</button>
           <button id="graph-fit" type="button">适配</button>
           <button id="graph-zoom-in" type="button" aria-label="放大">＋</button>
+          <a href="./index.html">索引</a>
         </div>
       </div>
       <svg id="knowledge-graph" role="img" aria-label="llm-wiki 页面关系图">
@@ -72,7 +65,7 @@
   const viewport = document.getElementById("graph-viewport");
   const searchInput = document.getElementById("graph-search");
   const resetButton = document.getElementById("graph-reset");
-  const focusButton = document.getElementById("graph-focus");
+  const detailsButton = document.getElementById("graph-details");
   const zoomInButton = document.getElementById("graph-zoom-in");
   const zoomOutButton = document.getElementById("graph-zoom-out");
   const fitButton = document.getElementById("graph-fit");
@@ -100,7 +93,7 @@
   let panY = 0;
   let drag = null;
   let panning = null;
-  let focusMode = true;
+  let detailsOpen = false;
   const positionsReady = new Set();
   const initialFocus = new URLSearchParams(window.location.search).get("focus");
   if (initialFocus && nodeById.has(initialFocus)) {
@@ -245,13 +238,13 @@
     const maxX = Math.max(...visibleNodes.map((node) => node.x || 0));
     const minY = Math.min(...visibleNodes.map((node) => node.y || 0));
     const maxY = Math.max(...visibleNodes.map((node) => node.y || 0));
-    const padding = focusMode ? 72 : 48;
+    const padding = 30;
     const graphWidth = Math.max(maxX - minX, 1);
     const graphHeight = Math.max(maxY - minY, 1);
     scale = Math.min(
       1.2,
       Math.max(
-        0.5,
+        0.62,
         Math.min((rect.width - padding * 2) / graphWidth, (rect.height - padding * 2) / graphHeight)
       )
     );
@@ -460,12 +453,11 @@
     render({ fit: true });
   });
 
-  focusButton.addEventListener("click", () => {
-    focusMode = !focusMode;
-    workbench.classList.toggle("is-focus", focusMode);
-    focusButton.textContent = focusMode ? "显示详情" : "专注看图";
-    focusButton.setAttribute("aria-pressed", focusMode ? "true" : "false");
-    window.requestAnimationFrame(() => render({ fit: true }));
+  detailsButton.addEventListener("click", () => {
+    detailsOpen = !detailsOpen;
+    workbench.classList.toggle("has-details", detailsOpen);
+    detailsButton.textContent = detailsOpen ? "隐藏详情" : "详情";
+    detailsButton.setAttribute("aria-pressed", detailsOpen ? "true" : "false");
   });
 
   zoomInButton.addEventListener("click", () => zoomBy(1.18));
@@ -512,9 +504,8 @@
     applyTransform();
   }, { passive: false });
 
-  workbench.classList.add("is-focus");
-  focusButton.textContent = "显示详情";
-  focusButton.setAttribute("aria-pressed", "true");
+  detailsButton.textContent = "详情";
+  detailsButton.setAttribute("aria-pressed", "false");
   render({ fit: true });
 })();
 </script>
