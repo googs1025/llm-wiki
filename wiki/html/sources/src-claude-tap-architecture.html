@@ -31,7 +31,7 @@
 <p>原文：<code>raw/claude-tap-architecture-analysis.md</code> · 仓库：https://github.com/liaohch3/claude-tap · 分析版本 HEAD <code>a11231b</code>（2026-06-12）</p>
 </blockquote>
 <h2 id="一句话定位">一句话定位</h2>
-<p>本地代理和 trace viewer，用 reverse proxy / forward proxy 截获 Claude Code、Codex CLI、Gemini CLI、Cursor CLI 等 coding agent 的真实 API 请求，落 SQLite trace，再提供 live viewer/export。它解决的是 agent 行为可观测和上下文取证，而不是执行任务。 这页和 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> <span class="wikilink wikilink-missing" title="未建页：codex">codex</span> <span class="wikilink wikilink-missing" title="未建页：openclaw">openclaw</span> <a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a> 形成对比，重点帮助理解项目边界和选型位置。</p>
+<p>本地代理和 trace viewer，用 reverse proxy / forward proxy 截获 Claude Code、Codex CLI、Gemini CLI、Cursor CLI 等 coding agent 的真实 API 请求，落 SQLite trace，再提供 live viewer/export。它解决的是 agent 行为可观测和上下文取证，而不是执行任务。 这页和 <a class="wikilink" href="../entities/claude-code.html">claude-code</a> <a class="wikilink" href="../entities/codex.html">codex</a> <span class="wikilink wikilink-missing" title="未建页：openclaw">openclaw</span> <a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a> 形成对比，重点帮助理解项目边界和选型位置。</p>
 <h2 id="核心架构图">核心架构图</h2>
 <pre><code>┌──────────────── AI Coding CLI ────────────────┐
 │ Claude Code / Codex / Gemini / Cursor / Kimi   │
@@ -139,7 +139,7 @@
 <h2 id="选型提示">选型提示</h2>
 <p>如果你在快速理解或选型，先判断它是“执行任务的 agent/runtime”、“观察与计量工具”、“消息/插件 bridge”，还是“Kubernetes/GPU 控制面”。同一条 star 列表里的项目经常解决的是相邻但不同的问题：比如 trace viewer 不能替代 remote control bridge，GPU Operator 也不能替代 DRA driver 或 device plugin 的分配路径。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><span class="wikilink wikilink-missing" title="未建页：codex">codex</span></li><li><span class="wikilink wikilink-missing" title="未建页：openclaw">openclaw</span></li><li><a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a></li><li><a class="wikilink" href="../analysis/agent-framework-programming-model-map.html">agent-framework-programming-model-map</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/claude-code.html">claude-code</a></li><li><a class="wikilink" href="../entities/codex.html">codex</a></li><li><span class="wikilink wikilink-missing" title="未建页：openclaw">openclaw</span></li><li><a class="wikilink" href="../analysis/coding-agent-selection-map.html">coding-agent-selection-map</a></li><li><a class="wikilink" href="../analysis/agent-framework-programming-model-map.html">agent-framework-programming-model-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · sources · <a href="../../sources/src-claude-tap-architecture.md">查看 Markdown 源</a>
