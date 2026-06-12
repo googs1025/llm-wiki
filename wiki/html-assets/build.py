@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import html as htmllib
 import json
+import math
 import os
 import re
 import shutil
@@ -142,6 +143,7 @@ class Resolver:
 
     def __init__(self) -> None:
         self.index: dict[str, str] = {}
+        self.canonical: dict[str, str] = {}
         for cat in CATEGORIES:
             d = WIKI / cat
             if not d.is_dir():
@@ -149,18 +151,30 @@ class Resolver:
             for f in d.glob("*.md"):
                 self.index[f.stem] = cat
                 self.index[f.stem.lower()] = cat
+                self.canonical[f.stem] = f.stem
+                self.canonical[f.stem.lower()] = f.stem
 
-    def href(self, target: str, *, from_cat: str | None) -> str | None:
-        """Return relative href from a page in from_cat to target page; None if not found."""
+    def resolve(self, target: str) -> tuple[str, str] | None:
+        """Return (category, canonical stem) for a target page; None if not found."""
         stem = target.strip()
+        if "|" in stem:
+            stem, _ = stem.split("|", 1)
+        if "#" in stem:
+            stem, _ = stem.split("#", 1)
+        stem = stem.strip()
+        if not stem:
+            return None
         cat = self.index.get(stem) or self.index.get(stem.lower())
         if not cat:
             return None
-        # Resolve canonical stem (case-sensitive)
-        real_stem = next(
-            (f.stem for f in (WIKI / cat).glob("*.md") if f.stem.lower() == stem.lower()),
-            stem,
-        )
+        return cat, self.canonical.get(stem) or self.canonical.get(stem.lower()) or stem
+
+    def href(self, target: str, *, from_cat: str | None) -> str | None:
+        """Return relative href from a page in from_cat to target page; None if not found."""
+        resolved = self.resolve(target)
+        if not resolved:
+            return None
+        cat, real_stem = resolved
         target_path = f"{cat}/{real_stem}.html"
         if from_cat is None:
             return target_path  # called from wiki/html/index.html
@@ -278,7 +292,7 @@ SHELL = """<!doctype html>
   </div>
   </main>
 
-  {toc_html}
+  {sidebar_html}
 </div>
 
 <script>
@@ -326,6 +340,101 @@ def render_toc(toc: list[tuple[int, str, str]]) -> str:
         + "".join(items)
         + "</ul></aside>"
     )
+
+
+def graph_node_href(node: dict[str, object], from_cat: str | None) -> str:
+    href = str(node["href"])
+    if from_cat is None:
+        return href
+    return f"../{href}"
+
+
+def render_page_relations(page: Page, graph_data: dict[str, object] | None) -> str:
+    if not graph_data or page.category == "ROOT":
+        return ""
+    current_id = page.md_path.stem
+    nodes = {str(node["id"]): node for node in graph_data["nodes"]}
+    if current_id not in nodes:
+        return ""
+
+    inbound = [edge for edge in graph_data["edges"] if edge["target"] == current_id and edge["source"] in nodes]
+    outbound = [edge for edge in graph_data["edges"] if edge["source"] == current_id and edge["target"] in nodes]
+    neighbor_ids: list[str] = []
+    for edge in outbound:
+        target = str(edge["target"])
+        if target not in neighbor_ids:
+            neighbor_ids.append(target)
+    for edge in inbound:
+        source = str(edge["source"])
+        if source not in neighbor_ids:
+            neighbor_ids.append(source)
+
+    neighbors = [nodes[node_id] for node_id in neighbor_ids[:12]]
+    mini_nodes = neighbors[:8]
+    graph_href = f"../graph.html?focus={htmllib.escape(current_id, quote=True)}"
+
+    if mini_nodes:
+        center_x = 120
+        center_y = 82
+        radius = 58
+        lines = []
+        circles = [
+            '<circle class="mini-node mini-node-current" cx="120" cy="82" r="10" />',
+            f'<text x="120" y="108" text-anchor="middle">{htmllib.escape(page.title[:16])}</text>',
+        ]
+        for index, node in enumerate(mini_nodes):
+            angle = (index / max(len(mini_nodes), 1)) * 6.28318 - 1.5708
+            x = center_x + radius * math.cos(angle)
+            y = center_y + radius * math.sin(angle)
+            category = htmllib.escape(str(node["category"]), quote=True)
+            lines.append(f'<line x1="{center_x:.1f}" y1="{center_y:.1f}" x2="{x:.1f}" y2="{y:.1f}" />')
+            circles.append(
+                f'<circle class="mini-node mini-node-{category}" cx="{x:.1f}" cy="{y:.1f}" r="7">'
+                f'<title>{htmllib.escape(str(node["title"]))}</title></circle>'
+            )
+        mini_svg = (
+            '<svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图">'
+            + "".join(lines)
+            + "".join(circles)
+            + "</svg>"
+        )
+    else:
+        mini_svg = '<p class="side-empty">本页还没有可解析的 wiki 关系。</p>'
+
+    def render_items(edges: list[dict[str, str]], direction: str) -> str:
+        if not edges:
+            return '<p class="side-empty">暂无。</p>'
+        items = []
+        for edge in edges[:8]:
+            node_id = edge["source"] if direction == "in" else edge["target"]
+            node = nodes.get(node_id)
+            if not node:
+                continue
+            items.append(
+                '<li>'
+                f'<a href="{graph_node_href(node, page.category)}">{htmllib.escape(str(node["title"]))}</a>'
+                f'<span>{htmllib.escape(str(node["category_label"]))} · {htmllib.escape(str(edge["kind"]))}</span>'
+                '</li>'
+            )
+        return f'<ul class="side-link-list">{"".join(items)}</ul>' if items else '<p class="side-empty">暂无。</p>'
+
+    return (
+        '<aside class="side-panel page-relations">'
+        '<div class="side-panel-head"><h3>关系图谱</h3>'
+        f'<a href="{graph_href}">全局打开</a></div>'
+        f'{mini_svg}'
+        '<h4>它指向</h4>'
+        f'{render_items(outbound, "out")}'
+        '<h4>反向链接</h4>'
+        f'{render_items(inbound, "in")}'
+        '</aside>'
+    )
+
+
+def render_sidebar(toc_html: str, relation_html: str) -> str:
+    if not toc_html and not relation_html:
+        return ""
+    return f'<aside class="right-rail">{relation_html}{toc_html}</aside>'
 
 
 def render_tags(tags: list[str]) -> str:
@@ -393,6 +502,28 @@ class PageMeta:
     description: str = ""
 
 
+@dataclass
+class GraphNode:
+    id: str
+    title: str
+    category: str
+    category_label: str
+    href: str
+    tags: list[str]
+    date: str
+    description: str
+    degree: int = 0
+    inbound: int = 0
+    outbound: int = 0
+
+
+@dataclass(frozen=True)
+class GraphEdge:
+    source: str
+    target: str
+    kind: str
+
+
 RELATED_SECTION_RE = re.compile(r"^##\s+相关页面\s*$.*?(?=^##\s+|\Z)", re.MULTILINE | re.DOTALL)
 
 
@@ -401,7 +532,7 @@ def strip_markdown_related_section(body: str) -> str:
     return RELATED_SECTION_RE.sub("", body).rstrip() + "\n"
 
 
-def build_page(page: Page, resolver: Resolver) -> str:
+def build_page(page: Page, resolver: Resolver, graph_data: dict[str, object] | None = None) -> str:
     body_md = strip_markdown_related_section(page.body_md) if page.fm.related else page.body_md
     body_with_ids = inject_heading_ids(body_md)
     body_with_links = rewrite_wikilinks(body_with_ids, resolver, from_cat=page.category if page.category != "ROOT" else None)
@@ -419,6 +550,8 @@ def build_page(page: Page, resolver: Resolver) -> str:
 
     toc = extract_toc(body_md)
     toc_html = render_toc(toc)
+    relation_html = render_page_relations(page, graph_data)
+    sidebar_html = render_sidebar(toc_html, relation_html)
 
     is_root = page.category == "ROOT"
     style_href = ASSETS_REL if is_root else f"../{ASSETS_REL}"
@@ -442,7 +575,7 @@ def build_page(page: Page, resolver: Resolver) -> str:
         related_html=render_related(page.fm.related, resolver, from_cat=page.category if not is_root else None),
         category_label=category_label,
         md_href=md_href,
-        toc_html=toc_html,
+        sidebar_html=sidebar_html,
     )
 
 
@@ -569,6 +702,92 @@ def collect_page_meta(descriptions: dict[str, str] | None = None) -> list[PageMe
                 )
             )
     return pages
+
+
+def collect_index_descriptions(resolver: Resolver) -> tuple[str, dict[str, str]]:
+    index_md = (WIKI / "index.md").read_text(encoding="utf-8")
+    _fm, body = parse_frontmatter(index_md)
+    body_resolved = rewrite_wikilinks(body, resolver, from_cat=None)
+    body_with_ids = inject_heading_ids(body_resolved)
+
+    converter = md.Markdown(extensions=["fenced_code", "tables", "attr_list", "sane_lists"], output_format="html5")
+    body_html = converter.convert(body_with_ids)
+    body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
+    body_html = re.sub(r"(<table>.*?</table>)", r'<div class="table-wrap">\1</div>', body_html, flags=re.DOTALL)
+    return body_html, extract_index_descriptions(body_html)
+
+
+def collect_graph_data(resolver: Resolver, descriptions: dict[str, str] | None = None) -> dict[str, object]:
+    descriptions = descriptions or {}
+    nodes: dict[str, GraphNode] = {}
+    edges_by_pair: dict[tuple[str, str], str] = {}
+
+    for cat in CATEGORIES:
+        src_dir = WIKI / cat
+        if not src_dir.is_dir():
+            continue
+        for md_path in sorted(src_dir.glob("*.md")):
+            page = load_page(md_path, cat)
+            node_id = md_path.stem
+            href = f"{cat}/{node_id}.html"
+            nodes[node_id] = GraphNode(
+                id=node_id,
+                title=page.title,
+                category=cat,
+                category_label=CATEGORY_LABELS.get(cat, cat),
+                href=href,
+                tags=page.fm.tags,
+                date=page.fm.date,
+                description=descriptions.get(href, ""),
+            )
+
+            page_edges: dict[tuple[str, str], str] = {}
+            for raw in WIKILINK_RE.findall(page.body_md):
+                resolved = resolver.resolve(raw)
+                if not resolved:
+                    continue
+                _target_cat, target_stem = resolved
+                if target_stem != node_id:
+                    page_edges.setdefault((node_id, target_stem), "wikilink")
+            for raw in page.fm.related:
+                resolved = resolver.resolve(raw)
+                if not resolved:
+                    continue
+                _target_cat, target_stem = resolved
+                if target_stem != node_id:
+                    page_edges[(node_id, target_stem)] = "related"
+            edges_by_pair.update(page_edges)
+
+    inbound: dict[str, set[str]] = {node_id: set() for node_id in nodes}
+    outbound: dict[str, set[str]] = {node_id: set() for node_id in nodes}
+    for source, target in edges_by_pair:
+        if source not in nodes or target not in nodes:
+            continue
+        outbound[source].add(target)
+        inbound[target].add(source)
+
+    for node_id, node in nodes.items():
+        node.inbound = len(inbound[node_id])
+        node.outbound = len(outbound[node_id])
+        node.degree = len(inbound[node_id] | outbound[node_id])
+
+    edges = [
+        GraphEdge(source=source, target=target, kind=kind)
+        for (source, target), kind in sorted(edges_by_pair.items())
+        if source in nodes and target in nodes
+    ]
+    return {
+        "nodes": [node.__dict__ for node in sorted(nodes.values(), key=lambda n: (n.category, n.title.lower()))],
+        "edges": [edge.__dict__ for edge in edges],
+        "categories": [
+            {
+                "id": cat,
+                "label": CATEGORY_LABELS.get(cat, cat),
+                "count": sum(1 for node in nodes.values() if node.category == cat),
+            }
+            for cat in CATEGORIES
+        ],
+    }
 
 
 def build_topic_groups(pages: list[PageMeta]) -> list[dict[str, object]]:
@@ -704,20 +923,481 @@ def render_reading_paths(topic_groups: list[dict[str, object]]) -> str:
     return '<section class="panel reading-paths"><h2>推荐阅读路径</h2><ol>' + "".join(items) + "</ol></section>"
 
 
-def build_site_index(resolver: Resolver) -> str:
+GRAPH_PAGE_SCRIPT = r"""
+(() => {
+  const data = JSON.parse(document.getElementById("graph-data").textContent);
+  const svg = document.getElementById("knowledge-graph");
+  const viewport = document.getElementById("graph-viewport");
+  const searchInput = document.getElementById("graph-search");
+  const resetButton = document.getElementById("graph-reset");
+  const inspector = document.getElementById("graph-inspector");
+  const totals = document.getElementById("graph-totals");
+  const categoryButtons = Array.from(document.querySelectorAll("[data-graph-category]"));
+  const nodeById = new Map(data.nodes.map((node) => [node.id, { ...node }]));
+  const allEdges = data.edges.filter((edge) => nodeById.has(edge.source) && nodeById.has(edge.target));
+  const categories = new Set(data.categories.map((cat) => cat.id));
+  const activeCategories = new Set(categories);
+  const colorByCategory = {
+    entities: "#6ea8fe",
+    concepts: "#8ad97a",
+    sources: "#f0b75d",
+    analysis: "#c99cff",
+  };
+
+  let visibleNodes = [];
+  let visibleEdges = [];
+  let selectedId = null;
+  let highlightedId = null;
+  let scale = 1;
+  let panX = 0;
+  let panY = 0;
+  let drag = null;
+  let panning = null;
+  const positionsReady = new Set();
+  const initialFocus = new URLSearchParams(window.location.search).get("focus");
+  if (initialFocus && nodeById.has(initialFocus)) {
+    selectedId = initialFocus;
+    searchInput.value = nodeById.get(initialFocus).title;
+  }
+
+  const esc = (value) => String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+  const shortLabel = (value) => {
+    const text = String(value ?? "");
+    return text.length > 26 ? `${text.slice(0, 25)}...` : text;
+  };
+
+  function matchesQuery(node, query) {
+    if (!query) return true;
+    return [node.title, node.id, node.category, node.category_label, node.description, ...(node.tags || [])]
+      .join(" ")
+      .toLowerCase()
+      .includes(query);
+  }
+
+  function getVisibleData() {
+    const query = searchInput.value.trim().toLowerCase();
+    const directMatches = new Set(
+      data.nodes
+        .filter((node) => activeCategories.has(node.category) && matchesQuery(node, query))
+        .map((node) => node.id)
+    );
+    const visibleIds = new Set(directMatches);
+
+    if (query) {
+      for (const edge of allEdges) {
+        if (directMatches.has(edge.source) && activeCategories.has(nodeById.get(edge.target).category)) {
+          visibleIds.add(edge.target);
+        }
+        if (directMatches.has(edge.target) && activeCategories.has(nodeById.get(edge.source).category)) {
+          visibleIds.add(edge.source);
+        }
+      }
+    }
+
+    const nodes = data.nodes.filter((node) => visibleIds.has(node.id)).map((node) => nodeById.get(node.id));
+    const idSet = new Set(nodes.map((node) => node.id));
+    const edges = allEdges.filter((edge) => idSet.has(edge.source) && idSet.has(edge.target));
+    return { nodes, edges };
+  }
+
+  function seedPositions(nodes) {
+    const rect = svg.getBoundingClientRect();
+    const width = Math.max(rect.width, 720);
+    const height = Math.max(rect.height, 460);
+    const lanes = Array.from(categories);
+    const laneWidth = width / Math.max(lanes.length, 1);
+    const ordered = [...nodes].sort((a, b) => (b.degree - a.degree) || a.title.localeCompare(b.title));
+
+    ordered.forEach((node, index) => {
+      if (positionsReady.has(node.id)) return;
+      const lane = Math.max(0, lanes.indexOf(node.category));
+      const row = Math.floor(index / Math.max(lanes.length, 1));
+      const jitter = ((index * 37) % 100) / 100;
+      node.x = laneWidth * lane + laneWidth * (0.32 + jitter * 0.36);
+      node.y = 78 + (row * 67 + jitter * 36) % Math.max(height - 120, 240);
+      positionsReady.add(node.id);
+    });
+  }
+
+  function runLayout(nodes, edges) {
+    seedPositions(nodes);
+    const rect = svg.getBoundingClientRect();
+    const width = Math.max(rect.width, 720);
+    const height = Math.max(rect.height, 460);
+    const links = edges.map((edge) => [nodeById.get(edge.source), nodeById.get(edge.target)]);
+
+    for (let step = 0; step < 130; step += 1) {
+      const alpha = 1 - step / 130;
+      for (let i = 0; i < nodes.length; i += 1) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j += 1) {
+          const b = nodes[j];
+          let dx = (a.x || 0) - (b.x || 0);
+          let dy = (a.y || 0) - (b.y || 0);
+          let distance = Math.max(Math.sqrt(dx * dx + dy * dy), 14);
+          const force = (900 / (distance * distance)) * alpha;
+          dx /= distance;
+          dy /= distance;
+          a.x += dx * force;
+          a.y += dy * force;
+          b.x -= dx * force;
+          b.y -= dy * force;
+        }
+      }
+
+      for (const [source, target] of links) {
+        const dx = (target.x || 0) - (source.x || 0);
+        const dy = (target.y || 0) - (source.y || 0);
+        const distance = Math.max(Math.sqrt(dx * dx + dy * dy), 1);
+        const ideal = 90 + Math.min((source.degree + target.degree) * 3, 50);
+        const force = (distance - ideal) * 0.018 * alpha;
+        const nx = dx / distance;
+        const ny = dy / distance;
+        source.x += nx * force;
+        source.y += ny * force;
+        target.x -= nx * force;
+        target.y -= ny * force;
+      }
+
+      for (const node of nodes) {
+        const lane = Array.from(categories).indexOf(node.category);
+        const laneX = width * ((lane + 0.5) / Math.max(categories.size, 1));
+        node.x += (laneX - node.x) * 0.012 * alpha;
+        node.y += (height / 2 - node.y) * 0.006 * alpha;
+        node.x = Math.max(24, Math.min(width - 24, node.x));
+        node.y = Math.max(24, Math.min(height - 24, node.y));
+      }
+    }
+  }
+
+  function edgeClass(edge) {
+    if (!selectedId && !highlightedId) return "";
+    const active = selectedId || highlightedId;
+    return edge.source === active || edge.target === active ? "is-connected" : "is-dimmed";
+  }
+
+  function applyTransform() {
+    viewport.setAttribute("transform", `translate(${panX} ${panY}) scale(${scale})`);
+  }
+
+  function nodeRadius(node) {
+    return 5 + Math.min(Math.sqrt(Math.max(node.degree, 1)) * 2.4, 11);
+  }
+
+  function drawPositions() {
+    viewport.querySelectorAll("[data-edge]").forEach((line) => {
+      const source = nodeById.get(line.dataset.source);
+      const target = nodeById.get(line.dataset.target);
+      line.setAttribute("x1", source.x);
+      line.setAttribute("y1", source.y);
+      line.setAttribute("x2", target.x);
+      line.setAttribute("y2", target.y);
+    });
+    viewport.querySelectorAll("[data-node]").forEach((group) => {
+      const node = nodeById.get(group.dataset.node);
+      group.setAttribute("transform", `translate(${node.x} ${node.y})`);
+    });
+  }
+
+  function renderInspector(nodeId) {
+    const node = nodeId ? nodeById.get(nodeId) : null;
+    if (!node) {
+      const top = [...data.nodes].sort((a, b) => b.degree - a.degree).slice(0, 8);
+      inspector.innerHTML = `
+        <h2>图谱概览</h2>
+        <p>${esc(data.nodes.length)} 个页面，${esc(data.edges.length)} 条页面关系。搜索会保留命中页面的一跳邻居，便于理解上下文。</p>
+        <h3>高连接页面</h3>
+        <div class="graph-link-list">
+          ${top.map((item) => `<a href="${esc(item.href)}">${esc(item.title)}<span>${esc(item.category_label)} · ${esc(item.degree)}</span></a>`).join("")}
+        </div>
+      `;
+      return;
+    }
+
+    const inbound = visibleEdges.filter((edge) => edge.target === node.id).map((edge) => nodeById.get(edge.source));
+    const outbound = visibleEdges.filter((edge) => edge.source === node.id).map((edge) => nodeById.get(edge.target));
+    const tags = (node.tags || []).slice(0, 8).map((tag) => `<span class="tag">${esc(tag)}</span>`).join("");
+    inspector.innerHTML = `
+      <div class="graph-inspector-head">
+        <span class="graph-node-kind">${esc(node.category_label)}</span>
+        <a href="${esc(node.href)}">打开页面</a>
+      </div>
+      <h2>${esc(node.title)}</h2>
+      ${node.description ? `<p>${esc(node.description)}</p>` : ""}
+      <div class="graph-metrics">
+        <span><strong>${esc(node.degree)}</strong>连接</span>
+        <span><strong>${esc(node.inbound)}</strong>入链</span>
+        <span><strong>${esc(node.outbound)}</strong>出链</span>
+      </div>
+      ${tags ? `<div class="tags">${tags}</div>` : ""}
+      <h3>指向它的页面</h3>
+      ${renderNodeList(inbound)}
+      <h3>它指向的页面</h3>
+      ${renderNodeList(outbound)}
+    `;
+  }
+
+  function renderNodeList(nodes) {
+    if (!nodes.length) return '<p class="graph-empty">当前筛选范围内没有关系。</p>';
+    return `<div class="graph-link-list">${nodes
+      .slice(0, 12)
+      .map((item) => `<a href="${esc(item.href)}">${esc(item.title)}<span>${esc(item.category_label)} · ${esc(item.degree)}</span></a>`)
+      .join("")}</div>`;
+  }
+
+  function render() {
+    const current = getVisibleData();
+    visibleNodes = current.nodes;
+    visibleEdges = current.edges;
+    if (selectedId && !visibleNodes.some((node) => node.id === selectedId)) selectedId = null;
+    runLayout(visibleNodes, visibleEdges);
+    viewport.replaceChildren();
+
+    for (const edge of visibleEdges) {
+      const source = nodeById.get(edge.source);
+      const target = nodeById.get(edge.target);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.dataset.edge = "true";
+      line.dataset.source = edge.source;
+      line.dataset.target = edge.target;
+      line.classList.add("graph-edge");
+      if (edge.kind === "related") line.classList.add("is-related");
+      const cls = edgeClass(edge);
+      if (cls) line.classList.add(cls);
+      line.setAttribute("x1", source.x);
+      line.setAttribute("y1", source.y);
+      line.setAttribute("x2", target.x);
+      line.setAttribute("y2", target.y);
+      viewport.append(line);
+    }
+
+    const connected = new Set();
+    if (selectedId || highlightedId) {
+      const active = selectedId || highlightedId;
+      for (const edge of visibleEdges) {
+        if (edge.source === active) connected.add(edge.target);
+        if (edge.target === active) connected.add(edge.source);
+      }
+    }
+
+    for (const node of visibleNodes) {
+      const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      group.classList.add("graph-node");
+      if (selectedId === node.id) group.classList.add("is-selected");
+      if ((selectedId || highlightedId) && node.id !== (selectedId || highlightedId) && !connected.has(node.id)) {
+        group.classList.add("is-dimmed");
+      }
+      group.dataset.node = node.id;
+      group.setAttribute("transform", `translate(${node.x} ${node.y})`);
+      group.setAttribute("tabindex", "0");
+      group.setAttribute("role", "button");
+      group.setAttribute("aria-label", node.title);
+
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.setAttribute("r", nodeRadius(node));
+      circle.setAttribute("fill", colorByCategory[node.category] || "#82b4ff");
+      group.append(circle);
+
+      if (node.degree >= 5 || selectedId === node.id || highlightedId === node.id) {
+        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        label.setAttribute("x", nodeRadius(node) + 7);
+        label.setAttribute("y", 4);
+        label.textContent = shortLabel(node.title);
+        group.append(label);
+      }
+
+      group.addEventListener("click", () => {
+        selectedId = node.id;
+        render();
+      });
+      group.addEventListener("dblclick", () => {
+        window.location.href = node.href;
+      });
+      group.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectedId = node.id;
+          render();
+        }
+      });
+      group.addEventListener("pointerdown", (event) => {
+        drag = { node, x: event.clientX, y: event.clientY };
+        group.setPointerCapture(event.pointerId);
+        event.stopPropagation();
+      });
+      viewport.append(group);
+    }
+
+    drawPositions();
+    applyTransform();
+    totals.textContent = `${visibleNodes.length} 个页面 · ${visibleEdges.length} 条关系`;
+    renderInspector(selectedId);
+  }
+
+  categoryButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const category = button.dataset.graphCategory;
+      if (activeCategories.has(category) && activeCategories.size > 1) {
+        activeCategories.delete(category);
+      } else {
+        activeCategories.add(category);
+      }
+      button.classList.toggle("is-active", activeCategories.has(category));
+      button.setAttribute("aria-pressed", activeCategories.has(category) ? "true" : "false");
+      render();
+    });
+  });
+
+  searchInput.addEventListener("input", render);
+  resetButton.addEventListener("click", () => {
+    searchInput.value = "";
+    selectedId = null;
+    highlightedId = null;
+    activeCategories.clear();
+    categories.forEach((cat) => activeCategories.add(cat));
+    categoryButtons.forEach((button) => {
+      button.classList.add("is-active");
+      button.setAttribute("aria-pressed", "true");
+    });
+    scale = 1;
+    panX = 0;
+    panY = 0;
+    render();
+  });
+
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.target !== svg) return;
+    panning = { x: event.clientX, y: event.clientY, panX, panY };
+    svg.setPointerCapture(event.pointerId);
+  });
+  svg.addEventListener("pointermove", (event) => {
+    if (drag) {
+      const dx = (event.clientX - drag.x) / scale;
+      const dy = (event.clientY - drag.y) / scale;
+      drag.node.x += dx;
+      drag.node.y += dy;
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+      drawPositions();
+    } else if (panning) {
+      panX = panning.panX + event.clientX - panning.x;
+      panY = panning.panY + event.clientY - panning.y;
+      applyTransform();
+    }
+  });
+  svg.addEventListener("pointerup", () => {
+    drag = null;
+    panning = null;
+  });
+  svg.addEventListener("pointercancel", () => {
+    drag = null;
+    panning = null;
+  });
+  svg.addEventListener("wheel", (event) => {
+    event.preventDefault();
+    const rect = svg.getBoundingClientRect();
+    const px = event.clientX - rect.left;
+    const py = event.clientY - rect.top;
+    const nextScale = Math.min(2.2, Math.max(0.55, scale * (event.deltaY > 0 ? 0.92 : 1.08)));
+    panX = px - (px - panX) * (nextScale / scale);
+    panY = py - (py - panY) * (nextScale / scale);
+    scale = nextScale;
+    applyTransform();
+  }, { passive: false });
+
+  render();
+})();
+"""
+
+
+def build_graph_page(graph_data: dict[str, object]) -> str:
+    graph_json = escape_script_json(json.dumps(graph_data, ensure_ascii=False, separators=(",", ":")))
+    category_buttons = "".join(
+        f'<button type="button" class="graph-filter is-active" data-graph-category="{esc(cat["id"])}" aria-pressed="true">'
+        f'<span class="graph-filter-dot graph-filter-{esc(cat["id"])}"></span>{esc(cat["label"])}<small>{esc(cat["count"])}</small></button>'
+        for cat in graph_data["categories"]
+    )
+    return f"""<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>知识图谱 · llm-wiki</title>
+  <link rel="stylesheet" href="{ASSETS_REL}" />
+{AUTO_MARKER}
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="./index.html"><span class="brand-dot"></span>llm-wiki</a>
+  <span class="meta">知识图谱</span>
+  <span class="spacer"></span>
+  <span class="meta"><a href="./log.html">操作时间线 →</a></span>
+  <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
+</header>
+
+<main class="graph-page">
+  <section class="graph-header">
+    <div>
+      <h1>知识图谱</h1>
+      <p class="subtitle">从所有 wiki 页面中的 <code>[[wikilink]]</code> 和 frontmatter <code>related</code> 自动生成，用来快速看项目、实体和概念之间的连接。</p>
+    </div>
+    <a class="button-link" href="./index.html">返回索引</a>
+  </section>
+
+  <section class="graph-toolbar" aria-label="图谱筛选">
+    <label class="sr-only" for="graph-search">搜索页面、标签、分类和描述</label>
+    <input id="graph-search" type="search" placeholder="搜索项目、概念、标签" autocomplete="off" />
+    <div class="graph-filters" aria-label="分类过滤">
+      {category_buttons}
+    </div>
+    <button id="graph-reset" type="button">重置</button>
+  </section>
+
+  <section class="graph-workbench">
+    <div class="graph-canvas-wrap">
+      <div class="graph-canvas-head">
+        <span id="graph-totals"></span>
+        <span>滚轮缩放 · 拖动画布 · 双击节点打开页面</span>
+      </div>
+      <svg id="knowledge-graph" role="img" aria-label="llm-wiki 页面关系图">
+        <g id="graph-viewport"></g>
+      </svg>
+    </div>
+    <aside id="graph-inspector" class="graph-inspector" aria-live="polite"></aside>
+  </section>
+</main>
+
+<script type="application/json" id="graph-data">{graph_json}</script>
+<script>
+  const root = document.documentElement;
+  const saved = localStorage.getItem("wiki-theme");
+  if (saved) root.setAttribute("data-theme", saved);
+  document.getElementById("theme-toggle").addEventListener("click", () => {{
+    const cur = root.getAttribute("data-theme") || "dark";
+    root.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+    localStorage.setItem("wiki-theme", root.getAttribute("data-theme"));
+  }});
+</script>
+<script>{GRAPH_PAGE_SCRIPT}</script>
+
+</body>
+</html>
+"""
+
+
+def build_site_index(
+    resolver: Resolver,
+    body_html: str | None = None,
+    descriptions: dict[str, str] | None = None,
+) -> str:
     """Generate wiki/html/index.html — mirrors wiki/index.md structure with search."""
-    index_md = (WIKI / "index.md").read_text(encoding="utf-8")
-    fm, body = parse_frontmatter(index_md)
-
-    # Replace [[X]] with anchors to the resolved page (from_cat=None → top-level path)
-    body_resolved = rewrite_wikilinks(body, resolver, from_cat=None)
-    body_with_ids = inject_heading_ids(body_resolved)
-
-    converter = md.Markdown(extensions=["fenced_code", "tables", "attr_list", "sane_lists"], output_format="html5")
-    body_html = converter.convert(body_with_ids)
-    body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
-    body_html = re.sub(r"(<table>.*?</table>)", r'<div class="table-wrap">\1</div>', body_html, flags=re.DOTALL)
-    descriptions = extract_index_descriptions(body_html)
+    if body_html is None or descriptions is None:
+        body_html, descriptions = collect_index_descriptions(resolver)
 
     # All pages for search index
     pages = collect_page_meta(descriptions)
@@ -745,6 +1425,10 @@ def build_site_index(resolver: Resolver) -> str:
   <div>
     <h1>llm-wiki</h1>
     <p class="subtitle">个人 LLM / AI Agent / 云原生 / 推理基础设施知识库。</p>
+    <div class="home-actions">
+      <a class="button-link" href="./graph.html">打开知识图谱</a>
+      <a class="button-link button-link-secondary" href="./log.html">查看操作时间线</a>
+    </div>
   </div>
   {render_stat_strip(site_stats)}
 </section>
@@ -824,6 +1508,7 @@ def build_site_index(resolver: Resolver) -> str:
   <a class="brand" href="./index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">全站首页</span>
   <span class="spacer"></span>
+  <span class="meta"><a href="./graph.html">知识图谱 →</a></span>
   <span class="meta"><a href="./log.html">操作时间线 →</a></span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
@@ -866,6 +1551,8 @@ def main() -> int:
     resolver = Resolver()
     OUT.mkdir(parents=True, exist_ok=True)
     sync_html_assets(args.dry_run)
+    index_body_html, descriptions = collect_index_descriptions(resolver)
+    graph_data = collect_graph_data(resolver, descriptions)
 
     stats = {"written": 0, "skipped": 0, "total": 0}
 
@@ -878,7 +1565,7 @@ def main() -> int:
         dst_dir.mkdir(parents=True, exist_ok=True)
         for md_path in sorted(src_dir.glob("*.md")):
             page = load_page(md_path, cat)
-            html = build_page(page, resolver)
+            html = build_page(page, resolver, graph_data)
             dst = dst_dir / f"{md_path.stem}.html"
             stats["total"] += 1
             if not should_write(dst, args.force):
@@ -897,7 +1584,7 @@ def main() -> int:
     log_md = WIKI / "log.md"
     if log_md.exists():
         page = load_page(log_md, "ROOT")
-        html = build_page(page, resolver)
+        html = build_page(page, resolver, graph_data)
         dst = OUT / "log.html"
         stats["total"] += 1
         if should_write(dst, args.force):
@@ -912,11 +1599,32 @@ def main() -> int:
     dst = OUT / "index.html"
     stats["total"] += 1
     if should_write(dst, args.force):
-        html = build_site_index(resolver)
+        html = build_site_index(resolver, index_body_html, descriptions)
         if not args.dry_run:
             dst.write_text(html, encoding="utf-8")
         stats["written"] += 1
         print(f"  ✓ {dst.relative_to(ROOT)}")
+    else:
+        stats["skipped"] += 1
+
+    # Knowledge graph
+    graph_json_dst = OUT / "graph.json"
+    if args.dry_run:
+        print(f"  would write: {graph_json_dst.relative_to(ROOT)}")
+    else:
+        graph_json_dst.write_text(json.dumps(graph_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"  ✓ {graph_json_dst.relative_to(ROOT)}")
+
+    dst = OUT / "graph.html"
+    stats["total"] += 1
+    if should_write(dst, args.force):
+        html = build_graph_page(graph_data)
+        if args.dry_run:
+            print(f"  would write: {dst.relative_to(ROOT)}")
+        else:
+            dst.write_text(html, encoding="utf-8")
+            print(f"  ✓ {dst.relative_to(ROOT)}")
+        stats["written"] += 1
     else:
         stats["skipped"] += 1
 
