@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-14</span>
+  <span class="meta">2026-06-12</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,14 +23,11 @@
 
   <header class="page-header">
     <h1>Kubernetes Gateway API</h1>
-    <p class="page-meta">2026-05-14 · 来源：agentgateway-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：agentgateway-architecture-analysis.md、gateway-api-inference-extension-architecture-analysis.md</p>
     <div class="tags"><span class="tag">kubernetes</span><span class="tag">networking</span><span class="tag">gateway</span><span class="tag">api</span></div>
   </header>
 
-  <blockquote>
-<p>Stub — 待充实</p>
-</blockquote>
-<p>K8s SIG-Network 的<strong>新一代入口 API</strong>，取代 Ingress。设计为更具表达力、可扩展、面向角色（infrastructure provider / cluster operator / application developer 三层职责分离）。核心资源族：</p>
+  <p>K8s SIG-Network 的<strong>新一代入口 API</strong>，取代 Ingress。设计为更具表达力、可扩展、面向角色（infrastructure provider / cluster operator / application developer 三层职责分离）。核心资源族：</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -71,22 +68,101 @@
 - <code>AgentgatewayBackend</code> 在 HTTPRoute 的 backendRef 里被引用，定义 AI / MCP / A2A 后端<br>
 - <code>AgentgatewayParameters</code> 跟 GatewayClass 的 parametersRef 关联，控制 deployer 行为</p>
 <p>这种"主资源用上游 API，扩展用自家引用型 CRD"的模式跟 Istio Gateway API 实现是同款。</p>
-<h2 id="todo">TODO</h2>
+<h2 id="与-ingress-的对照">与 Ingress 的对照</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Ingress</th>
+<th>Gateway API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>角色模型</td>
+<td>一个资源里混合平台和应用意图</td>
+<td>GatewayClass / Gateway / Route 分离职责</td>
+</tr>
+<tr>
+<td>协议覆盖</td>
+<td>主要 HTTP/HTTPS</td>
+<td>HTTP、gRPC、TCP、TLS 等资源族</td>
+</tr>
+<tr>
+<td>扩展方式</td>
+<td>annotation 堆叠，controller-specific</td>
+<td>标准字段 + policy attachment + extension points</td>
+</tr>
+<tr>
+<td>多团队边界</td>
+<td>namespace / host 冲突处理弱</td>
+<td><code>ReferenceGrant</code>、Route attachment 更明确</td>
+</tr>
+<tr>
+<td>适合场景</td>
+<td>简单 Web ingress</td>
+<td>多租户入口、mesh interop、AI inference routing</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="主流实现位置">主流实现位置</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>实现</th>
+<th>特点</th>
+<th>适合关注点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Istio</td>
+<td>Gateway API + service mesh / HBONE / xDS 生态</td>
+<td>mesh 与 ingress 统一</td>
+</tr>
+<tr>
+<td>Envoy Gateway</td>
+<td>以 Envoy 为数据面的 Gateway API 实现</td>
+<td>API gateway / GenAI gateway 扩展</td>
+</tr>
+<tr>
+<td>Cilium Gateway API</td>
+<td>eBPF datapath + Cilium 网络策略生态</td>
+<td>网络、安全、L7 policy 结合</td>
+</tr>
+<tr>
+<td>Kong / NGINX Gateway Fabric</td>
+<td>传统 API gateway / ingress controller 演进</td>
+<td>已有网关生态迁移</td>
+</tr>
+<tr>
+<td>agentgateway</td>
+<td>复用 Gateway API 控制面，扩展 AI/MCP/A2A backend</td>
+<td>AI-native L7 gateway</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="gamma-与-service-mesh">GAMMA 与 Service Mesh</h2>
+<p>GAMMA（Gateway API for Mesh Management and Administration）把 Gateway API 的 Route / policy attachment 思路扩展到 service mesh 内部流量。对 AI infra 的价值是：入口流量、服务间流量、Agent 到工具/模型的出口流量可以逐渐使用同一套资源模型表达，而不是 Ingress、VirtualService、网关插件各写一套。</p>
+<p><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 借用 <span class="wikilink wikilink-missing" title="未建页：istio">istio</span> / <span class="wikilink wikilink-missing" title="未建页：xds">xds</span> / <span class="wikilink wikilink-missing" title="未建页：hbone">hbone</span> 的思路，说明 Gateway API 已经不只是“北南向入口”，也可以成为 AI gateway 控制面的公共语言。</p>
+<h2 id="inferencepool-与-ai-推理调度">InferencePool 与 AI 推理调度</h2>
+<p><a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a> 把推理 endpoint picking 推进 Gateway API extension 层：</p>
 <ul>
-<li>[ ] 写 Gateway API 跟 Ingress 的对照</li>
-<li>[ ] 写主流实现（Istio / Envoy Gateway / Cilium / Kong / NGINX Gateway Fabric）</li>
-<li>[ ] 写 GAMMA（service mesh interop）扩展</li>
-<li>[ ] 写 InferencePool 与 AI 推理调度</li>
+<li><code>InferencePool</code> 表示一组可被 gateway 选择的推理后端；</li>
+<li>EPP / LWEPP 作为 Endpoint Picker 参考实现；</li>
+<li>下游如 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 可以把 KV cache、P/D 分离、负载、端口、模型能力等信息接进 picking；</li>
+<li>它解决的是“Gateway 该把这个推理请求发给哪个 endpoint”，不是 provider auth、prompt mutation 或模型本身推理。</li>
 </ul>
+<p>因此 Gateway API 在 AI 场景里的位置正在上移：从普通 HTTP ingress，变成 LLM serving routing、AI gateway policy 和 mesh interop 的共同 API 层。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><span class="wikilink wikilink-missing" title="未建页：istio">istio</span></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/gateway-api.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#在-agentgateway-中的使用">在 agentgateway 中的使用</a></li><li class=""><a href="#todo">TODO</a></li></ul></aside>
+  <aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#在-agentgateway-中的使用">在 agentgateway 中的使用</a></li><li class=""><a href="#与-ingress-的对照">与 Ingress 的对照</a></li><li class=""><a href="#主流实现位置">主流实现位置</a></li><li class=""><a href="#gamma-与-service-mesh">GAMMA 与 Service Mesh</a></li><li class=""><a href="#inferencepool-与-ai-推理调度">InferencePool 与 AI 推理调度</a></li></ul></aside>
 </div>
 
 <script>
