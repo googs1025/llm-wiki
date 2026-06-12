@@ -89,6 +89,7 @@ date: 2026-05-12
 - [[src-k8s-gpu-device-plugins-stars]] — K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）
 - [[src-k8s-core-controllers-stars]] — K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）
 - [[src-github-stars-backlog-current-state]] — GitHub Stars P0-P2 当前状态核验（39 个项目，runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU）
+- [[src-substrate-architecture]] — Agent Substrate 架构（HEAD `a3f4474`，K8s 上的高密度 agent-like workload substrate：WorkerPool/ActorTemplate + Redis/ValKey actor 状态 + Envoy 唤醒路由 + atelet/ateom gVisor snapshot）
 - [[src-nemoclaw-architecture]] — NVIDIA NemoClaw 架构（HEAD `3c0340a`，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）
 - [[src-openshell-architecture]] — NVIDIA OpenShell 架构（HEAD `97986d9`，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）
 - [[src-ai-infra-learning-cn-stars]] — AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）
