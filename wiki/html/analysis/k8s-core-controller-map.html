@@ -101,6 +101,54 @@ Cluster substrate
 <li><a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a>、<a class="wikilink" href="../entities/hami.html">hami</a> 把 GPU 生命周期、DRA 和 sharing 策略放进 K8s。</li>
 </ul>
 <p>因此理解 controller-runtime / kubebuilder / client-go，是理解这些 AI Infra 项目的共同底座。</p>
+<h2 id="kubernetes-sigs-维度拆分">Kubernetes SIGs 维度拆分</h2>
+<p>更完整的候选清单见 <a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a>。如果按工程维度而不是 SIG 名称拆，下一批最有价值的是：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>P0 项目</th>
+<th>和当前 wiki 的关系</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网络</td>
+<td><code>external-dns</code>, <code>aws-load-balancer-controller</code></td>
+<td>补 <a class="wikilink" href="../entities/gateway-api.html">gateway-api</a> 之外的 DNS/LB/Ingress 控制器实战。</td>
+</tr>
+<tr>
+<td>存储 / Secret</td>
+<td><code>secrets-store-csi-driver</code>, <code>aws-ebs-csi-driver</code>, <code>aws-efs-csi-driver</code></td>
+<td>补 <a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a>、凭据注入和 CSI 侧的工程边界。</td>
+</tr>
+<tr>
+<td>调度 / 资源</td>
+<td><code>Kueue</code>, <code>Karpenter</code>, <code>scheduler-plugins</code></td>
+<td>补 AI/HPC/batch workload queueing、节点弹性和 scheduler 扩展。</td>
+</tr>
+<tr>
+<td>可观测 / 性能</td>
+<td><code>metrics-server</code>, <code>prometheus-adapter</code>, <code>inference-perf</code></td>
+<td>补 HPA/custom metrics 和 GenAI benchmark。</td>
+</tr>
+<tr>
+<td>计算 / Runtime</td>
+<td><code>kind</code>, <code>kubespray</code>, <code>cri-tools</code></td>
+<td>补本地测试集群、生产集群部署和 kubelet/CRI 边界。</td>
+</tr>
+<tr>
+<td>API / Operator</td>
+<td><code>controller-runtime</code>, <code>kubebuilder</code>, <code>controller-tools</code>, <code>cluster-api</code></td>
+<td>把当前 controller 学习路径升级为正式架构页候选。</td>
+</tr>
+<tr>
+<td>AI Infra 交叉</td>
+<td><code>mcp-lifecycle-operator</code>, <code>kube-agentic-networking</code>, <code>LeaderWorkerSet</code>, <code>JobSet</code></td>
+<td>连接 <a class="wikilink" href="../entities/mcp.html">mcp</a>、Agent runtime、LLM serving 和分布式 workload API。</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="选型提示">选型提示</h2>
 <ul>
 <li>想理解控制器底层：读 client-go 和 sample-controller。</li>
@@ -109,14 +157,14 @@ Cluster substrate
 <li>想理解 AI Infra on K8s：把 model serving operator、GPU operator、agent sandbox operator 放到同一个 reconcile 模型下看。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../concepts/gitops.html">gitops</a></li><li><a class="wikilink" href="../concepts/ai-ops.html">ai-ops</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../concepts/gitops.html">gitops</a></li><li><a class="wikilink" href="../concepts/ai-ops.html">ai-ops</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/k8s-core-controller-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=k8s-core-controller-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Core </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>AI 运维 (AIOps)</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>声明式 Agent 管理</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Envoy AI Gateway</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../concepts/ai-ops.html">AI 运维 (AIOps)</a><span>概念 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li><li><a href="../entities/envoy-ai-gateway.html">Envoy AI Gateway</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><p class="side-empty">暂无。</p></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#学习路径">学习路径</a></li><li class=""><a href="#核心工具链边界">核心工具链边界</a></li><li class="level-3"><a href="#client-go">client-go</a></li><li class="level-3"><a href="#controller-runtime">controller-runtime</a></li><li class="level-3"><a href="#kubebuilder">kubebuilder</a></li><li class=""><a href="#和当前-ai-infra-页面的关系">和当前 AI Infra 页面的关系</a></li><li class=""><a href="#选型提示">选型提示</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=k8s-core-controller-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Core </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>AI 运维 (AIOps)</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>声明式 Agent 管理</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../concepts/ai-ops.html">AI 运维 (AIOps)</a><span>概念 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · wikilink</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#学习路径">学习路径</a></li><li class=""><a href="#核心工具链边界">核心工具链边界</a></li><li class="level-3"><a href="#client-go">client-go</a></li><li class="level-3"><a href="#controller-runtime">controller-runtime</a></li><li class="level-3"><a href="#kubebuilder">kubebuilder</a></li><li class=""><a href="#和当前-ai-infra-页面的关系">和当前 AI Infra 页面的关系</a></li><li class=""><a href="#kubernetes-sigs-维度拆分">Kubernetes SIGs 维度拆分</a></li><li class=""><a href="#选型提示">选型提示</a></li></ul></aside></aside>
 </div>
 
 <script>
