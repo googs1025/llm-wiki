@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>Model Serving Operator</h1>
-    <p class="page-meta">2026-06-12 · 来源：kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">model-serving</span><span class="tag">kubernetes</span><span class="tag">operator</span><span class="tag">llm-serving</span></div>
   </header>
 
@@ -42,30 +42,72 @@
 <td>标准化 InferenceService / LLMISvc / LocalModel 平台</td>
 </tr>
 <tr>
-<td>OME</td>
+<td><a class="wikilink" href="../entities/ome.html">ome</a></td>
 <td>Open Model Engine，CRD/controller + runtime selector + accelerator configs</td>
 </tr>
 <tr>
-<td>KubeAI</td>
+<td><a class="wikilink" href="../entities/kubeai.html">kubeai</a></td>
 <td>Model CRD + OpenAI-compatible proxy + autoscaler + model loader</td>
 </tr>
 <tr>
-<td>GPUStack</td>
+<td><a class="wikilink" href="../entities/gpustack.html">gpustack</a></td>
 <td>GPU cluster manager + vLLM/SGLang 编排 + observability</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
+<td>针对同一模型多个 serving variant 的全局 autoscaling 决策层</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
+<td>不管理模型部署，但把 batch job lifecycle 接到 model serving endpoint</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="和-engine-的区别">和 engine 的区别</h2>
 <p><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 是推理 engine；model serving operator 管的是 engine 在集群里的部署、扩缩、路由、模型生命周期和 API 暴露。</p>
+<h2 id="和-llm-d-外围组件的关系">和 llm-d 外围组件的关系</h2>
+<p><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 说明 model serving operator 周围还有一圈工程能力：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>能力</th>
+<th>代表</th>
+<th>和 operator 的边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Batch job control plane</td>
+<td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
+<td>不创建模型服务，复用已有 endpoint 执行异步 JSONL job。</td>
+</tr>
+<tr>
+<td>Variant autoscaling</td>
+<td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
+<td>不替代 HPA/KEDA，而是为多个 variant 计算 desired allocation。</td>
+</tr>
+<tr>
+<td>Benchmark lifecycle</td>
+<td><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></td>
+<td>不是生产 controller，而是部署、运行、收集和分析实验。</td>
+</tr>
+<tr>
+<td>Simulator</td>
+<td><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></td>
+<td>不是真实模型服务，用于验证 controller/router/benchmark 闭环。</td>
+</tr>
+</tbody>
+</table></div>
+<p>选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark、simulator、variant autoscaling 分别补异步任务、评测、测试替身和资源经济。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/model-serving-operator.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=model-serving-operator">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Model Serving Op</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>vLLM</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Gateway API Inference Extension</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · wikilink</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · related</span></li><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#代表项目">代表项目</a></li><li class=""><a href="#和-engine-的区别">和 engine 的区别</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=model-serving-operator">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Model Serving Op</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>GPUStack</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>KubeAI</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>llm-d</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>llm-d Batch Gateway</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · wikilink</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · related</span></li><li><a href="../entities/llm-d-batch-gateway.html">llm-d Batch Gateway</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#代表项目">代表项目</a></li><li class=""><a href="#和-engine-的区别">和 engine 的区别</a></li><li class=""><a href="#和-llm-d-外围组件的关系">和 llm-d 外围组件的关系</a></li></ul></aside></aside>
 </div>
 
 <script>

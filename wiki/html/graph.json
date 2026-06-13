@@ -273,9 +273,9 @@
       ],
       "date": "2026-06-09",
       "description": "LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）",
-      "degree": 23,
+      "degree": 28,
       "inbound": 8,
-      "outbound": 16
+      "outbound": 21
     },
     {
       "id": "llm-serving-engine-selection-map",
@@ -310,10 +310,10 @@
         "ai-infra"
       ],
       "date": "2026-06-13",
-      "description": "llm-d batch、benchmark、autoscaling 和 simulator 外围组件（详见 llm-d-kubernetes-sigs-candidate-map）",
-      "degree": 21,
+      "description": "llm-d P1/P2 后续外围组件（latency scoring、performance dashboard、P/D diagnostics、payload processor，详见 llm-d-kubernetes-sigs-candidate-map）",
+      "degree": 26,
       "inbound": 2,
-      "outbound": 21
+      "outbound": 26
     },
     {
       "id": "mcp-gateway-tooling-map",
@@ -440,8 +440,8 @@
       ],
       "date": "2026-06-12",
       "description": "面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面",
-      "degree": 13,
-      "inbound": 10,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 5
     },
     {
@@ -479,6 +479,24 @@
       "degree": 15,
       "inbound": 14,
       "outbound": 2
+    },
+    {
+      "id": "batch-inference",
+      "title": "Batch Inference",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/batch-inference.html",
+      "tags": [
+        "concept",
+        "llm-serving",
+        "batch-inference",
+        "ai-infra"
+      ],
+      "date": "2026-06-13",
+      "description": "大量 LLM 请求异步执行的 job/file/queue/output 控制面模式",
+      "degree": 10,
+      "inbound": 7,
+      "outbound": 7
     },
     {
       "id": "code-graph",
@@ -627,9 +645,9 @@
       ],
       "date": "2026-06-12",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 15,
-      "inbound": 13,
-      "outbound": 6
+      "degree": 20,
+      "inbound": 18,
+      "outbound": 9
     },
     {
       "id": "device-plugin",
@@ -684,8 +702,8 @@
       ],
       "date": "2026-05-16",
       "description": "KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）",
-      "degree": 26,
-      "inbound": 22,
+      "degree": 27,
+      "inbound": 23,
       "outbound": 8
     },
     {
@@ -702,9 +720,9 @@
       ],
       "date": "2026-06-12",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 34,
-      "inbound": 21,
-      "outbound": 22
+      "degree": 43,
+      "inbound": 30,
+      "outbound": 28
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -739,9 +757,9 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 14,
-      "inbound": 9,
-      "outbound": 6
+      "degree": 22,
+      "inbound": 17,
+      "outbound": 15
     },
     {
       "id": "paged-attention",
@@ -1359,8 +1377,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）",
-      "degree": 11,
-      "inbound": 5,
+      "degree": 15,
+      "inbound": 9,
       "outbound": 8
     },
     {
@@ -1398,7 +1416,7 @@
       "date": "2026-06-12",
       "description": "GPU cluster manager / model serving platform（server/worker/scheduler/gateway）",
       "degree": 10,
-      "inbound": 4,
+      "inbound": 5,
       "outbound": 9
     },
     {
@@ -1529,8 +1547,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 标准化 model serving 平台（InferenceService + LLMISvc/LocalModel/controllers/webhooks/router）",
-      "degree": 16,
-      "inbound": 10,
+      "degree": 18,
+      "inbound": 12,
       "outbound": 11
     },
     {
@@ -1548,8 +1566,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes AI inference operator（Model CRD + OpenAI-compatible proxy/autoscaler/loader）",
-      "degree": 10,
-      "inbound": 6,
+      "degree": 11,
+      "inbound": 8,
       "outbound": 7
     },
     {
@@ -1584,8 +1602,8 @@
       ],
       "date": "2026-04-22",
       "description": "容器编排平台，云原生核心（5 篇源文件）",
-      "degree": 54,
-      "inbound": 54,
+      "degree": 55,
+      "inbound": 55,
       "outbound": 8
     },
     {
@@ -1639,9 +1657,83 @@
       ],
       "date": "2026-06-12",
       "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 19,
-      "inbound": 12,
-      "outbound": 10
+      "degree": 28,
+      "inbound": 22,
+      "outbound": 18
+    },
+    {
+      "id": "llm-d-batch-gateway",
+      "title": "llm-d Batch Gateway",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-batch-gateway.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "batch-inference",
+        "llm-d"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）",
+      "degree": 11,
+      "inbound": 8,
+      "outbound": 9
+    },
+    {
+      "id": "llm-d-benchmark",
+      "title": "llm-d Benchmark",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-benchmark.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "benchmark",
+        "llm-d"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）",
+      "degree": 8,
+      "inbound": 8,
+      "outbound": 5
+    },
+    {
+      "id": "llm-d-inference-sim",
+      "title": "llm-d Inference Sim",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-inference-sim.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "simulator",
+        "benchmark",
+        "llm-d"
+      ],
+      "date": "2026-06-13",
+      "description": "无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）",
+      "degree": 12,
+      "inbound": 9,
+      "outbound": 8
+    },
+    {
+      "id": "llm-d-workload-variant-autoscaler",
+      "title": "llm-d Workload Variant Autoscaler",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-workload-variant-autoscaler.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "autoscaling",
+        "kubernetes",
+        "llm-d"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）",
+      "degree": 9,
+      "inbound": 6,
+      "outbound": 7
     },
     {
       "id": "llm-wiki",
@@ -1905,7 +1997,7 @@
       "date": "2026-06-12",
       "description": "Open Model Engine，K8s model serving operator（CRD/controller + runtime selector + accelerator configs）",
       "degree": 9,
-      "inbound": 5,
+      "inbound": 6,
       "outbound": 8
     },
     {
@@ -2076,8 +2168,8 @@
       ],
       "date": "2026-05-15",
       "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 22,
-      "inbound": 22,
+      "degree": 23,
+      "inbound": 23,
       "outbound": 4
     },
     {
@@ -2172,8 +2264,8 @@
       ],
       "date": "2026-05-15",
       "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 32,
-      "inbound": 32,
+      "degree": 33,
+      "inbound": 33,
       "outbound": 3
     },
     {
@@ -2950,6 +3042,60 @@
       "outbound": 5
     },
     {
+      "id": "src-llm-d-batch-gateway-architecture",
+      "title": "llm-d Batch Gateway 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-batch-gateway-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "batch-inference",
+        "ai-infra"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d Batch Gateway 架构（HEAD 66fae7e，OpenAI Batch API / 离线推理：API server + PostgreSQL/Redis/Object Store + processor/GC + 下游 llm-d Router）",
+      "degree": 6,
+      "inbound": 2,
+      "outbound": 6
+    },
+    {
+      "id": "src-llm-d-benchmark-architecture",
+      "title": "llm-d Benchmark 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-benchmark-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "benchmark",
+        "ai-infra"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d Benchmark 架构（HEAD bd8dc5e，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 5
+    },
+    {
+      "id": "src-llm-d-inference-sim-architecture",
+      "title": "llm-d Inference Sim 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-inference-sim-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "simulator",
+        "benchmark"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d Inference Sim 架构（HEAD 6fb66f3，无 GPU vLLM 行为模拟：OpenAI/vLLM API、KV cache events、latency/failure/metrics）",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 5
+    },
+    {
       "id": "src-llm-d-kv-cache-architecture",
       "title": "llm-d KV Cache 架构与设计思路分析",
       "category": "sources",
@@ -2986,6 +3132,24 @@
       "degree": 10,
       "inbound": 1,
       "outbound": 9
+    },
+    {
+      "id": "src-llm-d-workload-variant-autoscaler-architecture",
+      "title": "llm-d Workload Variant Autoscaler 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-workload-variant-autoscaler-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "autoscaling",
+        "kubernetes"
+      ],
+      "date": "2026-06-13",
+      "description": "llm-d WVA 架构（HEAD 526ce85，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 5
     },
     {
       "id": "src-llm-d-architecture",
@@ -4503,6 +4667,41 @@
       "kind": "wikilink"
     },
     {
+      "source": "batch-inference",
+      "target": "ai-gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "batch-inference",
+      "target": "gateway-api-inference-extension",
+      "kind": "wikilink"
+    },
+    {
+      "source": "batch-inference",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
       "source": "cc-connect",
       "target": "agent-delegation",
       "kind": "related"
@@ -5979,6 +6178,11 @@
     },
     {
       "source": "inference-routing",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
       "target": "dynamo",
       "kind": "wikilink"
     },
@@ -5995,6 +6199,16 @@
     {
       "source": "inference-routing",
       "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-d-inference-sim",
       "kind": "related"
     },
     {
@@ -6634,12 +6848,47 @@
     },
     {
       "source": "llm-d",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
       "target": "model-serving-operator",
       "kind": "related"
     },
     {
       "source": "llm-d",
       "target": "src-llm-d-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "src-llm-d-batch-gateway-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "src-llm-d-benchmark-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "src-llm-d-inference-sim-architecture",
       "kind": "wikilink"
     },
     {
@@ -6654,8 +6903,123 @@
     },
     {
       "source": "llm-d",
+      "target": "src-llm-d-workload-variant-autoscaler-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "gateway-api-inference-extension",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "kserve",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-batch-gateway",
+      "target": "src-llm-d-batch-gateway-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-benchmark",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-benchmark",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-benchmark",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-benchmark",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-benchmark",
+      "target": "src-llm-d-benchmark-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "sglang",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "src-llm-d-inference-sim-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-inference-sim",
+      "target": "vllm",
+      "kind": "wikilink"
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
@@ -6675,6 +7039,11 @@
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "aibrix",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "batch-inference",
       "kind": "wikilink"
     },
     {
@@ -6744,6 +7113,26 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "llm-inference",
       "kind": "wikilink"
     },
@@ -6763,6 +7152,41 @@
       "kind": "related"
     },
     {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "gateway-api-inference-extension",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "kserve",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
+      "target": "src-llm-d-workload-variant-autoscaler-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "llm-inference",
       "target": "ai-gateway",
       "kind": "wikilink"
@@ -6770,6 +7194,11 @@
     {
       "source": "llm-inference",
       "target": "aibrix",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "batch-inference",
       "kind": "related"
     },
     {
@@ -6839,6 +7268,31 @@
     },
     {
       "source": "llm-inference",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "model-serving-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference",
       "target": "ome",
       "kind": "wikilink"
     },
@@ -6879,6 +7333,11 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "disaggregated-serving",
       "kind": "related"
     },
@@ -6914,7 +7373,27 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "llm-d-kubernetes-sigs-candidate-map",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
     {
@@ -7259,6 +7738,16 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "gpustack",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "inference-routing",
       "kind": "related"
     },
@@ -7269,13 +7758,48 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d-benchmark",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d-inference-sim",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
     {
       "source": "model-serving-operator",
       "target": "llm-inference",
       "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "ome",
+      "kind": "wikilink"
     },
     {
       "source": "model-serving-operator",
@@ -9363,6 +9887,86 @@
       "kind": "related"
     },
     {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-batch-gateway-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-benchmark-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-benchmark-architecture",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-benchmark-architecture",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-benchmark-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-benchmark-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-inference-sim-architecture",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-inference-sim-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-inference-sim-architecture",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-inference-sim-architecture",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-inference-sim-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
       "source": "src-llm-d-kv-cache-architecture",
       "target": "disaggregated-serving",
       "kind": "related"
@@ -9446,6 +10050,31 @@
       "source": "src-llm-d-router-architecture",
       "target": "src-github-stars-backlog-current-state",
       "kind": "wikilink"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "gateway-api-inference-extension",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
     },
     {
       "source": "src-loongsuite-pilot-architecture",
@@ -10412,17 +11041,17 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 67
+      "count": 71
     },
     {
       "id": "concepts",
       "label": "概念",
-      "count": 32
+      "count": 33
     },
     {
       "id": "sources",
       "label": "源文件",
-      "count": 68
+      "count": 72
     },
     {
       "id": "analysis",
