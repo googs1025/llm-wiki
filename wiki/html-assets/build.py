@@ -95,6 +95,81 @@ TOPIC_GROUPS = [
     },
 ]
 
+READING_PATHS = [
+    {
+        "title": "Agent Memory 入门",
+        "description": "先理解长期记忆问题，再看项目地图和代表实现。",
+        "steps": (
+            ("概念", "agent-memory"),
+            ("地图", "agent-memory-project-map"),
+            ("选型", "agent-memory-selection-matrix"),
+        ),
+    },
+    {
+        "title": "Agent Runtime / Sandbox",
+        "description": "从运行时隔离、会话编排到凭据和网关治理。",
+        "steps": (
+            ("地图", "agent-runtime-sandbox-project-map"),
+            ("原语", "agent-sandbox"),
+            ("治理", "agent-credential-isolation"),
+        ),
+    },
+    {
+        "title": "Coding Agent 选型",
+        "description": "对比本地 CLI、插件、托管 teammate 和观测工具。",
+        "steps": (
+            ("地图", "coding-agent-selection-map"),
+            ("基线", "codex"),
+            ("协作", "multica"),
+        ),
+    },
+    {
+        "title": "LLM Serving / Inference",
+        "description": "把推理引擎、KV cache、P/D 分离和 serving operator 连起来看。",
+        "steps": (
+            ("总览", "llm-inference"),
+            ("地图", "llm-inference-serving-project-map"),
+            ("选型", "llm-serving-engine-selection-map"),
+        ),
+    },
+    {
+        "title": "AI Gateway / Routing",
+        "description": "理解模型网关、MCP 工具网关、推理路由和 provider 治理。",
+        "steps": (
+            ("概念", "ai-gateway"),
+            ("地图", "mcp-gateway-tooling-map"),
+            ("样本", "agentgateway"),
+        ),
+    },
+    {
+        "title": "K8s GPU / Device Stack",
+        "description": "从 device plugin、GPU Operator、DRA/CDI 到 GPU sharing。",
+        "steps": (
+            ("地图", "k8s-gpu-device-stack"),
+            ("机制", "kubernetes-dra"),
+            ("实现", "hami"),
+        ),
+    },
+    {
+        "title": "Code Intelligence / Repo Wiki",
+        "description": "对比语义检索、代码图谱、Graph RAG 和自动 repo wiki。",
+        "steps": (
+            ("地图", "code-semantic-search-rag-map"),
+            ("图谱", "code-graph"),
+            ("产品", "deepwiki-open"),
+        ),
+    },
+    {
+        "title": "中文 AI Infra 学习路线",
+        "description": "把中文学习项目按 AI 系统、CUDA、推理、Agent 分层。",
+        "steps": (
+            ("路线", "ai-infra-learning-cn-map"),
+            ("底稿", "src-ai-infra-learning-cn-stars"),
+            ("总览", "github-stars-backlog-implementation-map"),
+        ),
+    },
+]
+
 
 # ── Frontmatter ──────────────────────────────────────────────────
 FRONTMATTER_RE = re.compile(r"\A[^\n]*?---\s*\n(.*?)\n---\s*\n", re.DOTALL)
@@ -905,22 +980,102 @@ def render_recent_updates(updates: list[dict[str, str]]) -> str:
     return f'<section class="panel recent-updates"><h2>最近更新</h2><ul>{items}</ul></section>'
 
 
-def render_reading_paths(topic_groups: list[dict[str, object]]) -> str:
+def render_reading_paths(pages: list[PageMeta]) -> str:
+    by_stem = {p.stem: p for p in pages}
     items = []
-    for group in topic_groups:
-        first_links = group["links"][:3]
-        links = " ".join(
-            f'<a href="{esc(p.href)}">{esc(p.title)}</a>'
-            for p in first_links
-        )
+    for path in READING_PATHS:
+        steps = []
+        for label, stem in path["steps"]:
+            page = by_stem.get(stem)
+            if not page:
+                continue
+            steps.append(
+                '<a class="path-step" '
+                f'href="{esc(page.href)}">'
+                f'<span>{esc(label)}</span>'
+                f'<strong>{esc(page.title)}</strong>'
+                '</a>'
+            )
+        if not steps:
+            continue
         items.append(
             '<li>'
-            f'<strong>{esc(group["title"])}</strong>'
-            f'<p>{esc(group["description"])}</p>'
-            f'<div class="inline-links">{links}</div>'
+            f'<div class="path-copy"><strong>{esc(path["title"])}</strong>'
+            f'<p>{esc(path["description"])}</p></div>'
+            f'<div class="path-steps">{"".join(steps)}</div>'
             '</li>'
         )
-    return '<section class="panel reading-paths"><h2>推荐阅读路径</h2><ol>' + "".join(items) + "</ol></section>"
+    return (
+        '<section class="panel reading-paths">'
+        '<div class="panel-title-row"><h2>推荐阅读路径</h2><span>按理解路径组织</span></div>'
+        '<ol>' + "".join(items) + "</ol></section>"
+    )
+
+
+def html_text(fragment: str) -> str:
+    return htmllib.unescape(re.sub(r"<[^>]+>", "", fragment)).strip()
+
+
+def count_index_items(fragment: str) -> int:
+    return len(re.findall(r"<li\b", fragment))
+
+
+def render_index_subsections(content: str) -> str:
+    parts = re.split(r"(<h3[^>]*>.*?</h3>)", content, flags=re.DOTALL)
+    if len(parts) == 1:
+        return f'<div class="index-list">{content}</div>'
+
+    leading = parts[0].strip()
+    sections = []
+    if leading:
+        sections.append(f'<div class="index-list">{leading}</div>')
+
+    for i in range(1, len(parts), 2):
+        heading = parts[i]
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        title = html_text(heading)
+        count = count_index_items(body)
+        count_label = f"{count} 项" if count else ""
+        sections.append(
+            '<details class="index-sub">'
+            f'<summary><span>{esc(title)}</span><small>{esc(count_label)}</small></summary>'
+            f'<div class="index-list">{body}</div>'
+            '</details>'
+        )
+    return "".join(sections)
+
+
+def render_full_index(body_html: str) -> str:
+    parts = re.split(r"(<h2[^>]*>.*?</h2>)", body_html, flags=re.DOTALL)
+    sections = []
+    open_titles = ("实体", "概念", "分析")
+
+    for i in range(1, len(parts), 2):
+        heading = parts[i]
+        content = parts[i + 1] if i + 1 < len(parts) else ""
+        title = html_text(heading)
+        count = count_index_items(content)
+        open_attr = " open" if any(token in title for token in open_titles) else ""
+        sections.append(
+            f'<details class="index-major"{open_attr}>'
+            f'<summary><span>{esc(title)}</span><small>{count} 项</small></summary>'
+            f'<div class="index-major-body">{render_index_subsections(content)}</div>'
+            '</details>'
+        )
+
+    return (
+        '<section class="full-index" id="full-index">'
+        '<div class="full-index-head">'
+        '<div><h2>完整索引</h2><p>按原始 wiki 索引折叠展示，用于查漏和快速跳转。</p></div>'
+        '<div class="full-index-actions">'
+        '<button type="button" data-index-expand>全部展开</button>'
+        '<button type="button" data-index-collapse>全部收起</button>'
+        '</div>'
+        '</div>'
+        '<div class="index-accordion">'
+        + "".join(sections)
+        + '</div></section>'
+    )
 
 
 GRAPH_PAGE_SCRIPT = r"""
@@ -1505,7 +1660,7 @@ def build_site_index(
 </section>
 
 <div class="home-panels">
-  {render_reading_paths(topic_groups)}
+  {render_reading_paths(pages)}
   {render_recent_updates(recent_updates)}
 </div>
 
@@ -1544,12 +1699,16 @@ def build_site_index(
     out.replaceChildren(...nodes);
   }}
   input.addEventListener("input", e => search(e.target.value));
+  const fullIndex = document.getElementById("full-index");
+  fullIndex?.querySelector("[data-index-expand]")?.addEventListener("click", () => {{
+    fullIndex.querySelectorAll("details").forEach(detail => detail.open = true);
+  }});
+  fullIndex?.querySelector("[data-index-collapse]")?.addEventListener("click", () => {{
+    fullIndex.querySelectorAll("details").forEach(detail => detail.open = false);
+  }});
 </script>
 
-<section class="full-index" id="full-index">
-  <h2>完整索引</h2>
-  {body_html}
-</section>
+{render_full_index(body_html)}
 """
 
     page_html = f"""<!doctype html>

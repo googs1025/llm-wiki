@@ -47,7 +47,7 @@
 </section>
 
 <div class="home-panels">
-  <section class="panel reading-paths"><h2>推荐阅读路径</h2><ol><li><strong>AI Agent / Memory</strong><p>长期记忆、MCP、coding agent、Agent framework 与个人 AI 工具链。</p><div class="inline-links"><a href="analysis/agent-memory-project-map.html">Agent Memory 项目地图</a> <a href="analysis/ai-agent-frameworks-map.html">AI Agent Frameworks 项目地图</a> <a href="concepts/agent-memory.html">Agent 长期记忆</a></div></li><li><strong>Agent Runtime / Sandbox</strong><p>Agent 会话编排、沙箱隔离、凭据托管、网关治理和多 Agent 协作。</p><div class="inline-links"><a href="analysis/agent-runtime-sandbox-project-map.html">Agent Runtime / Sandbox 项目地图</a> <a href="entities/agent-sandbox.html">agent-sandbox</a> <a href="entities/agentgateway.html">agentgateway</a></div></li><li><strong>LLM Inference / Serving</strong><p>推理服务、KV cache、PagedAttention、RadixAttention 和多云 GPU 编排。</p><div class="inline-links"><a href="analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a> <a href="concepts/llm-inference.html">LLM Inference</a> <a href="concepts/paged-attention.html">PagedAttention</a></div></li><li><strong>Kubernetes / Cloud Native</strong><p>Kubernetes、GitOps、controller/operator、GPU 资源栈、安全和可观测。</p><div class="inline-links"><a href="entities/kubernetes.html">Kubernetes</a> <a href="concepts/gitops.html">GitOps</a> <a href="entities/argocd.html">Argo CD</a></div></li></ol></section>
+  <section class="panel reading-paths"><div class="panel-title-row"><h2>推荐阅读路径</h2><span>按理解路径组织</span></div><ol><li><div class="path-copy"><strong>Agent Memory 入门</strong><p>先理解长期记忆问题，再看项目地图和代表实现。</p></div><div class="path-steps"><a class="path-step" href="concepts/agent-memory.html"><span>概念</span><strong>Agent 长期记忆</strong></a><a class="path-step" href="analysis/agent-memory-project-map.html"><span>地图</span><strong>Agent Memory 项目地图</strong></a><a class="path-step" href="analysis/agent-memory-selection-matrix.html"><span>选型</span><strong>Agent Memory 细分选型矩阵</strong></a></div></li><li><div class="path-copy"><strong>Agent Runtime / Sandbox</strong><p>从运行时隔离、会话编排到凭据和网关治理。</p></div><div class="path-steps"><a class="path-step" href="analysis/agent-runtime-sandbox-project-map.html"><span>地图</span><strong>Agent Runtime / Sandbox 项目地图</strong></a><a class="path-step" href="entities/agent-sandbox.html"><span>原语</span><strong>agent-sandbox</strong></a><a class="path-step" href="concepts/agent-credential-isolation.html"><span>治理</span><strong>Agent 凭据隔离</strong></a></div></li><li><div class="path-copy"><strong>Coding Agent 选型</strong><p>对比本地 CLI、插件、托管 teammate 和观测工具。</p></div><div class="path-steps"><a class="path-step" href="analysis/coding-agent-selection-map.html"><span>地图</span><strong>Coding Agent / Personal Agent 选型地图</strong></a><a class="path-step" href="entities/codex.html"><span>基线</span><strong>OpenAI Codex CLI</strong></a><a class="path-step" href="entities/multica.html"><span>协作</span><strong>Multica</strong></a></div></li><li><div class="path-copy"><strong>LLM Serving / Inference</strong><p>把推理引擎、KV cache、P/D 分离和 serving operator 连起来看。</p></div><div class="path-steps"><a class="path-step" href="concepts/llm-inference.html"><span>总览</span><strong>LLM Inference</strong></a><a class="path-step" href="analysis/llm-inference-serving-project-map.html"><span>地图</span><strong>LLM Inference / Serving 项目地图</strong></a><a class="path-step" href="analysis/llm-serving-engine-selection-map.html"><span>选型</span><strong>LLM Serving / 推理引擎选型地图</strong></a></div></li><li><div class="path-copy"><strong>AI Gateway / Routing</strong><p>理解模型网关、MCP 工具网关、推理路由和 provider 治理。</p></div><div class="path-steps"><a class="path-step" href="concepts/ai-gateway.html"><span>概念</span><strong>AI Gateway</strong></a><a class="path-step" href="analysis/mcp-gateway-tooling-map.html"><span>地图</span><strong>MCP Server / Tool Gateway 对比地图</strong></a><a class="path-step" href="entities/agentgateway.html"><span>样本</span><strong>agentgateway</strong></a></div></li><li><div class="path-copy"><strong>K8s GPU / Device Stack</strong><p>从 device plugin、GPU Operator、DRA/CDI 到 GPU sharing。</p></div><div class="path-steps"><a class="path-step" href="analysis/k8s-gpu-device-stack.html"><span>地图</span><strong>Kubernetes GPU / Device Stack 项目地图</strong></a><a class="path-step" href="concepts/kubernetes-dra.html"><span>机制</span><strong>Kubernetes Dynamic Resource Allocation</strong></a><a class="path-step" href="entities/hami.html"><span>实现</span><strong>HAMi</strong></a></div></li><li><div class="path-copy"><strong>Code Intelligence / Repo Wiki</strong><p>对比语义检索、代码图谱、Graph RAG 和自动 repo wiki。</p></div><div class="path-steps"><a class="path-step" href="analysis/code-semantic-search-rag-map.html"><span>地图</span><strong>Code Semantic Search / Code RAG 对比地图</strong></a><a class="path-step" href="concepts/code-graph.html"><span>图谱</span><strong>Code Graph</strong></a><a class="path-step" href="entities/deepwiki-open.html"><span>产品</span><strong>deepwiki-open</strong></a></div></li><li><div class="path-copy"><strong>中文 AI Infra 学习路线</strong><p>把中文学习项目按 AI 系统、CUDA、推理、Agent 分层。</p></div><div class="path-steps"><a class="path-step" href="analysis/ai-infra-learning-cn-map.html"><span>路线</span><strong>AI Infra 中文学习项目地图</strong></a><a class="path-step" href="sources/src-ai-infra-learning-cn-stars.html"><span>底稿</span><strong>AI Infra Learning 中文 Star 项目清单整理</strong></a><a class="path-step" href="analysis/github-stars-backlog-implementation-map.html"><span>总览</span><strong>GitHub Stars P0-P2 实现地图</strong></a></div></li></ol></section>
   <section class="panel recent-updates"><h2>最近更新</h2><ul><li><time>2026-06-13</time><a href="log.html">缺失实体页与 K8s 项目地图补全</a><span>query</span></li><li><time>2026-06-12</time><a href="log.html">TODO 页面补全</a><span>query</span></li><li><time>2026-06-12</time><a href="log.html">LoongSuite Pilot 架构</a><span>ingest</span></li><li><time>2026-06-12</time><a href="log.html">NVIDIA k8s-device-plugin 架构</a><span>ingest</span></li><li><time>2026-06-12</time><a href="log.html">NVIDIA GPU Operator 架构</a><span>ingest</span></li><li><time>2026-06-12</time><a href="log.html">DRA Driver for NVIDIA GPUs 架构</a><span>ingest</span></li><li><time>2026-06-12</time><a href="log.html">HAMi 架构</a><span>ingest</span></li><li><time>2026-06-12</time><a href="log.html">Tokscale 架构</a><span>ingest</span></li></ul></section>
 </div>
 
@@ -86,12 +86,16 @@
     out.replaceChildren(...nodes);
   }
   input.addEventListener("input", e => search(e.target.value));
+  const fullIndex = document.getElementById("full-index");
+  fullIndex?.querySelector("[data-index-expand]")?.addEventListener("click", () => {
+    fullIndex.querySelectorAll("details").forEach(detail => detail.open = true);
+  });
+  fullIndex?.querySelector("[data-index-collapse]")?.addEventListener("click", () => {
+    fullIndex.querySelectorAll("details").forEach(detail => detail.open = false);
+  });
 </script>
 
-<section class="full-index" id="full-index">
-  <h2>完整索引</h2>
-  <h2 id="实体-entities">实体 (Entities)</h2>
-<h3 id="云原生">云原生</h3>
+<section class="full-index" id="full-index"><div class="full-index-head"><div><h2>完整索引</h2><p>按原始 wiki 索引折叠展示，用于查漏和快速跳转。</p></div><div class="full-index-actions"><button type="button" data-index-expand>全部展开</button><button type="button" data-index-collapse>全部收起</button></div></div><div class="index-accordion"><details class="index-major" open><summary><span>实体 (Entities)</span><small>66 项</small></summary><div class="index-major-body"><details class="index-sub"><summary><span>云原生</span><small>6 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/kubernetes.html">kubernetes</a> — 容器编排平台，云原生核心（5 篇源文件）</li>
 <li><a class="wikilink" href="entities/argocd.html">argocd</a> — Kubernetes GitOps 持续交付工具</li>
@@ -100,7 +104,7 @@
 <li><a class="wikilink" href="entities/k8m.html">k8m</a> — 轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）</li>
 <li><a class="wikilink" href="entities/kubewall.html">kubewall</a> — single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照</li>
 </ul>
-<h3 id="coding-agent--agent-生态">Coding Agent / Agent 生态</h3>
+</div></details><details class="index-sub"><summary><span>Coding Agent / Agent 生态</span><small>13 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/claude-code.html">claude-code</a> — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制</li>
 <li><a class="wikilink" href="entities/claude-agent-sdk.html">claude-agent-sdk</a> — <code>@anthropic-ai/claude-agent-sdk</code>，Agent 编程 SDK</li>
@@ -116,7 +120,7 @@
 <li><a class="wikilink" href="entities/loongsuite-pilot.html">loongsuite-pilot</a> — Alibaba 多 Agent AI coding telemetry collector（hooks/SQLite/session/trace → JSONL/SLS/HTTP/OTLP）</li>
 <li><a class="wikilink" href="entities/nanobot.html">nanobot</a> — HKUDS 出品的极简个人 AI Agent 框架（Python，事件驱动 8 态状态机 + 17 渠道 + 7 厂商 + MCP）</li>
 </ul>
-<h3 id="agent-runtime--memory">Agent Runtime / Memory</h3>
+</div></details><details class="index-sub"><summary><span>Agent Runtime / Memory</span><small>20 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/claude-mem.html">claude-mem</a> — 给 Claude Code 装上长期记忆的开源插件</li>
 <li><a class="wikilink" href="entities/claude-context.html">claude-context</a> — Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent</li>
@@ -139,7 +143,7 @@
 <li><a class="wikilink" href="entities/tencentdb-agent-memory.html">tencentdb-agent-memory</a> — 腾讯云出品的 OpenClaw / Hermes Agent 记忆插件（L0→L3 分层长期记忆 + Mermaid context offload + SQLite/TCVDB hybrid search）</li>
 <li><a class="wikilink" href="entities/agentmemory.html">agentmemory</a> — Rohit Ghumare 出品的本地化跨 Agent 记忆服务（TS + iii-engine + SQLite，三流 RRF + 零 LLM 默认）</li>
 </ul>
-<h3 id="llm-serving--ai-gateway">LLM Serving / AI Gateway</h3>
+</div></details><details class="index-sub"><summary><span>LLM Serving / AI Gateway</span><small>18 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/dynamo.html">dynamo</a> — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）</li>
 <li><a class="wikilink" href="entities/vllm.html">vllm</a> — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）</li>
@@ -160,14 +164,14 @@
 <li><a class="wikilink" href="entities/ome.html">ome</a> — Open Model Engine，K8s model serving operator（CRD/controller + runtime selector + accelerator configs）</li>
 <li><a class="wikilink" href="entities/kubeai.html">kubeai</a> — Kubernetes AI inference operator（Model CRD + OpenAI-compatible proxy/autoscaler/loader）</li>
 </ul>
-<h3 id="kubernetes-gpu--device">Kubernetes GPU / Device</h3>
+</div></details><details class="index-sub"><summary><span>Kubernetes GPU / Device</span><small>4 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/hami.html">hami</a> — Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）</li>
 <li><a class="wikilink" href="entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a> — NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）</li>
 <li><a class="wikilink" href="entities/gpu-operator.html">gpu-operator</a> — NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）</li>
 <li><a class="wikilink" href="entities/k8s-device-plugin.html">k8s-device-plugin</a> — NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）</li>
 </ul>
-<h3 id="code-intelligence--repo-wiki">Code Intelligence / Repo Wiki</h3>
+</div></details><details class="index-sub"><summary><span>Code Intelligence / Repo Wiki</span><small>5 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="entities/milvus.html">milvus</a> — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval</li>
 <li><a class="wikilink" href="entities/code-review-graph.html">code-review-graph</a> — local-first code intelligence graph（Python package + CLI/MCP + VSCode extension）</li>
@@ -175,8 +179,7 @@
 <li><a class="wikilink" href="entities/deepwiki-open.html">deepwiki-open</a> — open-source DeepWiki/repo wiki generator（Next.js UI + Python API/tools + LiteLLM）</li>
 <li><a class="wikilink" href="entities/llm-wiki.html">llm-wiki</a> — 当前个人知识库项目（raw/source/entity/concept/analysis 可链接知识图谱）</li>
 </ul>
-<h2 id="概念-concepts">概念 (Concepts)</h2>
-<h3 id="云原生-2">云原生</h3>
+</div></details></div></details><details class="index-major" open><summary><span>概念 (Concepts)</span><small>32 项</small></summary><div class="index-major-body"><details class="index-sub"><summary><span>云原生</span><small>7 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="concepts/gitops.html">gitops</a> — 以 Git 为单一事实来源的运维方法论</li>
 <li><a class="wikilink" href="concepts/ai-ops.html">ai-ops</a> — AI/LLM 增强运维（告警分诊、根因分析）</li>
@@ -186,7 +189,7 @@
 <li><a class="wikilink" href="concepts/device-plugin.html">device-plugin</a> — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制</li>
 <li><a class="wikilink" href="concepts/gpu-sharing.html">gpu-sharing</a> — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式</li>
 </ul>
-<h3 id="agent-记忆--设计模式">Agent 记忆 / 设计模式</h3>
+</div></details><details class="index-sub"><summary><span>Agent 记忆 / 设计模式</span><small>7 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="concepts/agent-memory.html">agent-memory</a> — Agent 长期记忆领域综述</li>
 <li><a class="wikilink" href="concepts/event-driven-memory-pipeline.html">event-driven-memory-pipeline</a> — 事件采集 → AI 压缩 → 双索引 → 反向注入闭环</li>
@@ -196,7 +199,7 @@
 <li><a class="wikilink" href="concepts/agent-runtime-substrate.html">agent-runtime-substrate</a> — 高密度 agent-like workload substrate（worker pool / actor / sandbox / wake routing）</li>
 <li><a class="wikilink" href="concepts/agent-delegation.html">agent-delegation</a> — 把本地 coding agent 委派给插件、消息平台或托管平台的任务分发模式</li>
 </ul>
-<h3 id="检索--code-intelligence">检索 / Code Intelligence</h3>
+</div></details><details class="index-sub"><summary><span>检索 / Code Intelligence</span><small>5 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="concepts/code-semantic-search.html">code-semantic-search</a> — 代码语义检索方法论</li>
 <li><a class="wikilink" href="concepts/hybrid-search-rrf.html">hybrid-search-rrf</a> — Dense + Sparse + RRF 重排混合检索</li>
@@ -204,7 +207,7 @@
 <li><a class="wikilink" href="concepts/code-graph.html">code-graph</a> — 从仓库构建符号/依赖/调用图并服务 review、Graph RAG、影响面分析</li>
 <li><a class="wikilink" href="concepts/repo-wiki-generation.html">repo-wiki-generation</a> — 自动把代码仓库生成可问答 wiki 的 pipeline</li>
 </ul>
-<h3 id="agent-工程--observability">Agent 工程 / Observability</h3>
+</div></details><details class="index-sub"><summary><span>Agent 工程 / Observability</span><small>5 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a> — AI Agent 外挂的 9 条设计原则（迁移检查表）</li>
 <li><a class="wikilink" href="concepts/declarative-agent-management.html">declarative-agent-management</a> — 用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）</li>
@@ -212,7 +215,7 @@
 <li><a class="wikilink" href="concepts/coding-agent-observability.html">coding-agent-observability</a> — coding agent 请求、工具、session、trace、usage、成本和运行状态的可观测性</li>
 <li><a class="wikilink" href="concepts/token-usage-observability.html">token-usage-observability</a> — 跨模型、client、workspace 汇总 token、cache、reasoning 和成本</li>
 </ul>
-<h3 id="llm-推理--serving">LLM 推理 / Serving</h3>
+</div></details><details class="index-sub"><summary><span>LLM 推理 / Serving</span><small>8 项</small></summary><div class="index-list">
 <ul>
 <li><a class="wikilink" href="concepts/paged-attention.html">paged-attention</a> — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）</li>
 <li><a class="wikilink" href="concepts/radix-attention.html">radix-attention</a> — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）</li>
@@ -223,7 +226,7 @@
 <li><a class="wikilink" href="concepts/inference-routing.html">inference-routing</a> — 按 KV cache、语义、成本、模型质量、负载做推理请求路由</li>
 <li><a class="wikilink" href="concepts/model-serving-operator.html">model-serving-operator</a> — Kubernetes 上声明式管理模型服务的 operator 模式</li>
 </ul>
-<h2 id="源文件摘要-sources">源文件摘要 (Sources)</h2>
+</div></details></div></details><details class="index-major"><summary><span>源文件摘要 (Sources)</span><small>67 项</small></summary><div class="index-major-body"><div class="index-list">
 <ul>
 <li><a class="wikilink" href="sources/src-k8s-v1.36-sneak-peek.html">src-k8s-v1.36-sneak-peek</a> — K8s v1.36 新特性预览（弃用 externalIPs、SELinux GA）</li>
 <li><a class="wikilink" href="sources/src-holmesgpt-k8s-alerts.html">src-holmesgpt-k8s-alerts</a> — HolmesGPT 自动诊断 K8s 告警（Runbook &gt; 模型选择）</li>
@@ -293,7 +296,7 @@
 <li><a class="wikilink" href="sources/src-openshell-architecture.html">src-openshell-architecture</a> — NVIDIA OpenShell 架构（HEAD <code>97986d9</code>，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）</li>
 <li><a class="wikilink" href="sources/src-ai-infra-learning-cn-stars.html">src-ai-infra-learning-cn-stars</a> — AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）</li>
 </ul>
-<h2 id="分析-analysis">分析 (Analysis)</h2>
+</div></div></details><details class="index-major" open><summary><span>分析 (Analysis)</span><small>17 项</small></summary><div class="index-major-body"><div class="index-list">
 <ul>
 <li><a class="wikilink" href="analysis/agent-memory-project-map.html">agent-memory-project-map</a> — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）</li>
 <li><a class="wikilink" href="analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a> — Agent Runtime / Sandbox 项目地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）</li>
@@ -314,9 +317,7 @@
 <li><a class="wikilink" href="analysis/k8s-core-controller-map.html">k8s-core-controller-map</a> — Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）</li>
 </ul>
 <hr>
-<h2 id="待建页面">待建页面</h2>
-<p>以下实体/概念在文章中被提及但尚未建页：</p>
-<h3 id="云原生-3">云原生</h3>
+</div></div></details><details class="index-major"><summary><span>待建页面</span><small>28 项</small></summary><div class="index-major-body"><div class="index-list"><p>以下实体/概念在文章中被提及但尚未建页：</p></div><details class="index-sub"><summary><span>云原生</span><small>14 项</small></summary><div class="index-list">
 <ul>
 <li>controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链</li>
 <li>opentelemetry — 可观测性框架</li>
@@ -333,7 +334,7 @@
 <li>a2a-protocol — Google Agent-to-Agent 协议（agentgateway A2A gateway 代理对象）</li>
 <li>rego / opa — OPA 策略语言，对照 CEL 设计</li>
 </ul>
-<h3 id="ai-agent--llm-infra">AI Agent / LLM Infra</h3>
+</div></details><details class="index-sub"><summary><span>AI Agent / LLM Infra</span><small>14 项</small></summary><div class="index-list">
 <ul>
 <li>openclaw / opencode / openclaude / hermes-agent — 个人 Agent、coding agent 与 Agent OS 代表项目</li>
 <li>agent-skills — Agent 能力包模式（Markdown + scripts + workflow，可迁移到 Claude Code / Codex / OpenCode）</li>
@@ -349,8 +350,7 @@
 <li>kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）</li>
 <li>autogen / langgraph / crewai — 多 Agent 框架同类对比项</li>
 <li>ai-infra-learning-cn — 中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 <a class="wikilink" href="analysis/ai-infra-learning-cn-map.html">ai-infra-learning-cn-map</a>）</li>
-</ul>
-</section>
+</ul></div></details></div></details></div></section>
 
 
   <div class="footer">
