@@ -11,11 +11,17 @@ date: 2026-05-12
 - [[kubernetes]] — 容器编排平台，云原生核心（5 篇源文件）
 - [[argocd]] — Kubernetes GitOps 持续交付工具
 - [[gateway-api]] — K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）
+- [[kubectl-ai]] — kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）
+- [[k8m]] — 轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）
+- [[kubewall]] — single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照
 
 ### Coding Agent / Agent 生态
 - [[claude-code]] — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制
 - [[claude-agent-sdk]] — `@anthropic-ai/claude-agent-sdk`，Agent 编程 SDK
 - [[codex]] — OpenAI Codex CLI，Rust terminal coding agent（approval/sandbox/AGENTS.md/patch 工具链）
+- [[pi]] — TypeScript agent harness monorepo（统一 LLM provider API + agent core + coding CLI + TUI）
+- [[oh-my-pi]] — Pi fork 的强工具 coding-agent 产品（LSP/DAP/hashline/browser/subagents/memory）
+- [[multica]] — managed agents platform，把 Claude Code/Codex/Pi 等 CLI 包成 agent teammate
 - [[codex-plugin-cc]] — Claude Code 插件形式接入 Codex 的 broker/review gate
 - [[open-cowork]] — Electron desktop agent host（Skills/MCP + WSL2/Lima sandbox + GUI/IM control）
 - [[claude-tap]] — 本地 AI coding agent trace proxy/viewer
@@ -31,8 +37,13 @@ date: 2026-05-12
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
 - [[agentcube]] — Volcano 社区 AI Agent / Code Interpreter 会话编排层（基于 agent-sandbox 的 Router + WorkloadManager + WarmPool）
+- [[substrate]] — K8s 上的高密度 agent-like workload substrate（WorkerPool/ActorTemplate + gVisor snapshot/restore）
+- [[openshell]] — NVIDIA AI Agent 安全运行时（Gateway + sandbox supervisor + OPA/Z3 policy + inference.local）
+- [[nemoclaw]] — OpenShell sandbox 内 always-on Agent 的 host-side CLI 编排层
 - [[agentgateway]] — Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）
+- [[agentscope]] — AgentScope 2.0 多 Agent 应用框架（事件流 ReAct + Toolkit/MCP/Skill + Workspace/offload）
 - [[agentscope-runtime]] — AgentScope Runtime，生产化 Agent-as-a-Service 运行时（FastAPI AgentApp + Runner + sandbox/deployers）
+- [[reme]] — AgentScope 生态 memory toolkit（ReMeLight 文件记忆 + personal/task/tool/working memory pipeline）
 - [[oceanbase]] — PowerMem 优先集成的分布式数据库/检索后端
 - [[powermem]] — OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
 - [[mem0]] — 通用 AI memory layer（SDK/server/OpenMemory/MCP/agent plugins）
@@ -47,8 +58,13 @@ date: 2026-05-12
 - [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
 - [[aibrix]] — vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）
 - [[llm-d]] — CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
+- [[skypilot]] — AI/ML 多云算力控制平面（Task/Dag/Resources + Optimizer + CloudVmRayBackend）
 - [[kagent]] — Cloud Native agentic AI 操作层（Go control plane + Python/ADK packages + Kubernetes/DevOps tools）
 - [[gateway-api-inference-extension]] — Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）
+- [[envoy-ai-gateway]] — Envoy Gateway 生态 GenAI gateway（CRD/controller + extproc + provider translators）
+- [[kgateway]] — Gateway API 原生通用 API/AI Gateway（controller + Envoy xDS + plugins/policies）
+- [[higress]] — 阿里系 AI Native API Gateway（Envoy/Istio + WASM plugins + model-router/MCP）
+- [[plano]] — AI-native Rust proxy/data plane（LLM gateway + prompt gateway + CLI/config/skills）
 - [[semantic-router]] — vLLM Semantic Router，system-level intelligent router（Go/Rust bindings + dashboard/operator）
 - [[routellm]] — 成本/质量 LLM routing 的算法与评测基线
 - [[kserve]] — Kubernetes 标准化 model serving 平台（InferenceService + LLMISvc/LocalModel/controllers/webhooks/router）
@@ -65,6 +81,7 @@ date: 2026-05-12
 ### Code Intelligence / Repo Wiki
 - [[milvus]] — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval
 - [[code-review-graph]] — local-first code intelligence graph（Python package + CLI/MCP + VSCode extension）
+- [[gitnexus]] — browser-side repo knowledge graph / Graph RAG / static analysis 项目
 - [[deepwiki-open]] — open-source DeepWiki/repo wiki generator（Next.js UI + Python API/tools + LiteLLM）
 - [[llm-wiki]] — 当前个人知识库项目（raw/source/entity/concept/analysis 可链接知识图谱）
 
@@ -199,6 +216,8 @@ date: 2026-05-12
 - [[github-stars-ingest-candidates]] — GitHub Stars 下一批摄入候选清单（P0-P2：agent-substrate / AgentScope Runtime / mem0 / Codex / llm-d / AI Gateway / K8s GPU 等）
 - [[github-stars-backlog-implementation-map]] — GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
+- [[k8s-gpu-device-stack]] — Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）
+- [[k8s-core-controller-map]] — Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）
 
 ---
 
@@ -207,8 +226,6 @@ date: 2026-05-12
 以下实体/概念在文章中被提及但尚未建页：
 
 ### 云原生
-- k8s-gpu-device-stack — Kubernetes GPU/异构设备资源层项目地图（device plugin、GPU Operator、vGPU/GPU sharing、DRA、CDI、DCGM/NVML、fake GPU）
-- k8s-core-controller-map — Kubernetes controller/operator 项目地图（client-go、controller-runtime、kubebuilder、CRD/webhook、调度、多集群、可观测）
 - controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
@@ -225,23 +242,17 @@ date: 2026-05-12
 - rego / opa — OPA 策略语言，对照 CEL 设计
 
 ### AI Agent / LLM Infra
-- nemoclaw / openshell / nvidia — NVIDIA OpenShell sandbox 与 NemoClaw host-side 编排层
 - openclaw / opencode / openclaude / hermes-agent — 个人 Agent、coding agent 与 Agent OS 代表项目
 - agent-skills — Agent 能力包模式（Markdown + scripts + workflow，可迁移到 Claude Code / Codex / OpenCode）
-- langchain / langgraph / dify / agentscope / eino / adk — Agent framework 与 workflow runtime 代表项目
-- fastmcp / playwright-mcp / github-mcp-server / plano — MCP server、browser automation、GitHub tools 与 Agentic proxy 代表项目
-- agentscope — 阿里通义实验室 AgentScope 2.0 多 Agent 应用框架（事件流 ReAct、Toolkit/MCP/Skill、Workspace/offload、FastAPI 多租户服务）
-- skypilot — AI/ML 多云算力控制平面（统一 YAML/SDK，跨 Kubernetes / Slurm / 公有云做 GPU 资源选择、failover、managed jobs、serve）
+- langchain / langgraph / dify / eino / adk — Agent framework 与 workflow runtime 代表项目
+- fastmcp / playwright-mcp / github-mcp-server — MCP server、browser automation 与 GitHub tools 代表项目
 - bullmq — Node.js 任务队列（claude-mem 后台压缩调度）
 - chroma — 开源向量数据库（claude-mem 使用）
 - fts5 — SQLite 全文索引扩展
 - outbox-pattern — 事务性消息发布模式
 - tree-sitter — 多语言 AST 解析器（claude-context AST splitter 基础）
-- rrf — Reciprocal Rank Fusion 重排算法（已并入 hybrid-search-rrf 概念页）
-- higress — AI 网关（HiClaw 凭据托管核心，apig-20240327 SDK）
 - matrix-protocol — 分布式 IM 协议（HiClaw 协作平面）
 - k8s-operator — Kubernetes Operator 模式（HiClaw 控制平面骨架）
 - kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
 - autogen / langgraph / crewai — 多 Agent 框架同类对比项
-- github-stars-ingest-candidates — 下一批 GitHub Stars 摄入候选项目：agent-substrate/substrate、agentscope-runtime、mem0、ReMe、Codex、Pi、oh-my-pi、multica、open-cowork、aibrix、llm-d、K8s AI assistant、AI Gateway、Code Graph、GPU/DRA 等（已实现为 [[github-stars-backlog-implementation-map]]，原候选清单见 [[github-stars-ingest-candidates]]）
 - ai-infra-learning-cn — 中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 [[ai-infra-learning-cn-map]]）
