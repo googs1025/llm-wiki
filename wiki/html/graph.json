@@ -14,8 +14,8 @@
       ],
       "date": "2026-06-11",
       "description": "Agent Framework 编程模型对比地图（LangGraph / LangChain / Dify / AgentScope / Eino / ADK / AutoGen / CrewAI）",
-      "degree": 10,
-      "inbound": 4,
+      "degree": 11,
+      "inbound": 5,
       "outbound": 6
     },
     {
@@ -32,8 +32,8 @@
       ],
       "date": "2026-06-11",
       "description": "Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）",
-      "degree": 16,
-      "inbound": 7,
+      "degree": 17,
+      "inbound": 8,
       "outbound": 9
     },
     {
@@ -69,8 +69,8 @@
       ],
       "date": "2026-06-11",
       "description": "Agent Runtime / Sandbox 细分选型地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）",
-      "degree": 21,
-      "inbound": 12,
+      "degree": 22,
+      "inbound": 13,
       "outbound": 9
     },
     {
@@ -106,8 +106,8 @@
       ],
       "date": "2026-06-11",
       "description": "Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）",
-      "degree": 18,
-      "inbound": 12,
+      "degree": 20,
+      "inbound": 14,
       "outbound": 6
     },
     {
@@ -161,8 +161,8 @@
       ],
       "date": "2026-06-11",
       "description": "Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）",
-      "degree": 16,
-      "inbound": 10,
+      "degree": 18,
+      "inbound": 12,
       "outbound": 6
     },
     {
@@ -179,8 +179,8 @@
       ],
       "date": "2026-06-11",
       "description": "Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）",
-      "degree": 30,
-      "inbound": 16,
+      "degree": 33,
+      "inbound": 19,
       "outbound": 14
     },
     {
@@ -196,7 +196,7 @@
         "ai-infra"
       ],
       "date": "2026-06-12",
-      "description": "下一批 GitHub Stars 摄入候选项目：agent-substrate/substrate、agentscope-runtime、mem0、ReMe、Codex、Pi、oh-my-pi、multica、open-cowork、aibrix、llm-d、K8s AI assistant、AI Gateway、Code Graph、GPU/DRA 等（已实现为 github-stars-backlog-implementation-map，原候选清单见 github-stars-ingest-candidates）",
+      "description": "GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）",
       "degree": 50,
       "inbound": 32,
       "outbound": 20
@@ -220,6 +220,45 @@
       "outbound": 23
     },
     {
+      "id": "k8s-core-controller-map",
+      "title": "Kubernetes Core / Controller 项目地图",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/k8s-core-controller-map.html",
+      "tags": [
+        "kubernetes",
+        "controller",
+        "operator",
+        "crd",
+        "project-map"
+      ],
+      "date": "2026-06-13",
+      "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
+      "degree": 19,
+      "inbound": 0,
+      "outbound": 19
+    },
+    {
+      "id": "k8s-gpu-device-stack",
+      "title": "Kubernetes GPU / Device Stack 项目地图",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/k8s-gpu-device-stack.html",
+      "tags": [
+        "kubernetes",
+        "gpu",
+        "device-plugin",
+        "dra",
+        "cdi",
+        "project-map"
+      ],
+      "date": "2026-06-13",
+      "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
+      "degree": 23,
+      "inbound": 5,
+      "outbound": 18
+    },
+    {
       "id": "llm-inference-serving-project-map",
       "title": "LLM Inference / Serving 项目地图",
       "category": "analysis",
@@ -234,8 +273,8 @@
       ],
       "date": "2026-06-09",
       "description": "LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）",
-      "degree": 17,
-      "inbound": 6,
+      "degree": 18,
+      "inbound": 7,
       "outbound": 11
     },
     {
@@ -272,8 +311,8 @@
       ],
       "date": "2026-06-11",
       "description": "MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）",
-      "degree": 17,
-      "inbound": 12,
+      "degree": 21,
+      "inbound": 16,
       "outbound": 5
     },
     {
@@ -291,8 +330,8 @@
       ],
       "date": "2026-06-12",
       "description": "把本地 coding agent 委派给插件、消息平台或托管平台的任务分发模式",
-      "degree": 7,
-      "inbound": 4,
+      "degree": 8,
+      "inbound": 5,
       "outbound": 5
     },
     {
@@ -310,8 +349,8 @@
       ],
       "date": "2026-06-12",
       "description": "高密度 agent-like workload substrate（worker pool / actor / sandbox / wake routing）",
-      "degree": 6,
-      "inbound": 1,
+      "degree": 7,
+      "inbound": 2,
       "outbound": 6
     },
     {
@@ -328,9 +367,9 @@
       ],
       "date": "2026-06-12",
       "description": "Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key",
-      "degree": 21,
-      "inbound": 18,
-      "outbound": 7
+      "degree": 24,
+      "inbound": 21,
+      "outbound": 8
     },
     {
       "id": "agent-memory",
@@ -345,8 +384,8 @@
       ],
       "date": "2026-05-12",
       "description": "Agent 长期记忆领域综述",
-      "degree": 27,
-      "inbound": 27,
+      "degree": 30,
+      "inbound": 30,
       "outbound": 5
     },
     {
@@ -363,8 +402,8 @@
       ],
       "date": "2026-05-12",
       "description": "AI Agent 外挂的 9 条设计原则（迁移检查表）",
-      "degree": 28,
-      "inbound": 22,
+      "degree": 29,
+      "inbound": 23,
       "outbound": 8
     },
     {
@@ -382,8 +421,8 @@
       ],
       "date": "2026-06-12",
       "description": "面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面",
-      "degree": 8,
-      "inbound": 5,
+      "degree": 13,
+      "inbound": 10,
       "outbound": 5
     },
     {
@@ -418,8 +457,8 @@
       ],
       "date": "2026-04-22",
       "description": "AI/LLM 增强运维（告警分诊、根因分析）",
-      "degree": 11,
-      "inbound": 10,
+      "degree": 15,
+      "inbound": 14,
       "outbound": 2
     },
     {
@@ -437,8 +476,8 @@
       ],
       "date": "2026-06-12",
       "description": "从仓库构建符号/依赖/调用图并服务 review、Graph RAG、影响面分析",
-      "degree": 7,
-      "inbound": 4,
+      "degree": 8,
+      "inbound": 5,
       "outbound": 5
     },
     {
@@ -476,8 +515,8 @@
       ],
       "date": "2026-06-12",
       "description": "Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec",
-      "degree": 11,
-      "inbound": 9,
+      "degree": 12,
+      "inbound": 10,
       "outbound": 6
     },
     {
@@ -531,8 +570,8 @@
       ],
       "date": "2026-04-22",
       "description": "以 Git 为单一事实来源的运维方法论",
-      "degree": 5,
-      "inbound": 5,
+      "degree": 6,
+      "inbound": 6,
       "outbound": 4
     },
     {
@@ -550,8 +589,8 @@
       ],
       "date": "2026-06-12",
       "description": "GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式",
-      "degree": 12,
-      "inbound": 12,
+      "degree": 13,
+      "inbound": 13,
       "outbound": 6
     },
     {
@@ -569,8 +608,8 @@
       ],
       "date": "2026-06-12",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 13,
-      "inbound": 11,
+      "degree": 14,
+      "inbound": 12,
       "outbound": 6
     },
     {
@@ -588,8 +627,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制",
-      "degree": 7,
-      "inbound": 7,
+      "degree": 8,
+      "inbound": 8,
       "outbound": 5
     },
     {
@@ -607,8 +646,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径",
-      "degree": 8,
-      "inbound": 7,
+      "degree": 9,
+      "inbound": 8,
       "outbound": 7
     },
     {
@@ -644,8 +683,8 @@
       ],
       "date": "2026-06-12",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 31,
-      "inbound": 18,
+      "degree": 33,
+      "inbound": 20,
       "outbound": 22
     },
     {
@@ -681,8 +720,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 12,
-      "inbound": 7,
+      "degree": 13,
+      "inbound": 8,
       "outbound": 6
     },
     {
@@ -737,8 +776,8 @@
       ],
       "date": "2026-06-12",
       "description": "自动把代码仓库生成可问答 wiki 的 pipeline",
-      "degree": 6,
-      "inbound": 4,
+      "degree": 7,
+      "inbound": 5,
       "outbound": 4
     },
     {
@@ -810,8 +849,8 @@
       ],
       "date": "2026-06-12",
       "description": "云原生安全实践与趋势",
-      "degree": 17,
-      "inbound": 11,
+      "degree": 21,
+      "inbound": 15,
       "outbound": 8
     },
     {
@@ -846,8 +885,8 @@
       ],
       "date": "2026-06-12",
       "description": "用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）",
-      "degree": 15,
-      "inbound": 13,
+      "degree": 16,
+      "inbound": 14,
       "outbound": 7
     },
     {
@@ -864,8 +903,8 @@
       ],
       "date": "2026-05-12",
       "description": "Dense + Sparse + RRF 重排混合检索",
-      "degree": 22,
-      "inbound": 21,
+      "degree": 23,
+      "inbound": 22,
       "outbound": 5
     },
     {
@@ -901,8 +940,8 @@
       ],
       "date": "2026-06-12",
       "description": "K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语",
-      "degree": 22,
-      "inbound": 21,
+      "degree": 27,
+      "inbound": 26,
       "outbound": 3
     },
     {
@@ -921,8 +960,8 @@
       ],
       "date": "2026-06-12",
       "description": "Volcano 社区 AI Agent / Code Interpreter 会话编排层（基于 agent-sandbox 的 Router + WorkloadManager + WarmPool）",
-      "degree": 15,
-      "inbound": 12,
+      "degree": 17,
+      "inbound": 14,
       "outbound": 5
     },
     {
@@ -941,8 +980,8 @@
       ],
       "date": "2026-06-12",
       "description": "Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）",
-      "degree": 29,
-      "inbound": 23,
+      "degree": 37,
+      "inbound": 31,
       "outbound": 9
     },
     {
@@ -965,6 +1004,25 @@
       "outbound": 11
     },
     {
+      "id": "agentscope",
+      "title": "AgentScope",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/agentscope.html",
+      "tags": [
+        "entity",
+        "ai-agent",
+        "multi-agent",
+        "mcp",
+        "agent-framework"
+      ],
+      "date": "2026-06-13",
+      "description": "AgentScope 2.0 多 Agent 应用框架（事件流 ReAct + Toolkit/MCP/Skill + Workspace/offload）",
+      "degree": 10,
+      "inbound": 1,
+      "outbound": 10
+    },
+    {
       "id": "agentscope-runtime",
       "title": "AgentScope Runtime",
       "category": "entities",
@@ -979,8 +1037,8 @@
       ],
       "date": "2026-06-12",
       "description": "AgentScope Runtime，生产化 Agent-as-a-Service 运行时（FastAPI AgentApp + Runner + sandbox/deployers）",
-      "degree": 6,
-      "inbound": 1,
+      "degree": 8,
+      "inbound": 3,
       "outbound": 6
     },
     {
@@ -998,8 +1056,8 @@
       ],
       "date": "2026-06-12",
       "description": "vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）",
-      "degree": 9,
-      "inbound": 2,
+      "degree": 11,
+      "inbound": 4,
       "outbound": 9
     },
     {
@@ -1071,8 +1129,8 @@
       ],
       "date": "2026-05-12",
       "description": "Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制",
-      "degree": 43,
-      "inbound": 43,
+      "degree": 46,
+      "inbound": 46,
       "outbound": 5
     },
     {
@@ -1107,8 +1165,8 @@
       ],
       "date": "2026-05-12",
       "description": "Zilliz 出品的 MCP 插件，把代码库语义检索接入 AI Agent",
-      "degree": 18,
-      "inbound": 17,
+      "degree": 19,
+      "inbound": 18,
       "outbound": 9
     },
     {
@@ -1163,8 +1221,8 @@
       ],
       "date": "2026-06-12",
       "description": "local-first code intelligence graph（Python package + CLI/MCP + VSCode extension）",
-      "degree": 9,
-      "inbound": 1,
+      "degree": 11,
+      "inbound": 3,
       "outbound": 9
     },
     {
@@ -1201,8 +1259,8 @@
       ],
       "date": "2026-06-12",
       "description": "open-source DeepWiki/repo wiki generator（Next.js UI + Python API/tools + LiteLLM）",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 7,
+      "inbound": 4,
       "outbound": 5
     },
     {
@@ -1220,8 +1278,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）",
-      "degree": 9,
-      "inbound": 6,
+      "degree": 11,
+      "inbound": 8,
       "outbound": 8
     },
     {
@@ -1243,9 +1301,29 @@
       ],
       "date": "2026-05-16",
       "description": "NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
-      "degree": 21,
-      "inbound": 16,
+      "degree": 22,
+      "inbound": 17,
       "outbound": 9
+    },
+    {
+      "id": "envoy-ai-gateway",
+      "title": "Envoy AI Gateway",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/envoy-ai-gateway.html",
+      "tags": [
+        "entity",
+        "ai-gateway",
+        "envoy",
+        "llm",
+        "mcp",
+        "kubernetes"
+      ],
+      "date": "2026-06-13",
+      "description": "Envoy Gateway 生态 GenAI gateway（CRD/controller + extproc + provider translators）",
+      "degree": 9,
+      "inbound": 1,
+      "outbound": 8
     },
     {
       "id": "gateway-api-inference-extension",
@@ -1267,6 +1345,25 @@
       "outbound": 8
     },
     {
+      "id": "gitnexus",
+      "title": "GitNexus",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/gitnexus.html",
+      "tags": [
+        "entity",
+        "code-intelligence",
+        "graph-rag",
+        "browser",
+        "static-analysis"
+      ],
+      "date": "2026-06-13",
+      "description": "browser-side repo knowledge graph / Graph RAG / static analysis 项目",
+      "degree": 10,
+      "inbound": 1,
+      "outbound": 9
+    },
+    {
       "id": "gpustack",
       "title": "GPUStack",
       "category": "entities",
@@ -1281,8 +1378,8 @@
       ],
       "date": "2026-06-12",
       "description": "GPU cluster manager / model serving platform（server/worker/scheduler/gateway）",
-      "degree": 9,
-      "inbound": 3,
+      "degree": 10,
+      "inbound": 4,
       "outbound": 9
     },
     {
@@ -1300,8 +1397,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）",
-      "degree": 9,
-      "inbound": 5,
+      "degree": 11,
+      "inbound": 7,
       "outbound": 8
     },
     {
@@ -1318,9 +1415,47 @@
       ],
       "date": "2026-06-12",
       "description": "阿里 Higress 系出品的 K8s 原生多 Agent 协作平台",
-      "degree": 13,
-      "inbound": 10,
-      "outbound": 6
+      "degree": 14,
+      "inbound": 11,
+      "outbound": 7
+    },
+    {
+      "id": "higress",
+      "title": "Higress",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/higress.html",
+      "tags": [
+        "entity",
+        "ai-gateway",
+        "api-gateway",
+        "wasm",
+        "kubernetes"
+      ],
+      "date": "2026-06-13",
+      "description": "阿里系 AI Native API Gateway（Envoy/Istio + WASM plugins + model-router/MCP）",
+      "degree": 10,
+      "inbound": 5,
+      "outbound": 8
+    },
+    {
+      "id": "k8m",
+      "title": "k8m",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/k8m.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "ai-ops",
+        "dashboard",
+        "mcp"
+      ],
+      "date": "2026-06-13",
+      "description": "轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）",
+      "degree": 7,
+      "inbound": 2,
+      "outbound": 7
     },
     {
       "id": "kagent",
@@ -1337,9 +1472,28 @@
       ],
       "date": "2026-06-12",
       "description": "Cloud Native agentic AI 操作层（Go control plane + Python/ADK packages + Kubernetes/DevOps tools）",
-      "degree": 6,
-      "inbound": 1,
+      "degree": 8,
+      "inbound": 3,
       "outbound": 6
+    },
+    {
+      "id": "kgateway",
+      "title": "kgateway",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kgateway.html",
+      "tags": [
+        "entity",
+        "api-gateway",
+        "ai-gateway",
+        "kubernetes",
+        "envoy"
+      ],
+      "date": "2026-06-13",
+      "description": "Gateway API 原生通用 API/AI Gateway（controller + Envoy xDS + plugins/policies）",
+      "degree": 10,
+      "inbound": 4,
+      "outbound": 7
     },
     {
       "id": "kserve",
@@ -1356,8 +1510,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 标准化 model serving 平台（InferenceService + LLMISvc/LocalModel/controllers/webhooks/router）",
-      "degree": 12,
-      "inbound": 6,
+      "degree": 14,
+      "inbound": 8,
       "outbound": 11
     },
     {
@@ -1375,8 +1529,27 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes AI inference operator（Model CRD + OpenAI-compatible proxy/autoscaler/loader）",
-      "degree": 8,
-      "inbound": 4,
+      "degree": 10,
+      "inbound": 6,
+      "outbound": 7
+    },
+    {
+      "id": "kubectl-ai",
+      "title": "kubectl-ai",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kubectl-ai.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "ai-ops",
+        "cli",
+        "mcp"
+      ],
+      "date": "2026-06-13",
+      "description": "kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）",
+      "degree": 7,
+      "inbound": 2,
       "outbound": 7
     },
     {
@@ -1392,8 +1565,8 @@
       ],
       "date": "2026-04-22",
       "description": "容器编排平台，云原生核心（5 篇源文件）",
-      "degree": 45,
-      "inbound": 45,
+      "degree": 53,
+      "inbound": 53,
       "outbound": 8
     },
     {
@@ -1410,9 +1583,27 @@
       ],
       "date": "2026-06-12",
       "description": "K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）",
-      "degree": 18,
-      "inbound": 18,
+      "degree": 23,
+      "inbound": 23,
       "outbound": 5
+    },
+    {
+      "id": "kubewall",
+      "title": "kubewall",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kubewall.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "dashboard",
+        "ai-ops"
+      ],
+      "date": "2026-06-13",
+      "description": "single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照",
+      "degree": 6,
+      "inbound": 2,
+      "outbound": 6
     },
     {
       "id": "llm-d",
@@ -1429,8 +1620,8 @@
       ],
       "date": "2026-06-12",
       "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 14,
-      "inbound": 7,
+      "degree": 17,
+      "inbound": 10,
       "outbound": 10
     },
     {
@@ -1485,8 +1676,8 @@
       ],
       "date": "2026-06-12",
       "description": "通用 AI memory layer（SDK/server/OpenMemory/MCP/agent plugins）",
-      "degree": 7,
-      "inbound": 1,
+      "degree": 9,
+      "inbound": 3,
       "outbound": 6
     },
     {
@@ -1505,8 +1696,8 @@
       ],
       "date": "2026-06-07",
       "description": "Zilliz 出品的跨平台 AI coding agent 语义记忆系统（Markdown source-of-truth + Milvus hybrid search + progressive recall）",
-      "degree": 23,
-      "inbound": 14,
+      "degree": 25,
+      "inbound": 16,
       "outbound": 11
     },
     {
@@ -1542,9 +1733,28 @@
       ],
       "date": "2026-05-12",
       "description": "Model Context Protocol，AI Agent 工具/资源接入协议",
-      "degree": 50,
-      "inbound": 48,
+      "degree": 59,
+      "inbound": 57,
       "outbound": 6
+    },
+    {
+      "id": "multica",
+      "title": "Multica",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/multica.html",
+      "tags": [
+        "entity",
+        "managed-agent",
+        "coding-agent",
+        "teammate",
+        "go"
+      ],
+      "date": "2026-06-13",
+      "description": "managed agents platform，把 Claude Code/Codex/Pi 等 CLI 包成 agent teammate",
+      "degree": 8,
+      "inbound": 1,
+      "outbound": 8
     },
     {
       "id": "nanobot",
@@ -1567,6 +1777,25 @@
       "outbound": 5
     },
     {
+      "id": "nemoclaw",
+      "title": "NemoClaw",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/nemoclaw.html",
+      "tags": [
+        "entity",
+        "ai-agent",
+        "sandbox",
+        "nvidia",
+        "coding-agent"
+      ],
+      "date": "2026-06-13",
+      "description": "OpenShell sandbox 内 always-on Agent 的 host-side CLI 编排层",
+      "degree": 8,
+      "inbound": 3,
+      "outbound": 7
+    },
+    {
       "id": "gpu-operator",
       "title": "NVIDIA GPU Operator",
       "category": "entities",
@@ -1581,8 +1810,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）",
-      "degree": 10,
-      "inbound": 8,
+      "degree": 12,
+      "inbound": 10,
       "outbound": 8
     },
     {
@@ -1600,8 +1829,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）",
-      "degree": 9,
-      "inbound": 8,
+      "degree": 10,
+      "inbound": 9,
       "outbound": 7
     },
     {
@@ -1623,6 +1852,25 @@
       "outbound": 3
     },
     {
+      "id": "oh-my-pi",
+      "title": "oh-my-pi",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/oh-my-pi.html",
+      "tags": [
+        "entity",
+        "coding-agent",
+        "tool-harness",
+        "lsp",
+        "rust"
+      ],
+      "date": "2026-06-13",
+      "description": "Pi fork 的强工具 coding-agent 产品（LSP/DAP/hashline/browser/subagents/memory）",
+      "degree": 10,
+      "inbound": 1,
+      "outbound": 10
+    },
+    {
       "id": "ome",
       "title": "OME",
       "category": "entities",
@@ -1637,8 +1885,8 @@
       ],
       "date": "2026-06-12",
       "description": "Open Model Engine，K8s model serving operator（CRD/controller + runtime selector + accelerator configs）",
-      "degree": 8,
-      "inbound": 4,
+      "degree": 9,
+      "inbound": 5,
       "outbound": 8
     },
     {
@@ -1656,8 +1904,8 @@
       ],
       "date": "2026-06-12",
       "description": "Electron desktop agent host（Skills/MCP + WSL2/Lima sandbox + GUI/IM control）",
-      "degree": 9,
-      "inbound": 2,
+      "degree": 10,
+      "inbound": 3,
       "outbound": 8
     },
     {
@@ -1675,9 +1923,66 @@
       ],
       "date": "2026-06-12",
       "description": "OpenAI Codex CLI，Rust terminal coding agent（approval/sandbox/AGENTS.md/patch 工具链）",
-      "degree": 17,
-      "inbound": 14,
+      "degree": 20,
+      "inbound": 17,
       "outbound": 10
+    },
+    {
+      "id": "openshell",
+      "title": "OpenShell",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/openshell.html",
+      "tags": [
+        "entity",
+        "sandbox",
+        "ai-agent",
+        "security",
+        "nvidia"
+      ],
+      "date": "2026-06-13",
+      "description": "NVIDIA AI Agent 安全运行时（Gateway + sandbox supervisor + OPA/Z3 policy + inference.local）",
+      "degree": 11,
+      "inbound": 6,
+      "outbound": 8
+    },
+    {
+      "id": "pi",
+      "title": "Pi Agent Harness",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/pi.html",
+      "tags": [
+        "entity",
+        "coding-agent",
+        "agent-harness",
+        "typescript",
+        "tui"
+      ],
+      "date": "2026-06-13",
+      "description": "TypeScript agent harness monorepo（统一 LLM provider API + agent core + coding CLI + TUI）",
+      "degree": 9,
+      "inbound": 2,
+      "outbound": 9
+    },
+    {
+      "id": "plano",
+      "title": "Plano",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/plano.html",
+      "tags": [
+        "entity",
+        "ai-gateway",
+        "proxy",
+        "rust",
+        "agentic"
+      ],
+      "date": "2026-06-13",
+      "description": "AI-native Rust proxy/data plane（LLM gateway + prompt gateway + CLI/config/skills）",
+      "degree": 8,
+      "inbound": 0,
+      "outbound": 8
     },
     {
       "id": "powermem",
@@ -1696,6 +2001,25 @@
       "description": "OceanBase 出品的 LLM 持久化记忆中间件（向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）",
       "degree": 24,
       "inbound": 20,
+      "outbound": 8
+    },
+    {
+      "id": "reme",
+      "title": "ReMe",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/reme.html",
+      "tags": [
+        "entity",
+        "agent-memory",
+        "agentscope",
+        "retrieval",
+        "context-management"
+      ],
+      "date": "2026-06-13",
+      "description": "AgentScope 生态 memory toolkit（ReMeLight 文件记忆 + personal/task/tool/working memory pipeline）",
+      "degree": 8,
+      "inbound": 1,
       "outbound": 8
     },
     {
@@ -1733,9 +2057,47 @@
       ],
       "date": "2026-05-15",
       "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 21,
-      "inbound": 21,
+      "degree": 22,
+      "inbound": 22,
       "outbound": 4
+    },
+    {
+      "id": "skypilot",
+      "title": "SkyPilot",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/skypilot.html",
+      "tags": [
+        "entity",
+        "ai-infra",
+        "gpu",
+        "kubernetes",
+        "serving"
+      ],
+      "date": "2026-06-13",
+      "description": "AI/ML 多云算力控制平面（Task/Dag/Resources + Optimizer + CloudVmRayBackend）",
+      "degree": 10,
+      "inbound": 1,
+      "outbound": 9
+    },
+    {
+      "id": "substrate",
+      "title": "substrate",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/substrate.html",
+      "tags": [
+        "entity",
+        "agent-runtime",
+        "sandbox",
+        "kubernetes",
+        "ai-infra"
+      ],
+      "date": "2026-06-13",
+      "description": "K8s 上的高密度 agent-like workload substrate（WorkerPool/ActorTemplate + gVisor snapshot/restore）",
+      "degree": 10,
+      "inbound": 1,
+      "outbound": 10
     },
     {
       "id": "tencentdb-agent-memory",
@@ -1752,8 +2114,8 @@
       ],
       "date": "2026-06-07",
       "description": "腾讯云出品的 OpenClaw / Hermes Agent 记忆插件（L0→L3 分层长期记忆 + Mermaid context offload + SQLite/TCVDB hybrid search）",
-      "degree": 15,
-      "inbound": 8,
+      "degree": 16,
+      "inbound": 9,
       "outbound": 8
     },
     {
@@ -1791,8 +2153,8 @@
       ],
       "date": "2026-05-15",
       "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 30,
-      "inbound": 30,
+      "degree": 32,
+      "inbound": 32,
       "outbound": 3
     },
     {
@@ -1829,8 +2191,8 @@
       ],
       "date": "2026-06-12",
       "description": "Agent Substrate 架构（HEAD a3f4474，K8s 上的高密度 agent-like workload substrate：WorkerPool/ActorTemplate + Redis/ValKey actor 状态 + Envoy 唤醒路由 + atelet/ateom gVisor snapshot）",
-      "degree": 9,
-      "inbound": 1,
+      "degree": 10,
+      "inbound": 2,
       "outbound": 8
     },
     {
@@ -1965,8 +2327,8 @@
       ],
       "date": "2026-06-02",
       "description": "AgentScope 架构（HEAD e129177，Python 多 Agent 应用框架，事件流 ReAct loop + Toolkit/MCP/Skill + Workspace/offload + FastAPI service）",
-      "degree": 14,
-      "inbound": 7,
+      "degree": 15,
+      "inbound": 8,
       "outbound": 7
     },
     {
@@ -2041,9 +2403,9 @@
       ],
       "date": "2026-06-12",
       "description": "AIBrix 架构（HEAD ac2c161，vLLM 生态 K8s GenAI inference infrastructure：gateway/routing、PodAutoscaler、ModelAdapter、KV cache/event sync、LoRA、distributed inference、GPU failure detection）",
-      "degree": 10,
+      "degree": 11,
       "inbound": 1,
-      "outbound": 9
+      "outbound": 10
     },
     {
       "id": "src-argocd-overview",
@@ -2206,9 +2568,9 @@
       ],
       "date": "2026-06-12",
       "description": "DRA Driver for NVIDIA GPUs 架构（HEAD 749a743，Kubernetes DRA NVIDIA driver：ResourceClaim/ResourceSlice + NodePrepare + dynamic MIG/VFIO + ComputeDomain）",
-      "degree": 4,
+      "degree": 5,
       "inbound": 1,
-      "outbound": 3
+      "outbound": 4
     },
     {
       "id": "src-ai-gateway-architecture",
@@ -2225,8 +2587,8 @@
       ],
       "date": "2026-06-12",
       "description": "Envoy AI Gateway 架构（HEAD 9a4b02c，Envoy Gateway 上的 GenAI gateway：CRD/controller + extproc + provider translators + rate limit/auth/redaction/MCP proxy）",
-      "degree": 7,
-      "inbound": 0,
+      "degree": 8,
+      "inbound": 1,
       "outbound": 7
     },
     {
@@ -2281,8 +2643,8 @@
       ],
       "date": "2026-06-12",
       "description": "GitNexus 架构（HEAD 14397dd，browser-side repo knowledge graph + Graph RAG + taint analysis：web app/shared/core/plugins，偏交互式代码理解）",
-      "degree": 6,
-      "inbound": 0,
+      "degree": 7,
+      "inbound": 1,
       "outbound": 6
     },
     {
@@ -2318,9 +2680,9 @@
       ],
       "date": "2026-06-12",
       "description": "HAMi 架构（HEAD 5dca58e，Kubernetes 异构 GPU sharing/vGPU：webhook + scheduler extender + device plugin + 多厂商 device abstraction）",
-      "degree": 4,
+      "degree": 5,
       "inbound": 1,
-      "outbound": 3
+      "outbound": 4
     },
     {
       "id": "src-hiclaw-architecture",
@@ -2337,9 +2699,9 @@
       ],
       "date": "2026-05-13",
       "description": "HiClaw 架构（v1.1.0，K8s 原生多 Agent 协作平台，Matrix IM + Higress 网关凭据托管）",
-      "degree": 5,
+      "degree": 6,
       "inbound": 1,
-      "outbound": 5
+      "outbound": 6
     },
     {
       "id": "src-higress-architecture",
@@ -2356,8 +2718,8 @@
       ],
       "date": "2026-06-12",
       "description": "Higress 架构（HEAD 2897c1e，AI Native API Gateway：Envoy/Istio/control plane + WASM plugins + model-router/MCP/credential governance，HiClaw 背景依赖）",
-      "degree": 7,
-      "inbound": 0,
+      "degree": 8,
+      "inbound": 1,
       "outbound": 7
     },
     {
@@ -2393,8 +2755,8 @@
       ],
       "date": "2026-06-12",
       "description": "k8m 架构（HEAD 718e894，Mini Kubernetes AI Dashboard：Go backend + UI + plugins/MCP + 多集群/权限/异常检测入口）",
-      "degree": 6,
-      "inbound": 0,
+      "degree": 7,
+      "inbound": 1,
       "outbound": 6
     },
     {
@@ -2413,8 +2775,8 @@
       ],
       "date": "2026-06-04",
       "description": "K8s Core & Controllers Star 项目清单（359 个项目，K8s 主线/client-go/controller-runtime/kubebuilder → 调度/多集群/网络/存储/可观测）",
-      "degree": 7,
-      "inbound": 0,
+      "degree": 8,
+      "inbound": 1,
       "outbound": 7
     },
     {
@@ -2433,8 +2795,8 @@
       ],
       "date": "2026-06-04",
       "description": "K8s GPU & Device Plugins Star 项目清单（36 个项目，device plugin/GPU Operator → vGPU/GPU sharing → DRA/CDI → GPU observability/diagnostics）",
-      "degree": 9,
-      "inbound": 2,
+      "degree": 10,
+      "inbound": 3,
       "outbound": 7
     },
     {
@@ -2471,8 +2833,8 @@
       ],
       "date": "2026-06-12",
       "description": "kgateway 架构（HEAD 1560573，cloud-native API/AI Gateway：Gateway API controller + Envoy xDS + plugins/policies/SDS，AI Gateway 是其能力分支）",
-      "degree": 6,
-      "inbound": 0,
+      "degree": 7,
+      "inbound": 1,
       "outbound": 6
     },
     {
@@ -2528,8 +2890,8 @@
       ],
       "date": "2026-06-12",
       "description": "kubectl-ai 架构（HEAD 08cf256，kubectl 入口的 Kubernetes AI assistant：Go CLI + agent/session/journal + built-in bash/kubectl tools + MCP server mode）",
-      "degree": 6,
-      "inbound": 0,
+      "degree": 7,
+      "inbound": 1,
       "outbound": 6
     },
     {
@@ -2564,8 +2926,8 @@
       ],
       "date": "2026-06-12",
       "description": "kubewall 架构（HEAD fd575ff，single-binary Kubernetes dashboard：Go backend + client + charts，把 AI integration 作为 dashboard 增强而非主 agent loop）",
-      "degree": 5,
-      "inbound": 0,
+      "degree": 6,
+      "inbound": 1,
       "outbound": 5
     },
     {
@@ -2696,8 +3058,8 @@
       ],
       "date": "2026-06-12",
       "description": "Multica 架构（HEAD 99afb82，managed agents platform：Next.js board + Go/Chi backend + PostgreSQL/pgvector + local daemon runtimes，把 Claude Code/Codex/Pi 等 CLI 包成可分配任务的 teammate）",
-      "degree": 9,
-      "inbound": 0,
+      "degree": 10,
+      "inbound": 1,
       "outbound": 9
     },
     {
@@ -2733,9 +3095,9 @@
       ],
       "date": "2026-06-05",
       "description": "NVIDIA NemoClaw 架构（HEAD 3c0340a，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）",
-      "degree": 9,
-      "inbound": 3,
-      "outbound": 6
+      "degree": 11,
+      "inbound": 4,
+      "outbound": 8
     },
     {
       "id": "src-dynamo-architecture",
@@ -2771,9 +3133,9 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA GPU Operator 架构（HEAD 0219120，GPU 软件栈 Kubernetes Operator：ClusterPolicy/NVIDIADriver + state renderer + operands lifecycle）",
-      "degree": 4,
+      "degree": 5,
       "inbound": 1,
-      "outbound": 3
+      "outbound": 4
     },
     {
       "id": "src-k8s-device-plugin-architecture",
@@ -2789,9 +3151,9 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA k8s-device-plugin 架构（HEAD 8688949，官方 GPU device plugin：NVML/CUDA discovery + kubelet gRPC + env/volume/CDI Allocate）",
-      "degree": 4,
+      "degree": 5,
       "inbound": 1,
-      "outbound": 3
+      "outbound": 4
     },
     {
       "id": "src-oh-my-pi-architecture",
@@ -2808,8 +3170,8 @@
       ],
       "date": "2026-06-12",
       "description": "oh-my-pi 架构（HEAD 12290e0，Pi fork 的重工具 coding-agent harness：32 tools、LSP/DAP、hashline edit、browser/web_search、subagents、memory、native Rust core）",
-      "degree": 8,
-      "inbound": 0,
+      "degree": 9,
+      "inbound": 1,
       "outbound": 8
     },
     {
@@ -2883,9 +3245,9 @@
       ],
       "date": "2026-06-05",
       "description": "NVIDIA OpenShell 架构（HEAD 97986d9，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）",
-      "degree": 11,
-      "inbound": 5,
-      "outbound": 6
+      "degree": 13,
+      "inbound": 6,
+      "outbound": 8
     },
     {
       "id": "src-pi-architecture",
@@ -2902,8 +3264,8 @@
       ],
       "date": "2026-06-12",
       "description": "Pi Agent Harness 架构（HEAD 3f44d3e，TypeScript monorepo：unified LLM provider API + agent core/tool loop + coding-agent CLI + TUI；默认不提供强权限隔离，建议外部 sandbox）",
-      "degree": 9,
-      "inbound": 0,
+      "degree": 10,
+      "inbound": 1,
       "outbound": 9
     },
     {
@@ -2921,8 +3283,8 @@
       ],
       "date": "2026-06-12",
       "description": "Plano 架构（HEAD 2e38f7f，AI-native proxy/data plane：Rust crates + CLI + config + skills，面向 model routing、guardrails、agent orchestration）",
-      "degree": 6,
-      "inbound": 0,
+      "degree": 7,
+      "inbound": 1,
       "outbound": 6
     },
     {
@@ -2960,8 +3322,8 @@
       ],
       "date": "2026-06-12",
       "description": "ReMe 架构（HEAD f458566，AgentScope 生态 memory kit：ReMeLight 文件记忆 + vector/service pipeline + personal/task/tool/working memory summarization/retrieval）",
-      "degree": 10,
-      "inbound": 0,
+      "degree": 11,
+      "inbound": 1,
       "outbound": 10
     },
     {
@@ -3016,8 +3378,8 @@
       ],
       "date": "2026-06-02",
       "description": "SkyPilot 架构（HEAD 55b9185，AI/ML 多云算力控制平面，YAML/SDK → API server → Optimizer → CloudVmRayBackend → provider/控制器）",
-      "degree": 9,
-      "inbound": 3,
+      "degree": 10,
+      "inbound": 4,
       "outbound": 6
     },
     {
@@ -3118,6 +3480,11 @@
     },
     {
       "source": "HiClaw",
+      "target": "higress",
+      "kind": "related"
+    },
+    {
+      "source": "HiClaw",
       "target": "mcp",
       "kind": "related"
     },
@@ -3150,6 +3517,11 @@
       "source": "agent-credential-isolation",
       "target": "declarative-agent-management",
       "kind": "related"
+    },
+    {
+      "source": "agent-credential-isolation",
+      "target": "higress",
+      "kind": "wikilink"
     },
     {
       "source": "agent-credential-isolation",
@@ -3689,6 +4061,56 @@
     {
       "source": "agentmemory",
       "target": "src-agentmemory-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "agentscope",
+      "target": "agent-framework-programming-model-map",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "agent-memory",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "agentscope-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "ai-agent-plugin-patterns",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "agentscope",
+      "target": "mem0",
+      "kind": "wikilink"
+    },
+    {
+      "source": "agentscope",
+      "target": "openshell",
+      "kind": "wikilink"
+    },
+    {
+      "source": "agentscope",
+      "target": "reme",
+      "kind": "wikilink"
+    },
+    {
+      "source": "agentscope",
+      "target": "src-agentscope-architecture",
       "kind": "wikilink"
     },
     {
@@ -4902,6 +5324,46 @@
       "kind": "related"
     },
     {
+      "source": "envoy-ai-gateway",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "ai-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "higress",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "kgateway",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "mcp-gateway-tooling-map",
+      "kind": "related"
+    },
+    {
+      "source": "envoy-ai-gateway",
+      "target": "src-ai-gateway-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "event-driven-memory-pipeline",
       "target": "agent-memory",
       "kind": "related"
@@ -5207,6 +5669,51 @@
       "kind": "wikilink"
     },
     {
+      "source": "gitnexus",
+      "target": "claude-context",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gitnexus",
+      "target": "code-graph",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "code-review-graph",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "code-semantic-search-rag-map",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "deepwiki-open",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "memsearch",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gitnexus",
+      "target": "repo-wiki-generation",
+      "kind": "related"
+    },
+    {
+      "source": "gitnexus",
+      "target": "src-gitnexus-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "gitops",
       "target": "argocd",
       "kind": "related"
@@ -5382,6 +5889,46 @@
       "kind": "wikilink"
     },
     {
+      "source": "higress",
+      "target": "HiClaw",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "agent-credential-isolation",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "ai-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "kgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "higress",
+      "target": "mcp-gateway-tooling-map",
+      "kind": "related"
+    },
+    {
+      "source": "higress",
+      "target": "src-higress-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "hybrid-search-rrf",
       "target": "claude-context",
       "kind": "related"
@@ -5437,6 +5984,136 @@
       "kind": "related"
     },
     {
+      "source": "k8m",
+      "target": "ai-ops",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "kagent",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "kubectl-ai",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "kubewall",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "k8m",
+      "target": "src-k8m-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "agentcube",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "agentgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "ai-ops",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "aibrix",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "envoy-ai-gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "gitops",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "gpu-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "hami",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kserve",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "ome",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "src-k8s-core-controllers-stars",
+      "kind": "wikilink"
+    },
+    {
       "source": "k8s-device-plugin",
       "target": "cdi",
       "kind": "related"
@@ -5472,6 +6149,96 @@
       "kind": "wikilink"
     },
     {
+      "source": "k8s-gpu-device-stack",
+      "target": "aibrix",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "gpu-operator",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "gpustack",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "inference-routing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "k8s-device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "kserve",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "model-serving-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-k8s-gpu-device-plugins-stars",
+      "kind": "wikilink"
+    },
+    {
       "source": "kagent",
       "target": "agent-framework-programming-model-map",
       "kind": "related"
@@ -5499,6 +6266,41 @@
     {
       "source": "kagent",
       "target": "src-kagent-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kgateway",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "ai-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "higress",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "mcp-gateway-tooling-map",
+      "kind": "related"
+    },
+    {
+      "source": "kgateway",
+      "target": "src-kgateway-architecture",
       "kind": "wikilink"
     },
     {
@@ -5592,6 +6394,41 @@
       "kind": "related"
     },
     {
+      "source": "kubectl-ai",
+      "target": "ai-ops",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "k8m",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "kagent",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "kubewall",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "kubectl-ai",
+      "target": "src-kubectl-ai-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "kubernetes",
       "target": "argocd",
       "kind": "related"
@@ -5665,6 +6502,36 @@
       "source": "kubernetes-dra",
       "target": "kubernetes",
       "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "ai-ops",
+      "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "k8m",
+      "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "kubectl-ai",
+      "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubewall",
+      "target": "src-kubewall-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kv-cache-offload",
@@ -6257,6 +7124,46 @@
       "kind": "related"
     },
     {
+      "source": "multica",
+      "target": "agent-delegation",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "agentscope-runtime",
+      "kind": "wikilink"
+    },
+    {
+      "source": "multica",
+      "target": "claude-code",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "codex",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "coding-agent-selection-map",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "open-cowork",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "pi",
+      "kind": "related"
+    },
+    {
+      "source": "multica",
+      "target": "src-multica-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "nanobot",
       "target": "ai-agent-plugin-patterns",
       "kind": "related"
@@ -6282,6 +7189,41 @@
       "kind": "wikilink"
     },
     {
+      "source": "nemoclaw",
+      "target": "agent-credential-isolation",
+      "kind": "related"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "openshell",
+      "kind": "related"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "src-nemoclaw-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "nemoclaw",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "oceanbase",
       "target": "agent-memory",
       "kind": "related"
@@ -6295,6 +7237,56 @@
       "source": "oceanbase",
       "target": "powermem",
       "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "agent-memory",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "claude-code",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "code-review-graph",
+      "kind": "wikilink"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "code-semantic-search-rag-map",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "codex",
+      "kind": "wikilink"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "coding-agent-selection-map",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "gitnexus",
+      "kind": "wikilink"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "pi",
+      "kind": "related"
+    },
+    {
+      "source": "oh-my-pi",
+      "target": "src-oh-my-pi-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "ome",
@@ -6377,6 +7369,46 @@
       "kind": "wikilink"
     },
     {
+      "source": "openshell",
+      "target": "agent-credential-isolation",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "nemoclaw",
+      "kind": "related"
+    },
+    {
+      "source": "openshell",
+      "target": "src-openshell-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openshell",
+      "target": "substrate",
+      "kind": "wikilink"
+    },
+    {
       "source": "paged-attention",
       "target": "radix-attention",
       "kind": "related"
@@ -6395,6 +7427,91 @@
       "source": "paged-attention",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "agent-skills-plugin-system-map",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "claude-code",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "codex",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "coding-agent-selection-map",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "multica",
+      "kind": "wikilink"
+    },
+    {
+      "source": "pi",
+      "target": "oh-my-pi",
+      "kind": "wikilink"
+    },
+    {
+      "source": "pi",
+      "target": "openshell",
+      "kind": "related"
+    },
+    {
+      "source": "pi",
+      "target": "src-pi-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "plano",
+      "target": "agent-skills-plugin-system-map",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "ai-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "kgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "plano",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "mcp-gateway-tooling-map",
+      "kind": "related"
+    },
+    {
+      "source": "plano",
+      "target": "src-plano-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "powermem",
@@ -6454,6 +7571,46 @@
     {
       "source": "radix-attention",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "agent-memory",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "agent-memory-selection-matrix",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "agentscope",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "hybrid-search-rrf",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "mem0",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "memsearch",
+      "kind": "related"
+    },
+    {
+      "source": "reme",
+      "target": "src-reme-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "reme",
+      "target": "tencentdb-agent-memory",
       "kind": "related"
     },
     {
@@ -6548,6 +7705,51 @@
     },
     {
       "source": "sglang",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "dynamo",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "skypilot",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "llm-inference-serving-project-map",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "skypilot",
+      "target": "src-skypilot-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "skypilot",
       "target": "vllm",
       "kind": "related"
     },
@@ -6998,6 +8200,11 @@
     },
     {
       "source": "src-aibrix-architecture",
+      "target": "skypilot",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-aibrix-architecture",
       "target": "src-github-stars-backlog-current-state",
       "kind": "wikilink"
     },
@@ -7283,6 +8490,11 @@
     },
     {
       "source": "src-dra-driver-nvidia-gpu-architecture",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "src-dra-driver-nvidia-gpu-architecture",
       "target": "kubernetes",
       "kind": "related"
     },
@@ -7468,6 +8680,11 @@
     },
     {
       "source": "src-gpu-operator-architecture",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "src-gpu-operator-architecture",
       "target": "kubernetes",
       "kind": "related"
     },
@@ -7518,6 +8735,11 @@
     },
     {
       "source": "src-hami-architecture",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "src-hami-architecture",
       "target": "kubernetes",
       "kind": "related"
     },
@@ -7539,6 +8761,11 @@
     {
       "source": "src-hiclaw-architecture",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "src-hiclaw-architecture",
+      "target": "higress",
       "kind": "related"
     },
     {
@@ -7679,6 +8906,11 @@
     {
       "source": "src-k8s-device-plugin-architecture",
       "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "src-k8s-device-plugin-architecture",
+      "target": "k8s-gpu-device-stack",
       "kind": "related"
     },
     {
@@ -8283,6 +9515,16 @@
     },
     {
       "source": "src-nemoclaw-architecture",
+      "target": "nemoclaw",
+      "kind": "related"
+    },
+    {
+      "source": "src-nemoclaw-architecture",
+      "target": "openshell",
+      "kind": "related"
+    },
+    {
+      "source": "src-nemoclaw-architecture",
       "target": "vllm",
       "kind": "related"
     },
@@ -8424,6 +9666,16 @@
     {
       "source": "src-openshell-architecture",
       "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "src-openshell-architecture",
+      "target": "nemoclaw",
+      "kind": "related"
+    },
+    {
+      "source": "src-openshell-architecture",
+      "target": "openshell",
       "kind": "related"
     },
     {
@@ -8802,6 +10054,56 @@
       "kind": "related"
     },
     {
+      "source": "substrate",
+      "target": "agent-runtime-sandbox-selection-map",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "agent-runtime-substrate",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "agentcube",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "agentgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "substrate",
+      "target": "ai-gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "substrate",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "substrate",
+      "target": "openshell",
+      "kind": "wikilink"
+    },
+    {
+      "source": "substrate",
+      "target": "src-substrate-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "tencentdb-agent-memory",
       "target": "agent-memory",
       "kind": "related"
@@ -8946,7 +10248,7 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 50
+      "count": 67
     },
     {
       "id": "concepts",
@@ -8961,7 +10263,7 @@
     {
       "id": "analysis",
       "label": "分析",
-      "count": 15
+      "count": 17
     }
   ]
 }
