@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>LLM Inference / Serving 项目地图</h1>
-    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars</p>
+    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-llm-d-architecture</p>
     <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">project-map</span><span class="tag">ai-infra</span></div>
   </header>
 
@@ -66,6 +66,11 @@ infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observabilit
 <td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
 <td>NVIDIA 数据中心级 LLM 推理编排层，把 vLLM/SGLang/TRT-LLM 组成协调集群</td>
 <td>多节点 serving 编排</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、KV/P-D/autoscaling 组织</td>
+<td>K8s serving control plane</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
@@ -397,6 +402,11 @@ cluster / managed job / serve
 <td>多节点 routing、KV offload、SLA autoscale、K8s operator</td>
 </tr>
 <tr>
+<td>K8s serving control plane</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/aibrix.html">aibrix</a>、<a class="wikilink" href="../entities/kserve.html">kserve</a></td>
+<td>Gateway API / InferencePool、Operator、Endpoint picking、autoscaling</td>
+</tr>
+<tr>
 <td>算力控制面</td>
 <td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
 <td>多云/K8s/Slurm 资源选择、failover、managed jobs/serve</td>
@@ -434,33 +444,47 @@ cluster / managed job / serve
 <td>KV-aware routing、KVBM、Planner、K8s operator</td>
 </tr>
 <tr>
+<td>构建 Kubernetes-native inference control plane</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a> / <a class="wikilink" href="../entities/aibrix.html">aibrix</a> / <a class="wikilink" href="../entities/kserve.html">kserve</a></td>
+<td>Gateway API、InferencePool、Operator、autoscaling、batch/benchmark 配套</td>
+</tr>
+<tr>
 <td>跨云/跨集群管理 AI workload</td>
 <td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
 <td>optimizer、failover、managed jobs、serve</td>
 </tr>
 <tr>
 <td>建生产 GPU Kubernetes 底座</td>
-<td><a class="wikilink" href="../sources/src-k8s-gpu-device-plugins-stars.html">K8s GPU stack</a></td>
+<td><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></td>
 <td>device plugin、GPU Operator、DRA/CDI、DCGM/GPUd</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="下一批候选">下一批候选</h2>
+<p>详见 <a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a>。当前最值得补的方向不是再加一个推理 engine，而是补全 serving control plane 的外围能力：</p>
+<ul>
+<li>batch inference：<code>llm-d-batch-gateway</code>。</li>
+<li>benchmark / simulator：<code>llm-d-benchmark</code>、<code>llm-d-inference-sim</code>、<code>inference-perf</code>。</li>
+<li>autoscaling / queueing：<code>llm-d-workload-variant-autoscaler</code>、<code>Kueue</code>、<code>Karpenter</code>。</li>
+<li>distributed workload API：<code>LeaderWorkerSet</code>、<code>JobSet</code>。</li>
+</ul>
 <h2 id="当前知识库缺口">当前知识库缺口</h2>
 <ul>
 <li>还缺少独立的 <a class="wikilink" href="../entities/vllm.html">vllm</a> 架构 source 页，当前主要来自 entity 和 SGLang 对照。</li>
-<li>还缺少 TensorRT-LLM、TGI、KServe/Ray Serve 的深入页，无法完整覆盖 serving 生态。</li>
-<li>还缺少 HAMi、NVIDIA DRA、GPU Operator 的单项架构页，GPU stack 只能先做资源层概览。</li>
+<li>还缺少 TensorRT-LLM、TGI、Ray Serve 的深入页，无法完整覆盖 serving 生态。</li>
+<li>还缺少 Kueue、Karpenter、LeaderWorkerSet、JobSet 这类 AI workload 调度 / 队列 / 分布式 API 页。</li>
+<li>还缺少 <code>llm-d-batch-gateway</code>、<code>llm-d-benchmark</code>、<code>llm-d-inference-sim</code>，无法完整解释 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 的 batch、评测和仿真外围。</li>
 <li>可以补一篇 “KV cache as schedulable resource” 概念页，把 KVBM、kvcached、P/D 分离和 GPU sharing 串起来。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-inference-serving-project-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference-serving-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference / </text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>SGLang</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/llm-serving-engine-selection-map.html">LLM Serving / 推理引擎选型地图</a><span>分析 · related</span></li><li><a href="../entities/skypilot.html">SkyPilot</a><span>实体 · related</span></li><li><a href="../sources/src-aibrix-architecture.html">AIBrix 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-gpustack-architecture.html">GPUStack 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-llm-d-architecture.html">llm-d 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-routellm-architecture.html">RouteLLM 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-semantic-router-architecture.html">vLLM Semantic Router 架构与设计思路分析</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#架构交叉矩阵">架构交叉矩阵</a></li><li class=""><a href="#核心设计轴">核心设计轴</a></li><li class="level-3"><a href="#1-kv-cache从内存优化到系统接口">1. KV cache：从内存优化到系统接口</a></li><li class="level-3"><a href="#2-单机引擎和集群编排是两层问题">2. 单机引擎和集群编排是两层问题</a></li><li class="level-3"><a href="#3-pd-分离改变了-gpu-池形态">3. P/D 分离改变了 GPU 池形态</a></li><li class="level-3"><a href="#4-路由不再只是负载均衡">4. 路由不再只是负载均衡</a></li><li class="level-3"><a href="#5-gpu-资源层正在变成-serving-架构的一部分">5. GPU 资源层正在变成 serving 架构的一部分</a></li><li class=""><a href="#项目工程剖面">项目工程剖面</a></li><li class="level-3"><a href="#vllm事实基线和-pagedattention">vllm：事实基线和 PagedAttention</a></li><li class="level-3"><a href="#sglang执行路径极致模块化">sglang：执行路径极致模块化</a></li><li class="level-3"><a href="#dynamo数据中心级-serving-编排">dynamo：数据中心级 serving 编排</a></li><li class="level-3"><a href="#src-skypilot-architectureskypilot算力控制面而不是-serving-engine">src-skypilot-architecture|SkyPilot：算力控制面而不是 serving engine</a></li><li class="level-3"><a href="#src-k8s-gpu-device-plugins-starsk8s-gpu-stack设备层正在上移">src-k8s-gpu-device-plugins-stars|K8s GPU stack：设备层正在上移</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-吞吐和延迟不是同一个优化目标">1. 吞吐和延迟不是同一个优化目标</a></li><li class="level-3"><a href="#2-kv-复用和负载均衡天然冲突">2. KV 复用和负载均衡天然冲突</a></li><li class="level-3"><a href="#3-pd-分离引入状态转移问题">3. P/D 分离引入状态转移问题</a></li><li class="level-3"><a href="#4-多级-kv-offload-是缓存系统不是简单-swap">4. 多级 KV offload 是缓存系统，不是简单 swap</a></li><li class="level-3"><a href="#5-gpu-资源调度和模型调度开始交叉">5. GPU 资源调度和模型调度开始交叉</a></li><li class="level-3"><a href="#6-可观测必须覆盖-tokenkv队列和-gpu">6. 可观测必须覆盖 token、KV、队列和 GPU</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference-serving-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference / </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>llm-d</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · wikilink</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-serving-engine-selection-map.html">LLM Serving / 推理引擎选型地图</a><span>分析 · related</span></li><li><a href="../entities/skypilot.html">SkyPilot</a><span>实体 · related</span></li><li><a href="../sources/src-aibrix-architecture.html">AIBrix 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-gpustack-architecture.html">GPUStack 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-llm-d-architecture.html">llm-d 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-routellm-architecture.html">RouteLLM 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-semantic-router-architecture.html">vLLM Semantic Router 架构与设计思路分析</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#架构交叉矩阵">架构交叉矩阵</a></li><li class=""><a href="#核心设计轴">核心设计轴</a></li><li class="level-3"><a href="#1-kv-cache从内存优化到系统接口">1. KV cache：从内存优化到系统接口</a></li><li class="level-3"><a href="#2-单机引擎和集群编排是两层问题">2. 单机引擎和集群编排是两层问题</a></li><li class="level-3"><a href="#3-pd-分离改变了-gpu-池形态">3. P/D 分离改变了 GPU 池形态</a></li><li class="level-3"><a href="#4-路由不再只是负载均衡">4. 路由不再只是负载均衡</a></li><li class="level-3"><a href="#5-gpu-资源层正在变成-serving-架构的一部分">5. GPU 资源层正在变成 serving 架构的一部分</a></li><li class=""><a href="#项目工程剖面">项目工程剖面</a></li><li class="level-3"><a href="#vllm事实基线和-pagedattention">vllm：事实基线和 PagedAttention</a></li><li class="level-3"><a href="#sglang执行路径极致模块化">sglang：执行路径极致模块化</a></li><li class="level-3"><a href="#dynamo数据中心级-serving-编排">dynamo：数据中心级 serving 编排</a></li><li class="level-3"><a href="#src-skypilot-architectureskypilot算力控制面而不是-serving-engine">src-skypilot-architecture|SkyPilot：算力控制面而不是 serving engine</a></li><li class="level-3"><a href="#src-k8s-gpu-device-plugins-starsk8s-gpu-stack设备层正在上移">src-k8s-gpu-device-plugins-stars|K8s GPU stack：设备层正在上移</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-吞吐和延迟不是同一个优化目标">1. 吞吐和延迟不是同一个优化目标</a></li><li class="level-3"><a href="#2-kv-复用和负载均衡天然冲突">2. KV 复用和负载均衡天然冲突</a></li><li class="level-3"><a href="#3-pd-分离引入状态转移问题">3. P/D 分离引入状态转移问题</a></li><li class="level-3"><a href="#4-多级-kv-offload-是缓存系统不是简单-swap">4. 多级 KV offload 是缓存系统，不是简单 swap</a></li><li class="level-3"><a href="#5-gpu-资源调度和模型调度开始交叉">5. GPU 资源调度和模型调度开始交叉</a></li><li class="level-3"><a href="#6-可观测必须覆盖-tokenkv队列和-gpu">6. 可观测必须覆盖 token、KV、队列和 GPU</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#下一批候选">下一批候选</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li></ul></aside></aside>
 </div>
 
 <script>

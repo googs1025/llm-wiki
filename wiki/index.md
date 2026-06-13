@@ -218,6 +218,7 @@ date: 2026-05-12
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
 - [[k8s-gpu-device-stack]] — Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）
 - [[k8s-core-controller-map]] — Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）
+- [[llm-d-kubernetes-sigs-candidate-map]] — llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）
 
 ---
 
@@ -227,6 +228,12 @@ date: 2026-05-12
 
 ### 云原生
 - controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链
+- controller-tools / cluster-api / kustomize / kro — Kubernetes API、控制器生成、集群生命周期和资源编排候选（详见 [[llm-d-kubernetes-sigs-candidate-map]]）
+- external-dns / aws-load-balancer-controller / ingress2gateway / apiserver-network-proxy — Kubernetes 网络、DNS、LB、Ingress→Gateway API 迁移候选
+- secrets-store-csi-driver / aws-ebs-csi-driver / aws-efs-csi-driver / nfs-subdir-external-provisioner — Kubernetes 存储、CSI 和 secret 注入候选
+- kueue / karpenter / scheduler-plugins / descheduler / kwok / node-feature-discovery — Kubernetes 调度、队列、弹性和节点能力发现候选
+- metrics-server / prometheus-adapter / inference-perf / usage-metrics-collector — Kubernetes 可观测、autoscaling metrics 和 GenAI benchmark 候选
+- kind / kubespray / cri-tools / security-profiles-operator / LeaderWorkerSet / JobSet — Kubernetes 计算、runtime、集群部署和分布式 workload API 候选
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
 - ingress-nginx — 已退役的 K8s 入口控制器
@@ -256,3 +263,5 @@ date: 2026-05-12
 - kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
 - autogen / langgraph / crewai — 多 Agent 框架同类对比项
 - ai-infra-learning-cn — 中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 [[ai-infra-learning-cn-map]]）
+- llm-d-batch-gateway / llm-d-benchmark / llm-d-workload-variant-autoscaler / llm-d-inference-sim — llm-d batch、benchmark、autoscaling 和 simulator 外围组件（详见 [[llm-d-kubernetes-sigs-candidate-map]]）
+- mcp-lifecycle-operator / kube-agentic-networking / ai-conformance — Kubernetes SIGs 中与 MCP、Agent networking、AI conformance 相关的交叉候选
