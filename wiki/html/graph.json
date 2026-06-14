@@ -234,9 +234,9 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
-      "degree": 22,
+      "degree": 41,
       "inbound": 1,
-      "outbound": 22
+      "outbound": 41
     },
     {
       "id": "k8s-gpu-device-stack",
@@ -254,9 +254,9 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
-      "degree": 25,
+      "degree": 28,
       "inbound": 7,
-      "outbound": 18
+      "outbound": 21
     },
     {
       "id": "llm-inference-serving-project-map",
@@ -273,9 +273,9 @@
       ],
       "date": "2026-06-09",
       "description": "LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）",
-      "degree": 28,
+      "degree": 36,
       "inbound": 8,
-      "outbound": 21
+      "outbound": 29
     },
     {
       "id": "llm-serving-engine-selection-map",
@@ -310,10 +310,10 @@
         "ai-infra"
       ],
       "date": "2026-06-13",
-      "description": "llm-d P1/P2 后续外围组件（latency scoring、performance dashboard、P/D diagnostics、payload processor，详见 llm-d-kubernetes-sigs-candidate-map）",
-      "degree": 26,
+      "description": "llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）",
+      "degree": 61,
       "inbound": 2,
-      "outbound": 26
+      "outbound": 61
     },
     {
       "id": "mcp-gateway-tooling-map",
@@ -386,8 +386,8 @@
       ],
       "date": "2026-06-12",
       "description": "Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key",
-      "degree": 25,
-      "inbound": 22,
+      "degree": 27,
+      "inbound": 24,
       "outbound": 8
     },
     {
@@ -494,8 +494,8 @@
       ],
       "date": "2026-06-13",
       "description": "大量 LLM 请求异步执行的 job/file/queue/output 控制面模式",
-      "degree": 10,
-      "inbound": 7,
+      "degree": 16,
+      "inbound": 13,
       "outbound": 7
     },
     {
@@ -571,8 +571,8 @@
       ],
       "date": "2026-05-16",
       "description": "Prefill/Decode 分离式服务（Dynamo 默认架构）",
-      "degree": 20,
-      "inbound": 16,
+      "degree": 22,
+      "inbound": 18,
       "outbound": 8
     },
     {
@@ -607,8 +607,8 @@
       ],
       "date": "2026-04-22",
       "description": "以 Git 为单一事实来源的运维方法论",
-      "degree": 6,
-      "inbound": 6,
+      "degree": 8,
+      "inbound": 8,
       "outbound": 4
     },
     {
@@ -626,8 +626,8 @@
       ],
       "date": "2026-06-12",
       "description": "GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式",
-      "degree": 13,
-      "inbound": 13,
+      "degree": 15,
+      "inbound": 15,
       "outbound": 6
     },
     {
@@ -645,8 +645,8 @@
       ],
       "date": "2026-06-12",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 20,
-      "inbound": 18,
+      "degree": 24,
+      "inbound": 22,
       "outbound": 9
     },
     {
@@ -720,8 +720,8 @@
       ],
       "date": "2026-06-12",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 43,
-      "inbound": 30,
+      "degree": 67,
+      "inbound": 54,
       "outbound": 28
     },
     {
@@ -757,9 +757,9 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 22,
-      "inbound": 17,
-      "outbound": 15
+      "degree": 46,
+      "inbound": 37,
+      "outbound": 23
     },
     {
       "id": "paged-attention",
@@ -886,9 +886,9 @@
       ],
       "date": "2026-06-12",
       "description": "云原生安全实践与趋势",
-      "degree": 23,
-      "inbound": 17,
-      "outbound": 8
+      "degree": 41,
+      "inbound": 35,
+      "outbound": 11
     },
     {
       "id": "code-semantic-search",
@@ -922,8 +922,8 @@
       ],
       "date": "2026-06-12",
       "description": "用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）",
-      "degree": 17,
-      "inbound": 15,
+      "degree": 25,
+      "inbound": 23,
       "outbound": 7
     },
     {
@@ -977,8 +977,8 @@
       ],
       "date": "2026-06-12",
       "description": "K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语",
-      "degree": 28,
-      "inbound": 27,
+      "degree": 32,
+      "inbound": 31,
       "outbound": 3
     },
     {
@@ -1017,8 +1017,8 @@
       ],
       "date": "2026-06-12",
       "description": "Solo.io / Istio 系出品的 AI-native L7 网关（LLM + MCP + A2A 三协议统一）",
-      "degree": 38,
-      "inbound": 32,
+      "degree": 42,
+      "inbound": 36,
       "outbound": 9
     },
     {
@@ -1096,6 +1096,24 @@
       "degree": 13,
       "inbound": 6,
       "outbound": 9
+    },
+    {
+      "id": "apiserver-network-proxy",
+      "title": "apiserver-network-proxy",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/apiserver-network-proxy.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "networking",
+        "control-plane"
+      ],
+      "date": "2026-06-14",
+      "description": "apiserver-network-proxy 通过 konnectivity server/agent 建立 apiserver 到节点网络的反向隧道，适合托管集群或私有节点网络。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
     },
     {
       "id": "argocd",
@@ -1244,6 +1262,24 @@
       "outbound": 6
     },
     {
+      "id": "cluster-api",
+      "title": "Cluster API",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/cluster-api.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "cluster-lifecycle",
+        "operator"
+      ],
+      "date": "2026-06-14",
+      "description": "Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。",
+      "degree": 5,
+      "inbound": 3,
+      "outbound": 3
+    },
+    {
       "id": "code-review-graph",
       "title": "code-review-graph",
       "category": "entities",
@@ -1282,6 +1318,60 @@
       "outbound": 7
     },
     {
+      "id": "controller-runtime",
+      "title": "controller-runtime",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/controller-runtime.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "controller",
+        "operator"
+      ],
+      "date": "2026-06-14",
+      "description": "controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 4
+    },
+    {
+      "id": "controller-tools",
+      "title": "controller-tools",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/controller-tools.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "crd",
+        "codegen"
+      ],
+      "date": "2026-06-14",
+      "description": "controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 4
+    },
+    {
+      "id": "cri-tools",
+      "title": "CRI Tools",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/cri-tools.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "cri",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。",
+      "degree": 5,
+      "inbound": 3,
+      "outbound": 3
+    },
+    {
       "id": "deepwiki-open",
       "title": "deepwiki-open",
       "category": "entities",
@@ -1299,6 +1389,24 @@
       "degree": 7,
       "inbound": 4,
       "outbound": 5
+    },
+    {
+      "id": "descheduler",
+      "title": "Descheduler",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/descheduler.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "scheduler",
+        "optimization"
+      ],
+      "date": "2026-06-14",
+      "description": "Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
     },
     {
       "id": "dra-driver-nvidia-gpu",
@@ -1361,6 +1469,24 @@
       "degree": 9,
       "inbound": 1,
       "outbound": 8
+    },
+    {
+      "id": "external-dns",
+      "title": "external-dns",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/external-dns.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "networking",
+        "dns"
+      ],
+      "date": "2026-06-14",
+      "description": "ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 4
     },
     {
       "id": "gateway-api-inference-extension",
@@ -1439,6 +1565,24 @@
       "outbound": 8
     },
     {
+      "id": "headlamp",
+      "title": "Headlamp",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/headlamp.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "dashboard",
+        "observability"
+      ],
+      "date": "2026-06-14",
+      "description": "Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
+    },
+    {
       "id": "HiClaw",
       "title": "HiClaw",
       "category": "entities",
@@ -1474,6 +1618,60 @@
       "degree": 10,
       "inbound": 5,
       "outbound": 8
+    },
+    {
+      "id": "inference-perf",
+      "title": "inference-perf",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/inference-perf.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "benchmark",
+        "kubernetes"
+      ],
+      "date": "2026-06-14",
+      "description": "GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。",
+      "degree": 9,
+      "inbound": 5,
+      "outbound": 5
+    },
+    {
+      "id": "ingress2gateway",
+      "title": "ingress2gateway",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/ingress2gateway.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "gateway-api",
+        "networking"
+      ],
+      "date": "2026-06-14",
+      "description": "ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 4
+    },
+    {
+      "id": "jobset",
+      "title": "JobSet",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/jobset.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "batch",
+        "distributed-workload"
+      ],
+      "date": "2026-06-14",
+      "description": "JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。",
+      "degree": 9,
+      "inbound": 5,
+      "outbound": 5
     },
     {
       "id": "k8m",
@@ -1514,6 +1712,24 @@
       "outbound": 6
     },
     {
+      "id": "karpenter",
+      "title": "Karpenter",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/karpenter.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "autoscaling",
+        "node"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。",
+      "degree": 7,
+      "inbound": 5,
+      "outbound": 4
+    },
+    {
       "id": "kgateway",
       "title": "kgateway",
       "category": "entities",
@@ -1531,6 +1747,42 @@
       "degree": 10,
       "inbound": 4,
       "outbound": 7
+    },
+    {
+      "id": "kind",
+      "title": "kind",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kind.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "testing",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。",
+      "degree": 5,
+      "inbound": 3,
+      "outbound": 3
+    },
+    {
+      "id": "kro",
+      "title": "KRO",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kro.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "orchestration",
+        "api"
+      ],
+      "date": "2026-06-14",
+      "description": "KRO（Kube Resource Orchestrator）用 ResourceGraphDefinition 把多个 Kubernetes resources 组合成更高层 API。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
     },
     {
       "id": "kserve",
@@ -1552,6 +1804,42 @@
       "outbound": 11
     },
     {
+      "id": "kube-agentic-networking",
+      "title": "kube-agentic-networking",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kube-agentic-networking.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "agent",
+        "networking"
+      ],
+      "date": "2026-06-14",
+      "description": "kube-agentic-networking 为 Kubernetes 中 agents/tools 提供 agentic networking policies and governance，面向 AI Agent 出口、工具调用和网络权限边界。",
+      "degree": 7,
+      "inbound": 4,
+      "outbound": 5
+    },
+    {
+      "id": "kube-scheduler-simulator",
+      "title": "kube-scheduler-simulator",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kube-scheduler-simulator.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "scheduler",
+        "simulator"
+      ],
+      "date": "2026-06-14",
+      "description": "kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。",
+      "degree": 3,
+      "inbound": 2,
+      "outbound": 2
+    },
+    {
       "id": "kubeai",
       "title": "KubeAI",
       "category": "entities",
@@ -1569,6 +1857,24 @@
       "degree": 11,
       "inbound": 8,
       "outbound": 7
+    },
+    {
+      "id": "kubebuilder",
+      "title": "Kubebuilder",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kubebuilder.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "operator",
+        "crd"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 4
     },
     {
       "id": "kubectl-ai",
@@ -1602,8 +1908,8 @@
       ],
       "date": "2026-04-22",
       "description": "容器编排平台，云原生核心（5 篇源文件）",
-      "degree": 55,
-      "inbound": 55,
+      "degree": 125,
+      "inbound": 125,
       "outbound": 8
     },
     {
@@ -1620,9 +1926,27 @@
       ],
       "date": "2026-06-12",
       "description": "K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）",
-      "degree": 24,
-      "inbound": 24,
+      "degree": 28,
+      "inbound": 28,
       "outbound": 5
+    },
+    {
+      "id": "kubespray",
+      "title": "Kubespray",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kubespray.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "cluster-lifecycle",
+        "ansible"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。",
+      "degree": 5,
+      "inbound": 3,
+      "outbound": 3
     },
     {
       "id": "kubewall",
@@ -1638,9 +1962,81 @@
       ],
       "date": "2026-06-13",
       "description": "single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照",
-      "degree": 7,
-      "inbound": 3,
+      "degree": 9,
+      "inbound": 5,
       "outbound": 6
+    },
+    {
+      "id": "kueue",
+      "title": "Kueue",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kueue.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "scheduler",
+        "queueing"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。",
+      "degree": 13,
+      "inbound": 10,
+      "outbound": 5
+    },
+    {
+      "id": "kustomize",
+      "title": "Kustomize",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kustomize.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "config",
+        "gitops"
+      ],
+      "date": "2026-06-14",
+      "description": "Kustomize 用 overlay/patch/transformer 管理 Kubernetes YAML 差异，是 kubectl 原生支持的配置定制工具链。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
+    },
+    {
+      "id": "kwok",
+      "title": "KWOK",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kwok.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "simulator",
+        "testing"
+      ],
+      "date": "2026-06-14",
+      "description": "KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
+    },
+    {
+      "id": "lws",
+      "title": "LeaderWorkerSet",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/lws.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "distributed-workload",
+        "llm-serving"
+      ],
+      "date": "2026-06-14",
+      "description": "LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。",
+      "degree": 9,
+      "inbound": 5,
+      "outbound": 5
     },
     {
       "id": "llm-d",
@@ -1657,8 +2053,8 @@
       ],
       "date": "2026-06-12",
       "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 28,
-      "inbound": 22,
+      "degree": 32,
+      "inbound": 26,
       "outbound": 18
     },
     {
@@ -1693,8 +2089,8 @@
       ],
       "date": "2026-06-13",
       "description": "llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）",
-      "degree": 8,
-      "inbound": 8,
+      "degree": 12,
+      "inbound": 12,
       "outbound": 5
     },
     {
@@ -1712,9 +2108,63 @@
       ],
       "date": "2026-06-13",
       "description": "无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）",
-      "degree": 12,
-      "inbound": 9,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 8
+    },
+    {
+      "id": "llm-d-latency-predictor",
+      "title": "llm-d Latency Predictor",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-latency-predictor.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "latency",
+        "inference-routing"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency scoring service，用预测延迟信号增强 endpoint picking。",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 4
+    },
+    {
+      "id": "llm-d-pd-utils",
+      "title": "llm-d P/D Utils",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-pd-utils.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "diagnostics",
+        "gpu"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d P/D Utils 是面向 Prefill/Decode 分离部署的 skills/scripts 工具集，用于 preflight、GPU topology、RDMA/NCCL/network/NIXL 等诊断。",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 4
+    },
+    {
+      "id": "llm-d-prism",
+      "title": "llm-d Prism",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-prism.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "observability",
+        "benchmark"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。",
+      "degree": 7,
+      "inbound": 4,
+      "outbound": 4
     },
     {
       "id": "llm-d-workload-variant-autoscaler",
@@ -1731,8 +2181,8 @@
       ],
       "date": "2026-06-13",
       "description": "llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）",
-      "degree": 9,
-      "inbound": 6,
+      "degree": 13,
+      "inbound": 10,
       "outbound": 7
     },
     {
@@ -1754,6 +2204,24 @@
       "outbound": 4
     },
     {
+      "id": "sig-storage-local-static-provisioner",
+      "title": "Local Static Provisioner",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/sig-storage-local-static-provisioner.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "storage",
+        "local-pv"
+      ],
+      "date": "2026-06-14",
+      "description": "Local Static Provisioner 发现节点本地磁盘/目录并创建 local PersistentVolume，配合调度绑定把数据固定到节点。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
+    },
+    {
       "id": "loongsuite-pilot",
       "title": "LoongSuite Pilot",
       "category": "entities",
@@ -1771,6 +2239,24 @@
       "degree": 11,
       "inbound": 6,
       "outbound": 8
+    },
+    {
+      "id": "mcp-lifecycle-operator",
+      "title": "MCP Lifecycle Operator",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/mcp-lifecycle-operator.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "mcp",
+        "agent"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubernetes SIGs AI conformance P2 候选；mcp-lifecycle-operator / kube-agentic-networking 已建页",
+      "degree": 7,
+      "inbound": 3,
+      "outbound": 5
     },
     {
       "id": "mem0",
@@ -1812,6 +2298,24 @@
       "outbound": 11
     },
     {
+      "id": "metrics-server",
+      "title": "metrics-server",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/metrics-server.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "observability",
+        "autoscaling"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。",
+      "degree": 8,
+      "inbound": 5,
+      "outbound": 5
+    },
+    {
       "id": "milvus",
       "title": "Milvus",
       "category": "entities",
@@ -1844,8 +2348,8 @@
       ],
       "date": "2026-05-12",
       "description": "Model Context Protocol，AI Agent 工具/资源接入协议",
-      "degree": 61,
-      "inbound": 59,
+      "degree": 63,
+      "inbound": 61,
       "outbound": 6
     },
     {
@@ -1905,6 +2409,42 @@
       "degree": 8,
       "inbound": 3,
       "outbound": 7
+    },
+    {
+      "id": "nfs-subdir-external-provisioner",
+      "title": "NFS Subdir External Provisioner",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/nfs-subdir-external-provisioner.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "storage",
+        "nfs"
+      ],
+      "date": "2026-06-14",
+      "description": "NFS Subdir External Provisioner 在远端 NFS server 上为 PVC 动态创建子目录，是轻量实验/中小集群常见 storage class。",
+      "degree": 4,
+      "inbound": 2,
+      "outbound": 3
+    },
+    {
+      "id": "node-feature-discovery",
+      "title": "Node Feature Discovery",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/node-feature-discovery.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "node",
+        "hardware"
+      ],
+      "date": "2026-06-14",
+      "description": "Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 4
     },
     {
       "id": "gpu-operator",
@@ -2115,6 +2655,24 @@
       "outbound": 8
     },
     {
+      "id": "prometheus-adapter",
+      "title": "prometheus-adapter",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/prometheus-adapter.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "observability",
+        "autoscaling"
+      ],
+      "date": "2026-06-14",
+      "description": "Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。",
+      "degree": 8,
+      "inbound": 5,
+      "outbound": 5
+    },
+    {
       "id": "reme",
       "title": "ReMe",
       "category": "entities",
@@ -2153,6 +2711,60 @@
       "outbound": 5
     },
     {
+      "id": "scheduler-plugins",
+      "title": "scheduler-plugins",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/scheduler-plugins.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "scheduler",
+        "plugins"
+      ],
+      "date": "2026-06-14",
+      "description": "scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。",
+      "degree": 6,
+      "inbound": 4,
+      "outbound": 3
+    },
+    {
+      "id": "secrets-store-csi-driver",
+      "title": "Secrets Store CSI Driver",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/secrets-store-csi-driver.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "security",
+        "storage"
+      ],
+      "date": "2026-06-14",
+      "description": "Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。",
+      "degree": 6,
+      "inbound": 4,
+      "outbound": 4
+    },
+    {
+      "id": "security-profiles-operator",
+      "title": "Security Profiles Operator",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/security-profiles-operator.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "security",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。",
+      "degree": 5,
+      "inbound": 3,
+      "outbound": 4
+    },
+    {
       "id": "sglang",
       "title": "SGLang",
       "category": "entities",
@@ -2171,6 +2783,24 @@
       "degree": 23,
       "inbound": 23,
       "outbound": 4
+    },
+    {
+      "id": "sig-storage-lib-external-provisioner",
+      "title": "sig-storage-lib-external-provisioner",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/sig-storage-lib-external-provisioner.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "storage",
+        "provisioner"
+      ],
+      "date": "2026-06-14",
+      "description": "sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。",
+      "degree": 3,
+      "inbound": 2,
+      "outbound": 2
     },
     {
       "id": "skypilot",
@@ -2519,6 +3149,24 @@
       "outbound": 10
     },
     {
+      "id": "src-apiserver-network-proxy-architecture",
+      "title": "apiserver-network-proxy 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-apiserver-network-proxy-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "networking",
+        "control-plane"
+      ],
+      "date": "2026-06-14",
+      "description": "apiserver-network-proxy 架构（P1，control plane network proxy：apiserver-network-proxy 通过 konnectivity server/agent 建立 apiserver 到节点网络的反向隧道，适合托管集群或私有节点网络。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-argocd-overview",
       "title": "Argo CD 概览",
       "category": "sources",
@@ -2610,6 +3258,24 @@
       "outbound": 4
     },
     {
+      "id": "src-cluster-api-architecture",
+      "title": "Cluster API 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-cluster-api-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "cluster-lifecycle",
+        "operator"
+      ],
+      "date": "2026-06-14",
+      "description": "Cluster API 架构（P0，集群生命周期：Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-code-review-graph-architecture",
       "title": "code-review-graph 架构与设计思路分析",
       "category": "sources",
@@ -2647,6 +3313,60 @@
       "outbound": 5
     },
     {
+      "id": "src-controller-runtime-architecture",
+      "title": "controller-runtime 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-controller-runtime-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "controller",
+        "operator"
+      ],
+      "date": "2026-06-14",
+      "description": "controller-runtime 架构（P0，Operator SDK：controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-controller-tools-architecture",
+      "title": "controller-tools 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-controller-tools-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "crd",
+        "codegen"
+      ],
+      "date": "2026-06-14",
+      "description": "controller-tools 架构（P0，API 生成工具：controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-cri-tools-architecture",
+      "title": "CRI Tools 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-cri-tools-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "cri",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "CRI Tools 架构（P0，计算 / Runtime：CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-deepwiki-open-architecture",
       "title": "deepwiki-open 架构与设计思路分析",
       "category": "sources",
@@ -2664,6 +3384,24 @@
       "degree": 7,
       "inbound": 1,
       "outbound": 6
+    },
+    {
+      "id": "src-descheduler-architecture",
+      "title": "Descheduler 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-descheduler-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "scheduler",
+        "optimization"
+      ],
+      "date": "2026-06-14",
+      "description": "Descheduler 架构（P1，调度后优化：Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
     },
     {
       "id": "src-dra-driver-nvidia-gpu-architecture",
@@ -2701,6 +3439,24 @@
       "degree": 8,
       "inbound": 1,
       "outbound": 7
+    },
+    {
+      "id": "src-external-dns-architecture",
+      "title": "external-dns 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-external-dns-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "networking",
+        "dns"
+      ],
+      "date": "2026-06-14",
+      "description": "external-dns 架构（P0，网络 / DNS：ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
     },
     {
       "id": "src-gateway-api-inference-extension-architecture",
@@ -2796,6 +3552,24 @@
       "outbound": 4
     },
     {
+      "id": "src-headlamp-architecture",
+      "title": "Headlamp 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-headlamp-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "dashboard",
+        "observability"
+      ],
+      "date": "2026-06-14",
+      "description": "Headlamp 架构（P1，Kubernetes UI：Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-hiclaw-architecture",
       "title": "HiClaw 架构与设计思路分析",
       "category": "sources",
@@ -2832,6 +3606,60 @@
       "degree": 8,
       "inbound": 1,
       "outbound": 7
+    },
+    {
+      "id": "src-inference-perf-architecture",
+      "title": "inference-perf 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-inference-perf-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "benchmark",
+        "kubernetes"
+      ],
+      "date": "2026-06-14",
+      "description": "inference-perf 架构（P1，GenAI benchmark：GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
+    },
+    {
+      "id": "src-ingress2gateway-architecture",
+      "title": "ingress2gateway 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-ingress2gateway-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "gateway-api",
+        "networking"
+      ],
+      "date": "2026-06-14",
+      "description": "ingress2gateway 架构（P1，Ingress -> Gateway API migration：ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-jobset-architecture",
+      "title": "JobSet 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-jobset-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "batch",
+        "distributed-workload"
+      ],
+      "date": "2026-06-14",
+      "description": "JobSet 架构（P1，分布式 workload API：JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
     },
     {
       "id": "src-k3s-gitops-k0rdent",
@@ -2930,6 +3758,24 @@
       "outbound": 7
     },
     {
+      "id": "src-karpenter-architecture",
+      "title": "Karpenter 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-karpenter-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "autoscaling",
+        "node"
+      ],
+      "date": "2026-06-14",
+      "description": "Karpenter 架构（P0，节点弹性 / 成本：Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
       "id": "src-kgateway-architecture",
       "title": "kgateway 架构与设计思路分析",
       "category": "sources",
@@ -2947,6 +3793,42 @@
       "degree": 7,
       "inbound": 1,
       "outbound": 6
+    },
+    {
+      "id": "src-kind-architecture",
+      "title": "kind 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kind-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "testing",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "kind 架构（P0，计算 / 测试集群：kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
+      "id": "src-kro-architecture",
+      "title": "KRO 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kro-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "orchestration",
+        "api"
+      ],
+      "date": "2026-06-14",
+      "description": "KRO 架构（P1，higher-level API orchestration：KRO（Kube Resource Orchestrator）用 ResourceGraphDefinition 把多个 Kubernetes resources 组合成更高层 API。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
     },
     {
       "id": "src-kserve-architecture",
@@ -2968,6 +3850,42 @@
       "outbound": 7
     },
     {
+      "id": "src-kube-agentic-networking-architecture",
+      "title": "kube-agentic-networking 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kube-agentic-networking-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "agent",
+        "networking"
+      ],
+      "date": "2026-06-14",
+      "description": "kube-agentic-networking 架构（P1，Agent networking governance：kube-agentic-networking 为 Kubernetes 中 agents/tools 提供 agentic networking policies and governance，面向 AI Agent 出口、工具调用和网络权限边界。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
+    },
+    {
+      "id": "src-kube-scheduler-simulator-architecture",
+      "title": "kube-scheduler-simulator 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kube-scheduler-simulator-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "scheduler",
+        "simulator"
+      ],
+      "date": "2026-06-14",
+      "description": "kube-scheduler-simulator 架构（P1，scheduler 可视化模拟：kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。）",
+      "degree": 2,
+      "inbound": 1,
+      "outbound": 2
+    },
+    {
       "id": "src-kubeai-architecture",
       "title": "KubeAI 架构与设计思路分析",
       "category": "sources",
@@ -2985,6 +3903,24 @@
       "degree": 7,
       "inbound": 1,
       "outbound": 6
+    },
+    {
+      "id": "src-kubebuilder-architecture",
+      "title": "Kubebuilder 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kubebuilder-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "operator",
+        "crd"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubebuilder 架构（P0，CRD / controller 脚手架：Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
     },
     {
       "id": "src-kubectl-ai-architecture",
@@ -3024,6 +3960,24 @@
       "outbound": 2
     },
     {
+      "id": "src-kubespray-architecture",
+      "title": "Kubespray 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kubespray-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "cluster-lifecycle",
+        "ansible"
+      ],
+      "date": "2026-06-14",
+      "description": "Kubespray 架构（P0，计算 / 集群部署：Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-kubewall-architecture",
       "title": "kubewall 架构与设计思路分析",
       "category": "sources",
@@ -3038,6 +3992,78 @@
       "date": "2026-06-12",
       "description": "kubewall 架构（HEAD fd575ff，single-binary Kubernetes dashboard：Go backend + client + charts，把 AI integration 作为 dashboard 增强而非主 agent loop）",
       "degree": 6,
+      "inbound": 1,
+      "outbound": 5
+    },
+    {
+      "id": "src-kueue-architecture",
+      "title": "Kueue 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kueue-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "scheduler",
+        "queueing"
+      ],
+      "date": "2026-06-14",
+      "description": "Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
+    },
+    {
+      "id": "src-kustomize-architecture",
+      "title": "Kustomize 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kustomize-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "config",
+        "gitops"
+      ],
+      "date": "2026-06-14",
+      "description": "Kustomize 架构（P1，配置管理：Kustomize 用 overlay/patch/transformer 管理 Kubernetes YAML 差异，是 kubectl 原生支持的配置定制工具链。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
+      "id": "src-kwok-architecture",
+      "title": "KWOK 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kwok-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "simulator",
+        "testing"
+      ],
+      "date": "2026-06-14",
+      "description": "KWOK 架构（P1，大规模集群模拟：KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
+      "id": "src-lws-architecture",
+      "title": "LeaderWorkerSet 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-lws-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "distributed-workload",
+        "llm-serving"
+      ],
+      "date": "2026-06-14",
+      "description": "LeaderWorkerSet 架构（P1，分布式 workload API：LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。）",
+      "degree": 5,
       "inbound": 1,
       "outbound": 5
     },
@@ -3115,6 +4141,60 @@
       "outbound": 8
     },
     {
+      "id": "src-llm-d-latency-predictor-architecture",
+      "title": "llm-d Latency Predictor 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-latency-predictor-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "latency",
+        "inference-routing"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d Latency Predictor 架构（P1，latency predictor：llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency scoring service，用预测延迟信号增强 endpoint picking。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-llm-d-pd-utils-architecture",
+      "title": "llm-d P/D Utils 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-pd-utils-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "diagnostics",
+        "gpu"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d P/D Utils 架构（P1，P/D diagnostics：llm-d P/D Utils 是面向 Prefill/Decode 分离部署的 skills/scripts 工具集，用于 preflight、GPU topology、RDMA/NCCL/network/NIXL 等诊断。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-llm-d-prism-architecture",
+      "title": "llm-d Prism 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-llm-d-prism-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "observability",
+        "benchmark"
+      ],
+      "date": "2026-06-14",
+      "description": "llm-d Prism 架构（P1，performance analysis：llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
       "id": "src-llm-d-router-architecture",
       "title": "llm-d Router 架构与设计思路分析",
       "category": "sources",
@@ -3171,6 +4251,24 @@
       "outbound": 10
     },
     {
+      "id": "src-sig-storage-local-static-provisioner-architecture",
+      "title": "Local Static Provisioner 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-sig-storage-local-static-provisioner-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "storage",
+        "local-pv"
+      ],
+      "date": "2026-06-14",
+      "description": "Local Static Provisioner 架构（P1，Local PV static provisioning：Local Static Provisioner 发现节点本地磁盘/目录并创建 local PersistentVolume，配合调度绑定把数据固定到节点。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
       "id": "src-loongsuite-pilot-architecture",
       "title": "LoongSuite Pilot 架构与设计思路分析",
       "category": "sources",
@@ -3187,6 +4285,24 @@
       "degree": 7,
       "inbound": 1,
       "outbound": 7
+    },
+    {
+      "id": "src-mcp-lifecycle-operator-architecture",
+      "title": "MCP Lifecycle Operator 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-mcp-lifecycle-operator-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "mcp",
+        "agent"
+      ],
+      "date": "2026-06-14",
+      "description": "MCP Lifecycle Operator 架构（P1，MCP lifecycle：MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
     },
     {
       "id": "src-mem0-architecture",
@@ -3225,6 +4341,24 @@
       "degree": 10,
       "inbound": 2,
       "outbound": 10
+    },
+    {
+      "id": "src-metrics-server-architecture",
+      "title": "metrics-server 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-metrics-server-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "observability",
+        "autoscaling"
+      ],
+      "date": "2026-06-14",
+      "description": "metrics-server 架构（P0，可观测 / autoscaling：Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
     },
     {
       "id": "src-multica-architecture",
@@ -3281,6 +4415,42 @@
       "degree": 11,
       "inbound": 4,
       "outbound": 8
+    },
+    {
+      "id": "src-nfs-subdir-external-provisioner-architecture",
+      "title": "NFS Subdir External Provisioner 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-nfs-subdir-external-provisioner-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "storage",
+        "nfs"
+      ],
+      "date": "2026-06-14",
+      "description": "NFS Subdir External Provisioner 架构（P1，NFS dynamic provisioning：NFS Subdir External Provisioner 在远端 NFS server 上为 PVC 动态创建子目录，是轻量实验/中小集群常见 storage class。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
+      "id": "src-node-feature-discovery-architecture",
+      "title": "Node Feature Discovery 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-node-feature-discovery-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "node",
+        "hardware"
+      ],
+      "date": "2026-06-14",
+      "description": "Node Feature Discovery 架构（P1，节点能力发现：Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
     },
     {
       "id": "src-dynamo-architecture",
@@ -3491,6 +4661,24 @@
       "outbound": 6
     },
     {
+      "id": "src-prometheus-adapter-architecture",
+      "title": "prometheus-adapter 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-prometheus-adapter-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "observability",
+        "autoscaling"
+      ],
+      "date": "2026-06-14",
+      "description": "prometheus-adapter 架构（P0，custom/external metrics：Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。）",
+      "degree": 5,
+      "inbound": 1,
+      "outbound": 5
+    },
+    {
       "id": "src-reme-architecture",
       "title": "ReMe 架构与设计思路分析",
       "category": "sources",
@@ -3528,6 +4716,60 @@
       "outbound": 5
     },
     {
+      "id": "src-scheduler-plugins-architecture",
+      "title": "scheduler-plugins 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-scheduler-plugins-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "scheduler",
+        "plugins"
+      ],
+      "date": "2026-06-14",
+      "description": "scheduler-plugins 架构（P0，调度 / 资源：scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。）",
+      "degree": 3,
+      "inbound": 1,
+      "outbound": 3
+    },
+    {
+      "id": "src-secrets-store-csi-driver-architecture",
+      "title": "Secrets Store CSI Driver 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-secrets-store-csi-driver-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "security",
+        "storage"
+      ],
+      "date": "2026-06-14",
+      "description": "Secrets Store CSI Driver 架构（P0，存储 / 凭据：Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
+      "id": "src-security-profiles-operator-architecture",
+      "title": "Security Profiles Operator 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-security-profiles-operator-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "security",
+        "runtime"
+      ],
+      "date": "2026-06-14",
+      "description": "Security Profiles Operator 架构（P1，Runtime security：Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。）",
+      "degree": 4,
+      "inbound": 1,
+      "outbound": 4
+    },
+    {
       "id": "src-sglang-architecture",
       "title": "SGLang 架构与设计思路分析",
       "category": "sources",
@@ -3545,6 +4787,24 @@
       "degree": 4,
       "inbound": 3,
       "outbound": 4
+    },
+    {
+      "id": "src-sig-storage-lib-external-provisioner-architecture",
+      "title": "sig-storage-lib-external-provisioner 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-sig-storage-lib-external-provisioner-architecture.html",
+      "tags": [
+        "architecture",
+        "kubernetes",
+        "storage",
+        "provisioner"
+      ],
+      "date": "2026-06-14",
+      "description": "sig-storage-lib-external-provisioner 架构（P1，external provisioner library：sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。）",
+      "degree": 2,
+      "inbound": 1,
+      "outbound": 2
     },
     {
       "id": "src-skypilot-architecture",
@@ -4652,6 +5912,21 @@
       "kind": "related"
     },
     {
+      "source": "apiserver-network-proxy",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "apiserver-network-proxy",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "apiserver-network-proxy",
+      "target": "src-apiserver-network-proxy-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "argocd",
       "target": "gitops",
       "kind": "related"
@@ -4978,6 +6253,11 @@
     },
     {
       "source": "cloud-native-security",
+      "target": "kube-agentic-networking",
+      "kind": "wikilink"
+    },
+    {
+      "source": "cloud-native-security",
       "target": "kubernetes",
       "kind": "related"
     },
@@ -4988,12 +6268,37 @@
     },
     {
       "source": "cloud-native-security",
+      "target": "secrets-store-csi-driver",
+      "kind": "wikilink"
+    },
+    {
+      "source": "cloud-native-security",
+      "target": "security-profiles-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "cloud-native-security",
       "target": "src-ai-vulnerability-discovery",
       "kind": "wikilink"
     },
     {
       "source": "cloud-native-security",
       "target": "src-k8s-v1.36-sneak-peek",
+      "kind": "wikilink"
+    },
+    {
+      "source": "cluster-api",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "cluster-api",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "cluster-api",
+      "target": "src-cluster-api-architecture",
       "kind": "wikilink"
     },
     {
@@ -5312,6 +6617,61 @@
       "kind": "wikilink"
     },
     {
+      "source": "controller-runtime",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "src-controller-runtime-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "controller-tools",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "src-controller-tools-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "cri-tools",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "cri-tools",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "cri-tools",
+      "target": "src-cri-tools-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "declarative-agent-management",
       "target": "HiClaw",
       "kind": "related"
@@ -5369,6 +6729,21 @@
     {
       "source": "deepwiki-open",
       "target": "src-deepwiki-open-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "descheduler",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "descheduler",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "descheduler",
+      "target": "src-descheduler-architecture",
       "kind": "wikilink"
     },
     {
@@ -5605,6 +6980,26 @@
       "source": "event-driven-memory-pipeline",
       "target": "three-tier-search-protocol",
       "kind": "related"
+    },
+    {
+      "source": "external-dns",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "external-dns",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "external-dns",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "external-dns",
+      "target": "src-external-dns-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "gateway-api",
@@ -6107,6 +7502,21 @@
       "kind": "wikilink"
     },
     {
+      "source": "headlamp",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "headlamp",
+      "target": "kubewall",
+      "kind": "related"
+    },
+    {
+      "source": "headlamp",
+      "target": "src-headlamp-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "higress",
       "target": "HiClaw",
       "kind": "related"
@@ -6172,6 +7582,31 @@
       "kind": "related"
     },
     {
+      "source": "inference-perf",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "inference-perf",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "inference-perf",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "inference-perf",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "inference-perf",
+      "target": "src-inference-perf-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "inference-routing",
       "target": "ai-gateway",
       "kind": "related"
@@ -6215,6 +7650,51 @@
       "source": "inference-routing",
       "target": "semantic-router",
       "kind": "related"
+    },
+    {
+      "source": "ingress2gateway",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "ingress2gateway",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "ingress2gateway",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "ingress2gateway",
+      "target": "src-ingress2gateway-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "jobset",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "src-jobset-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "k8m",
@@ -6283,6 +7763,26 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "cluster-api",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "controller-runtime",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "controller-tools",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "cri-tools",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "declarative-agent-management",
       "kind": "related"
     },
@@ -6294,6 +7794,11 @@
     {
       "source": "k8s-core-controller-map",
       "target": "envoy-ai-gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "external-dns",
       "kind": "wikilink"
     },
     {
@@ -6318,7 +7823,27 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "inference-perf",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "jobset",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "karpenter",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "kgateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kind",
       "kind": "wikilink"
     },
     {
@@ -6328,13 +7853,33 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "kube-agentic-networking",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kubebuilder",
       "kind": "wikilink"
     },
     {
       "source": "k8s-core-controller-map",
       "target": "kubernetes",
       "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kubespray",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kueue",
+      "kind": "wikilink"
     },
     {
       "source": "k8s-core-controller-map",
@@ -6348,12 +7893,42 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "lws",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "mcp",
       "kind": "wikilink"
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "mcp-lifecycle-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "metrics-server",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "ome",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "prometheus-adapter",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "scheduler-plugins",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "secrets-store-csi-driver",
       "kind": "wikilink"
     },
     {
@@ -6468,6 +8043,11 @@
     },
     {
       "source": "k8s-gpu-device-stack",
+      "target": "kueue",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
       "target": "llm-d",
       "kind": "wikilink"
     },
@@ -6479,6 +8059,16 @@
     {
       "source": "k8s-gpu-device-stack",
       "target": "model-serving-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "node-feature-discovery",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "scheduler-plugins",
       "kind": "wikilink"
     },
     {
@@ -6517,6 +8107,26 @@
       "kind": "wikilink"
     },
     {
+      "source": "karpenter",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "src-karpenter-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "kgateway",
       "target": "agentgateway",
       "kind": "related"
@@ -6549,6 +8159,36 @@
     {
       "source": "kgateway",
       "target": "src-kgateway-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kind",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kind",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kind",
+      "target": "src-kind-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kro",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kro",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kro",
+      "target": "src-kro-architecture",
       "kind": "wikilink"
     },
     {
@@ -6607,6 +8247,41 @@
       "kind": "related"
     },
     {
+      "source": "kube-agentic-networking",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "kube-agentic-networking",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "kube-agentic-networking",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "kube-agentic-networking",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kube-agentic-networking",
+      "target": "src-kube-agentic-networking-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kube-scheduler-simulator",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kube-scheduler-simulator",
+      "target": "src-kube-scheduler-simulator-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "kubeai",
       "target": "kserve",
       "kind": "related"
@@ -6640,6 +8315,26 @@
       "source": "kubeai",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "src-kubebuilder-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubectl-ai",
@@ -6752,6 +8447,21 @@
       "kind": "related"
     },
     {
+      "source": "kubespray",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "kubespray",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubespray",
+      "target": "src-kubespray-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "kubewall",
       "target": "ai-ops",
       "kind": "related"
@@ -6779,6 +8489,46 @@
     {
       "source": "kubewall",
       "target": "src-kubewall-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kueue",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "src-kueue-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kustomize",
+      "target": "gitops",
+      "kind": "related"
+    },
+    {
+      "source": "kustomize",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kustomize",
+      "target": "src-kustomize-architecture",
       "kind": "wikilink"
     },
     {
@@ -6820,6 +8570,21 @@
       "source": "kv-cache-offload",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "kwok",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kwok",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kwok",
+      "target": "src-kwok-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "llm-d",
@@ -7043,6 +8808,11 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "apiserver-network-proxy",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "batch-inference",
       "kind": "wikilink"
     },
@@ -7053,12 +8823,42 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "cluster-api",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "controller-runtime",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "controller-tools",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "cri-tools",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "declarative-agent-management",
       "kind": "wikilink"
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "descheduler",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "dra-driver-nvidia-gpu",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "external-dns",
       "kind": "wikilink"
     },
     {
@@ -7073,8 +8873,28 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "headlamp",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "inference-perf",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "inference-routing",
       "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "ingress2gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "jobset",
+      "kind": "wikilink"
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
@@ -7088,7 +8908,37 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "karpenter",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kind",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kro",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "kserve",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kube-agentic-networking",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kube-scheduler-simulator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kubebuilder",
       "kind": "wikilink"
     },
     {
@@ -7103,7 +8953,27 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kubespray",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "kubewall",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kueue",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kustomize",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "kwok",
       "kind": "wikilink"
     },
     {
@@ -7128,6 +8998,21 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-latency-predictor",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-pd-utils",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-prism",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
@@ -7143,13 +9028,128 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "lws",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "mcp",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "mcp-lifecycle-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "metrics-server",
       "kind": "wikilink"
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "model-serving-operator",
       "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "nfs-subdir-external-provisioner",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "node-feature-discovery",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "prometheus-adapter",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "scheduler-plugins",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "secrets-store-csi-driver",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "security-profiles-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "sig-storage-lib-external-provisioner",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "sig-storage-local-static-provisioner",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-latency-predictor",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-latency-predictor",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-latency-predictor",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-latency-predictor",
+      "target": "src-llm-d-latency-predictor-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-pd-utils",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-pd-utils",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-pd-utils",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-pd-utils",
+      "target": "src-llm-d-pd-utils-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-prism",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-prism",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-prism",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-prism",
+      "target": "src-llm-d-prism-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "llm-d-workload-variant-autoscaler",
@@ -7348,7 +9348,22 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "inference-perf",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "jobset",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "k8s-gpu-device-stack",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "karpenter",
       "kind": "wikilink"
     },
     {
@@ -7360,6 +9375,11 @@
       "source": "llm-inference-serving-project-map",
       "target": "kubernetes",
       "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "kueue",
+      "kind": "wikilink"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -7393,6 +9413,11 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "llm-d-prism",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
@@ -7403,8 +9428,23 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "lws",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "metrics-server",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "paged-attention",
       "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "prometheus-adapter",
+      "kind": "wikilink"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -7537,6 +9577,31 @@
       "kind": "related"
     },
     {
+      "source": "lws",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "src-lws-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "mcp",
       "target": "ai-agent-plugin-patterns",
       "kind": "wikilink"
@@ -7590,6 +9655,31 @@
       "source": "mcp-gateway-tooling-map",
       "target": "mcp",
       "kind": "related"
+    },
+    {
+      "source": "mcp-lifecycle-operator",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "mcp-lifecycle-operator",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "mcp-lifecycle-operator",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "mcp-lifecycle-operator",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "mcp-lifecycle-operator",
+      "target": "src-mcp-lifecycle-operator-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "mem0",
@@ -7702,6 +9792,31 @@
       "kind": "wikilink"
     },
     {
+      "source": "metrics-server",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "metrics-server",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "metrics-server",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "metrics-server",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "metrics-server",
+      "target": "src-metrics-server-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "milvus",
       "target": "agent-memory",
       "kind": "related"
@@ -7748,8 +9863,23 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "inference-perf",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "inference-routing",
       "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "jobset",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "karpenter",
+      "kind": "wikilink"
     },
     {
       "source": "model-serving-operator",
@@ -7765,6 +9895,11 @@
       "source": "model-serving-operator",
       "target": "kubernetes",
       "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "kueue",
+      "kind": "wikilink"
     },
     {
       "source": "model-serving-operator",
@@ -7788,6 +9923,11 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "llm-d-prism",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
@@ -7798,7 +9938,22 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "lws",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "metrics-server",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "ome",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "prometheus-adapter",
       "kind": "wikilink"
     },
     {
@@ -7910,6 +10065,41 @@
       "source": "nemoclaw",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "nfs-subdir-external-provisioner",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "nfs-subdir-external-provisioner",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "nfs-subdir-external-provisioner",
+      "target": "src-nfs-subdir-external-provisioner-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "src-node-feature-discovery-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "oceanbase",
@@ -8242,6 +10432,31 @@
       "kind": "wikilink"
     },
     {
+      "source": "prometheus-adapter",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "prometheus-adapter",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "prometheus-adapter",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "prometheus-adapter",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "prometheus-adapter",
+      "target": "src-prometheus-adapter-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "radix-attention",
       "target": "paged-attention",
       "kind": "related"
@@ -8347,6 +10562,61 @@
       "kind": "wikilink"
     },
     {
+      "source": "scheduler-plugins",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "src-scheduler-plugins-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "secrets-store-csi-driver",
+      "target": "agent-credential-isolation",
+      "kind": "related"
+    },
+    {
+      "source": "secrets-store-csi-driver",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "secrets-store-csi-driver",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "secrets-store-csi-driver",
+      "target": "src-secrets-store-csi-driver-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "security-profiles-operator",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "security-profiles-operator",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "security-profiles-operator",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "security-profiles-operator",
+      "target": "src-security-profiles-operator-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "semantic-router",
       "target": "ai-gateway",
       "kind": "related"
@@ -8395,6 +10665,31 @@
       "source": "sglang",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "sig-storage-lib-external-provisioner",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "sig-storage-lib-external-provisioner",
+      "target": "src-sig-storage-lib-external-provisioner-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sig-storage-local-static-provisioner",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "sig-storage-local-static-provisioner",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "sig-storage-local-static-provisioner",
+      "target": "src-sig-storage-local-static-provisioner-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "skypilot",
@@ -8902,6 +11197,21 @@
       "kind": "related"
     },
     {
+      "source": "src-apiserver-network-proxy-architecture",
+      "target": "apiserver-network-proxy",
+      "kind": "related"
+    },
+    {
+      "source": "src-apiserver-network-proxy-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-apiserver-network-proxy-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
       "source": "src-argocd-overview",
       "target": "gitops",
       "kind": "related"
@@ -9042,6 +11352,21 @@
       "kind": "related"
     },
     {
+      "source": "src-cluster-api-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-cluster-api-architecture",
+      "target": "cluster-api",
+      "kind": "related"
+    },
+    {
+      "source": "src-cluster-api-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
       "source": "src-code-review-graph-architecture",
       "target": "agent-skills-plugin-system-map",
       "kind": "related"
@@ -9137,6 +11462,61 @@
       "kind": "related"
     },
     {
+      "source": "src-controller-runtime-architecture",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-runtime-architecture",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-runtime-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-runtime-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-tools-architecture",
+      "target": "controller-tools",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-tools-architecture",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-tools-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-controller-tools-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-cri-tools-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-cri-tools-architecture",
+      "target": "cri-tools",
+      "kind": "related"
+    },
+    {
+      "source": "src-cri-tools-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
       "source": "src-deepwiki-open-architecture",
       "target": "ai-infra-learning-cn-map",
       "kind": "related"
@@ -9165,6 +11545,21 @@
       "source": "src-deepwiki-open-architecture",
       "target": "src-github-stars-backlog-current-state",
       "kind": "wikilink"
+    },
+    {
+      "source": "src-descheduler-architecture",
+      "target": "descheduler",
+      "kind": "related"
+    },
+    {
+      "source": "src-descheduler-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-descheduler-architecture",
+      "target": "llm-inference",
+      "kind": "related"
     },
     {
       "source": "src-dra-driver-nvidia-gpu-architecture",
@@ -9224,6 +11619,26 @@
     {
       "source": "src-dynamo-architecture",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "src-external-dns-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-external-dns-architecture",
+      "target": "external-dns",
+      "kind": "related"
+    },
+    {
+      "source": "src-external-dns-architecture",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "src-external-dns-architecture",
+      "target": "kubernetes",
       "kind": "related"
     },
     {
@@ -9432,6 +11847,21 @@
       "kind": "related"
     },
     {
+      "source": "src-headlamp-architecture",
+      "target": "headlamp",
+      "kind": "related"
+    },
+    {
+      "source": "src-headlamp-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-headlamp-architecture",
+      "target": "kubewall",
+      "kind": "related"
+    },
+    {
       "source": "src-hiclaw-architecture",
       "target": "HiClaw",
       "kind": "related"
@@ -9504,6 +11934,76 @@
     {
       "source": "src-holmesgpt-k8s-alerts",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-inference-perf-architecture",
+      "target": "inference-perf",
+      "kind": "related"
+    },
+    {
+      "source": "src-inference-perf-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-inference-perf-architecture",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "src-inference-perf-architecture",
+      "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "src-inference-perf-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-ingress2gateway-architecture",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "src-ingress2gateway-architecture",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "src-ingress2gateway-architecture",
+      "target": "ingress2gateway",
+      "kind": "related"
+    },
+    {
+      "source": "src-ingress2gateway-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-jobset-architecture",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-jobset-architecture",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "src-jobset-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-jobset-architecture",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "src-jobset-architecture",
+      "target": "llm-inference",
       "kind": "related"
     },
     {
@@ -9687,6 +12187,26 @@
       "kind": "wikilink"
     },
     {
+      "source": "src-karpenter-architecture",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "src-karpenter-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-karpenter-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-karpenter-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
       "source": "src-kgateway-architecture",
       "target": "agentgateway",
       "kind": "related"
@@ -9715,6 +12235,36 @@
       "source": "src-kgateway-architecture",
       "target": "src-github-stars-backlog-current-state",
       "kind": "wikilink"
+    },
+    {
+      "source": "src-kind-architecture",
+      "target": "kind",
+      "kind": "related"
+    },
+    {
+      "source": "src-kind-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kind-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-kro-architecture",
+      "target": "kro",
+      "kind": "related"
+    },
+    {
+      "source": "src-kro-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kro-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
     },
     {
       "source": "src-kserve-architecture",
@@ -9752,6 +12302,41 @@
       "kind": "related"
     },
     {
+      "source": "src-kube-agentic-networking-architecture",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-agentic-networking-architecture",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-agentic-networking-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-agentic-networking-architecture",
+      "target": "kube-agentic-networking",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-agentic-networking-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-scheduler-simulator-architecture",
+      "target": "kube-scheduler-simulator",
+      "kind": "related"
+    },
+    {
+      "source": "src-kube-scheduler-simulator-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
       "source": "src-kubeai-architecture",
       "target": "github-stars-backlog-implementation-map",
       "kind": "wikilink"
@@ -9779,6 +12364,26 @@
     {
       "source": "src-kubeai-architecture",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubebuilder-architecture",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubebuilder-architecture",
+      "target": "kubebuilder",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubebuilder-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubebuilder-architecture",
+      "target": "model-serving-operator",
       "kind": "related"
     },
     {
@@ -9812,6 +12417,21 @@
       "kind": "wikilink"
     },
     {
+      "source": "src-kubespray-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubespray-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubespray-architecture",
+      "target": "kubespray",
+      "kind": "related"
+    },
+    {
       "source": "src-kubewall-architecture",
       "target": "ai-ops",
       "kind": "related"
@@ -9835,6 +12455,61 @@
       "source": "src-kubewall-architecture",
       "target": "src-github-stars-backlog-current-state",
       "kind": "wikilink"
+    },
+    {
+      "source": "src-kueue-architecture",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-kueue-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kueue-architecture",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "src-kueue-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-kueue-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-kustomize-architecture",
+      "target": "gitops",
+      "kind": "related"
+    },
+    {
+      "source": "src-kustomize-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kustomize-architecture",
+      "target": "kustomize",
+      "kind": "related"
+    },
+    {
+      "source": "src-kwok-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-kwok-architecture",
+      "target": "kwok",
+      "kind": "related"
+    },
+    {
+      "source": "src-kwok-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
     },
     {
       "source": "src-llm-d-architecture",
@@ -10007,6 +12682,66 @@
       "kind": "related"
     },
     {
+      "source": "src-llm-d-latency-predictor-architecture",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-latency-predictor-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-latency-predictor-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-latency-predictor-architecture",
+      "target": "llm-d-latency-predictor",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-pd-utils-architecture",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-pd-utils-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-pd-utils-architecture",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-pd-utils-architecture",
+      "target": "llm-d-pd-utils",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-prism-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-prism-architecture",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-prism-architecture",
+      "target": "llm-d-prism",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-prism-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
       "source": "src-llm-d-router-architecture",
       "target": "agentgateway",
       "kind": "related"
@@ -10112,6 +12847,56 @@
       "kind": "related"
     },
     {
+      "source": "src-lws-architecture",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-lws-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-lws-architecture",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "src-lws-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-lws-architecture",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "src-mcp-lifecycle-operator-architecture",
+      "target": "agentgateway",
+      "kind": "related"
+    },
+    {
+      "source": "src-mcp-lifecycle-operator-architecture",
+      "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "src-mcp-lifecycle-operator-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-mcp-lifecycle-operator-architecture",
+      "target": "mcp",
+      "kind": "related"
+    },
+    {
+      "source": "src-mcp-lifecycle-operator-architecture",
+      "target": "mcp-lifecycle-operator",
+      "kind": "related"
+    },
+    {
       "source": "src-mem0-architecture",
       "target": "agent-memory-project-map",
       "kind": "related"
@@ -10210,6 +12995,31 @@
       "source": "src-memsearch-architecture",
       "target": "three-tier-search-protocol",
       "kind": "wikilink"
+    },
+    {
+      "source": "src-metrics-server-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-metrics-server-architecture",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "src-metrics-server-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-metrics-server-architecture",
+      "target": "metrics-server",
+      "kind": "related"
+    },
+    {
+      "source": "src-metrics-server-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
     },
     {
       "source": "src-multica-architecture",
@@ -10319,6 +13129,41 @@
     {
       "source": "src-nemoclaw-architecture",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "src-nfs-subdir-external-provisioner-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-nfs-subdir-external-provisioner-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-nfs-subdir-external-provisioner-architecture",
+      "target": "nfs-subdir-external-provisioner",
+      "kind": "related"
+    },
+    {
+      "source": "src-node-feature-discovery-architecture",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "src-node-feature-discovery-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-node-feature-discovery-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-node-feature-discovery-architecture",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -10582,6 +13427,31 @@
       "kind": "related"
     },
     {
+      "source": "src-prometheus-adapter-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-prometheus-adapter-architecture",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "src-prometheus-adapter-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-prometheus-adapter-architecture",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "src-prometheus-adapter-architecture",
+      "target": "prometheus-adapter",
+      "kind": "related"
+    },
+    {
       "source": "src-reme-architecture",
       "target": "agent-memory-selection-matrix",
       "kind": "related"
@@ -10657,6 +13527,61 @@
       "kind": "wikilink"
     },
     {
+      "source": "src-scheduler-plugins-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-scheduler-plugins-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-scheduler-plugins-architecture",
+      "target": "scheduler-plugins",
+      "kind": "related"
+    },
+    {
+      "source": "src-secrets-store-csi-driver-architecture",
+      "target": "agent-credential-isolation",
+      "kind": "related"
+    },
+    {
+      "source": "src-secrets-store-csi-driver-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-secrets-store-csi-driver-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-secrets-store-csi-driver-architecture",
+      "target": "secrets-store-csi-driver",
+      "kind": "related"
+    },
+    {
+      "source": "src-security-profiles-operator-architecture",
+      "target": "agent-sandbox",
+      "kind": "related"
+    },
+    {
+      "source": "src-security-profiles-operator-architecture",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-security-profiles-operator-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-security-profiles-operator-architecture",
+      "target": "security-profiles-operator",
+      "kind": "related"
+    },
+    {
       "source": "src-semantic-router-architecture",
       "target": "github-stars-backlog-implementation-map",
       "kind": "wikilink"
@@ -10709,6 +13634,31 @@
     {
       "source": "src-sglang-architecture",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "src-sig-storage-lib-external-provisioner-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-sig-storage-lib-external-provisioner-architecture",
+      "target": "sig-storage-lib-external-provisioner",
+      "kind": "related"
+    },
+    {
+      "source": "src-sig-storage-local-static-provisioner-architecture",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-sig-storage-local-static-provisioner-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-sig-storage-local-static-provisioner-architecture",
+      "target": "sig-storage-local-static-provisioner",
       "kind": "related"
     },
     {
@@ -11041,7 +13991,7 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 71
+      "count": 106
     },
     {
       "id": "concepts",
@@ -11051,7 +14001,7 @@
     {
       "id": "sources",
       "label": "源文件",
-      "count": 72
+      "count": 107
     },
     {
       "id": "analysis",

@@ -14,6 +14,36 @@ date: 2026-05-12
 - [[kubectl-ai]] — kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）
 - [[k8m]] — 轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）
 - [[kubewall]] — single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照
+- [[kueue]] — Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。
+- [[karpenter]] — Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。
+- [[metrics-server]] — Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k8s.io`，供 HPA/VPA/kubectl top 使用。
+- [[prometheus-adapter]] — Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。
+- [[lws]] — LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。
+- [[jobset]] — JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。
+- [[controller-runtime]] — controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。
+- [[kubebuilder]] — Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。
+- [[controller-tools]] — controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。
+- [[cluster-api]] — Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。
+- [[external-dns]] — ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。
+- [[secrets-store-csi-driver]] — Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。
+- [[kind]] — kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。
+- [[scheduler-plugins]] — scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。
+- [[kubespray]] — Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。
+- [[cri-tools]] — CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。
+- [[ingress2gateway]] — ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。
+- [[apiserver-network-proxy]] — apiserver-network-proxy 通过 konnectivity server/agent 建立 apiserver 到节点网络的反向隧道，适合托管集群或私有节点网络。
+- [[kube-agentic-networking]] — kube-agentic-networking 为 Kubernetes 中 agents/tools 提供 agentic networking policies and governance，面向 AI Agent 出口、工具调用和网络权限边界。
+- [[nfs-subdir-external-provisioner]] — NFS Subdir External Provisioner 在远端 NFS server 上为 PVC 动态创建子目录，是轻量实验/中小集群常见 storage class。
+- [[sig-storage-local-static-provisioner]] — Local Static Provisioner 发现节点本地磁盘/目录并创建 local PersistentVolume，配合调度绑定把数据固定到节点。
+- [[sig-storage-lib-external-provisioner]] — sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。
+- [[descheduler]] — Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。
+- [[kwok]] — KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。
+- [[node-feature-discovery]] — Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。
+- [[kube-scheduler-simulator]] — kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。
+- [[headlamp]] — Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。
+- [[security-profiles-operator]] — Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。
+- [[kustomize]] — Kustomize 用 overlay/patch/transformer 管理 Kubernetes YAML 差异，是 kubectl 原生支持的配置定制工具链。
+- [[kro]] — KRO（Kube Resource Orchestrator）用 ResourceGraphDefinition 把多个 Kubernetes resources 组合成更高层 API。
 
 ### Coding Agent / Agent 生态
 - [[claude-code]] — Anthropic 出品的 CLI AI Agent，提供 Lifecycle Hook 插件机制
@@ -51,6 +81,7 @@ date: 2026-05-12
 - [[memsearch]] — Zilliz 出品的跨平台 AI coding agent 语义记忆系统（Markdown source-of-truth + Milvus hybrid search + progressive recall）
 - [[tencentdb-agent-memory]] — 腾讯云出品的 OpenClaw / Hermes Agent 记忆插件（L0→L3 分层长期记忆 + Mermaid context offload + SQLite/TCVDB hybrid search）
 - [[agentmemory]] — Rohit Ghumare 出品的本地化跨 Agent 记忆服务（TS + iii-engine + SQLite，三流 RRF + 零 LLM 默认）
+- [[mcp-lifecycle-operator]] — MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。
 
 ### LLM Serving / AI Gateway
 - [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
@@ -62,6 +93,10 @@ date: 2026-05-12
 - [[llm-d-benchmark]] — llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）
 - [[llm-d-workload-variant-autoscaler]] — llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）
 - [[llm-d-inference-sim]] — 无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）
+- [[inference-perf]] — GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。
+- [[llm-d-latency-predictor]] — llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency scoring service，用预测延迟信号增强 endpoint picking。
+- [[llm-d-prism]] — llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。
+- [[llm-d-pd-utils]] — llm-d P/D Utils 是面向 Prefill/Decode 分离部署的 skills/scripts 工具集，用于 preflight、GPU topology、RDMA/NCCL/network/NIXL 等诊断。
 - [[skypilot]] — AI/ML 多云算力控制平面（Task/Dag/Resources + Optimizer + CloudVmRayBackend）
 - [[kagent]] — Cloud Native agentic AI 操作层（Go control plane + Python/ADK packages + Kubernetes/DevOps tools）
 - [[gateway-api-inference-extension]] — Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）
@@ -177,6 +212,41 @@ date: 2026-05-12
 - [[src-llm-d-benchmark-architecture]] — llm-d Benchmark 架构（HEAD `bd8dc5e`，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）
 - [[src-llm-d-workload-variant-autoscaler-architecture]] — llm-d WVA 架构（HEAD `526ce85`，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）
 - [[src-llm-d-inference-sim-architecture]] — llm-d Inference Sim 架构（HEAD `6fb66f3`，无 GPU vLLM 行为模拟：OpenAI/vLLM API、KV cache events、latency/failure/metrics）
+- [[src-kueue-architecture]] — Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）
+- [[src-karpenter-architecture]] — Karpenter 架构（P0，节点弹性 / 成本：Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。）
+- [[src-metrics-server-architecture]] — metrics-server 架构（P0，可观测 / autoscaling：Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k8s.io`，供 HPA/VPA/kubectl top 使用。）
+- [[src-prometheus-adapter-architecture]] — prometheus-adapter 架构（P0，custom/external metrics：Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。）
+- [[src-inference-perf-architecture]] — inference-perf 架构（P1，GenAI benchmark：GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。）
+- [[src-lws-architecture]] — LeaderWorkerSet 架构（P1，分布式 workload API：LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。）
+- [[src-jobset-architecture]] — JobSet 架构（P1，分布式 workload API：JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。）
+- [[src-controller-runtime-architecture]] — controller-runtime 架构（P0，Operator SDK：controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。）
+- [[src-kubebuilder-architecture]] — Kubebuilder 架构（P0，CRD / controller 脚手架：Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。）
+- [[src-controller-tools-architecture]] — controller-tools 架构（P0，API 生成工具：controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。）
+- [[src-cluster-api-architecture]] — Cluster API 架构（P0，集群生命周期：Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。）
+- [[src-external-dns-architecture]] — external-dns 架构（P0，网络 / DNS：ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。）
+- [[src-secrets-store-csi-driver-architecture]] — Secrets Store CSI Driver 架构（P0，存储 / 凭据：Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。）
+- [[src-kind-architecture]] — kind 架构（P0，计算 / 测试集群：kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。）
+- [[src-scheduler-plugins-architecture]] — scheduler-plugins 架构（P0，调度 / 资源：scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。）
+- [[src-kubespray-architecture]] — Kubespray 架构（P0，计算 / 集群部署：Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。）
+- [[src-cri-tools-architecture]] — CRI Tools 架构（P0，计算 / Runtime：CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。）
+- [[src-llm-d-latency-predictor-architecture]] — llm-d Latency Predictor 架构（P1，latency predictor：llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency scoring service，用预测延迟信号增强 endpoint picking。）
+- [[src-llm-d-prism-architecture]] — llm-d Prism 架构（P1，performance analysis：llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。）
+- [[src-llm-d-pd-utils-architecture]] — llm-d P/D Utils 架构（P1，P/D diagnostics：llm-d P/D Utils 是面向 Prefill/Decode 分离部署的 skills/scripts 工具集，用于 preflight、GPU topology、RDMA/NCCL/network/NIXL 等诊断。）
+- [[src-ingress2gateway-architecture]] — ingress2gateway 架构（P1，Ingress -> Gateway API migration：ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。）
+- [[src-apiserver-network-proxy-architecture]] — apiserver-network-proxy 架构（P1，control plane network proxy：apiserver-network-proxy 通过 konnectivity server/agent 建立 apiserver 到节点网络的反向隧道，适合托管集群或私有节点网络。）
+- [[src-kube-agentic-networking-architecture]] — kube-agentic-networking 架构（P1，Agent networking governance：kube-agentic-networking 为 Kubernetes 中 agents/tools 提供 agentic networking policies and governance，面向 AI Agent 出口、工具调用和网络权限边界。）
+- [[src-nfs-subdir-external-provisioner-architecture]] — NFS Subdir External Provisioner 架构（P1，NFS dynamic provisioning：NFS Subdir External Provisioner 在远端 NFS server 上为 PVC 动态创建子目录，是轻量实验/中小集群常见 storage class。）
+- [[src-sig-storage-local-static-provisioner-architecture]] — Local Static Provisioner 架构（P1，Local PV static provisioning：Local Static Provisioner 发现节点本地磁盘/目录并创建 local PersistentVolume，配合调度绑定把数据固定到节点。）
+- [[src-sig-storage-lib-external-provisioner-architecture]] — sig-storage-lib-external-provisioner 架构（P1，external provisioner library：sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。）
+- [[src-descheduler-architecture]] — Descheduler 架构（P1，调度后优化：Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。）
+- [[src-kwok-architecture]] — KWOK 架构（P1，大规模集群模拟：KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。）
+- [[src-node-feature-discovery-architecture]] — Node Feature Discovery 架构（P1，节点能力发现：Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。）
+- [[src-kube-scheduler-simulator-architecture]] — kube-scheduler-simulator 架构（P1，scheduler 可视化模拟：kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。）
+- [[src-headlamp-architecture]] — Headlamp 架构（P1，Kubernetes UI：Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。）
+- [[src-security-profiles-operator-architecture]] — Security Profiles Operator 架构（P1，Runtime security：Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。）
+- [[src-kustomize-architecture]] — Kustomize 架构（P1，配置管理：Kustomize 用 overlay/patch/transformer 管理 Kubernetes YAML 差异，是 kubectl 原生支持的配置定制工具链。）
+- [[src-kro-architecture]] — KRO 架构（P1，higher-level API orchestration：KRO（Kube Resource Orchestrator）用 ResourceGraphDefinition 把多个 Kubernetes resources 组合成更高层 API。）
+- [[src-mcp-lifecycle-operator-architecture]] — MCP Lifecycle Operator 架构（P1，MCP lifecycle：MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。）
 - [[src-kagent-architecture]] — kagent 架构（HEAD `feb8cf9`，Cloud Native agentic AI：Go control plane + Python/ADK packages + Helm/UI/tools，把 Kubernetes/DevOps 工作流包装成 agentic 操作层）
 - [[src-kubectl-ai-architecture]] — kubectl-ai 架构（HEAD `08cf256`，kubectl 入口的 Kubernetes AI assistant：Go CLI + agent/session/journal + built-in bash/kubectl tools + MCP server mode）
 - [[src-k8m-architecture]] — k8m 架构（HEAD `718e894`，Mini Kubernetes AI Dashboard：Go backend + UI + plugins/MCP + 多集群/权限/异常检测入口）
@@ -236,13 +306,13 @@ date: 2026-05-12
 以下实体/概念在文章中被提及但尚未建页：
 
 ### 云原生
-- controller-runtime / kubebuilder / client-go — Kubernetes controller/operator 开发核心工具链
-- controller-tools / cluster-api / kustomize / kro — Kubernetes API、控制器生成、集群生命周期和资源编排候选（详见 [[llm-d-kubernetes-sigs-candidate-map]]）
-- external-dns / aws-load-balancer-controller / ingress2gateway / apiserver-network-proxy — Kubernetes 网络、DNS、LB、Ingress→Gateway API 迁移候选
-- secrets-store-csi-driver / aws-ebs-csi-driver / aws-efs-csi-driver / nfs-subdir-external-provisioner — Kubernetes 存储、CSI 和 secret 注入候选
-- kueue / karpenter / scheduler-plugins / descheduler / kwok / node-feature-discovery — Kubernetes 调度、队列、弹性和节点能力发现候选
-- metrics-server / prometheus-adapter / inference-perf / usage-metrics-collector — Kubernetes 可观测、autoscaling metrics 和 GenAI benchmark 候选
-- kind / kubespray / cri-tools / security-profiles-operator / LeaderWorkerSet / JobSet — Kubernetes 计算、runtime、集群部署和分布式 workload API 候选
+- client-go — Kubernetes controller/operator 底层 client/informer/workqueue 基座（controller-runtime/kubebuilder/controller-tools 已建页）
+- client-go / sample-controller — Kubernetes controller 底层学习材料（其余 P0/P1 controller/API 项目已建页）
+- aws-load-balancer-controller — 用户明确暂不需要；网络 P0/P1 其余候选已建页
+- aws-ebs-csi-driver / aws-efs-csi-driver — 用户明确暂不需要；存储 P0/P1 其余候选已建页
+- 调度/队列/弹性 P0/P1 候选已建页：[[kueue]] / [[karpenter]] / [[scheduler-plugins]] / [[descheduler]] / [[kwok]] / [[node-feature-discovery]]
+- usage-metrics-collector — P2 容量/使用率指标候选；metrics-server/prometheus-adapter/inference-perf 已建页
+- 计算/runtime/分布式 workload P0/P1 候选已建页：[[kind]] / [[kubespray]] / [[cri-tools]] / [[security-profiles-operator]] / [[lws]] / [[jobset]]
 - opentelemetry — 可观测性框架
 - ebpf — 内核级可编程技术
 - ingress-nginx — 已退役的 K8s 入口控制器
@@ -272,5 +342,5 @@ date: 2026-05-12
 - kine — SQLite-backed etcd 协议层（HiClaw 嵌入式模式）
 - autogen / langgraph / crewai — 多 Agent 框架同类对比项
 - ai-infra-learning-cn — 中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 [[ai-infra-learning-cn-map]]）
-- llm-d-latency-predictor / llm-d-prism / llm-d-pd-utils / llm-d-inference-payload-processor — llm-d P1/P2 后续外围组件（latency scoring、performance dashboard、P/D diagnostics、payload processor，详见 [[llm-d-kubernetes-sigs-candidate-map]]）
-- mcp-lifecycle-operator / kube-agentic-networking / ai-conformance — Kubernetes SIGs 中与 MCP、Agent networking、AI conformance 相关的交叉候选
+- llm-d-inference-payload-processor — llm-d P2 payload processor 后续候选；llm-d P1 latency/prism/pd-utils 已建页
+- ai-conformance — Kubernetes SIGs AI conformance P2 候选；[[mcp-lifecycle-operator]] / [[kube-agentic-networking]] 已建页

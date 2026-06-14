@@ -37,3 +37,8 @@ Model serving operator 是在 Kubernetes 上声明式管理模型、runtime、en
 | Simulator | [[llm-d-inference-sim]] | 不是真实模型服务，用于验证 controller/router/benchmark 闭环。 |
 
 选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark、simulator、variant autoscaling 分别补异步任务、评测、测试替身和资源经济。
+
+
+## 和 Kubernetes 调度/指标外围的关系
+
+模型服务 operator 只管理模型服务生命周期还不够。[[kueue]] / [[jobset]] / [[lws]] 决定 batch 和分布式 workload 怎么表达与入队；[[karpenter]] 决定节点容量怎样按 pending pods 扩出；[[metrics-server]] / [[prometheus-adapter]] 决定 autoscaling 能看到哪些指标；[[inference-perf]] / [[llm-d-prism]] 决定实验结果怎样被复现和分析。
