@@ -33,25 +33,29 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Security Profiles Operator │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ CRDs: Secc │ │ Daemon/control │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Recorder:  │ │ Admission/prof │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime security policy intent                                             │
+│ Platform teams define seccomp, AppArmor, SELinux, or recording behavior.   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Security Profiles Operator APIs                                            │
+│ Profiles, bindings, recordings, and status are represented as Kubernetes   │
+│ objects.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Controller and node delivery                                               │
+│ Profiles are generated or installed on nodes and attached to workloads.    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ kubelet and container runtime enforce workload security profiles.          │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

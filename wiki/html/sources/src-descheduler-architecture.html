@@ -33,25 +33,30 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Descheduler                │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Policy con │ │ Strategies: re │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Evictor: s │ │ CronJob/contro │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Cluster state drift                                                        │
+│ Initial scheduling decisions become suboptimal after node or workload      │
+│ changes.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ descheduler policy engine                                                  │
+│ Strategies detect imbalance, policy violations, or removable Pods.         │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Eviction control                                                           │
+│ Evicts eligible Pods while respecting PDBs, priorities, namespaces, and    │
+│ safety limits.                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ kube-scheduler places replacement Pods using current cluster state.        │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

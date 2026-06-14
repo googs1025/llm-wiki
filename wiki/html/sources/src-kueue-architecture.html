@@ -33,25 +33,31 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Kueue                      │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ API: Clust │ │ Controller: wo │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Integratio │ │ Scheduler-like │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Batch / AI / HPC workload intent                                           │
+│ Users submit Jobs, JobSets, RayJobs, MPIJobs, or PyTorchJobs.              │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Kueue APIs                                                                 │
+│ ClusterQueue, LocalQueue, Workload, and ResourceFlavor model quota and     │
+│ admission.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Admission and quota control                                                │
+│ Workload admission, cohort borrowing, fair sharing, flavor assignment, and │
+│ preemption.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Admitted workloads flow to Kubernetes scheduler and normal cluster         │
+│ runtime.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

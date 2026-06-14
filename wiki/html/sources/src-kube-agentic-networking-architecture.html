@@ -33,25 +33,30 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>kube-agentic-networking 为 Kubernetes 中 agents/tools 提供 agentic networking policies and governance，面向 AI Agent 出口、工具调用和网络权限边界。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ kube-agentic-networking    │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ CRD/polici │ │ Controller: po │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Gateway/ne │ │ Audit/governan │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Agent communication policy intent                                          │
+│ Agents, tools, sandboxes, and services need explicit network governance.   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ kube-agentic-networking APIs                                               │
+│ CRDs represent agent/tool identity, endpoint scope, and permitted          │
+│ communication.                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Policy controller                                                          │
+│ Generates or coordinates network policy, gateway, and isolation artifacts. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Kubernetes networking, agent sandboxes, MCP tools, and gateways enforce    │
+│ the policy.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

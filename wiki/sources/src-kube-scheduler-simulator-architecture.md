@@ -17,25 +17,30 @@ kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ kube-scheduler-simulator   │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Simulator  │ │ Scheduler inte │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Frontend v │ │ Scenario objec │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Scheduler scenario                                                         │
+│ Users define nodes, pods, scheduler config, and policy experiments.        │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Simulator backend                                                          │
+│ Runs scheduler logic and captures filter, score, bind, and decision        │
+│ traces.                                                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Visualization frontend                                                     │
+│ Shows scheduling timeline, plugin results, and object state changes.       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ Scheduler policy debugging and education without requiring a real workload │
+│ cluster.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

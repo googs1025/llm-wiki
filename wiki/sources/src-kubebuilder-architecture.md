@@ -17,25 +17,31 @@ Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Kubebuilder                │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ CLI scaffo │ │ API markers: k │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Project la │ │ Generation: CR │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Operator author workflow                                                   │
+│ kubebuilder init and create api define a project, API types, and           │
+│ controllers.                                                               │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Scaffolded project                                                         │
+│ Project layout, controller-runtime Manager, Reconciler, tests, and config  │
+│ tree.                                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Generation toolchain                                                       │
+│ controller-tools markers generate CRDs, RBAC, webhooks, deepcopy, and      │
+│ manifests.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ Controller image and installable Kubernetes manifests for an operator.     │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

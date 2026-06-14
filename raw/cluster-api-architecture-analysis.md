@@ -9,25 +9,31 @@ Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Cluster API                │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Core API:  │ │ Providers: inf │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Controller │ │ Clusterctl: pr │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Declarative cluster lifecycle intent                                       │
+│ Platform teams describe desired workload clusters and machines.            │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Cluster API core                                                           │
+│ Cluster, Machine, MachineDeployment, MachineSet, and related lifecycle     │
+│ controllers.                                                               │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Provider contracts                                                         │
+│ Infrastructure, bootstrap, and control-plane providers implement           │
+│ environment details.                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ A management cluster continuously reconciles workload clusters and         │
+│ machines.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

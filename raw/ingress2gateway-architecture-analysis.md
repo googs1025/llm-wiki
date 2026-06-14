@@ -9,25 +9,32 @@ ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ ingress2gateway            │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Parser: 读取 │ │ Provider trans │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Gateway AP │ │ CLI/report: 迁移 │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Existing Ingress estate                                                    │
+│ Clusters have Ingress objects plus controller-specific annotations and     │
+│ behaviors.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ingress2gateway converter                                                  │
+│ Reads Ingress resources and provider plugins to infer Gateway API          │
+│ equivalents.                                                               │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Generated Gateway API                                                      │
+│ Gateway, HTTPRoute, and related resources plus migration gaps and          │
+│ unsupported fields.                                                        │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ Gateway API adoption plan that still requires validation against real      │
+│ traffic behavior.                                                          │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

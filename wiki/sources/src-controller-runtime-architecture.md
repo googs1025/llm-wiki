@@ -17,25 +17,31 @@ controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ controller-runtime         │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Manager: l │ │ Cache/Client:  │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Controller │ │ Webhook/envtes │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Custom controller binary                                                   │
+│ Operator code is built around controller-runtime primitives.               │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Manager                                                                    │
+│ Scheme, leader election, metrics, health probes, webhooks, cache, and      │
+│ lifecycle.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Controller layer                                                           │
+│ Informer cache, typed client, workqueue, reconciler, retry, status, and    │
+│ finalizers.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Kubernetes API server, admission webhooks, and envtest form the execution  │
+│ surface.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

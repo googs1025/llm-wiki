@@ -17,25 +17,30 @@ GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serv
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ inference-perf             │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ CLI/config │ │ Load generator │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Metrics co │ │ Reports: 结果输出供 │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Benchmark plan                                                             │
+│ Model, endpoint, prompt mix, concurrency, request rate, and duration       │
+│ define the run.                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ inference-perf runner                                                      │
+│ Generates inference load and captures latency, throughput, token, and      │
+│ error data.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Target serving stack                                                       │
+│ llm-d, vLLM, SGLang, KServe, AIBrix, or compatible OpenAI-style endpoints. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ Comparable performance reports for tuning routing, batching, and capacity. │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

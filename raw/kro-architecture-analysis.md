@@ -9,25 +9,31 @@ KRO（Kube Resource Orchestrator）用 ResourceGraphDefinition 把多个 Kuberne
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ KRO                        │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ ResourceGr │ │ Controller: gr │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Generated  │ │ Status/value p │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Higher-level platform API intent                                           │
+│ A team defines a ResourceGraphDefinition for application or platform       │
+│ abstractions.                                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ KRO controller                                                             │
+│ Expands graph definitions, reconciles dependencies, and tracks composed    │
+│ resource status.                                                           │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Generated API surface                                                      │
+│ Application teams create simpler custom resources backed by multiple       │
+│ Kubernetes objects.                                                        │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ The composed Kubernetes resources implement the higher-level API contract. │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

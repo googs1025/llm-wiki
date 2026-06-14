@@ -17,25 +17,29 @@ CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Ru
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ CRI Tools                  │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ crictl: in │ │ critest: CRI c │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Runtime en │ │ Kubelet/runtim │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime debugging or validation need                                       │
+│ Operators and CI need direct access to the CRI boundary.                   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ cri-tools                                                                  │
+│ crictl offers CLI inspection; critest validates CRI runtime behavior.      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CRI endpoint                                                               │
+│ containerd, CRI-O, or another runtime exposes pods, containers, images,    │
+│ logs, exec, and stats.                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ kubelet/runtime boundary diagnosis and conformance-style validation.       │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

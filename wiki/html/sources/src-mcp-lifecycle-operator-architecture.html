@@ -33,25 +33,32 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ MCP Lifecycle Operator     │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ MCPServer- │ │ Controller: de │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Integratio │ │ Production aut │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ MCP server lifecycle intent                                                │
+│ Platform teams declare tool server version, config, rollout, security, and │
+│ readiness.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ MCP Lifecycle Operator                                                     │
+│ Controllers reconcile MCP server deployment, service, config, secrets, and │
+│ status.                                                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Operational automation                                                     │
+│ Health checks, rollout control, version state, and production lifecycle    │
+│ behavior.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ Agents, gateways, auth layers, and MCP clients discover and use the        │
+│ managed tool servers.                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

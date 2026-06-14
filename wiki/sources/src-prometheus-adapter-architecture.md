@@ -17,25 +17,29 @@ Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ prometheus-adapter         │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Discovery: │ │ Mapper: series │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ APIService │ │ Query renderer │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Prometheus metrics                                                         │
+│ Application, queue, GPU, request, and serving metrics live in Prometheus.  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ prometheus-adapter                                                         │
+│ Rule mapping converts PromQL results into Kubernetes aggregated metrics    │
+│ APIs.                                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Metrics API surface                                                        │
+│ custom.metrics.k8s.io and external.metrics.k8s.io expose selected series.  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ HPA and custom autoscalers scale workloads from domain-specific signals.   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

@@ -9,25 +9,29 @@ Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ metrics-server             │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Scraper: 周 │ │ Storage: 只保留最新 │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ APIService │ │ Consumers: HPA │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Node resource usage                                                        │
+│ Kubelets expose CPU and memory usage through stats and summary APIs.       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ metrics-server                                                             │
+│ Scrapes kubelets, normalizes samples, and serves an aggregated APIService. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Resource metrics API                                                       │
+│ metrics.k8s.io backs kubectl top and basic Kubernetes autoscaling.         │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ HPA, VPA, dashboards, and platform controllers read current resource       │
+│ metrics.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

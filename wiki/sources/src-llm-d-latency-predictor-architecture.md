@@ -17,25 +17,29 @@ llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency sc
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ llm-d Latency Predictor    │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Service AP │ │ Model/features │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Integratio │ │ Training/evalu │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Inference scheduling context                                               │
+│ Request features, current load, cache state, and serving configuration     │
+│ affect latency.                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Latency predictor service                                                  │
+│ Extracts features and predicts latency or cost for candidate endpoints.    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Training and evaluation path                                               │
+│ Historical request data and benchmark traces calibrate prediction quality. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumer                                                                   │
+│ llm-d router or scheduler uses scores to choose an endpoint or route.      │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层
