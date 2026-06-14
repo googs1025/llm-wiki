@@ -2,15 +2,15 @@
 title: llm-d / Kubernetes SIGs 候选项目地图
 tags: [kubernetes, llm-serving, project-map, backlog, ai-infra]
 date: 2026-06-13
-sources: [src-k8s-core-controllers-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture]
-related: [[llm-d]], [[kubernetes]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-inference-serving-project-map]], [[model-serving-operator]], [[inference-routing]]
+sources: [src-k8s-core-controllers-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
+related: [[llm-d]], [[kubernetes]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-inference-serving-project-map]], [[model-serving-operator]], [[inference-routing]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
 ---
 
 # llm-d / Kubernetes SIGs 候选项目地图
 
 这页把 `llm-d` 组织和 `kubernetes-sigs` 组织里值得继续加入 wiki 的项目，按工程维度拆成候选清单。它不是 star 排行榜，而是服务于当前知识库的补全路线：哪些项目能帮助理解 [[llm-inference]]、[[model-serving-operator]]、[[kubernetes-dra]]、[[inference-routing]]、[[cloud-native-security]] 和 Kubernetes 控制器生态。
 
-本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 [[llm-d]]、[[gateway-api]]、[[gateway-api-inference-extension]]、[[agent-sandbox]]、[[dra-driver-nvidia-gpu]]。
+本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 [[llm-d]]、[[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-workload-variant-autoscaler]]、[[llm-d-inference-sim]]、[[gateway-api]]、[[gateway-api-inference-extension]]、[[agent-sandbox]]、[[dra-driver-nvidia-gpu]]。
 
 ## 总体优先级
 
@@ -22,10 +22,10 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 | 优先级 | 项目 | 维度 | 加入价值 |
 |---|---|---|---|
-| P0 | `llm-d-batch-gateway` | LLM batch serving | 把 [[llm-d]] 从在线 inference 扩展到 OpenAI Batch API / 离线 batch workload。 |
-| P0 | `llm-d-benchmark` | LLM serving benchmark | 作为 [[llm-inference-serving-project-map]] 的性能评测入口。 |
-| P0 | `llm-d-workload-variant-autoscaler` | serving autoscaling | 补齐 variant / workload autoscaling，和 `Kueue`、`Karpenter` 形成资源经济链路。 |
-| P0 | `llm-d-inference-sim` | inference simulator | 无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。 |
+| P0 已完成 | [[llm-d-batch-gateway]] | LLM batch serving | 已补正式源码架构页，把 [[llm-d]] 从在线 inference 扩展到 OpenAI Batch API / 离线 batch workload。 |
+| P0 已完成 | [[llm-d-benchmark]] | LLM serving benchmark | 已补正式源码架构页，作为 [[llm-inference-serving-project-map]] 的性能评测入口。 |
+| P0 已完成 | [[llm-d-workload-variant-autoscaler]] | serving autoscaling | 已补正式源码架构页，补齐 variant / workload autoscaling 和资源经济链路。 |
+| P0 已完成 | [[llm-d-inference-sim]] | inference simulator | 已补正式源码架构页，无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。 |
 | P0 | `kueue` | 调度 / 队列 | K8s 原生 Job queueing，是 AI/HPC/batch workload 控制面的核心项目。 |
 | P0 | `karpenter` | 节点弹性 / 成本 | Node autoscaler，连接 serving SLO、GPU 成本和容量弹性。 |
 | P0 | `controller-runtime` | Operator SDK | 现代 K8s controller 的通用抽象层，当前大量实体页都依赖它。 |
@@ -39,10 +39,10 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 | 项目 | 优先级 | 当前定位 | 应放入的 wiki 主题 |
 |---|---|---|---|
-| `llm-d-batch-gateway` | P0 | OpenAI-compatible `/v1/batches` 和 `/v1/files`，把 batch job 分成 API server、processor、dispatcher 等组件。 | [[llm-inference-serving-project-map]]、batch inference、[[model-serving-operator]] |
-| `llm-d-benchmark` | P0 | llm-d benchmark scripts/tooling。 | LLM serving benchmark、[[llm-inference]] |
-| `llm-d-workload-variant-autoscaler` | P0 | distributed inference workload variant autoscaler。 | autoscaling、K8s resource economics、[[model-serving-operator]] |
-| `llm-d-inference-sim` | P0 | 轻量模拟 vLLM 行为，不需要 GPU 或真实大模型。 | simulator、scheduler、benchmark |
+| [[llm-d-batch-gateway]] | P0 已完成 | OpenAI-compatible `/v1/batches` 和 `/v1/files`，把 batch job 分成 API server、processor、queue、storage、GC 等组件。 | [[llm-inference-serving-project-map]]、[[batch-inference]]、[[model-serving-operator]] |
+| [[llm-d-benchmark]] | P0 已完成 | llm-d benchmark lifecycle/workspace/harness 编排。 | LLM serving benchmark、[[llm-inference]] |
+| [[llm-d-workload-variant-autoscaler]] | P0 已完成 | distributed inference workload variant autoscaler。 | autoscaling、K8s resource economics、[[model-serving-operator]] |
+| [[llm-d-inference-sim]] | P0 已完成 | 轻量模拟 vLLM 行为，不需要 GPU 或真实大模型。 | simulator、scheduler、benchmark |
 | `llm-d-latency-predictor` | P1 | 给 inference scheduler 的 ML-based latency scoring service。 | latency predictor、[[inference-routing]] |
 | `llm-d-prism` | P1 | 分布式推理性能分析 dashboard，把 benchmark 数据做交互式分析。 | observability、performance analysis |
 | `llm-d-pd-utils` | P1 | Agentic Skills + scripts，用于 P/D 部署 preflight、GPU topology、RDMA/NCCL/network tests。 | P/D diagnostics、GPU/network validation |
@@ -53,11 +53,11 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 ### llm-d 的知识结构缺口
 
-当前 wiki 已经覆盖 [[llm-d]] 总入口、Router/EPP 和 KV cache。缺的是四类外围能力：
+当前 wiki 已经覆盖 [[llm-d]] 总入口、Router/EPP、KV cache 和 P0 四类外围能力：
 
-- **Batch inference**：`llm-d-batch-gateway` 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。
-- **Performance evaluation**：`llm-d-benchmark` / `llm-d-prism` / `llm-d-inference-sim` 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。
-- **Autoscaling/resource economics**：`llm-d-workload-variant-autoscaler` 可连接 `Kueue`、`Karpenter`、GPU 资源层。
+- **Batch inference**：[[llm-d-batch-gateway]] 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。
+- **Performance evaluation**：[[llm-d-benchmark]] / `llm-d-prism` / [[llm-d-inference-sim]] 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。
+- **Autoscaling/resource economics**：[[llm-d-workload-variant-autoscaler]] 可连接 `Kueue`、`Karpenter`、GPU 资源层。
 - **P/D deployment diagnostics**：`llm-d-pd-utils` 把 GPU topology、RDMA、NCCL、NIXL 等实际部署问题显性化。
 
 ## Kubernetes SIGs 候选：按工程维度
@@ -148,10 +148,10 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 ### 第一批：直接补 AI Infra 选型缺口
 
-1. `llm-d-batch-gateway`
-2. `llm-d-benchmark`
-3. `llm-d-workload-variant-autoscaler`
-4. `llm-d-inference-sim`
+1. [[llm-d-batch-gateway]]（已完成）
+2. [[llm-d-benchmark]]（已完成）
+3. [[llm-d-workload-variant-autoscaler]]（已完成）
+4. [[llm-d-inference-sim]]（已完成）
 5. `kueue`
 6. `karpenter`
 7. `metrics-server`

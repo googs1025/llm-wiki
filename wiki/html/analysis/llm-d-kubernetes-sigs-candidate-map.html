@@ -23,12 +23,12 @@
 
   <header class="page-header">
     <h1>llm-d / Kubernetes SIGs 候选项目地图</h1>
-    <p class="page-meta">2026-06-13 · 来源：src-k8s-core-controllers-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture</p>
+    <p class="page-meta">2026-06-13 · 来源：src-k8s-core-controllers-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
     <div class="tags"><span class="tag">kubernetes</span><span class="tag">llm-serving</span><span class="tag">project-map</span><span class="tag">backlog</span><span class="tag">ai-infra</span></div>
   </header>
 
   <p>这页把 <code>llm-d</code> 组织和 <code>kubernetes-sigs</code> 组织里值得继续加入 wiki 的项目，按工程维度拆成候选清单。它不是 star 排行榜，而是服务于当前知识库的补全路线：哪些项目能帮助理解 <a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a>、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a>、<a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a>、<a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>、<a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a> 和 Kubernetes 控制器生态。</p>
-<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/gateway-api.html">gateway-api</a>、<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>、<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a>。</p>
+<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>、<a class="wikilink" href="../entities/gateway-api.html">gateway-api</a>、<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>、<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a>。</p>
 <h2 id="总体优先级">总体优先级</h2>
 <pre><code>P0: 直接补当前 AI Infra / LLM serving / K8s control plane 选型缺口
 P1: 强相关，但更偏评测、诊断、迁移、配套或特定场景
@@ -45,28 +45,28 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td>P0</td>
-<td><code>llm-d-batch-gateway</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
 <td>LLM batch serving</td>
-<td>把 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 从在线 inference 扩展到 OpenAI Batch API / 离线 batch workload。</td>
+<td>已补正式源码架构页，把 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 从在线 inference 扩展到 OpenAI Batch API / 离线 batch workload。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>llm-d-benchmark</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></td>
 <td>LLM serving benchmark</td>
-<td>作为 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 的性能评测入口。</td>
+<td>已补正式源码架构页，作为 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 的性能评测入口。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>llm-d-workload-variant-autoscaler</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
 <td>serving autoscaling</td>
-<td>补齐 variant / workload autoscaling，和 <code>Kueue</code>、<code>Karpenter</code> 形成资源经济链路。</td>
+<td>已补正式源码架构页，补齐 variant / workload autoscaling 和资源经济链路。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>llm-d-inference-sim</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></td>
 <td>inference simulator</td>
-<td>无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。</td>
+<td>已补正式源码架构页，无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。</td>
 </tr>
 <tr>
 <td>P0</td>
@@ -130,26 +130,26 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>llm-d-batch-gateway</code></td>
-<td>P0</td>
-<td>OpenAI-compatible <code>/v1/batches</code> 和 <code>/v1/files</code>，把 batch job 分成 API server、processor、dispatcher 等组件。</td>
-<td><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>、batch inference、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></td>
+<td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
+<td>P0 已完成</td>
+<td>OpenAI-compatible <code>/v1/batches</code> 和 <code>/v1/files</code>，把 batch job 分成 API server、processor、queue、storage、GC 等组件。</td>
+<td><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>、<a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a>、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></td>
 </tr>
 <tr>
-<td><code>llm-d-benchmark</code></td>
-<td>P0</td>
-<td>llm-d benchmark scripts/tooling。</td>
+<td><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></td>
+<td>P0 已完成</td>
+<td>llm-d benchmark lifecycle/workspace/harness 编排。</td>
 <td>LLM serving benchmark、<a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></td>
 </tr>
 <tr>
-<td><code>llm-d-workload-variant-autoscaler</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
+<td>P0 已完成</td>
 <td>distributed inference workload variant autoscaler。</td>
 <td>autoscaling、K8s resource economics、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></td>
 </tr>
 <tr>
-<td><code>llm-d-inference-sim</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></td>
+<td>P0 已完成</td>
 <td>轻量模拟 vLLM 行为，不需要 GPU 或真实大模型。</td>
 <td>simulator、scheduler、benchmark</td>
 </tr>
@@ -198,11 +198,11 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </tbody>
 </table></div>
 <h3 id="llm-d-的知识结构缺口">llm-d 的知识结构缺口</h3>
-<p>当前 wiki 已经覆盖 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 总入口、Router/EPP 和 KV cache。缺的是四类外围能力：</p>
+<p>当前 wiki 已经覆盖 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 总入口、Router/EPP、KV cache 和 P0 四类外围能力：</p>
 <ul>
-<li><strong>Batch inference</strong>：<code>llm-d-batch-gateway</code> 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。</li>
-<li><strong>Performance evaluation</strong>：<code>llm-d-benchmark</code> / <code>llm-d-prism</code> / <code>llm-d-inference-sim</code> 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。</li>
-<li><strong>Autoscaling/resource economics</strong>：<code>llm-d-workload-variant-autoscaler</code> 可连接 <code>Kueue</code>、<code>Karpenter</code>、GPU 资源层。</li>
+<li><strong>Batch inference</strong>：<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a> 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。</li>
+<li><strong>Performance evaluation</strong>：<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a> / <code>llm-d-prism</code> / <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。</li>
+<li><strong>Autoscaling/resource economics</strong>：<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 可连接 <code>Kueue</code>、<code>Karpenter</code>、GPU 资源层。</li>
 <li><strong>P/D deployment diagnostics</strong>：<code>llm-d-pd-utils</code> 把 GPU topology、RDMA、NCCL、NIXL 等实际部署问题显性化。</li>
 </ul>
 <h2 id="kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</h2>
@@ -528,10 +528,10 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <h2 id="推荐实施顺序">推荐实施顺序</h2>
 <h3 id="第一批直接补-ai-infra-选型缺口">第一批：直接补 AI Infra 选型缺口</h3>
 <ol>
-<li><code>llm-d-batch-gateway</code></li>
-<li><code>llm-d-benchmark</code></li>
-<li><code>llm-d-workload-variant-autoscaler</code></li>
-<li><code>llm-d-inference-sim</code></li>
+<li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>（已完成）</li>
 <li><code>kueue</code></li>
 <li><code>karpenter</code></li>
 <li><code>metrics-server</code></li>
@@ -571,14 +571,14 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <li>更新 <a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a>：把 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 外围组件与 K8s SIG 的 queueing/autoscaling/distributed workload API 连起来。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a></li><li><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></li><li><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a></li><li><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></li><li><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-d-kubernetes-sigs-candidate-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d-kubernetes-sigs-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d / Kubernet</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>声明式 Agent 管理</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Kubernetes Gateway API</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · wikilink</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · wikilink</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · wikilink</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · wikilink</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li><li><a href="../entities/gateway-api.html">Kubernetes Gateway API</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体优先级">总体优先级</a></li><li class=""><a href="#llm-d-组织候选">llm-d 组织候选</a></li><li class="level-3"><a href="#llm-d-的知识结构缺口">llm-d 的知识结构缺口</a></li><li class=""><a href="#kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</a></li><li class="level-3"><a href="#网络">网络</a></li><li class="level-3"><a href="#存储--secret--数据面挂载">存储 / Secret / 数据面挂载</a></li><li class="level-3"><a href="#调度--资源--队列">调度 / 资源 / 队列</a></li><li class="level-3"><a href="#可观测--性能--诊断">可观测 / 性能 / 诊断</a></li><li class="level-3"><a href="#计算--runtime--节点">计算 / Runtime / 节点</a></li><li class="level-3"><a href="#api--operator--控制器开发">API / Operator / 控制器开发</a></li><li class="level-3"><a href="#ai-infra--agent-交叉">AI Infra / Agent 交叉</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class="level-3"><a href="#第一批直接补-ai-infra-选型缺口">第一批：直接补 AI Infra 选型缺口</a></li><li class="level-3"><a href="#第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</a></li><li class="level-3"><a href="#第三批按专项补齐">第三批：按专项补齐</a></li><li class=""><a href="#和现有页面的关系">和现有页面的关系</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d-kubernetes-sigs-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d / Kubernet</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>声明式 Agent 管理</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · wikilink</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · wikilink</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · wikilink</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · wikilink</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体优先级">总体优先级</a></li><li class=""><a href="#llm-d-组织候选">llm-d 组织候选</a></li><li class="level-3"><a href="#llm-d-的知识结构缺口">llm-d 的知识结构缺口</a></li><li class=""><a href="#kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</a></li><li class="level-3"><a href="#网络">网络</a></li><li class="level-3"><a href="#存储--secret--数据面挂载">存储 / Secret / 数据面挂载</a></li><li class="level-3"><a href="#调度--资源--队列">调度 / 资源 / 队列</a></li><li class="level-3"><a href="#可观测--性能--诊断">可观测 / 性能 / 诊断</a></li><li class="level-3"><a href="#计算--runtime--节点">计算 / Runtime / 节点</a></li><li class="level-3"><a href="#api--operator--控制器开发">API / Operator / 控制器开发</a></li><li class="level-3"><a href="#ai-infra--agent-交叉">AI Infra / Agent 交叉</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class="level-3"><a href="#第一批直接补-ai-infra-选型缺口">第一批：直接补 AI Infra 选型缺口</a></li><li class="level-3"><a href="#第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</a></li><li class="level-3"><a href="#第三批按专项补齐">第三批：按专项补齐</a></li><li class=""><a href="#和现有页面的关系">和现有页面的关系</a></li></ul></aside></aside>
 </div>
 
 <script>
