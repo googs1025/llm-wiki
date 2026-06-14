@@ -17,25 +17,31 @@ Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitor
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Headlamp                   │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Frontend:  │ │ Backend/proxy: │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Plugin sys │ │ Auth/context:  │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Kubernetes UI need                                                         │
+│ Users need browsing, debugging, monitoring, and plugin-driven cluster      │
+│ operations.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Headlamp frontend                                                          │
+│ React UI renders resources, logs, events, plugin views, and navigation.    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Backend/proxy and auth                                                     │
+│ Kubeconfig, tokens, access checks, and API proxying connect the UI to      │
+│ clusters.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Kubernetes API resources and extensions become an operator-facing web      │
+│ experience.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

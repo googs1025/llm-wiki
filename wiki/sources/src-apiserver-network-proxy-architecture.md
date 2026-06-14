@@ -17,25 +17,31 @@ apiserver-network-proxy 通过 konnectivity server/agent 建立 apiserver 到节
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ apiserver-network-proxy    │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Server: co │ │ Agent: node/cl │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ gRPC strea │ │ Integration: a │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Control-plane egress need                                                  │
+│ API server must reach nodes, kubelets, or services across private network  │
+│ boundaries.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ apiserver-network-proxy                                                    │
+│ Server and konnectivity agents maintain gRPC tunnels between control plane │
+│ and cluster network.                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ API server integration                                                     │
+│ Egress selector routes selected traffic through the proxy path.            │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Managed or private clusters expose kubelet and service access without      │
+│ direct network reachability.                                               │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

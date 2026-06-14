@@ -33,25 +33,29 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 <code>metrics.k8s.io</code>，供 HPA/VPA/kubectl top 使用。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ metrics-server             │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Scraper: 周 │ │ Storage: 只保留最新 │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ APIService │ │ Consumers: HPA │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Node resource usage                                                        │
+│ Kubelets expose CPU and memory usage through stats and summary APIs.       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ metrics-server                                                             │
+│ Scrapes kubelets, normalizes samples, and serves an aggregated APIService. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Resource metrics API                                                       │
+│ metrics.k8s.io backs kubectl top and basic Kubernetes autoscaling.         │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ HPA, VPA, dashboards, and platform controllers read current resource       │
+│ metrics.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>

@@ -9,25 +9,32 @@ Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Kubespray                  │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Inventory: │ │ Ansible roles: │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Playbooks: │ │ Provider suppo │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Cluster deployment inventory                                               │
+│ Hosts, variables, networking, runtime, and add-ons define desired cluster  │
+│ shape.                                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Kubespray Ansible playbooks                                                │
+│ Roles prepare OS, container runtime, kubeadm, control plane, workers, and  │
+│ CNI.                                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Lifecycle operations                                                       │
+│ Install, upgrade, scale, reset, and configure production Kubernetes        │
+│ clusters.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ Bare-metal, VM, or cloud Kubernetes clusters managed through repeatable    │
+│ automation.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

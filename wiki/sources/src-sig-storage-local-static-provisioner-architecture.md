@@ -17,25 +17,29 @@ Local Static Provisioner 发现节点本地磁盘/目录并创建 local Persiste
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Local Static Provisioner   │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Discovery  │ │ PV controller: │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Node affin │ │ Cleanup script │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Local disk inventory                                                       │
+│ Nodes expose disks or directories intended for local PersistentVolumes.    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Local static provisioner DaemonSet                                         │
+│ Discovers local paths and creates PVs with node affinity.                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Cleanup policy                                                             │
+│ Handles released volumes, reuse behavior, and administrator-defined        │
+│ discovery rules.                                                           │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Scheduler binds Pods to the node that owns the selected local PV.          │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

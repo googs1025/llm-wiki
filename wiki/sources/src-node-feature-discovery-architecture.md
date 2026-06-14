@@ -17,25 +17,32 @@ Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Node Feature Discovery     │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ nfd-worker │ │ nfd-master/gc: │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Feature so │ │ Rules: custom  │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Node hardware and OS traits                                                │
+│ CPU, GPU, PCI, kernel, NUMA, and custom device facts matter for            │
+│ scheduling.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ NFD workers and master/controller                                          │
+│ Workers scan feature sources; master/controller publishes selected         │
+│ features.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Feature output                                                             │
+│ Node labels, annotations, extended resource hints, and optional custom     │
+│ rules.                                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ Scheduler, device plugins, GPU operators, and AI workloads use the         │
+│ discovered traits.                                                         │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

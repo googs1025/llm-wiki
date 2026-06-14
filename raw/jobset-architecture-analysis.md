@@ -9,25 +9,30 @@ JobSet 是 K8s native API for distributed ML training and HPC workloads，用多
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ JobSet                     │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ API: JobSe │ │ Controller: ch │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Failure po │ │ Integrations:  │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Distributed batch / ML job intent                                          │
+│ A training or HPC workload needs multiple related Kubernetes Jobs.         │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ JobSet API                                                                 │
+│ Replicated jobs, dependencies, startup ordering, success policy, and       │
+│ failure behavior.                                                          │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ JobSet controller                                                          │
+│ Creates child Jobs and reconciles status, completion, restart, and failure │
+│ policy.                                                                    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Kueue, scheduler, Pods, and distributed frameworks run the actual work.    │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

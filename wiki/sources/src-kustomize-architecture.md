@@ -17,25 +17,30 @@ Kustomize 用 overlay/patch/transformer 管理 Kubernetes YAML 差异，是 kube
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Kustomize                  │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Resources/ │ │ Transformers:  │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Patches: s │ │ Generators: Co │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Base manifests and overlays                                                │
+│ Teams maintain reusable YAML plus environment-specific customization.      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Kustomize engine                                                           │
+│ Resources, generators, patches, transformers, labels, namespaces, and      │
+│ image changes.                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Rendered output                                                            │
+│ Produces final Kubernetes manifests without requiring templates at apply   │
+│ time.                                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ kubectl, GitOps controllers, CI pipelines, and platform release workflows. │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

@@ -9,25 +9,29 @@ kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubea
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ kind                       │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ CLI: kind  │ │ Node image: sy │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Cluster co │ │ Provider: dock │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Local cluster request                                                      │
+│ Developers or CI need disposable Kubernetes clusters for tests and demos.  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ kind CLI                                                                   │
+│ Reads cluster config, selects node images, and drives kubeadm bootstrap.   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Node containers                                                            │
+│ Docker or Podman containers behave as control-plane and worker nodes.      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ A local kubeconfig and Kubernetes cluster for controller and integration   │
+│ testing.                                                                   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

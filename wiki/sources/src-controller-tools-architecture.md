@@ -17,25 +17,31 @@ controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webho
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ controller-tools           │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Markers pa │ │ CRD generator: │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ RBAC/webho │ │ object/deepcop │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Go API source                                                              │
+│ Types, Kubebuilder markers, RBAC comments, webhook comments, and object    │
+│ metadata.                                                                  │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ controller-gen                                                             │
+│ Parses markers and type information to generate Kubernetes integration     │
+│ artifacts.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Generated artifacts                                                        │
+│ CRD schemas, deepcopy code, RBAC manifests, webhook configs, and object    │
+│ YAML.                                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Consumers                                                                  │
+│ Kubebuilder/operator build pipelines and cluster installation workflows.   │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

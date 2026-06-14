@@ -17,25 +17,30 @@ Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending po
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ Karpenter                  │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ API: NodeP │ │ Controller: pr │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Scheduler  │ │ CloudProvider  │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Pending Pods with resource and topology constraints                        │
+│ CPU, memory, GPU, zone, architecture, taints, and affinity shape demand.   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Karpenter controller                                                       │
+│ Provisioning, disruption, consolidation, and termination control loops.    │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Capacity model                                                             │
+│ NodePool, NodeClaim, scheduler simulation, and CloudProvider               │
+│ pricing/capacity APIs.                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Cloud instances join as Kubernetes nodes; idle or replaceable nodes are    │
+│ consolidated.                                                              │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

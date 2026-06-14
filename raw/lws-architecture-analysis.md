@@ -9,25 +9,31 @@ LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 L
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ LeaderWorkerSet            │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ API: Leade │ │ Controller: re │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Pod templa │ │ Integrations:  │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Distributed workload intent                                                │
+│ A workload needs one leader plus a group of homogeneous worker Pods.       │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LeaderWorkerSet API                                                        │
+│ Group size, replicas, pod templates, rollout policy, and status model the  │
+│ group.                                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LWS controller                                                             │
+│ Reconciles leader/worker Pods and keeps grouped replicas in a coherent     │
+│ lifecycle.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime boundary                                                           │
+│ Services, scheduler, Pods, and AI/HPC runtimes consume the generated       │
+│ group.                                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

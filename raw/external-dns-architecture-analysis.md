@@ -9,25 +9,30 @@ ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外
 ## 核心架构图
 
 ```
-┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ external-dns               │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Sources: s │ │ Registry: TXT  │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Provider:  │ │ Controller loo │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Kubernetes network objects                                                 │
+│ Services, Ingresses, Gateways, and annotations describe desired DNS names. │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ external-dns controller                                                    │
+│ Source readers build desired DNS records from Kubernetes object state.     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Ownership and providers                                                    │
+│ Registry/TXT ownership plus adapters for Route53, Cloud DNS, and other     │
+│ providers.                                                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ External DNS zones converge to the service endpoints represented in        │
+│ Kubernetes.                                                                │
+└────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## 模块分层

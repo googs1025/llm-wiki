@@ -33,25 +33,29 @@
 <h2 id="一句话定位">一句话定位</h2>
 <p>CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。</p>
 <h2 id="核心架构图">核心架构图</h2>
-<pre><code>┌────────────────────────────┐
-│ User / platform intent     │
-└──────────────┬─────────────┘
-               │
-┌──────────────▼─────────────┐
-│ CRI Tools                  │
-│ control plane / tooling    │
-└──────┬───────────┬────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ crictl: in │ │ critest: CRI c │
-└──────┬─────┘ └───┬────────────┘
-       │           │
-┌──────▼─────┐ ┌───▼────────────┐
-│ Runtime en │ │ Kubelet/runtim │
-└────────────┘ └────────────────┘
-               │
-               ▼
-     Kubernetes API / runtime / external systems
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│ Runtime debugging or validation need                                       │
+│ Operators and CI need direct access to the CRI boundary.                   │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ cri-tools                                                                  │
+│ crictl offers CLI inspection; critest validates CRI runtime behavior.      │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CRI endpoint                                                               │
+│ containerd, CRI-O, or another runtime exposes pods, containers, images,    │
+│ logs, exec, and stats.                                                     │
+└────────────────────────────────────────────────────────────────────────────┘
+                                       │
+                                       ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Output                                                                     │
+│ kubelet/runtime boundary diagnosis and conformance-style validation.       │
+└────────────────────────────────────────────────────────────────────────────┘
 </code></pre>
 <h2 id="模块分层">模块分层</h2>
 <div class="table-wrap"><table>
