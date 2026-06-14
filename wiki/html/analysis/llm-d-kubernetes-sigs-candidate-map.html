@@ -69,52 +69,58 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>已补正式源码架构页，无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>kueue</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/kueue.html">kueue</a></td>
 <td>调度 / 队列</td>
 <td>K8s 原生 Job queueing，是 AI/HPC/batch workload 控制面的核心项目。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>karpenter</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/karpenter.html">karpenter</a></td>
 <td>节点弹性 / 成本</td>
 <td>Node autoscaler，连接 serving SLO、GPU 成本和容量弹性。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>controller-runtime</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a></td>
 <td>Operator SDK</td>
 <td>现代 K8s controller 的通用抽象层，当前大量实体页都依赖它。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>kubebuilder</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a></td>
 <td>CRD / controller 脚手架</td>
 <td>和 controller-runtime 一起构成 Operator 工程主线。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>metrics-server</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></td>
 <td>可观测 / autoscaling</td>
 <td>HPA/VPA 基础指标源，解释 autoscaling 体系必需。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>external-dns</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/external-dns.html">external-dns</a></td>
 <td>网络 / DNS</td>
 <td>K8s service/ingress/gateway 到 DNS record 的控制器代表。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>secrets-store-csi-driver</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/secrets-store-csi-driver.html">secrets-store-csi-driver</a></td>
 <td>存储 / 凭据</td>
 <td>CSI 方式注入外部 secret，连接凭据治理和 runtime security。</td>
 </tr>
 <tr>
-<td>P0</td>
-<td><code>kind</code></td>
+<td>P0 已完成</td>
+<td><a class="wikilink" href="../entities/kind.html">kind</a></td>
 <td>计算 / 测试集群</td>
 <td>本地 K8s 测试底座，很多 controller/operator 项目的开发环境基线。</td>
+</tr>
+<tr>
+<td>排除</td>
+<td><code>aws-load-balancer-controller</code> / <code>aws-ebs-csi-driver</code> / <code>aws-efs-csi-driver</code></td>
+<td>AWS 专项</td>
+<td>用户明确本轮不需要。</td>
 </tr>
 </tbody>
 </table></div>
@@ -154,20 +160,20 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>simulator、scheduler、benchmark</td>
 </tr>
 <tr>
-<td><code>llm-d-latency-predictor</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/llm-d-latency-predictor.html">llm-d-latency-predictor</a></td>
+<td>P1 已完成</td>
 <td>给 inference scheduler 的 ML-based latency scoring service。</td>
 <td>latency predictor、<a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></td>
 </tr>
 <tr>
-<td><code>llm-d-prism</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/llm-d-prism.html">llm-d-prism</a></td>
+<td>P1 已完成</td>
 <td>分布式推理性能分析 dashboard，把 benchmark 数据做交互式分析。</td>
 <td>observability、performance analysis</td>
 </tr>
 <tr>
-<td><code>llm-d-pd-utils</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/llm-d-pd-utils.html">llm-d-pd-utils</a></td>
+<td>P1 已完成</td>
 <td>Agentic Skills + scripts，用于 P/D 部署 preflight、GPU topology、RDMA/NCCL/network tests。</td>
 <td>P/D diagnostics、GPU/network validation</td>
 </tr>
@@ -217,13 +223,13 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>external-dns</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/external-dns.html">external-dns</a></td>
+<td>P0 已完成</td>
 <td>从 Service/Ingress/Gateway 等 K8s 对象动态维护外部 DNS，是典型“声明式网络控制器”。</td>
 </tr>
 <tr>
 <td><code>aws-load-balancer-controller</code></td>
-<td>P0</td>
+<td>排除</td>
 <td>AWS LB / Ingress / Gateway API 的生产代表，适合和 <a class="wikilink" href="../entities/gateway-api.html">gateway-api</a> 放在同一条网络入口路线。</td>
 </tr>
 <tr>
@@ -237,18 +243,18 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>已收录，作为 LLM inference endpoint picking 标准层。</td>
 </tr>
 <tr>
-<td><code>ingress2gateway</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/ingress2gateway.html">ingress2gateway</a></td>
+<td>P1 已完成</td>
 <td>从 Ingress 迁移到 Gateway API 的工具，适合补迁移路线。</td>
 </tr>
 <tr>
-<td><code>apiserver-network-proxy</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/apiserver-network-proxy.html">apiserver-network-proxy</a></td>
+<td>P1 已完成</td>
 <td>control plane 到节点网络代理，适合理解托管 K8s / 私有网络控制面连接。</td>
 </tr>
 <tr>
-<td><code>kube-agentic-networking</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kube-agentic-networking.html">kube-agentic-networking</a></td>
+<td>P1 已完成</td>
 <td>Agent/tool networking policy governance，和 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a>、<a class="wikilink" href="../entities/agentgateway.html">agentgateway</a> 方向高度相关。</td>
 </tr>
 <tr>
@@ -269,33 +275,33 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>secrets-store-csi-driver</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/secrets-store-csi-driver.html">secrets-store-csi-driver</a></td>
+<td>P0 已完成</td>
 <td>把外部 secret store 通过 CSI volume 注入 Pod，连接 <a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a> 和 <a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a>。</td>
 </tr>
 <tr>
 <td><code>aws-ebs-csi-driver</code></td>
-<td>P0</td>
+<td>排除</td>
 <td>块存储 CSI driver 的云厂商代表。</td>
 </tr>
 <tr>
 <td><code>aws-efs-csi-driver</code></td>
-<td>P0</td>
+<td>排除</td>
 <td>文件存储 CSI driver 的云厂商代表，适合与 EBS 对比。</td>
 </tr>
 <tr>
-<td><code>nfs-subdir-external-provisioner</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/nfs-subdir-external-provisioner.html">nfs-subdir-external-provisioner</a></td>
+<td>P1 已完成</td>
 <td>轻量 NFS 动态 PV，适合本地/实验集群。</td>
 </tr>
 <tr>
-<td><code>sig-storage-local-static-provisioner</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/sig-storage-local-static-provisioner.html">sig-storage-local-static-provisioner</a></td>
+<td>P1 已完成</td>
 <td>local PV 静态 provisioner，适合理解本地盘和调度绑定。</td>
 </tr>
 <tr>
-<td><code>sig-storage-lib-external-provisioner</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/sig-storage-lib-external-provisioner.html">sig-storage-lib-external-provisioner</a></td>
+<td>P1 已完成</td>
 <td>CSI/external provisioner 的库和控制器抽象。</td>
 </tr>
 <tr>
@@ -316,38 +322,38 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>kueue</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/kueue.html">kueue</a></td>
+<td>P0 已完成</td>
 <td>K8s-native Job queueing，是 AI/HPC/batch workload 多租户队列核心。</td>
 </tr>
 <tr>
-<td><code>karpenter</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/karpenter.html">karpenter</a></td>
+<td>P0 已完成</td>
 <td>节点级弹性和容量经济，适合接 LLM serving 的成本与 SLO。</td>
 </tr>
 <tr>
-<td><code>scheduler-plugins</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></td>
+<td>P0 已完成</td>
 <td>kube-scheduler framework 的 out-of-tree 插件集合，理解调度扩展必读。</td>
 </tr>
 <tr>
-<td><code>descheduler</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/descheduler.html">descheduler</a></td>
+<td>P1 已完成</td>
 <td>通过策略触发重调度，补“调度后优化”维度。</td>
 </tr>
 <tr>
-<td><code>kwok</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kwok.html">kwok</a></td>
+<td>P1 已完成</td>
 <td>无 kubelet 模拟大量节点/集群，适合调度和控制面扩展测试。</td>
 </tr>
 <tr>
-<td><code>node-feature-discovery</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></td>
+<td>P1 已完成</td>
 <td>发现节点硬件能力，连接 GPU、NUMA、加速器调度。</td>
 </tr>
 <tr>
-<td><code>kube-scheduler-simulator</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a></td>
+<td>P1 已完成</td>
 <td>可视化/模拟 scheduler 行为。</td>
 </tr>
 <tr>
@@ -368,23 +374,23 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>metrics-server</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></td>
+<td>P0 已完成</td>
 <td>HPA/VPA 的基础资源指标源，K8s autoscaling 入口。</td>
 </tr>
 <tr>
-<td><code>prometheus-adapter</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a></td>
+<td>P0 已完成</td>
 <td>把 Prometheus 指标暴露为 custom/external metrics API，连接高级 autoscaling。</td>
 </tr>
 <tr>
-<td><code>inference-perf</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/inference-perf.html">inference-perf</a></td>
+<td>P1 已完成</td>
 <td>GenAI inference performance benchmarking tool，可与 <code>llm-d-benchmark</code> 对比。</td>
 </tr>
 <tr>
-<td><code>headlamp</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/headlamp.html">headlamp</a></td>
+<td>P1 已完成</td>
 <td>K8s UI / debugging / monitoring，可和 <a class="wikilink" href="../entities/kubewall.html">kubewall</a>、<code>k8m</code> 对比。</td>
 </tr>
 <tr>
@@ -410,23 +416,23 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>kind</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/kind.html">kind</a></td>
+<td>P0 已完成</td>
 <td>本地 Kubernetes in Docker，是 controller/operator 开发和 CI 的事实基线。</td>
 </tr>
 <tr>
-<td><code>kubespray</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/kubespray.html">kubespray</a></td>
+<td>P0 已完成</td>
 <td>生产集群部署自动化，适合理解集群生命周期和裸金属/on-prem。</td>
 </tr>
 <tr>
-<td><code>cri-tools</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/cri-tools.html">cri-tools</a></td>
+<td>P0 已完成</td>
 <td>CRI CLI + validation，理解 kubelet/runtime 边界。</td>
 </tr>
 <tr>
-<td><code>security-profiles-operator</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/security-profiles-operator.html">security-profiles-operator</a></td>
+<td>P1 已完成</td>
 <td>seccomp/AppArmor/SELinux profile operator，连接 runtime security。</td>
 </tr>
 <tr>
@@ -435,13 +441,13 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>已收录，AI Agent runtime 的 sandbox CRD。</td>
 </tr>
 <tr>
-<td><code>lws</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/lws.html">lws</a></td>
+<td>P1 已完成</td>
 <td>LeaderWorkerSet，用一组 Pod 表达 leader/worker 分布式 workload。</td>
 </tr>
 <tr>
-<td><code>jobset</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/jobset.html">jobset</a></td>
+<td>P1 已完成</td>
 <td>分布式 ML/HPC workload API，和 <code>Kueue</code>、batch serving 强相关。</td>
 </tr>
 </tbody>
@@ -457,33 +463,33 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>controller-runtime</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a></td>
+<td>P0 已完成</td>
 <td>Manager、cache、client、reconcile、webhook、envtest 的现代 controller 抽象层。</td>
 </tr>
 <tr>
-<td><code>kubebuilder</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a></td>
+<td>P0 已完成</td>
 <td>CRD/controller 项目脚手架和代码生成路径。</td>
 </tr>
 <tr>
-<td><code>controller-tools</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/controller-tools.html">controller-tools</a></td>
+<td>P0 已完成</td>
 <td>CRD、RBAC、webhook、object deepcopy 等生成工具链。</td>
 </tr>
 <tr>
-<td><code>cluster-api</code></td>
-<td>P0</td>
+<td><a class="wikilink" href="../entities/cluster-api.html">cluster-api</a></td>
+<td>P0 已完成</td>
 <td>声明式集群生命周期管理，适合接多集群和平台工程。</td>
 </tr>
 <tr>
-<td><code>kustomize</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kustomize.html">kustomize</a></td>
+<td>P1 已完成</td>
 <td>Kubernetes YAML 定制工具链，GitOps/配置管理基础。</td>
 </tr>
 <tr>
-<td><code>kro</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kro.html">kro</a></td>
+<td>P1 已完成</td>
 <td>Kube Resource Orchestrator，适合与 Crossplane Composition / higher-level API 对比。</td>
 </tr>
 <tr>
@@ -504,13 +510,13 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </thead>
 <tbody>
 <tr>
-<td><code>mcp-lifecycle-operator</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/mcp-lifecycle-operator.html">mcp-lifecycle-operator</a></td>
+<td>P1 已完成</td>
 <td>声明式管理 MCP Servers，和 <a class="wikilink" href="../entities/mcp.html">mcp</a>、<a class="wikilink" href="../entities/agentgateway.html">agentgateway</a>、<a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a> 直接相关。</td>
 </tr>
 <tr>
-<td><code>kube-agentic-networking</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/kube-agentic-networking.html">kube-agentic-networking</a></td>
+<td>P1 已完成</td>
 <td>Agent/tool 网络策略治理，适合补 Agent runtime 安全边界。</td>
 </tr>
 <tr>
@@ -519,8 +525,8 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>AI conformance definition/proposals/tests，待生态更稳定后再摄入。</td>
 </tr>
 <tr>
-<td><code>inference-perf</code></td>
-<td>P1</td>
+<td><a class="wikilink" href="../entities/inference-perf.html">inference-perf</a></td>
+<td>P1 已完成</td>
 <td>GenAI inference benchmark，与 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/aibrix.html">aibrix</a>、<a class="wikilink" href="../entities/kserve.html">kserve</a> 有直接交集。</td>
 </tr>
 </tbody>
@@ -532,35 +538,35 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>（已完成）</li>
-<li><code>kueue</code></li>
-<li><code>karpenter</code></li>
-<li><code>metrics-server</code></li>
-<li><code>prometheus-adapter</code></li>
-<li><code>inference-perf</code></li>
-<li><code>lws</code></li>
-<li><code>jobset</code></li>
+<li><a class="wikilink" href="../entities/kueue.html">kueue</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/karpenter.html">karpenter</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/inference-perf.html">inference-perf</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/lws.html">lws</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/jobset.html">jobset</a>（已完成）</li>
 </ol>
 <p>这批可以让 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 从“引擎/serving stack”扩展到 batch、benchmark、queueing、autoscaling、distributed workload API。</p>
 <h3 id="第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</h3>
 <ol>
-<li><code>controller-runtime</code></li>
-<li><code>kubebuilder</code></li>
-<li><code>controller-tools</code></li>
-<li><code>cluster-api</code></li>
-<li><code>kind</code></li>
-<li><code>cri-tools</code></li>
-<li><code>external-dns</code></li>
-<li><code>secrets-store-csi-driver</code></li>
-<li><code>scheduler-plugins</code></li>
-<li><code>node-feature-discovery</code></li>
+<li><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/controller-tools.html">controller-tools</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/cluster-api.html">cluster-api</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/kind.html">kind</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/cri-tools.html">cri-tools</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/external-dns.html">external-dns</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/secrets-store-csi-driver.html">secrets-store-csi-driver</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a>（已完成）</li>
 </ol>
 <p>这批可以让 <a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a> 从学习路径升级成更完整的平台工程架构图。</p>
 <h3 id="第三批按专项补齐">第三批：按专项补齐</h3>
 <ul>
-<li>网络专项：<code>aws-load-balancer-controller</code>、<code>ingress2gateway</code>、<code>apiserver-network-proxy</code>、<code>dranet</code>。</li>
-<li>存储专项：<code>aws-ebs-csi-driver</code>、<code>aws-efs-csi-driver</code>、<code>nfs-subdir-external-provisioner</code>、<code>sig-storage-local-static-provisioner</code>。</li>
-<li>安全专项：<code>security-profiles-operator</code>、<code>secrets-store-csi-driver</code>、<code>kube-agentic-networking</code>。</li>
-<li>工具/测试专项：<code>krew</code>、<code>kustomize</code>、<code>e2e-framework</code>、<code>kubetest2</code>。</li>
+<li>网络专项：<a class="wikilink" href="../entities/ingress2gateway.html">ingress2gateway</a>、<a class="wikilink" href="../entities/apiserver-network-proxy.html">apiserver-network-proxy</a>、<a class="wikilink" href="../entities/kube-agentic-networking.html">kube-agentic-networking</a> 已完成；<code>aws-load-balancer-controller</code> 按用户要求排除；<code>dranet</code> 留作 P2。</li>
+<li>存储专项：<a class="wikilink" href="../entities/nfs-subdir-external-provisioner.html">nfs-subdir-external-provisioner</a>、<a class="wikilink" href="../entities/sig-storage-local-static-provisioner.html">sig-storage-local-static-provisioner</a>、<a class="wikilink" href="../entities/sig-storage-lib-external-provisioner.html">sig-storage-lib-external-provisioner</a> 已完成；<code>aws-ebs-csi-driver</code>、<code>aws-efs-csi-driver</code> 按用户要求排除。</li>
+<li>安全专项：<a class="wikilink" href="../entities/security-profiles-operator.html">security-profiles-operator</a>、<a class="wikilink" href="../entities/secrets-store-csi-driver.html">secrets-store-csi-driver</a>、<a class="wikilink" href="../entities/kube-agentic-networking.html">kube-agentic-networking</a> 已完成。</li>
+<li>工具/测试专项：<a class="wikilink" href="../entities/kustomize.html">kustomize</a>、<a class="wikilink" href="../entities/kwok.html">kwok</a>、<a class="wikilink" href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a>、<a class="wikilink" href="../entities/headlamp.html">headlamp</a>、<a class="wikilink" href="../entities/kro.html">kro</a>、<a class="wikilink" href="../entities/mcp-lifecycle-operator.html">mcp-lifecycle-operator</a> 已完成；<code>krew</code>、<code>e2e-framework</code>、<code>kubetest2</code> 留作 P2。</li>
 </ul>
 <h2 id="和现有页面的关系">和现有页面的关系</h2>
 <ul>
@@ -578,7 +584,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d-kubernetes-sigs-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d / Kubernet</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>声明式 Agent 管理</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · wikilink</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · wikilink</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · wikilink</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · wikilink</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体优先级">总体优先级</a></li><li class=""><a href="#llm-d-组织候选">llm-d 组织候选</a></li><li class="level-3"><a href="#llm-d-的知识结构缺口">llm-d 的知识结构缺口</a></li><li class=""><a href="#kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</a></li><li class="level-3"><a href="#网络">网络</a></li><li class="level-3"><a href="#存储--secret--数据面挂载">存储 / Secret / 数据面挂载</a></li><li class="level-3"><a href="#调度--资源--队列">调度 / 资源 / 队列</a></li><li class="level-3"><a href="#可观测--性能--诊断">可观测 / 性能 / 诊断</a></li><li class="level-3"><a href="#计算--runtime--节点">计算 / Runtime / 节点</a></li><li class="level-3"><a href="#api--operator--控制器开发">API / Operator / 控制器开发</a></li><li class="level-3"><a href="#ai-infra--agent-交叉">AI Infra / Agent 交叉</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class="level-3"><a href="#第一批直接补-ai-infra-选型缺口">第一批：直接补 AI Infra 选型缺口</a></li><li class="level-3"><a href="#第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</a></li><li class="level-3"><a href="#第三批按专项补齐">第三批：按专项补齐</a></li><li class=""><a href="#和现有页面的关系">和现有页面的关系</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d-kubernetes-sigs-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d / Kubernet</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>apiserver-network-proxy</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Cluster API</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · wikilink</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · wikilink</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../entities/apiserver-network-proxy.html">apiserver-network-proxy</a><span>实体 · wikilink</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · wikilink</span></li><li><a href="../entities/cluster-api.html">Cluster API</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体优先级">总体优先级</a></li><li class=""><a href="#llm-d-组织候选">llm-d 组织候选</a></li><li class="level-3"><a href="#llm-d-的知识结构缺口">llm-d 的知识结构缺口</a></li><li class=""><a href="#kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</a></li><li class="level-3"><a href="#网络">网络</a></li><li class="level-3"><a href="#存储--secret--数据面挂载">存储 / Secret / 数据面挂载</a></li><li class="level-3"><a href="#调度--资源--队列">调度 / 资源 / 队列</a></li><li class="level-3"><a href="#可观测--性能--诊断">可观测 / 性能 / 诊断</a></li><li class="level-3"><a href="#计算--runtime--节点">计算 / Runtime / 节点</a></li><li class="level-3"><a href="#api--operator--控制器开发">API / Operator / 控制器开发</a></li><li class="level-3"><a href="#ai-infra--agent-交叉">AI Infra / Agent 交叉</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class="level-3"><a href="#第一批直接补-ai-infra-选型缺口">第一批：直接补 AI Infra 选型缺口</a></li><li class="level-3"><a href="#第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</a></li><li class="level-3"><a href="#第三批按专项补齐">第三批：按专项补齐</a></li><li class=""><a href="#和现有页面的关系">和现有页面的关系</a></li></ul></aside></aside>
 </div>
 
 <script>

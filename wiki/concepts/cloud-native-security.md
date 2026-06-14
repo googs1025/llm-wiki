@@ -64,3 +64,8 @@ AI Agent 把云原生安全问题放大了：
 - 观测日志可能包含 prompt、tool result、代码片段和 secret，需要 content policy 与 mask。
 
 因此 Agent workload 推荐组合：[[agent-sandbox]] 做运行隔离，[[agentgateway]] / Gateway 做出口和凭据，[[loongsuite-pilot]] / trace 工具做审计与脱敏观测。
+
+
+## Secrets Store / Security Profiles / Agent Networking
+
+[[secrets-store-csi-driver]] 把外部 secret store 通过 CSI volume 注入 Pod，适合把真凭据留在 Vault、云 secret manager 或专用 provider 中。[[security-profiles-operator]] 把 seccomp/AppArmor/SELinux profiles 变成可声明、可分发、可录制的 runtime security 对象。[[kube-agentic-networking]] 则把 Agent/tool 的网络访问策略纳入 Kubernetes governance。三者分别补凭据、syscall/LSM 和网络出口三条安全线。
