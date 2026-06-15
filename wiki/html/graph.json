@@ -88,8 +88,8 @@
       ],
       "date": "2026-06-15",
       "description": "Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）",
-      "degree": 19,
-      "inbound": 5,
+      "degree": 20,
+      "inbound": 6,
       "outbound": 14
     },
     {
@@ -234,8 +234,8 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
-      "degree": 41,
-      "inbound": 1,
+      "degree": 43,
+      "inbound": 3,
       "outbound": 41
     },
     {
@@ -333,6 +333,25 @@
       "degree": 21,
       "inbound": 16,
       "outbound": 5
+    },
+    {
+      "id": "openkruise-project-candidate-map",
+      "title": "OpenKruise 项目候选地图",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/openkruise-project-candidate-map.html",
+      "tags": [
+        "openkruise",
+        "kubernetes",
+        "project-map",
+        "backlog",
+        "cloud-native"
+      ],
+      "date": "2026-06-15",
+      "description": "OpenKruise 项目候选地图（kruise / rollouts / kruise-game / agents / observability / controller isolation）",
+      "degree": 8,
+      "inbound": 1,
+      "outbound": 7
     },
     {
       "id": "agent-delegation",
@@ -757,8 +776,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 46,
-      "inbound": 37,
+      "degree": 47,
+      "inbound": 38,
       "outbound": 23
     },
     {
@@ -886,8 +905,8 @@
       ],
       "date": "2026-06-15",
       "description": "云原生安全实践与趋势",
-      "degree": 42,
-      "inbound": 36,
+      "degree": 44,
+      "inbound": 38,
       "outbound": 12
     },
     {
@@ -1908,8 +1927,8 @@
       ],
       "date": "2026-04-22",
       "description": "容器编排平台，云原生核心（5 篇源文件）",
-      "degree": 125,
-      "inbound": 125,
+      "degree": 127,
+      "inbound": 127,
       "outbound": 8
     },
     {
@@ -2594,8 +2613,8 @@
       ],
       "date": "2026-06-15",
       "description": "OpenKruise 的 K8s 原生 Agent sandbox lifecycle platform（SandboxSet/Claim + E2B API + Envoy route + agent-runtime/CSI/identity）",
-      "degree": 10,
-      "inbound": 7,
+      "degree": 12,
+      "inbound": 9,
       "outbound": 8
     },
     {
@@ -4621,9 +4640,28 @@
       ],
       "date": "2026-06-15",
       "description": "OpenKruise Agents 架构（HEAD 0e58df8，K8s 原生 Agent sandbox lifecycle platform：SandboxSet/Claim warm pool + E2B-compatible API + Envoy route + agent-runtime/CSI/identity）",
-      "degree": 9,
-      "inbound": 1,
+      "degree": 10,
+      "inbound": 2,
       "outbound": 9
+    },
+    {
+      "id": "src-openkruise-projects-current-state",
+      "title": "OpenKruise 组织项目当前状态核验",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-openkruise-projects-current-state.html",
+      "tags": [
+        "openkruise",
+        "kubernetes",
+        "project-map",
+        "backlog",
+        "cloud-native"
+      ],
+      "date": "2026-06-15",
+      "description": "OpenKruise 组织项目当前状态核验（kruise / rollouts / kruise-game / agents / metrics / dashboard / controllermesh）",
+      "degree": 5,
+      "inbound": 0,
+      "outbound": 5
     },
     {
       "id": "src-openshell-architecture",
@@ -10358,6 +10396,41 @@
       "kind": "wikilink"
     },
     {
+      "source": "openkruise-project-candidate-map",
+      "target": "agent-runtime-sandbox-project-map",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "openkruise-agents",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "src-openkruise-agents-architecture",
+      "kind": "wikilink"
+    },
+    {
       "source": "openshell",
       "target": "agent-credential-isolation",
       "kind": "related"
@@ -13438,6 +13511,31 @@
       "kind": "wikilink"
     },
     {
+      "source": "src-openkruise-projects-current-state",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "openkruise-agents",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "openkruise-project-candidate-map",
+      "kind": "related"
+    },
+    {
       "source": "src-openshell-architecture",
       "target": "agent-credential-isolation",
       "kind": "related"
@@ -14157,12 +14255,12 @@
     {
       "id": "sources",
       "label": "源文件",
-      "count": 108
+      "count": 109
     },
     {
       "id": "analysis",
       "label": "分析",
-      "count": 18
+      "count": 19
     }
   ]
 }
