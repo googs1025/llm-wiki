@@ -66,6 +66,7 @@ date: 2026-05-12
 - [[mcp]] — Model Context Protocol，AI Agent 工具/资源接入协议
 - [[HiClaw]] — 阿里 Higress 系出品的 K8s 原生多 Agent 协作平台
 - [[agent-sandbox]] — K8s SIG Apps 孵化的 Sandbox CRD，给 AI Agent 提供安全隔离的有状态容器原语
+- [[openkruise-agents]] — OpenKruise 的 K8s 原生 Agent sandbox lifecycle platform（SandboxSet/Claim + E2B API + Envoy route + agent-runtime/CSI/identity）
 - [[agentcube]] — Volcano 社区 AI Agent / Code Interpreter 会话编排层（基于 agent-sandbox 的 Router + WorkloadManager + WarmPool）
 - [[substrate]] — K8s 上的高密度 agent-like workload substrate（WorkerPool/ActorTemplate + gVisor snapshot/restore）
 - [[openshell]] — NVIDIA AI Agent 安全运行时（Gateway + sandbox supervisor + OPA/Z3 policy + inference.local）
@@ -180,6 +181,7 @@ date: 2026-05-12
 - [[src-claude-context-architecture]] — Claude Context 架构（v0.1.13，MCP 代码语义检索）
 - [[src-hiclaw-architecture]] — HiClaw 架构（v1.1.0，K8s 原生多 Agent 协作平台，Matrix IM + Higress 网关凭据托管）
 - [[src-agent-sandbox-architecture]] — agent-sandbox 架构（v0.4.5，K8s SIG Apps 孵化的 Sandbox CRD，AI Agent 安全隔离运行时原语）
+- [[src-openkruise-agents-architecture]] — OpenKruise Agents 架构（HEAD `0e58df8`，K8s 原生 Agent sandbox lifecycle platform：SandboxSet/Claim warm pool + E2B-compatible API + Envoy route + agent-runtime/CSI/identity）
 - [[src-agentcube-architecture]] — AgentCube 架构（HEAD `208da32`，Volcano 社区 AI Agent / Code Interpreter 会话编排层，基于 agent-sandbox 做 Router + WorkloadManager + WarmPool）
 - [[src-agentgateway-architecture]] — agentgateway 架构（v1.2.0-alpha.2，Istio 系骨架 + Rust 数据面，LLM/MCP/A2A 三协议 AI Gateway）
 - [[src-powermem-architecture]] — PowerMem 架构（v1.1.1，OceanBase 持久化记忆中间件，向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
@@ -281,12 +283,12 @@ date: 2026-05-12
 ## 分析 (Analysis)
 
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
-- [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
+- [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
 - [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
 - [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
 - [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）
-- [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
+- [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
 - [[llm-serving-engine-selection-map]] — LLM Serving / 推理引擎选型地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack）
 - [[mcp-gateway-tooling-map]] — MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）
 - [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）

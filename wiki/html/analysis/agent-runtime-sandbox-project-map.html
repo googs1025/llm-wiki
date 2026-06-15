@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-09</span>
+  <span class="meta">2026-06-15</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>Agent Runtime / Sandbox 项目地图</h1>
-    <p class="page-meta">2026-06-09 · 来源：src-agent-sandbox-architecture、src-agentcube-architecture、src-openshell-architecture、src-nemoclaw-architecture、src-hiclaw-architecture、src-agentscope-architecture、src-agentgateway-architecture</p>
+    <p class="page-meta">2026-06-15 · 来源：src-agent-sandbox-architecture、src-openkruise-agents-architecture、src-agentcube-architecture、src-openshell-architecture、src-nemoclaw-architecture、src-hiclaw-architecture、src-agentscope-architecture、src-agentgateway-architecture</p>
     <div class="tags"><span class="tag">ai-agent</span><span class="tag">agent-runtime</span><span class="tag">sandbox</span><span class="tag">project-map</span><span class="tag">cloud-native</span></div>
   </header>
 
@@ -55,6 +55,11 @@ network, credentials, storage, inference, tool access
 <td><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></td>
 <td>K8s SIG Apps 的 Sandbox CRD，把单个有状态 Agent 容器建模成 K8s 一等资源</td>
 <td>Sandbox 基础设施原语</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a></td>
+<td>OpenKruise 的 Agent sandbox lifecycle platform，把 SandboxSet/Claim、E2B API、Envoy 路由和 runtime/CSI/identity 扩展组合起来</td>
+<td>K8s sandbox 平台层</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/agentcube.html">agentcube</a></td>
@@ -94,6 +99,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <th>维度</th>
 <th><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></th>
+<th><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a></th>
 <th><a class="wikilink" href="../entities/agentcube.html">agentcube</a></th>
 <th><a class="wikilink" href="../sources/src-openshell-architecture.html">OpenShell</a></th>
 <th><a class="wikilink" href="../sources/src-nemoclaw-architecture.html">NemoClaw</a></th>
@@ -106,6 +112,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>主问题</td>
 <td>安全运行一个有状态 Agent 容器</td>
+<td>K8s 上运营 E2B-like sandbox 服务</td>
 <td>把 Sandbox 变成可调用 session</td>
 <td>sandbox 内 runtime enforcement</td>
 <td>OpenShell onboarding + agent setup</td>
@@ -116,6 +123,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>用户入口</td>
 <td>K8s CRD / Go/Python SDK</td>
+<td>E2B API + K8s CRD</td>
 <td>HTTP invocation / Python SDK / Dify / LangChain</td>
 <td>CLI / SDK / TUI</td>
 <td><code>nemoclaw</code> / <code>nemohermes</code> CLI</td>
@@ -126,6 +134,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>控制面</td>
 <td>K8s controller-runtime</td>
+<td>sandbox-manager + agent-sandbox-controller</td>
 <td>Router + WorkloadManager + Redis</td>
 <td>Gateway object store + compute runtime</td>
 <td>Host-side FSM + OpenShell adapters</td>
@@ -136,6 +145,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>数据面</td>
 <td>Pod + headless Service + PVC</td>
+<td>Envoy ext_proc / Go filter + Sandbox Pod</td>
 <td>Sandbox Pod / PicoD / reverse proxy</td>
 <td>Supervisor + restricted child + policy proxy</td>
 <td>OpenShell sandbox + OpenClaw/Hermes</td>
@@ -146,6 +156,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>生命周期</td>
 <td><code>Sandbox</code> 0/1 replicas, shutdownTime, WarmPool</td>
+<td>SandboxSet pool、Claim、pause/resume、clone/checkpoint</td>
 <td>session create/route/GC, WarmPool claim</td>
 <td>create/delete/watch/reconcile/resume</td>
 <td>onboard resume/fresh, registry lock</td>
@@ -156,6 +167,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>隔离机制</td>
 <td>委托 K8s runtimeClass/NetworkPolicy/securityContext</td>
+<td>K8s runtime + agent-runtime/CSI/traffic-proxy 扩展</td>
 <td>继承 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> + Router JWT</td>
 <td>Supervisor/proxy/seccomp/netns/TLS/OPA</td>
 <td>继承 OpenShell policy/shields</td>
@@ -166,6 +178,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>凭据模型</td>
 <td>不直接托管凭据</td>
+<td>E2B API key storage + identity token propagation</td>
 <td>Router→PicoD JWT，WorkloadManager auth</td>
 <td>Gateway 托管 provider credentials</td>
 <td>Gateway 是凭据 system-of-record</td>
@@ -176,6 +189,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>状态</td>
 <td>K8s API + PVC</td>
+<td>K8s API + route registry + key storage + memberlist</td>
 <td>Redis/ValKey session registry + K8s</td>
 <td>SQLite/Postgres object store</td>
 <td><code>~/.nemoclaw</code> JSON + Gateway state</td>
@@ -186,6 +200,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>典型强项</td>
 <td>K8s-native、简单、WarmPool</td>
+<td>CRD + E2B API + Envoy route + runtime 扩展一体化</td>
 <td>产品化 invocation API</td>
 <td>安全 enforcement 边界最细</td>
 <td>Onboarding 和 provider/policy 编排</td>
@@ -196,6 +211,7 @@ network, credentials, storage, inference, tool access
 <tr>
 <td>典型代价</td>
 <td>只提供底层原语</td>
+<td>系统面宽，API/roadmap 仍在快速演进</td>
 <td>依赖 agent-sandbox API 演进</td>
 <td>系统复杂度高</td>
 <td>host-side 状态机复杂</td>
@@ -215,6 +231,7 @@ network, credentials, storage, inference, tool access
 ┌────────────────────────────────────────────────────────────────────────────┐
 │ Multi-agent / session product layer                                         │
 │ HiClaw: Worker/Team/Human/Manager CRD + Matrix + Higress                    │
+│ OpenKruise Agents: SandboxSet/Claim + E2B API + Envoy route                 │
 │ AgentCube: AgentRuntime/CodeInterpreter + Router + WorkloadManager          │
 │ NemoClaw: OpenShell onboarding + OpenClaw/Hermes setup                      │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -234,6 +251,7 @@ network, credentials, storage, inference, tool access
 <p>关键关系：</p>
 <ul>
 <li><a class="wikilink" href="../entities/agentcube.html">agentcube</a> 明确站在 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 之上：前者做 session API，后者做 Sandbox 生命周期。</li>
+<li><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a> 站在 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 相邻但更平台化的位置：它把 SandboxSet/Claim、E2B API、Envoy 路由、agent-runtime、CSI 和 identity token 放到同一套 K8s 发行版里。</li>
 <li><a class="wikilink" href="../sources/src-nemoclaw-architecture.html">NemoClaw</a> 明确站在 <a class="wikilink" href="../sources/src-openshell-architecture.html">OpenShell</a> 之上：前者做 onboarding 和 agent setup，后者做 sandbox runtime 和 enforcement。</li>
 <li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a> 和 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 是互补关系：HiClaw 管多 Agent 协作，agent-sandbox 可以成为底层隔离原语。</li>
 <li><a class="wikilink" href="../sources/src-agentscope-architecture.html">AgentScope</a> 和 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 处在相邻问题域：AgentScope 的 Workspace 能接 Local/Docker/E2B，agent-sandbox 是更云原生的执行环境原语。</li>
@@ -252,6 +270,20 @@ network, credentials, storage, inference, tool access
 </ul>
 <p>它避免把安全机制做成私有实现，而是把隔离委托给 K8s 原语：runtimeClassName、gVisor/Kata、NetworkPolicy、securityContext、serviceAccount。这个设计的工程价值是可组合：任何上层平台都可以继承 K8s 生态能力。</p>
 <p>风险也清楚：它只提供底层原语，不负责多 Agent 协作、工具协议、凭据网关、HTTP invocation 或 Agent app framework。这些必须由上层补齐。</p>
+<h3 id="openkruise-agents把-sandbox-原语扩展成-e2b-like-平台"><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a>：把 Sandbox 原语扩展成 E2B-like 平台</h3>
+<p><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a> 的关键不是再造一个最小 Sandbox CRD，而是把 Agent sandbox 生命周期的产品面补齐：</p>
+<pre><code>E2B API / K8s CRD
+        ↓
+sandbox-manager
+        ↓
+SandboxClaim / SandboxSet / Sandbox
+        ↓
+agent-sandbox-controller
+        ↓
+Envoy route registry → Sandbox Pod IP:port
+</code></pre>
+<p>它把 warm pool 明确建模成 <code>SandboxSet</code>，把用户请求建模成 <code>SandboxClaim</code>，把 API 入口做成 E2B-compatible <code>/sandboxes</code> / <code>/snapshots</code>，再通过 Envoy ext_proc 或 Go filter 把请求路由到具体 sandbox。这个组合适合做自托管 E2B-like workspace 服务。</p>
+<p>风险在于系统面比 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 大很多：key storage、route registry、memberlist peer sync、dynamic CSI mount、identity token propagation、checkpoint/hibernation 和 runtime sidecar 都需要分别验证。选型时应把它看成平台工程项目，而不是单一 controller。</p>
 <h3 id="agentcube把-sandbox-包成可调用会话"><a class="wikilink" href="../entities/agentcube.html">agentcube</a>：把 Sandbox 包成可调用会话</h3>
 <p><a class="wikilink" href="../entities/agentcube.html">agentcube</a> 的定位比 <a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 高一层。它关心开发者如何通过 HTTP/SDK 调用一个 Code Interpreter 或 AgentRuntime，而不是让用户直接写 Sandbox CR。</p>
 <p>关键路径：</p>
@@ -339,6 +371,7 @@ Human / Manager / Workers collaborate in rooms
 <p>Agent sandbox 的生命周期包含：创建、恢复、暂停、续期、过期、热领养、GC、startup resume、长任务 offload。这比普通 Pod 的 Running/Terminated 更复杂。</p>
 <ul>
 <li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 用 <code>shutdownTime</code> 和 0/1 replicas 表达暂停/过期。</li>
+<li><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a> 用 <code>SandboxSet</code> / <code>SandboxClaim</code> 表达 pool 与领取，用 E2B API 管 pause/resume/clone/checkpoint。</li>
 <li><a class="wikilink" href="../entities/agentcube.html">agentcube</a> 用 Redis sorted set 管 session TTL 和 last activity。</li>
 <li><a class="wikilink" href="../sources/src-openshell-architecture.html">OpenShell</a> 用 Gateway store + driver watch/reconcile/resume。</li>
 <li><a class="wikilink" href="../sources/src-nemoclaw-architecture.html">NemoClaw</a> 用 host-side FSM 和 registry 做 onboarding resume。</li>
@@ -358,7 +391,7 @@ Human / Manager / Workers collaborate in rooms
 <p>对于大多数平台，第一阶段可以用 NetworkPolicy + egress proxy；高风险场景才需要 OpenShell 这种 Supervisor/proxy 模型。</p>
 <h3 id="4-warmpool-是性能优化也是所有权协议">4. WarmPool 是性能优化，也是所有权协议</h3>
 <p>预热不是“提前启动 Pod”这么简单。关键难点是 ready sandbox 被 claim 领养时，ownerReference、labels、status、Pod exclusivity 必须一致。</p>
-<p><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 的 <code>SandboxClaim</code> adoption 协议是底层实现；<a class="wikilink" href="../entities/agentcube.html">agentcube</a> 只在 CodeInterpreter <code>warmPoolSize</code> 上暴露能力。这是合理分工：底层保证所有权不变量，上层只表达“我需要低冷启动”。</p>
+<p><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a> 的 <code>SandboxClaim</code> adoption 协议是底层实现；<a class="wikilink" href="../entities/agentcube.html">agentcube</a> 只在 CodeInterpreter <code>warmPoolSize</code> 上暴露能力。这是合理分工：底层保证所有权不变量，上层只表达“我需要低冷启动”。<a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a> 则把 warm pool 升级成平台级 <code>SandboxSet</code> + <code>SandboxClaim</code> 协议，并在 claim 时叠加 inplace update、dynamic CSI mount、runtime init 和 identity token。</p>
 <h3 id="5-人在回路不是-ui-附加项">5. 人在回路不是 UI 附加项</h3>
 <p>多 Agent 系统需要人类在任务中途介入、批准、观察和接管。</p>
 <ul>
@@ -479,14 +512,14 @@ K8s/OpenShell/container runtime
 </tbody>
 </table></div>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../entities/HiClaw.html">HiClaw</a></li><li><a class="wikilink" href="../entities/agentgateway.html">agentgateway</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../concepts/agent-credential-isolation.html">agent-credential-isolation</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/ai-agent-plugin-patterns.html">ai-agent-plugin-patterns</a></li><li><a class="wikilink" href="../entities/mcp.html">mcp</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/agent-runtime-sandbox-project-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=agent-runtime-sandbox-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Agent Runtime / </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>HiClaw</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>AI Agent 外挂的 9 条设计原则</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>声明式 Agent 管理</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/HiClaw.html">HiClaw</a><span>实体 · related</span></li><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · related</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · related</span></li><li><a href="../concepts/ai-agent-plugin-patterns.html">AI Agent 外挂的 9 条设计原则</a><span>概念 · related</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/agent-framework-programming-model-map.html">Agent Framework 编程模型对比地图</a><span>分析 · related</span></li><li><a href="../analysis/agent-runtime-sandbox-selection-map.html">Agent Runtime / Sandbox 细分选型地图</a><span>分析 · related</span></li><li><a href="../analysis/ai-agent-frameworks-map.html">AI Agent Frameworks 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/coding-agent-selection-map.html">Coding Agent / Personal Agent 选型地图</a><span>分析 · related</span></li><li><a href="../sources/src-substrate-architecture.html">Agent Substrate 架构与设计思路分析</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#分层图谱">分层图谱</a></li><li class=""><a href="#工程剖面">工程剖面</a></li><li class="level-3"><a href="#agent-sandboxsandbox-作为-k8s-原语">agent-sandbox：Sandbox 作为 K8s 原语</a></li><li class="level-3"><a href="#agentcube把-sandbox-包成可调用会话">agentcube：把 Sandbox 包成可调用会话</a></li><li class="level-3"><a href="#src-openshell-architectureopenshellgateway-desired-statesupervisor-runtime-enfor">src-openshell-architecture|OpenShell：Gateway desired state，Supervisor runtime enforcement</a></li><li class="level-3"><a href="#src-nemoclaw-architecturenemoclawopenshell-上的-host-side-agent-编排">src-nemoclaw-architecture|NemoClaw：OpenShell 上的 host-side Agent 编排</a></li><li class="level-3"><a href="#hiclawagent-是-cr也是-im-用户">HiClaw：Agent 是 CR，也是 IM 用户</a></li><li class="level-3"><a href="#src-agentscope-architectureagentscope应用框架里的-runtime-边界">src-agentscope-architecture|AgentScope：应用框架里的 runtime 边界</a></li><li class="level-3"><a href="#agentgatewayagent-访问外界的网络控制点">agentgateway：Agent 访问外界的网络控制点</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-生命周期不是-pod-生命周期">1. 生命周期不是 Pod 生命周期</a></li><li class="level-3"><a href="#2-凭据不能进-agent-进程">2. 凭据不能进 Agent 进程</a></li><li class="level-3"><a href="#3-网络策略需要进程级语义">3. 网络策略需要进程级语义</a></li><li class="level-3"><a href="#4-warmpool-是性能优化也是所有权协议">4. WarmPool 是性能优化，也是所有权协议</a></li><li class="level-3"><a href="#5-人在回路不是-ui-附加项">5. 人在回路不是 UI 附加项</a></li><li class="level-3"><a href="#6-app-framework-和-sandbox-runtime-要分层">6. App framework 和 sandbox runtime 要分层</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=agent-runtime-sandbox-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Agent Runtime / </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>HiClaw</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Agent 凭据隔离</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>AI Agent 外挂的 9 条设计原则</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>声明式 Agent 管理</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/HiClaw.html">HiClaw</a><span>实体 · related</span></li><li><a href="../concepts/agent-credential-isolation.html">Agent 凭据隔离</a><span>概念 · related</span></li><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · related</span></li><li><a href="../concepts/ai-agent-plugin-patterns.html">AI Agent 外挂的 9 条设计原则</a><span>概念 · related</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../concepts/declarative-agent-management.html">声明式 Agent 管理</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/agent-framework-programming-model-map.html">Agent Framework 编程模型对比地图</a><span>分析 · related</span></li><li><a href="../analysis/agent-runtime-sandbox-selection-map.html">Agent Runtime / Sandbox 细分选型地图</a><span>分析 · related</span></li><li><a href="../analysis/ai-agent-frameworks-map.html">AI Agent Frameworks 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/coding-agent-selection-map.html">Coding Agent / Personal Agent 选型地图</a><span>分析 · related</span></li><li><a href="../sources/src-substrate-architecture.html">Agent Substrate 架构与设计思路分析</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#分层图谱">分层图谱</a></li><li class=""><a href="#工程剖面">工程剖面</a></li><li class="level-3"><a href="#agent-sandboxsandbox-作为-k8s-原语">agent-sandbox：Sandbox 作为 K8s 原语</a></li><li class="level-3"><a href="#openkruise-agents把-sandbox-原语扩展成-e2b-like-平台">openkruise-agents：把 Sandbox 原语扩展成 E2B-like 平台</a></li><li class="level-3"><a href="#agentcube把-sandbox-包成可调用会话">agentcube：把 Sandbox 包成可调用会话</a></li><li class="level-3"><a href="#src-openshell-architectureopenshellgateway-desired-statesupervisor-runtime-enfor">src-openshell-architecture|OpenShell：Gateway desired state，Supervisor runtime enforcement</a></li><li class="level-3"><a href="#src-nemoclaw-architecturenemoclawopenshell-上的-host-side-agent-编排">src-nemoclaw-architecture|NemoClaw：OpenShell 上的 host-side Agent 编排</a></li><li class="level-3"><a href="#hiclawagent-是-cr也是-im-用户">HiClaw：Agent 是 CR，也是 IM 用户</a></li><li class="level-3"><a href="#src-agentscope-architectureagentscope应用框架里的-runtime-边界">src-agentscope-architecture|AgentScope：应用框架里的 runtime 边界</a></li><li class="level-3"><a href="#agentgatewayagent-访问外界的网络控制点">agentgateway：Agent 访问外界的网络控制点</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-生命周期不是-pod-生命周期">1. 生命周期不是 Pod 生命周期</a></li><li class="level-3"><a href="#2-凭据不能进-agent-进程">2. 凭据不能进 Agent 进程</a></li><li class="level-3"><a href="#3-网络策略需要进程级语义">3. 网络策略需要进程级语义</a></li><li class="level-3"><a href="#4-warmpool-是性能优化也是所有权协议">4. WarmPool 是性能优化，也是所有权协议</a></li><li class="level-3"><a href="#5-人在回路不是-ui-附加项">5. 人在回路不是 UI 附加项</a></li><li class="level-3"><a href="#6-app-framework-和-sandbox-runtime-要分层">6. App framework 和 sandbox runtime 要分层</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li></ul></aside></aside>
 </div>
 
 <script>
