@@ -1,9 +1,9 @@
 ---
 title: 声明式 Agent 管理
 tags: [k8s-operator, multi-agent, agent-platform, design-pattern]
-date: 2026-06-12
-sources: [hiclaw-architecture-analysis.md, agent-sandbox-architecture-analysis.md, agentcube-architecture-analysis.md]
-related: [[HiClaw]], [[agent-sandbox]], [[agentcube]], [[kagent]], [[kubernetes]], [[agent-credential-isolation]], [[ai-agent-plugin-patterns]]
+date: 2026-06-15
+sources: [hiclaw-architecture-analysis.md, agent-sandbox-architecture-analysis.md, openkruise-agents-architecture-analysis.md, agentcube-architecture-analysis.md]
+related: [[HiClaw]], [[agent-sandbox]], [[openkruise-agents]], [[agentcube]], [[kagent]], [[kubernetes]], [[agent-credential-isolation]], [[ai-agent-plugin-patterns]]
 ---
 
 # 声明式 Agent 管理
@@ -33,6 +33,7 @@ related: [[HiClaw]], [[agent-sandbox]], [[agentcube]], [[kagent]], [[kubernetes]
 |------|------------|----------|
 | [[HiClaw]] | `Worker` / `Team` / `Human` / `Manager` | 多 Agent 协作、IM 平面、凭据网关、容器后端 |
 | [[agent-sandbox]] | `Sandbox` / `SandboxClaim` / `SandboxTemplate` / `SandboxWarmPool` | 有状态单实例 Agent runtime 原语 |
+| [[openkruise-agents]] | `Sandbox` / `SandboxSet` / `SandboxClaim` / `SandboxTemplate` | Agent sandbox lifecycle platform：warm pool、claim、E2B API、路由、runtime/CSI/identity 扩展 |
 | [[agentcube]] | `AgentRuntime` / `CodeInterpreter` | 把 agent-sandbox 包成会话、Router、PicoD、WarmPool API |
 | [[kagent]] | agentic DevOps/K8s 操作入口 | 更偏“用 Agent 操作 K8s”，不是底层 runtime CRD |
 
