@@ -1,9 +1,9 @@
 ---
 title: 云原生安全
 tags: [security, kubernetes, cloud-native, ai]
-date: 2026-06-12
-sources: [ai-vulnerability-discovery.md, k8s-v1.36-sneak-peek.md]
-related: [[kubernetes]], [[gateway-api]], [[agentgateway]], [[agent-sandbox]], [[agent-credential-isolation]]
+date: 2026-06-15
+sources: [ai-vulnerability-discovery.md, k8s-v1.36-sneak-peek.md, openkruise-agents-architecture-analysis.md]
+related: [[kubernetes]], [[gateway-api]], [[agentgateway]], [[agent-sandbox]], [[openkruise-agents]], [[agent-credential-isolation]]
 ---
 
 # 云原生安全
@@ -52,6 +52,7 @@ AI Agent 场景下，mesh/gateway 的价值更高：Agent prompt 和工具调用
 - syscall / eBPF 监控用于发现异常进程、文件、网络行为；
 - gVisor / Kata / microVM 提供更强隔离，适合运行不可信 Agent 代码；
 - [[agent-sandbox]] 把 gVisor、Kata、NetworkPolicy 等隔离机制委托给 PodTemplate，让用户按风险选择运行时；
+- [[openkruise-agents]] 在 sandbox lifecycle 上继续补 E2B API key storage、identity token propagation、dynamic CSI mount 和 Envoy route registry，因此要同时审计 API 身份、运行时 token、存储挂载和路由表 stale/fail-close 行为；
 - Falco/Tetragon 这类工具适合做 runtime detection，但需要和 workload identity、namespace、owner reference 关联，才知道异常来自哪个 Agent 或任务。
 
 ## Agent 特有风险

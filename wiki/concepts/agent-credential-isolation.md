@@ -1,9 +1,9 @@
 ---
 title: Agent 凭据隔离
 tags: [security, multi-agent, ai-infra, design-pattern]
-date: 2026-06-12
-sources: [hiclaw-architecture-analysis.md, agentgateway-architecture-analysis.md]
-related: [[HiClaw]], [[agentgateway]], [[ai-gateway]], [[mcp]], [[ai-agent-plugin-patterns]], [[declarative-agent-management]]
+date: 2026-06-15
+sources: [hiclaw-architecture-analysis.md, agentgateway-architecture-analysis.md, openkruise-agents-architecture-analysis.md]
+related: [[HiClaw]], [[agentgateway]], [[openkruise-agents]], [[ai-gateway]], [[mcp]], [[ai-agent-plugin-patterns]], [[declarative-agent-management]]
 ---
 
 # Agent 凭据隔离
@@ -47,6 +47,7 @@ LLM provider / MCP server / storage / code host
 |------|----------|------------|
 | [[HiClaw]] | Worker / Manager 只持 Higress consumer key，真实 LLM / OSS / MCP 凭据在网关侧 | 多 Agent 协作平台的默认安全边界 |
 | [[agentgateway]] | `AgentgatewayBackend` 保存 provider/backend secret，LLM/MCP/A2A 统一走 gateway policy | AI Gateway 作为出口流量和工具访问控制面 |
+| [[openkruise-agents]] | E2B API key storage、namespace-scoped team、identity provider 和 security token propagation，把 sandbox API 身份与运行时 token 分开 | K8s sandbox platform 的 API key / short-lived token / runtime propagation 边界 |
 | [[loongsuite-pilot]] | 不托管业务凭据，但在 telemetry 上统一执行 content policy / secret mask | 观测链路里的隐私边界 |
 
 ## 凭据轮转

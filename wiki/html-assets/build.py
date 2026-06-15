@@ -67,8 +67,8 @@ TOPIC_GROUPS = [
         "preferred": (
             "agent-runtime-sandbox-project-map",
             "agent-sandbox",
+            "openkruise-agents",
             "agentgateway",
-            "agent-credential-isolation",
         ),
     },
     {
@@ -111,6 +111,7 @@ READING_PATHS = [
         "steps": (
             ("地图", "agent-runtime-sandbox-project-map"),
             ("原语", "agent-sandbox"),
+            ("平台", "openkruise-agents"),
             ("治理", "agent-credential-isolation"),
         ),
     },
