@@ -3,7 +3,7 @@ title: nanobot
 tags: [ai-agent, llm, python, chat-bot, mcp, entity]
 date: 2026-05-20
 sources: [src-nanobot-architecture.md]
-related: [[claude-code], [[mcp]], [[claude-agent-sdk]], [[ai-agent-plugin-patterns]]]
+related: [[claude-code]], [[mcp]], [[claude-agent-sdk]], [[ai-agent-plugin-patterns]]
 ---
 
 # nanobot

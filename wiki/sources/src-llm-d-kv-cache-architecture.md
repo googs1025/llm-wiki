@@ -3,7 +3,7 @@ title: llm-d KV Cache 架构与设计思路分析
 tags: [architecture, kv-cache, llm-serving, vllm, ai-infra]
 date: 2026-06-12
 sources: [llm-d-kv-cache-architecture-analysis.md]
-related: [[[kv-cache-offload]], [[disaggregated-serving]], [[llm-serving-engine-selection-map]], [[vllm]], [[dynamo]], [[kubernetes]]]
+related: [[llm-d-kv-cache]], [[kv-cache-offload]], [[disaggregated-serving]], [[llm-serving-engine-selection-map]], [[vllm]], [[dynamo]], [[kubernetes]]
 ---
 
 # llm-d KV Cache 架构与设计思路分析

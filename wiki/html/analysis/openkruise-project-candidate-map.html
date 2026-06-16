@@ -28,18 +28,18 @@
   </header>
 
   <p>这页把 <code>openkruise</code> GitHub 组织里值得纳入 wiki 的项目按工程价值排序。目标不是收集全部仓库，而是补齐 Kubernetes workload automation、progressive delivery、specialized workload、observability 和 controller/operator isolation 这些架构维度。</p>
-<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-15）。当前已收录的 OpenKruise 项目是 <a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a>。</p>
+<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-15）。当前已收录的正式源码架构页是 <a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a>；本页中的 P0/P1 候选已经补成实体页，并统一归入 <a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a> 这个整体概念，而不是按每个项目维度继续拆概念页。</p>
 <h2 id="总体分层">总体分层</h2>
 <pre><code>OpenKruise ecosystem
         │
-        ├─ Workload enhancement: kruise
+        ├─ Workload enhancement: &lt;a class=&quot;wikilink&quot; href=&quot;../entities/openkruise-kruise.html&quot;&gt;openkruise-kruise&lt;/a&gt;
         │      CloneSet / Advanced StatefulSet / SidecarSet / UnitedDeployment
         │      WorkloadSpread / ImagePullJob / ContainerRecreateRequest
         │
-        ├─ Progressive delivery: rollouts
+        ├─ Progressive delivery: &lt;a class=&quot;wikilink&quot; href=&quot;../entities/openkruise-rollouts.html&quot;&gt;openkruise-rollouts&lt;/a&gt;
         │      rollout strategy / traffic routing / batch release / canary
         │
-        ├─ Specialized workload: kruise-game
+        ├─ Specialized workload: &lt;a class=&quot;wikilink&quot; href=&quot;../entities/kruise-game.html&quot;&gt;kruise-game&lt;/a&gt;
         │      game server set / ops state / network / lifecycle
         │
         ├─ Agent sandbox: agents  已收录为 &lt;a class=&quot;wikilink&quot; href=&quot;../entities/openkruise-agents.html&quot;&gt;openkruise-agents&lt;/a&gt;
@@ -58,22 +58,22 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/openkruise/kruise">openkruise/kruise</a></td>
+<td><a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a></td>
 <td>5267 stars，最近 push 2026-06-08，release v1.8.3，CNCF incubating</td>
 <td>OpenKruise 主仓，是理解 Kubernetes workload 增强的核心入口。重点是 CloneSet、Advanced StatefulSet、Advanced DaemonSet、SidecarSet、UnitedDeployment、WorkloadSpread、ImagePullJob 等比原生 Deployment/StatefulSet 更细的自动化控制。</td>
-<td><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a>、<a class="wikilink" href="../entities/kubernetes.html">kubernetes</a>、平台工程、workload automation</td>
+<td><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a>、<a class="wikilink" href="../entities/kubernetes.html">kubernetes</a>、<a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></td>
 </tr>
 <tr>
-<td><a href="https://github.com/openkruise/rollouts">openkruise/rollouts</a></td>
+<td><a class="wikilink" href="../entities/openkruise-rollouts.html">openkruise-rollouts</a></td>
 <td>254 stars，最近 push 2026-06-13，release v0.6.2</td>
 <td>渐进式发布 / enhanced rollout 控制面。适合和 Argo Rollouts、原生 Deployment rollout、Gateway/Ingress 流量切分对比。</td>
-<td>progressive delivery、GitOps、流量治理、发布控制面</td>
+<td><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a>、<a class="wikilink" href="../concepts/gitops.html">gitops</a>、流量治理、发布控制面</td>
 </tr>
 <tr>
-<td><a href="https://github.com/openkruise/kruise-game">openkruise/kruise-game</a></td>
+<td><a class="wikilink" href="../entities/kruise-game.html">kruise-game</a></td>
 <td>1059 stars，最近 push 2026-05-22，release v1.0.0</td>
 <td>Kubernetes game server management，场景独特且成熟度相对高。适合对比 Agones、StatefulSet、GameServerSet、专用 workload operator。</td>
-<td>specialized workload operator、游戏服务器、长连接/状态 workload</td>
+<td><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a>、specialized workload operator、游戏服务器</td>
 </tr>
 </tbody>
 </table></div>
@@ -108,28 +108,28 @@
 </thead>
 <tbody>
 <tr>
-<td><a href="https://github.com/openkruise/kruise-state-metrics">openkruise/kruise-state-metrics</a></td>
+<td><a class="wikilink" href="../entities/kruise-state-metrics.html">kruise-state-metrics</a></td>
 <td>12 stars，最近 push 2025-04-28</td>
 <td>OpenKruise CRD metrics addon，适合补 kube-state-metrics / Prometheus 体系下的自定义 workload 可观测。</td>
-<td>可做短架构页，或合并到 <code>openkruise/kruise</code> 摄入后的可观测章节。</td>
+<td>已建实体页；后续若摄入主仓，可补更细的 metrics schema。</td>
 </tr>
 <tr>
-<td><a href="https://github.com/openkruise/kruise-tools">openkruise/kruise-tools</a></td>
+<td><a class="wikilink" href="../entities/kruise-tools.html">kruise-tools</a></td>
 <td>55 stars，最近 push 2025-07-22，release v1.2.2</td>
 <td>Kruise libraries/tools，偏工具链与开发/运维辅助。</td>
-<td>不急于单独摄入；主仓摄入时作为工具链支撑引用。</td>
+<td>已建实体页；作为主仓工具链支撑引用。</td>
 </tr>
 <tr>
-<td><a href="https://github.com/openkruise/kruise-dashboard">openkruise/kruise-dashboard</a></td>
+<td><a class="wikilink" href="../entities/kruise-dashboard.html">kruise-dashboard</a></td>
 <td>0 stars，最近 push 2025-11-19</td>
 <td>CloneSet / Advanced StatefulSet / Advanced DaemonSet dashboard，补 OpenKruise 运维入口。</td>
-<td>如后续做 Kubernetes dashboard / ops UI 对比，可纳入 P1/P2。</td>
+<td>已建实体页；后续可放入 Kubernetes dashboard / ops UI 对比。</td>
 </tr>
 <tr>
-<td><a href="https://github.com/openkruise/controllermesh">openkruise/controllermesh</a></td>
+<td><a class="wikilink" href="../entities/controllermesh.html">controllermesh</a></td>
 <td>64 stars，最近 push 2023-05-30</td>
 <td>controller/operator isolation 管理方案，概念有价值但活跃度低。</td>
-<td>适合作为 controller 高可用、隔离和多 operator 管理的设计参考，不作为第一批源码摄入。</td>
+<td>已建实体页并接入 <a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a> 的 controller operation boundary，作为 controller 高可用、隔离和多 operator 管理设计参考。</td>
 </tr>
 </tbody>
 </table></div>
@@ -197,28 +197,28 @@
 </table></div>
 <h2 id="推荐实施顺序">推荐实施顺序</h2>
 <ol>
-<li><code>$ingest-codebase https://github.com/openkruise/kruise</code></li>
-<li><code>$ingest-codebase https://github.com/openkruise/rollouts</code></li>
-<li><code>$ingest-codebase https://github.com/openkruise/kruise-game</code></li>
+<li><code>$ingest-codebase https://github.com/openkruise/kruise</code>，扩写 <a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a>。</li>
+<li><code>$ingest-codebase https://github.com/openkruise/rollouts</code>，扩写 <a class="wikilink" href="../entities/openkruise-rollouts.html">openkruise-rollouts</a>，并同步更新 <a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a> 中的 release governance 部分。</li>
+<li><code>$ingest-codebase https://github.com/openkruise/kruise-game</code>，扩写 <a class="wikilink" href="../entities/kruise-game.html">kruise-game</a>。</li>
 <li>视主仓内容决定是否单独补 <code>kruise-state-metrics</code></li>
 <li>如果要研究 controller/operator isolation，再补 <code>controllermesh</code></li>
 </ol>
 <h2 id="和现有知识库的关系">和现有知识库的关系</h2>
 <ul>
-<li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a>：<code>kruise</code> 可以补齐“原生 workload 之外的增强 workload controller”路线。</li>
+<li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a> / <a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a>：<a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a> 可以补齐“原生 workload 之外的增强 workload controller”路线。</li>
 <li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a>：<code>SidecarSet</code>、<code>ImagePullJob</code>、runtime hooks 和 workload spread 会影响节点/镜像/sidecar/变更安全边界。</li>
 <li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a>：<a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a> 已经接入 Agent sandbox 路线，后续可补 <code>agents-api</code> 作为 API source。</li>
 <li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a> / AI infra：<code>kruise</code> 的 workload spread、pre-download image、advanced StatefulSet 可能为大模型服务滚动、镜像预热和多可用区部署提供对照。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/openkruise-agents.html">openkruise-agents</a></li><li><a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a></li><li><a class="wikilink" href="../entities/openkruise-rollouts.html">openkruise-rollouts</a></li><li><a class="wikilink" href="../entities/kruise-game.html">kruise-game</a></li><li><a class="wikilink" href="../entities/kruise-state-metrics.html">kruise-state-metrics</a></li><li><a class="wikilink" href="../entities/kruise-tools.html">kruise-tools</a></li><li><a class="wikilink" href="../entities/kruise-dashboard.html">kruise-dashboard</a></li><li><a class="wikilink" href="../entities/controllermesh.html">controllermesh</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../analysis/agent-runtime-sandbox-project-map.html">agent-runtime-sandbox-project-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/openkruise-project-candidate-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=openkruise-project-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">OpenKruise 项目候选地</text><circle class="mini-node mini-node-analysis" cx="120.0" cy="24.0" r="7"><title>Agent Runtime / Sandbox 项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-analysis" cx="178.0" cy="82.0" r="7"><title>Kubernetes Core / Controller 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Model Serving Operator</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>OpenKruise Agents</title></circle><circle class="mini-node mini-node-sources" cx="62.0" cy="82.0" r="7"><title>OpenKruise Agents 架构与设计思路分析</title></circle><circle class="mini-node mini-node-sources" cx="79.0" cy="41.0" r="7"><title>OpenKruise 组织项目当前状态核验</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../analysis/agent-runtime-sandbox-project-map.html">Agent Runtime / Sandbox 项目地图</a><span>分析 · related</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/model-serving-operator.html">Model Serving Operator</a><span>概念 · related</span></li><li><a href="../entities/openkruise-agents.html">OpenKruise Agents</a><span>实体 · related</span></li><li><a href="../sources/src-openkruise-agents-architecture.html">OpenKruise Agents 架构与设计思路分析</a><span>源文件 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../sources/src-openkruise-projects-current-state.html">OpenKruise 组织项目当前状态核验</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体分层">总体分层</a></li><li class=""><a href="#p0应优先摄入">P0：应优先摄入</a></li><li class=""><a href="#已收录">已收录</a></li><li class=""><a href="#p1专题补强">P1：专题补强</a></li><li class=""><a href="#p2支撑材料">P2：支撑材料</a></li><li class=""><a href="#暂不建议单独加入">暂不建议单独加入</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class=""><a href="#和现有知识库的关系">和现有知识库的关系</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=openkruise-project-candidate-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">OpenKruise 项目候选地</text><circle class="mini-node mini-node-analysis" cx="120.0" cy="24.0" r="7"><title>Agent Runtime / Sandbox 项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>ControllerMesh</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>GitOps</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes Core / Controller 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kruise Dashboard</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Kruise Game</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Kruise State Metrics</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../analysis/agent-runtime-sandbox-project-map.html">Agent Runtime / Sandbox 项目地图</a><span>分析 · related</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../entities/controllermesh.html">ControllerMesh</a><span>实体 · related</span></li><li><a href="../concepts/gitops.html">GitOps</a><span>概念 · wikilink</span></li><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../entities/kruise-dashboard.html">Kruise Dashboard</a><span>实体 · related</span></li><li><a href="../entities/kruise-game.html">Kruise Game</a><span>实体 · related</span></li><li><a href="../entities/kruise-state-metrics.html">Kruise State Metrics</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · wikilink</span></li><li><a href="../sources/src-openkruise-projects-current-state.html">OpenKruise 组织项目当前状态核验</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#总体分层">总体分层</a></li><li class=""><a href="#p0应优先摄入">P0：应优先摄入</a></li><li class=""><a href="#已收录">已收录</a></li><li class=""><a href="#p1专题补强">P1：专题补强</a></li><li class=""><a href="#p2支撑材料">P2：支撑材料</a></li><li class=""><a href="#暂不建议单独加入">暂不建议单独加入</a></li><li class=""><a href="#推荐实施顺序">推荐实施顺序</a></li><li class=""><a href="#和现有知识库的关系">和现有知识库的关系</a></li></ul></aside></aside>
 </div>
 
 <script>

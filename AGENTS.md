@@ -71,6 +71,22 @@ For project understanding, architecture comparison, or technology selection ques
 - Make the selection guidance explicit: best fit, avoid-if conditions, migration/adoption cost, and what to verify next.
 - Distinguish fresh GitHub observations from older ingested source notes when they differ or when confidence depends on current repository state.
 
+## Impeccable / HTML Workflow
+
+When `$impeccable` is used to redesign, polish, or restructure this wiki's generated pages, treat the UI as a projection of the wiki source of truth, not as an independent surface.
+
+Before finishing any `$impeccable` operation that changes project presentation, navigation, graph, reading paths, comparison pages, or backlog visibility:
+
+1. Check whether the changed topic introduces or promotes a project/source/concept.
+2. If a project or tool is newly visible, create or update the matching page under `wiki/entities/`.
+3. If the change affects the interpretation of an architecture pattern, update the relevant page under `wiki/concepts/` instead of leaving the concept stale.
+4. If the UI references a newly analyzed source, ensure there is a matching `wiki/sources/src-*.md` page backed by `raw/*.md`.
+5. Update `wiki/index.md` so Entities, Concepts, Sources, Analysis, and Backlog sections remain discoverable.
+6. Append `wiki/log.md` when the operation changes durable wiki content.
+7. Rebuild generated pages with `wiki/html-assets/build.py` and verify the generated graph/index reflects the source updates.
+
+Do not mark a UI polish task complete if the generated page shows newer knowledge than the entity, concept, source summary, index, or log pages.
+
 ## Lint Workflow
 
 When the user asks for a health check, inspect these items:

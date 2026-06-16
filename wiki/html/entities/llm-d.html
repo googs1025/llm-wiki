@@ -29,7 +29,7 @@
 
   <p>CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、model server、KV cache management、P/D disaggregation、autoscaling、batch、benchmark 和 simulator 组织。详见 <a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a>。</p>
 <h2 id="架构边界">架构边界</h2>
-<p>llm-d 是 serving system，不是推理 engine。<code>llm-d-router</code> 负责 LLM-aware entry point，<code>llm-d-kv-cache</code> 负责 KV cache aware routing/indexing library；外围项目继续补齐 <a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 和 <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>。它与 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 同属 K8s serving control plane，与 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> 同属分布式 serving 系统，但更贴近 Gateway API / InferencePool 标准化路线。</p>
+<p>llm-d 是 serving system，不是推理 engine。<a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> 负责 LLM-aware entry point，<a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a> 负责 KV cache aware routing/indexing library；外围项目继续补齐 <a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 和 <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>。它与 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 同属 K8s serving control plane，与 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> 同属分布式 serving 系统，但更贴近 Gateway API / InferencePool 标准化路线。</p>
 <h2 id="选型判断">选型判断</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -41,11 +41,11 @@
 <tbody>
 <tr>
 <td>Gateway API/InferencePool 路由</td>
-<td><a class="wikilink" href="../sources/src-llm-d-router-architecture.html">src-llm-d-router-architecture</a></td>
+<td><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> / <a class="wikilink" href="../sources/src-llm-d-router-architecture.html">src-llm-d-router-architecture</a></td>
 </tr>
 <tr>
 <td>KV cache aware route/index</td>
-<td><a class="wikilink" href="../sources/src-llm-d-kv-cache-architecture.html">src-llm-d-kv-cache-architecture</a></td>
+<td><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a> / <a class="wikilink" href="../sources/src-llm-d-kv-cache-architecture.html">src-llm-d-kv-cache-architecture</a></td>
 </tr>
 <tr>
 <td>完整 K8s serving stack</td>
@@ -70,7 +70,7 @@
 </tbody>
 </table></div>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/llm-d.md">查看 Markdown 源</a>
