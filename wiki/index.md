@@ -136,49 +136,55 @@ date: 2026-05-12
 
 ## 概念 (Concepts)
 
-### 云原生
+### Kubernetes 控制面 / 工作负载
 - [[gitops]] — 以 Git 为单一事实来源的运维方法论
-- [[ai-ops]] — AI/LLM 增强运维（告警分诊、根因分析）
-- [[cloud-native-security]] — 云原生安全实践与趋势
+- [[kubernetes-workload-automation]] — Kubernetes workload 自动化整体概念：workload enhancement、release governance、specialized workload、queueing、capacity、observability 和 controller operation boundary。
+- [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
+
+### Kubernetes 资源 / 设备 / GPU
 - [[kubernetes-dra]] — Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径
 - [[cdi]] — Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec
 - [[device-plugin]] — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制
 - [[gpu-sharing]] — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式
-- [[kubernetes-workload-automation]] — Kubernetes workload 自动化整体概念：workload enhancement、release governance、specialized workload、queueing、capacity、observability 和 controller operation boundary。
 
-### Agent 记忆 / 设计模式
+### LLM Serving 执行层
+- [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
+- [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
+- [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
+- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 默认架构）
+- [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
+
+### LLM Serving 流量 / 网关 / 批处理
+- [[ai-gateway]] — 面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面
+- [[inference-routing]] — 按 KV cache、语义、成本、模型质量、负载做推理请求路由
+- [[batch-inference]] — 大量 LLM 请求异步执行的 job/file/queue/output 控制面模式
+
+### Agent 运行时 / 编排 / 扩展
+- [[agent-runtime-substrate]] — 高密度 agent-like workload substrate（worker pool / actor / sandbox / wake routing）
+- [[declarative-agent-management]] — 用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）
+- [[agent-delegation]] — 把本地 coding agent 委派给插件、消息平台或托管平台的任务分发模式
+- [[ai-agent-plugin-patterns]] — AI Agent 外挂的 9 条设计原则（迁移检查表）
+
+### Agent Memory / Context 管理
 - [[agent-memory]] — Agent 长期记忆领域综述
 - [[event-driven-memory-pipeline]] — 事件采集 → AI 压缩 → 双索引 → 反向注入闭环
 - [[three-tier-search-protocol]] — 三层搜索协议（防上下文爆炸）
 - [[ai-as-compressor]] — AI 作为压缩器的设计哲学
 - [[ebbinghaus-forgetting-curve]] — `R = e^(-t/S)` 数学模型驱动 working/short/long 三层记忆衰减与晋升（PowerMem 核心）
-- [[agent-runtime-substrate]] — 高密度 agent-like workload substrate（worker pool / actor / sandbox / wake routing）
-- [[agent-delegation]] — 把本地 coding agent 委派给插件、消息平台或托管平台的任务分发模式
 
-### 检索 / Code Intelligence
+### Code Intelligence / Knowledge Graph
 - [[code-semantic-search]] — 代码语义检索方法论
 - [[hybrid-search-rrf]] — Dense + Sparse + RRF 重排混合检索
 - [[merkle-dag-fingerprint]] — 内容指纹做增量同步
 - [[code-graph]] — 从仓库构建符号/依赖/调用图并服务 review、Graph RAG、影响面分析
 - [[repo-wiki-generation]] — 自动把代码仓库生成可问答 wiki 的 pipeline
 
-### Agent 工程 / Observability
-- [[ai-agent-plugin-patterns]] — AI Agent 外挂的 9 条设计原则（迁移检查表）
-- [[declarative-agent-management]] — 用 K8s CRD 声明式管理 AI Agent 集群（HiClaw 模式）
-- [[agent-credential-isolation]] — Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key
+### Observability / Security / Governance
+- [[ai-ops]] — AI/LLM 增强运维（告警分诊、根因分析）
 - [[coding-agent-observability]] — coding agent 请求、工具、session、trace、usage、成本和运行状态的可观测性
 - [[token-usage-observability]] — 跨模型、client、workspace 汇总 token、cache、reasoning 和成本
-
-### LLM 推理 / Serving
-- [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
-- [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
-- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 默认架构）
-- [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
-- [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
-- [[ai-gateway]] — 面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面
-- [[inference-routing]] — 按 KV cache、语义、成本、模型质量、负载做推理请求路由
-- [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
-- [[batch-inference]] — 大量 LLM 请求异步执行的 job/file/queue/output 控制面模式
+- [[cloud-native-security]] — 云原生安全实践与趋势
+- [[agent-credential-isolation]] — Agent 凭据零暴露：网关托管真凭据，Agent 只持 consumer key
 
 ## 源文件摘要 (Sources)
 
