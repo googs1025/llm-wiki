@@ -3,7 +3,7 @@ title: llm-d Router 架构与设计思路分析
 tags: [architecture, llm-serving, routing, gateway-api, kubernetes]
 date: 2026-06-12
 sources: [llm-d-router-architecture-analysis.md]
-related: [[[llm-serving-engine-selection-map]], [[mcp-gateway-tooling-map]], [[agentgateway]], [[gateway-api]], [[kv-cache-offload]], [[disaggregated-serving]], [[kubernetes]]]
+related: [[llm-d-router]], [[llm-serving-engine-selection-map]], [[mcp-gateway-tooling-map]], [[agentgateway]], [[gateway-api]], [[kv-cache-offload]], [[disaggregated-serving]], [[kubernetes]]
 ---
 
 # llm-d Router 架构与设计思路分析

@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>LLM Inference / Serving 项目地图</h1>
-    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-llm-d-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
+    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
     <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">project-map</span><span class="tag">ai-infra</span></div>
   </header>
 
@@ -73,6 +73,16 @@ peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 <td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
 <td>CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、KV/P-D/autoscaling 组织</td>
 <td>K8s serving control plane</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></td>
+<td>llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择</td>
+<td>Endpoint picking / routing</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></td>
+<td>llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal</td>
+<td>KV-aware routing signal</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
@@ -205,7 +215,7 @@ peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 <tbody>
 <tr>
 <td>KV cache 显式管理</td>
-<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></td>
 <td>KV cache 是 serving 吞吐和显存效率的核心资源，不再是模型内部细节</td>
 </tr>
 <tr>
@@ -219,9 +229,9 @@ peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 <td>prefill 计算密集，decode 内存带宽密集，独立扩缩能提高资源利用</td>
 </tr>
 <tr>
-<td>多级 KV offload</td>
-<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></td>
-<td>GPU 显存不够时，把 KV 分层到 CPU/NVMe/Object store</td>
+<td>多级 KV offload / locality signal</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>, <a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></td>
+<td>GPU 显存不够时，把 KV 分层；路由时则把 KV locality 变成 endpoint score</td>
 </tr>
 <tr>
 <td>Speculative decoding</td>
@@ -509,7 +519,7 @@ cluster / managed job / serve
 <li>可以补一篇 “KV cache as schedulable resource” 概念页，把 KVBM、kvcached、P/D 分离和 GPU sharing 串起来。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-inference-serving-project-map.md">查看 Markdown 源</a>

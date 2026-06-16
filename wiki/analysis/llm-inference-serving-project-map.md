@@ -2,8 +2,8 @@
 title: LLM Inference / Serving 项目地图
 tags: [llm-inference, llm-serving, kv-cache, project-map, ai-infra]
 date: 2026-06-09
-sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-llm-d-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
-related: [[dynamo]], [[vllm]], [[sglang]], [[llm-d]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]], [[batch-inference]], [[llm-inference]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[kubernetes]], [[llm-d-kubernetes-sigs-candidate-map]]
+sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
+related: [[dynamo]], [[vllm]], [[sglang]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]], [[batch-inference]], [[llm-inference]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[kubernetes]], [[llm-d-kubernetes-sigs-candidate-map]]
 ---
 
 # LLM Inference / Serving 项目地图
@@ -36,6 +36,8 @@ peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 | [[sglang]] | 高性能推理引擎，[[radix-attention]] token 级 KV 复用 + 4 进程流水线 + speculative decoding | 单机/多实例推理引擎 |
 | [[dynamo]] | NVIDIA 数据中心级 LLM 推理编排层，把 vLLM/SGLang/TRT-LLM 组成协调集群 | 多节点 serving 编排 |
 | [[llm-d]] | CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、KV/P-D/autoscaling 组织 | K8s serving control plane |
+| [[llm-d-router]] | llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择 | Endpoint picking / routing |
+| [[llm-d-kv-cache]] | llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal | KV-aware routing signal |
 | [[llm-d-batch-gateway]] | OpenAI Batch API / 离线推理控制面，把 batch job/file/queue/output 接到下游 llm-d Router/model endpoint | Batch serving control plane |
 | [[llm-d-benchmark]] | llm-d 实验编排器，把 scenario/spec、K8s lifecycle、harness 和 result workspace 串起来 | Benchmark lifecycle |
 | [[llm-d-workload-variant-autoscaler]] | 同一模型多个 serving variant 的全局 autoscaling 决策层，经 Prometheus/HPA/KEDA 执行扩缩 | Variant autoscaling |
@@ -61,10 +63,10 @@ peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 
 | 交叉模式 | 采用项目 | 工程含义 |
 |----------|----------|----------|
-| KV cache 显式管理 | [[vllm]], [[sglang]], [[dynamo]] | KV cache 是 serving 吞吐和显存效率的核心资源，不再是模型内部细节 |
+| KV cache 显式管理 | [[vllm]], [[sglang]], [[dynamo]], [[llm-d-kv-cache]] | KV cache 是 serving 吞吐和显存效率的核心资源，不再是模型内部细节 |
 | 前缀复用 | [[vllm]], [[sglang]], [[dynamo]] | system prompt、few-shot、agent template 可共享，路由/调度要感知 prefix |
 | Prefill/Decode 分离 | [[sglang]], [[dynamo]], [[disaggregated-serving]] | prefill 计算密集，decode 内存带宽密集，独立扩缩能提高资源利用 |
-| 多级 KV offload | [[dynamo]], [[kv-cache-offload]] | GPU 显存不够时，把 KV 分层到 CPU/NVMe/Object store |
+| 多级 KV offload / locality signal | [[dynamo]], [[kv-cache-offload]], [[llm-d-kv-cache]] | GPU 显存不够时，把 KV 分层；路由时则把 KV locality 变成 endpoint score |
 | Speculative decoding | [[sglang]], [[vllm]] | 用 draft/target 或 ngram 等方法降低 decode latency |
 | K8s 控制面 | [[dynamo]], [[src-skypilot-architecture|SkyPilot]], [[src-k8s-gpu-device-plugins-stars|K8s GPU stack]] | serving 从进程问题变成 CRD/operator/scheduler 问题 |
 | Batch / benchmark / simulator | [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-inference-sim]] | serving 选型需要异步任务、可复现实验和低成本控制面替身 |

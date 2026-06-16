@@ -234,9 +234,9 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
-      "degree": 43,
-      "inbound": 3,
-      "outbound": 41
+      "degree": 49,
+      "inbound": 8,
+      "outbound": 46
     },
     {
       "id": "k8s-gpu-device-stack",
@@ -273,9 +273,9 @@
       ],
       "date": "2026-06-09",
       "description": "LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）",
-      "degree": 36,
+      "degree": 38,
       "inbound": 8,
-      "outbound": 29
+      "outbound": 31
     },
     {
       "id": "llm-serving-engine-selection-map",
@@ -311,9 +311,9 @@
       ],
       "date": "2026-06-13",
       "description": "llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）",
-      "degree": 61,
+      "degree": 63,
       "inbound": 2,
-      "outbound": 61
+      "outbound": 63
     },
     {
       "id": "mcp-gateway-tooling-map",
@@ -349,9 +349,9 @@
       ],
       "date": "2026-06-15",
       "description": "OpenKruise 项目候选地图（kruise / rollouts / kruise-game / agents / observability / controller isolation）",
-      "degree": 8,
-      "inbound": 1,
-      "outbound": 7
+      "degree": 17,
+      "inbound": 2,
+      "outbound": 16
     },
     {
       "id": "agent-delegation",
@@ -459,8 +459,8 @@
       ],
       "date": "2026-06-12",
       "description": "面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面",
-      "degree": 14,
-      "inbound": 11,
+      "degree": 15,
+      "inbound": 12,
       "outbound": 5
     },
     {
@@ -590,8 +590,8 @@
       ],
       "date": "2026-05-16",
       "description": "Prefill/Decode 分离式服务（Dynamo 默认架构）",
-      "degree": 22,
-      "inbound": 18,
+      "degree": 23,
+      "inbound": 19,
       "outbound": 8
     },
     {
@@ -626,8 +626,8 @@
       ],
       "date": "2026-04-22",
       "description": "以 Git 为单一事实来源的运维方法论",
-      "degree": 8,
-      "inbound": 8,
+      "degree": 11,
+      "inbound": 11,
       "outbound": 4
     },
     {
@@ -664,9 +664,9 @@
       ],
       "date": "2026-06-12",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 24,
-      "inbound": 22,
-      "outbound": 9
+      "degree": 26,
+      "inbound": 25,
+      "outbound": 12
     },
     {
       "id": "device-plugin",
@@ -707,6 +707,25 @@
       "outbound": 7
     },
     {
+      "id": "kubernetes-workload-automation",
+      "title": "Kubernetes Workload Automation",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/kubernetes-workload-automation.html",
+      "tags": [
+        "concept",
+        "kubernetes",
+        "workload",
+        "operator",
+        "platform-engineering"
+      ],
+      "date": "2026-06-16",
+      "description": "Kubernetes workload 自动化整体概念：workload enhancement、release governance、specialized workload、queueing、capacity、observability 和 controller operation boundary。",
+      "degree": 22,
+      "inbound": 11,
+      "outbound": 18
+    },
+    {
       "id": "kv-cache-offload",
       "title": "KV Cache Offload（KV 多级缓存）",
       "category": "concepts",
@@ -721,9 +740,9 @@
       ],
       "date": "2026-05-16",
       "description": "KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）",
-      "degree": 27,
-      "inbound": 23,
-      "outbound": 8
+      "degree": 29,
+      "inbound": 24,
+      "outbound": 12
     },
     {
       "id": "llm-inference",
@@ -739,9 +758,9 @@
       ],
       "date": "2026-06-12",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 67,
-      "inbound": 54,
-      "outbound": 28
+      "degree": 70,
+      "inbound": 55,
+      "outbound": 30
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -776,9 +795,9 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 47,
-      "inbound": 38,
-      "outbound": 23
+      "degree": 52,
+      "inbound": 41,
+      "outbound": 27
     },
     {
       "id": "paged-attention",
@@ -905,8 +924,8 @@
       ],
       "date": "2026-06-15",
       "description": "云原生安全实践与趋势",
-      "degree": 44,
-      "inbound": 38,
+      "degree": 46,
+      "inbound": 40,
       "outbound": 12
     },
     {
@@ -1350,8 +1369,8 @@
       ],
       "date": "2026-06-14",
       "description": "controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 8,
+      "inbound": 5,
       "outbound": 4
     },
     {
@@ -1371,6 +1390,25 @@
       "degree": 6,
       "inbound": 3,
       "outbound": 4
+    },
+    {
+      "id": "controllermesh",
+      "title": "ControllerMesh",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/controllermesh.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "controller",
+        "high-availability"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise controller/operator isolation 设计参考，关注控制器权限、运行和故障边界。",
+      "degree": 8,
+      "inbound": 3,
+      "outbound": 7
     },
     {
       "id": "cri-tools",
@@ -1465,8 +1503,8 @@
       ],
       "date": "2026-05-16",
       "description": "NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
-      "degree": 22,
-      "inbound": 17,
+      "degree": 23,
+      "inbound": 18,
       "outbound": 9
     },
     {
@@ -1522,8 +1560,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）",
-      "degree": 15,
-      "inbound": 9,
+      "degree": 16,
+      "inbound": 11,
       "outbound": 8
     },
     {
@@ -1597,8 +1635,8 @@
       ],
       "date": "2026-06-14",
       "description": "Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。",
-      "degree": 4,
-      "inbound": 2,
+      "degree": 5,
+      "inbound": 3,
       "outbound": 3
     },
     {
@@ -1688,8 +1726,8 @@
       ],
       "date": "2026-06-14",
       "description": "JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。",
-      "degree": 9,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 6,
       "outbound": 5
     },
     {
@@ -1707,8 +1745,8 @@
       ],
       "date": "2026-06-13",
       "description": "轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）",
-      "degree": 7,
-      "inbound": 2,
+      "degree": 8,
+      "inbound": 3,
       "outbound": 7
     },
     {
@@ -1744,8 +1782,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。",
-      "degree": 7,
-      "inbound": 5,
+      "degree": 8,
+      "inbound": 6,
       "outbound": 4
     },
     {
@@ -1802,6 +1840,81 @@
       "degree": 4,
       "inbound": 2,
       "outbound": 3
+    },
+    {
+      "id": "kruise-dashboard",
+      "title": "Kruise Dashboard",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kruise-dashboard.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "dashboard",
+        "observability"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise workload 运维 UI，面向 CloneSet / Advanced StatefulSet / Advanced DaemonSet 等资源。",
+      "degree": 7,
+      "inbound": 2,
+      "outbound": 6
+    },
+    {
+      "id": "kruise-game",
+      "title": "Kruise Game",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kruise-game.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "workload",
+        "game-server"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise game server management 专用 workload operator，用 Kubernetes API 表达游戏服务器生命周期。",
+      "degree": 7,
+      "inbound": 5,
+      "outbound": 6
+    },
+    {
+      "id": "kruise-state-metrics",
+      "title": "Kruise State Metrics",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kruise-state-metrics.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "observability",
+        "metrics"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise CRD metrics addon，把增强 workload 状态转成 Prometheus 可观测指标。",
+      "degree": 6,
+      "inbound": 3,
+      "outbound": 5
+    },
+    {
+      "id": "kruise-tools",
+      "title": "Kruise Tools",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kruise-tools.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "tooling"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise libraries/tools 支撑项目，作为主仓工具链和运维辅助材料。",
+      "degree": 6,
+      "inbound": 1,
+      "outbound": 5
     },
     {
       "id": "kserve",
@@ -1891,8 +2004,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 7,
+      "inbound": 4,
       "outbound": 4
     },
     {
@@ -1927,8 +2040,8 @@
       ],
       "date": "2026-04-22",
       "description": "容器编排平台，云原生核心（5 篇源文件）",
-      "degree": 127,
-      "inbound": 127,
+      "degree": 128,
+      "inbound": 128,
       "outbound": 8
     },
     {
@@ -1945,8 +2058,8 @@
       ],
       "date": "2026-06-12",
       "description": "K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）",
-      "degree": 28,
-      "inbound": 28,
+      "degree": 31,
+      "inbound": 31,
       "outbound": 5
     },
     {
@@ -1981,8 +2094,8 @@
       ],
       "date": "2026-06-13",
       "description": "single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照",
-      "degree": 9,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 6,
       "outbound": 6
     },
     {
@@ -1999,8 +2112,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。",
-      "degree": 13,
-      "inbound": 10,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 5
     },
     {
@@ -2053,8 +2166,8 @@
       ],
       "date": "2026-06-14",
       "description": "LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。",
-      "degree": 9,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 6,
       "outbound": 5
     },
     {
@@ -2072,9 +2185,9 @@
       ],
       "date": "2026-06-12",
       "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 32,
-      "inbound": 26,
-      "outbound": 18
+      "degree": 35,
+      "inbound": 29,
+      "outbound": 20
     },
     {
       "id": "llm-d-batch-gateway",
@@ -2127,9 +2240,28 @@
       ],
       "date": "2026-06-13",
       "description": "无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）",
-      "degree": 14,
-      "inbound": 11,
+      "degree": 15,
+      "inbound": 12,
       "outbound": 8
+    },
+    {
+      "id": "llm-d-kv-cache",
+      "title": "llm-d KV Cache",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-kv-cache.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "kv-cache",
+        "inference-routing",
+        "llm-d"
+      ],
+      "date": "2026-06-16",
+      "description": "llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。",
+      "degree": 13,
+      "inbound": 9,
+      "outbound": 9
     },
     {
       "id": "llm-d-latency-predictor",
@@ -2184,6 +2316,25 @@
       "degree": 7,
       "inbound": 4,
       "outbound": 4
+    },
+    {
+      "id": "llm-d-router",
+      "title": "llm-d Router",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/llm-d-router.html",
+      "tags": [
+        "entity",
+        "llm-serving",
+        "inference-routing",
+        "gateway-api",
+        "llm-d"
+      ],
+      "date": "2026-06-16",
+      "description": "llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。",
+      "degree": 15,
+      "inbound": 9,
+      "outbound": 10
     },
     {
       "id": "llm-d-workload-variant-autoscaler",
@@ -2330,8 +2481,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。",
-      "degree": 8,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -2613,9 +2764,47 @@
       ],
       "date": "2026-06-15",
       "description": "OpenKruise 的 K8s 原生 Agent sandbox lifecycle platform（SandboxSet/Claim + E2B API + Envoy route + agent-runtime/CSI/identity）",
-      "degree": 12,
-      "inbound": 9,
+      "degree": 15,
+      "inbound": 12,
       "outbound": 8
+    },
+    {
+      "id": "openkruise-kruise",
+      "title": "OpenKruise Kruise",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/openkruise-kruise.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "workload",
+        "operator"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise 主仓，Kubernetes workload enhancement（CloneSet / Advanced StatefulSet / SidecarSet / WorkloadSpread / ImagePullJob 等）。",
+      "degree": 13,
+      "inbound": 11,
+      "outbound": 8
+    },
+    {
+      "id": "openkruise-rollouts",
+      "title": "OpenKruise Rollouts",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/openkruise-rollouts.html",
+      "tags": [
+        "entity",
+        "kubernetes",
+        "openkruise",
+        "release-governance",
+        "rollout"
+      ],
+      "date": "2026-06-16",
+      "description": "OpenKruise 渐进式发布控制面，面向分批发布、灰度/金丝雀、暂停推进和回滚。",
+      "degree": 8,
+      "inbound": 5,
+      "outbound": 6
     },
     {
       "id": "openshell",
@@ -2707,8 +2896,8 @@
       ],
       "date": "2026-06-14",
       "description": "Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。",
-      "degree": 8,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -2745,8 +2934,8 @@
       ],
       "date": "2026-06-12",
       "description": "成本/质量 LLM routing 的算法与评测基线",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 7,
+      "inbound": 4,
       "outbound": 5
     },
     {
@@ -2819,8 +3008,8 @@
       ],
       "date": "2026-05-15",
       "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 23,
-      "inbound": 23,
+      "degree": 24,
+      "inbound": 24,
       "outbound": 4
     },
     {
@@ -2933,8 +3122,8 @@
       ],
       "date": "2026-05-15",
       "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 33,
-      "inbound": 33,
+      "degree": 34,
+      "inbound": 34,
       "outbound": 3
     },
     {
@@ -2952,8 +3141,8 @@
       ],
       "date": "2026-06-12",
       "description": "vLLM Semantic Router，system-level intelligent router（Go/Rust bindings + dashboard/operator）",
-      "degree": 7,
-      "inbound": 4,
+      "degree": 8,
+      "inbound": 5,
       "outbound": 6
     },
     {
@@ -4175,9 +4364,9 @@
       ],
       "date": "2026-06-12",
       "description": "llm-d KV Cache 架构（HEAD 26e2b6f，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）",
-      "degree": 9,
-      "inbound": 1,
-      "outbound": 8
+      "degree": 10,
+      "inbound": 3,
+      "outbound": 9
     },
     {
       "id": "src-llm-d-latency-predictor-architecture",
@@ -4248,9 +4437,9 @@
       ],
       "date": "2026-06-12",
       "description": "llm-d Router 架构（HEAD a0173a7，LLM-aware inference entry point：Envoy/ext-proc + Endpoint Picker(EPP) + filters/scorers/scrapers + InferenceObjective/ModelRewrite + P/D sidecar）",
-      "degree": 10,
-      "inbound": 1,
-      "outbound": 9
+      "degree": 11,
+      "inbound": 2,
+      "outbound": 10
     },
     {
       "id": "src-llm-d-workload-variant-autoscaler-architecture",
@@ -4659,9 +4848,9 @@
       ],
       "date": "2026-06-15",
       "description": "OpenKruise 组织项目当前状态核验（kruise / rollouts / kruise-game / agents / metrics / dashboard / controllermesh）",
-      "degree": 5,
-      "inbound": 0,
-      "outbound": 5
+      "degree": 13,
+      "inbound": 7,
+      "outbound": 12
     },
     {
       "id": "src-openshell-architecture",
@@ -6761,6 +6950,41 @@
       "kind": "wikilink"
     },
     {
+      "source": "controllermesh",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "controllermesh",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "controllermesh",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "controllermesh",
+      "target": "kubebuilder",
+      "kind": "wikilink"
+    },
+    {
+      "source": "controllermesh",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "controllermesh",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "controllermesh",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
       "source": "cri-tools",
       "target": "cloud-native-security",
       "kind": "related"
@@ -7737,6 +7961,11 @@
     },
     {
       "source": "inference-routing",
+      "target": "gateway-api-inference-extension",
+      "kind": "wikilink"
+    },
+    {
+      "source": "inference-routing",
       "target": "kv-cache-offload",
       "kind": "related"
     },
@@ -7753,6 +7982,16 @@
     {
       "source": "inference-routing",
       "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-d-router",
       "kind": "related"
     },
     {
@@ -7868,7 +8107,7 @@
     {
       "source": "k8s-core-controller-map",
       "target": "cloud-native-security",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
@@ -7957,6 +8196,11 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "kruise-game",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "kserve",
       "kind": "wikilink"
     },
@@ -7978,6 +8222,11 @@
     {
       "source": "k8s-core-controller-map",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "kubernetes-workload-automation",
       "kind": "related"
     },
     {
@@ -8023,6 +8272,21 @@
     {
       "source": "k8s-core-controller-map",
       "target": "ome",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "openkruise-project-candidate-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "openkruise-rollouts",
       "kind": "wikilink"
     },
     {
@@ -8301,6 +8565,116 @@
       "kind": "wikilink"
     },
     {
+      "source": "kruise-dashboard",
+      "target": "headlamp",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-dashboard",
+      "target": "k8m",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-dashboard",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-dashboard",
+      "target": "kubewall",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-dashboard",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-dashboard",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kruise-game",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-game",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-game",
+      "target": "llm-inference",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kruise-game",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-game",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-game",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kruise-state-metrics",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-state-metrics",
+      "target": "metrics-server",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-state-metrics",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-state-metrics",
+      "target": "prometheus-adapter",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-state-metrics",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kruise-tools",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-tools",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-tools",
+      "target": "openkruise-agents",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kruise-tools",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "kruise-tools",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
       "source": "kserve",
       "target": "gpustack",
       "kind": "wikilink"
@@ -8556,6 +8930,96 @@
       "kind": "related"
     },
     {
+      "source": "kubernetes-workload-automation",
+      "target": "cloud-native-security",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "controller-runtime",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "controllermesh",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "gitops",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "kruise-game",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "kruise-state-metrics",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "metrics-server",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "openkruise-rollouts",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-automation",
+      "target": "prometheus-adapter",
+      "kind": "wikilink"
+    },
+    {
       "source": "kubespray",
       "target": "cloud-native-security",
       "kind": "related"
@@ -8652,6 +9116,21 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-d-router",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
       "target": "llm-inference",
       "kind": "related"
     },
@@ -8673,6 +9152,11 @@
     {
       "source": "kv-cache-offload",
       "target": "src-dynamo-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "src-llm-d-kv-cache-architecture",
       "kind": "wikilink"
     },
     {
@@ -8733,6 +9217,16 @@
     {
       "source": "llm-d",
       "target": "llm-d-inference-sim",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-router",
       "kind": "related"
     },
     {
@@ -9107,6 +9601,11 @@
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "llm-d-latency-predictor",
       "kind": "wikilink"
     },
@@ -9119,6 +9618,11 @@
       "source": "llm-d-kubernetes-sigs-candidate-map",
       "target": "llm-d-prism",
       "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kubernetes-sigs-candidate-map",
+      "target": "llm-d-router",
+      "kind": "related"
     },
     {
       "source": "llm-d-kubernetes-sigs-candidate-map",
@@ -9201,6 +9705,51 @@
       "kind": "wikilink"
     },
     {
+      "source": "llm-d-kv-cache",
+      "target": "dynamo",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "llm-d-inference-sim",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "llm-d-router",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "src-llm-d-kv-cache-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-kv-cache",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "llm-d-latency-predictor",
       "target": "inference-routing",
       "kind": "related"
@@ -9258,6 +9807,56 @@
     {
       "source": "llm-d-prism",
       "target": "src-llm-d-prism-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "ai-gateway",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "gateway-api-inference-extension",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "routellm",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "semantic-router",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-router",
+      "target": "src-llm-d-router-architecture",
       "kind": "wikilink"
     },
     {
@@ -9392,6 +9991,16 @@
     },
     {
       "source": "llm-inference",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-d-router",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
     },
@@ -9522,8 +10131,18 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "llm-d-prism",
       "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-d-router",
+      "kind": "related"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -10007,6 +10626,11 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "kueue",
       "kind": "wikilink"
     },
@@ -10032,8 +10656,18 @@
     },
     {
       "source": "model-serving-operator",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
       "target": "llm-d-prism",
       "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-d-router",
+      "kind": "related"
     },
     {
       "source": "model-serving-operator",
@@ -10058,6 +10692,11 @@
     {
       "source": "model-serving-operator",
       "target": "ome",
+      "kind": "wikilink"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "openkruise-kruise",
       "kind": "wikilink"
     },
     {
@@ -10396,6 +11035,46 @@
       "kind": "wikilink"
     },
     {
+      "source": "openkruise-kruise",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "kruise-game",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "openkruise-agents",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "openkruise-rollouts",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openkruise-kruise",
+      "target": "src-openkruise-projects-current-state",
+      "kind": "wikilink"
+    },
+    {
       "source": "openkruise-project-candidate-map",
       "target": "agent-runtime-sandbox-project-map",
       "kind": "related"
@@ -10407,12 +11086,47 @@
     },
     {
       "source": "openkruise-project-candidate-map",
+      "target": "controllermesh",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "gitops",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
       "target": "k8s-core-controller-map",
       "kind": "related"
     },
     {
       "source": "openkruise-project-candidate-map",
+      "target": "kruise-dashboard",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "kruise-game",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "kruise-state-metrics",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "kruise-tools",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "kubernetes-workload-automation",
       "kind": "related"
     },
     {
@@ -10427,7 +11141,47 @@
     },
     {
       "source": "openkruise-project-candidate-map",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
+      "target": "openkruise-rollouts",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-project-candidate-map",
       "target": "src-openkruise-agents-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "gateway-api",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "gitops",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "openkruise-agents",
+      "kind": "wikilink"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "openkruise-rollouts",
+      "target": "src-openkruise-projects-current-state",
       "kind": "wikilink"
     },
     {
@@ -12852,6 +13606,11 @@
     },
     {
       "source": "src-llm-d-kv-cache-architecture",
+      "target": "llm-d-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-kv-cache-architecture",
       "target": "llm-serving-engine-selection-map",
       "kind": "related"
     },
@@ -12953,6 +13712,11 @@
     {
       "source": "src-llm-d-router-architecture",
       "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "src-llm-d-router-architecture",
+      "target": "llm-d-router",
       "kind": "related"
     },
     {
@@ -13517,12 +14281,37 @@
     },
     {
       "source": "src-openkruise-projects-current-state",
+      "target": "controllermesh",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
       "target": "k8s-core-controller-map",
       "kind": "related"
     },
     {
       "source": "src-openkruise-projects-current-state",
+      "target": "kruise-dashboard",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "kruise-game",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "kruise-state-metrics",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "kubernetes-workload-automation",
       "kind": "related"
     },
     {
@@ -13532,7 +14321,17 @@
     },
     {
       "source": "src-openkruise-projects-current-state",
+      "target": "openkruise-kruise",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
       "target": "openkruise-project-candidate-map",
+      "kind": "related"
+    },
+    {
+      "source": "src-openkruise-projects-current-state",
+      "target": "openkruise-rollouts",
       "kind": "related"
     },
     {
@@ -14245,12 +15044,12 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 107
+      "count": 116
     },
     {
       "id": "concepts",
       "label": "概念",
-      "count": 33
+      "count": 34
     },
     {
       "id": "sources",

@@ -3,7 +3,7 @@ title: OpenKruise 组织项目当前状态核验
 tags: [openkruise, kubernetes, project-map, backlog, cloud-native]
 date: 2026-06-15
 sources: [openkruise-projects-current-state.md]
-related: ["[[openkruise-project-candidate-map]]", "[[openkruise-agents]]", "[[kubernetes]]", "[[k8s-core-controller-map]]", "[[cloud-native-security]]"]
+related: ["[[openkruise-project-candidate-map]]", "[[openkruise-agents]]", "[[openkruise-kruise]]", "[[openkruise-rollouts]]", "[[kruise-game]]", "[[kubernetes-workload-automation]]", "[[kubernetes]]", "[[k8s-core-controller-map]]", "[[cloud-native-security]]"]
 ---
 
 # OpenKruise 组织项目当前状态核验
@@ -14,11 +14,11 @@ related: ["[[openkruise-project-candidate-map]]", "[[openkruise-agents]]", "[[ku
 
 当前 wiki 已完成 [[openkruise-agents]]。OpenKruise 生态还值得补的主线不是“把所有仓库都摄入”，而是围绕 Kubernetes workload 自动化形成几条清晰路线：
 
-- workload enhancement：`openkruise/kruise`
-- progressive delivery：`openkruise/rollouts`
-- specialized workload：`openkruise/kruise-game`
-- observability / operations：`openkruise/kruise-state-metrics`、`openkruise/kruise-dashboard`
-- controller/operator isolation：`openkruise/controllermesh`
+- workload enhancement：[[openkruise-kruise]]
+- progressive delivery：[[openkruise-rollouts]]
+- specialized workload：[[kruise-game]]
+- observability / operations：[[kruise-state-metrics]]、[[kruise-dashboard]]
+- controller/operator isolation：[[controllermesh]]
 - deployment/API support：`openkruise/charts`、`openkruise/*-api`
 
 ## 重点仓库元数据
