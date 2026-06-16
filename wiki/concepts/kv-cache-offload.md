@@ -2,8 +2,8 @@
 title: KV Cache Offload（KV 多级缓存）
 tags: [concept, ai-infra, kv-cache, llm-inference, memory-hierarchy]
 date: 2026-05-16
-sources: [dynamo-architecture-analysis.md]
-related: [dynamo, paged-attention, radix-attention, disaggregated-serving, vllm, sglang, llm-inference]
+sources: [dynamo-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md]
+related: [[dynamo]], [[llm-d-kv-cache]], [[llm-d-router]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[vllm]], [[sglang]], [[llm-inference]], [[inference-routing]]
 ---
 
 # KV Cache Offload（KV 多级缓存）
@@ -70,6 +70,10 @@ GPU 显存有限（A100 80GB / H200 141GB / B200 192GB），但生产 LLM servin
 
 分离式 P/D 把 KV 从 prefill worker 传到 decode worker 时，本质上也是一种 "offload"——只不过目的地是另一个 GPU 而不是本地 CPU/SSD。Dynamo 把这两件事都包装成 NIXL MemType，传输路径同形。
 
+## 与 [[llm-d-kv-cache]] 的关系
+
+[[llm-d-kv-cache]] 更偏 KV locality index，而不是完整 offload manager。它订阅 vLLM/SGLang KV events，维护 block 到 pod/tier 的命中信息，并把 score 提供给 [[llm-d-router]]。因此它回答“请求打到哪里 KV 命中更高”；[[dynamo]] KVBM / [[kv-cache-offload]] 回答“KV 应该放在哪一层、如何迁移、如何读回”。
+
 ## 收益与代价
 
 **收益：**
@@ -85,5 +89,6 @@ GPU 显存有限（A100 80GB / H200 141GB / B200 192GB），但生产 LLM servin
 ## 相关页面
 
 - 旗舰实现：[[dynamo]] KVBM（[[src-dynamo-architecture]] "KVBM 四级层次"节）
+- 路由索引：[[llm-d-kv-cache]]（[[src-llm-d-kv-cache-architecture]]）
 - 协同概念：[[paged-attention]]、[[radix-attention]]、[[disaggregated-serving]]
 - 上位概念：[[llm-inference]]

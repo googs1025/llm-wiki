@@ -3,7 +3,7 @@ title: llm-d / Kubernetes SIGs 候选项目地图
 tags: [kubernetes, llm-serving, project-map, backlog, ai-infra]
 date: 2026-06-13
 sources: [src-k8s-core-controllers-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
-related: [[llm-d]], [[kubernetes]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-inference-serving-project-map]], [[model-serving-operator]], [[inference-routing]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
+related: [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[kubernetes]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-inference-serving-project-map]], [[model-serving-operator]], [[inference-routing]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
 ---
 
 # llm-d / Kubernetes SIGs 候选项目地图
@@ -54,7 +54,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 ### llm-d 的知识结构缺口
 
-当前 wiki 已经覆盖 [[llm-d]] 总入口、Router/EPP、KV cache 和 P0 四类外围能力：
+当前 wiki 已经覆盖 [[llm-d]] 总入口、[[llm-d-router]]、[[llm-d-kv-cache]] 和 P0 四类外围能力：
 
 - **Batch inference**：[[llm-d-batch-gateway]] 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。
 - **Performance evaluation**：[[llm-d-benchmark]] / `llm-d-prism` / [[llm-d-inference-sim]] 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。

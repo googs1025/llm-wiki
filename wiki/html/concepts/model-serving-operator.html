@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>Model Serving Operator</h1>
-    <p class="page-meta">2026-06-12 · 来源：kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、openkruise-projects-current-state.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">model-serving</span><span class="tag">kubernetes</span><span class="tag">operator</span><span class="tag">llm-serving</span></div>
   </header>
 
@@ -60,6 +60,10 @@
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
 <td>不管理模型部署，但把 batch job lifecycle 接到 model serving endpoint</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a></td>
+<td>不直接管理模型服务，但提供 workload enhancement、image preheat、workload spread 等可借鉴的 K8s workload automation 模式</td>
 </tr>
 </tbody>
 </table></div>
@@ -100,9 +104,9 @@
 </table></div>
 <p>选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark、simulator、variant autoscaling 分别补异步任务、评测、测试替身和资源经济。</p>
 <h2 id="和-kubernetes-调度指标外围的关系">和 Kubernetes 调度/指标外围的关系</h2>
-<p>模型服务 operator 只管理模型服务生命周期还不够。<a class="wikilink" href="../entities/kueue.html">kueue</a> / <a class="wikilink" href="../entities/jobset.html">jobset</a> / <a class="wikilink" href="../entities/lws.html">lws</a> 决定 batch 和分布式 workload 怎么表达与入队；<a class="wikilink" href="../entities/karpenter.html">karpenter</a> 决定节点容量怎样按 pending pods 扩出；<a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> / <a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 决定 autoscaling 能看到哪些指标；<a class="wikilink" href="../entities/inference-perf.html">inference-perf</a> / <a class="wikilink" href="../entities/llm-d-prism.html">llm-d-prism</a> 决定实验结果怎样被复现和分析。</p>
+<p>模型服务 operator 只管理模型服务生命周期还不够。<a class="wikilink" href="../entities/kueue.html">kueue</a> / <a class="wikilink" href="../entities/jobset.html">jobset</a> / <a class="wikilink" href="../entities/lws.html">lws</a> 决定 batch 和分布式 workload 怎么表达与入队；<a class="wikilink" href="../entities/karpenter.html">karpenter</a> 决定节点容量怎样按 pending pods 扩出；<a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> / <a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 决定 autoscaling 能看到哪些指标；<a class="wikilink" href="../entities/inference-perf.html">inference-perf</a> / <a class="wikilink" href="../entities/llm-d-prism.html">llm-d-prism</a> 决定实验结果怎样被复现和分析。<a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a> 则提供更上位的视角：OpenKruise、Kueue、Karpenter、JobSet/LWS 和 model serving operator 都是在把业务 workload 意图提升为 Kubernetes API。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/model-serving-operator.md">查看 Markdown 源</a>
