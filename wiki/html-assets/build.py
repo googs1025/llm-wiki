@@ -901,6 +901,36 @@ def build_topic_groups(pages: list[PageMeta]) -> list[dict[str, object]]:
 LOG_ENTRY_RE = re.compile(r"^## \[(?P<date>\d{4}-\d{2}-\d{2})\]\s+(?P<kind>[^|]+)\|\s*(?P<title>.+)$")
 
 
+def sort_log_entries_newest_first(body_md: str) -> str:
+    lines = body_md.splitlines(keepends=True)
+    prefix: list[str] = []
+    entries: list[tuple[str, int, str]] = []
+    current_date = ""
+    current_index = -1
+    current_lines: list[str] = []
+
+    def flush_current() -> None:
+        if current_lines:
+            entries.append((current_date, current_index, "".join(current_lines)))
+
+    for line_index, line in enumerate(lines):
+        m = LOG_ENTRY_RE.match(line.strip())
+        if m:
+            flush_current()
+            current_date = m.group("date")
+            current_index = line_index
+            current_lines = [line]
+            continue
+        if current_lines:
+            current_lines.append(line)
+        else:
+            prefix.append(line)
+    flush_current()
+
+    entries.sort(key=lambda entry: (entry[0], entry[1]), reverse=True)
+    return "".join(prefix) + "".join(entry for _, _, entry in entries)
+
+
 def parse_recent_updates(limit: int = 8) -> list[dict[str, str]]:
     log_path = WIKI / "log.md"
     if not log_path.exists():
@@ -1804,6 +1834,7 @@ def main() -> int:
     log_md = WIKI / "log.md"
     if log_md.exists():
         page = load_page(log_md, "ROOT")
+        page.body_md = sort_log_entries_newest_first(page.body_md)
         html = build_page(page, resolver, graph_data)
         dst = OUT / "log.html"
         stats["total"] += 1

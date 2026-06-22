@@ -143,8 +143,8 @@
       ],
       "date": "2026-06-12",
       "description": "中文 AI Infra 学习项目：AISystem / AIInfra / InfraTech / LeetCUDA / Awesome-LLM-Inference / self-llm / hello-agents / nanoclaw 等（详见 ai-infra-learning-cn-map）",
-      "degree": 16,
-      "inbound": 2,
+      "degree": 17,
+      "inbound": 3,
       "outbound": 14
     },
     {
@@ -254,8 +254,8 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
-      "degree": 28,
-      "inbound": 7,
+      "degree": 31,
+      "inbound": 10,
       "outbound": 21
     },
     {
@@ -645,9 +645,29 @@
       ],
       "date": "2026-06-12",
       "description": "GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式",
-      "degree": 15,
-      "inbound": 15,
+      "degree": 16,
+      "inbound": 16,
       "outbound": 6
+    },
+    {
+      "id": "gpu-programming-learning",
+      "title": "GPU 编程学习",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/gpu-programming-learning.html",
+      "tags": [
+        "concept",
+        "gpu",
+        "cuda",
+        "musa",
+        "ai-infra",
+        "learning"
+      ],
+      "date": "2026-06-21",
+      "description": "GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解",
+      "degree": 10,
+      "inbound": 2,
+      "outbound": 10
     },
     {
       "id": "inference-routing",
@@ -664,8 +684,8 @@
       ],
       "date": "2026-06-12",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 26,
-      "inbound": 25,
+      "degree": 27,
+      "inbound": 26,
       "outbound": 12
     },
     {
@@ -758,8 +778,8 @@
       ],
       "date": "2026-06-12",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 70,
-      "inbound": 55,
+      "degree": 73,
+      "inbound": 58,
       "outbound": 30
     },
     {
@@ -795,8 +815,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 52,
-      "inbound": 41,
+      "degree": 53,
+      "inbound": 42,
       "outbound": 27
     },
     {
@@ -813,8 +833,8 @@
       ],
       "date": "2026-05-15",
       "description": "KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）",
-      "degree": 13,
-      "inbound": 13,
+      "degree": 14,
+      "inbound": 14,
       "outbound": 4
     },
     {
@@ -832,8 +852,8 @@
       ],
       "date": "2026-05-15",
       "description": "KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）",
-      "degree": 13,
-      "inbound": 13,
+      "degree": 14,
+      "inbound": 14,
       "outbound": 4
     },
     {
@@ -1503,8 +1523,8 @@
       ],
       "date": "2026-05-16",
       "description": "NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
-      "degree": 23,
-      "inbound": 18,
+      "degree": 24,
+      "inbound": 19,
       "outbound": 9
     },
     {
@@ -2185,8 +2205,8 @@
       ],
       "date": "2026-06-12",
       "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 35,
-      "inbound": 29,
+      "degree": 36,
+      "inbound": 30,
       "outbound": 20
     },
     {
@@ -2542,6 +2562,26 @@
       "outbound": 8
     },
     {
+      "id": "musa-learning-notes",
+      "title": "MUSA Learning Notes",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/musa-learning-notes.html",
+      "tags": [
+        "entity",
+        "gpu",
+        "musa",
+        "cuda",
+        "ai-infra",
+        "learning"
+      ],
+      "date": "2026-06-21",
+      "description": "MUSA SDK / CUDA→MUSA GPU 编程学习日志（6 周路线 + 38 个 .mu/C++/Python 示例）",
+      "degree": 12,
+      "inbound": 2,
+      "outbound": 12
+    },
+    {
       "id": "nanobot",
       "title": "nanobot",
       "category": "entities",
@@ -2631,8 +2671,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）",
-      "degree": 12,
-      "inbound": 10,
+      "degree": 13,
+      "inbound": 11,
       "outbound": 8
     },
     {
@@ -2650,8 +2690,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）",
-      "degree": 10,
-      "inbound": 9,
+      "degree": 11,
+      "inbound": 10,
       "outbound": 7
     },
     {
@@ -3008,8 +3048,8 @@
       ],
       "date": "2026-05-15",
       "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 24,
-      "inbound": 24,
+      "degree": 25,
+      "inbound": 25,
       "outbound": 4
     },
     {
@@ -3122,8 +3162,8 @@
       ],
       "date": "2026-05-15",
       "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 34,
-      "inbound": 34,
+      "degree": 35,
+      "inbound": 35,
       "outbound": 3
     },
     {
@@ -3335,8 +3375,8 @@
       ],
       "date": "2026-06-12",
       "description": "AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）",
-      "degree": 8,
-      "inbound": 0,
+      "degree": 11,
+      "inbound": 3,
       "outbound": 8
     },
     {
@@ -4606,6 +4646,25 @@
       "degree": 10,
       "inbound": 1,
       "outbound": 9
+    },
+    {
+      "id": "src-musa-learning-notes-architecture",
+      "title": "MUSA Learning Notes 架构与设计思路分析",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-musa-learning-notes-architecture.html",
+      "tags": [
+        "architecture",
+        "gpu",
+        "musa",
+        "cuda",
+        "ai-infra"
+      ],
+      "date": "2026-06-21",
+      "description": "MUSA Learning Notes 架构（HEAD b4042c3，GPU / CUDA→MUSA 学习日志：6 周路线 + Runtime/Stream/Graph/访存/GEMM/调试多卡示例）",
+      "degree": 5,
+      "inbound": 2,
+      "outbound": 5
     },
     {
       "id": "src-nanobot-architecture",
@@ -7720,6 +7779,56 @@
       "kind": "wikilink"
     },
     {
+      "source": "gpu-programming-learning",
+      "target": "ai-infra-learning-cn-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "inference-routing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "model-serving-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "musa-learning-notes",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "src-ai-infra-learning-cn-stars",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
+      "target": "src-musa-learning-notes-architecture",
+      "kind": "related"
+    },
+    {
       "source": "gpu-sharing",
       "target": "device-plugin",
       "kind": "related"
@@ -10752,6 +10861,66 @@
     {
       "source": "multica",
       "target": "src-multica-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "dynamo",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "gpu-operator",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "gpu-programming-learning",
+      "kind": "related"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "gpu-sharing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "k8s-device-plugin",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "sglang",
+      "kind": "wikilink"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "src-ai-infra-learning-cn-stars",
+      "kind": "related"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "src-musa-learning-notes-architecture",
+      "kind": "related"
+    },
+    {
+      "source": "musa-learning-notes",
+      "target": "vllm",
       "kind": "wikilink"
     },
     {
@@ -14015,6 +14184,31 @@
       "kind": "wikilink"
     },
     {
+      "source": "src-musa-learning-notes-architecture",
+      "target": "gpu-programming-learning",
+      "kind": "related"
+    },
+    {
+      "source": "src-musa-learning-notes-architecture",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "src-musa-learning-notes-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-musa-learning-notes-architecture",
+      "target": "musa-learning-notes",
+      "kind": "related"
+    },
+    {
+      "source": "src-musa-learning-notes-architecture",
+      "target": "src-ai-infra-learning-cn-stars",
+      "kind": "related"
+    },
+    {
       "source": "src-nanobot-architecture",
       "target": "ai-agent-plugin-patterns",
       "kind": "related"
@@ -15044,17 +15238,17 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 116
+      "count": 117
     },
     {
       "id": "concepts",
       "label": "概念",
-      "count": 34
+      "count": 35
     },
     {
       "id": "sources",
       "label": "源文件",
-      "count": 109
+      "count": 110
     },
     {
       "id": "analysis",

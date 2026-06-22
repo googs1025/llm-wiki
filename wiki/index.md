@@ -127,6 +127,9 @@ date: 2026-05-12
 - [[gpu-operator]] — NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）
 - [[k8s-device-plugin]] — NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）
 
+### GPU Learning / CUDA-MUSA
+- [[musa-learning-notes]] — MUSA SDK / CUDA→MUSA GPU 编程学习日志（6 周路线 + 38 个 `.mu`/C++/Python 示例）
+
 ### Code Intelligence / Repo Wiki
 - [[milvus]] — Zilliz 主导的开源向量数据库，支撑代码/记忆的 dense + sparse hybrid retrieval
 - [[code-review-graph]] — local-first code intelligence graph（Python package + CLI/MCP + VSCode extension）
@@ -146,6 +149,7 @@ date: 2026-05-12
 - [[cdi]] — Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec
 - [[device-plugin]] — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制
 - [[gpu-sharing]] — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式
+- [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
 - [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
@@ -296,6 +300,7 @@ date: 2026-05-12
 - [[src-nemoclaw-architecture]] — NVIDIA NemoClaw 架构（HEAD `3c0340a`，OpenShell sandbox 内 always-on AI Agent 的 CLI 控制面，onboard FSM + gateway 托管凭证 + inference.local 路由 + policy/shields）
 - [[src-openshell-architecture]] — NVIDIA OpenShell 架构（HEAD `97986d9`，AI Agent 安全运行时，Gateway 控制面 + sandbox Supervisor enforcement + OPA/Z3 policy + provider credential/inference.local 路由）
 - [[src-ai-infra-learning-cn-stars]] — AI Infra Learning 中文 Star 项目清单（32 个项目，AI 系统/Infra → CUDA/GPU kernel → LLM 推理/部署 → Agent/Skills → 面试材料）
+- [[src-musa-learning-notes-architecture]] — MUSA Learning Notes 架构（HEAD `b4042c3`，GPU / CUDA→MUSA 学习日志：6 周路线 + Runtime/Stream/Graph/访存/GEMM/调试多卡示例）
 
 ## 分析 (Analysis)
 
