@@ -8,7 +8,7 @@ date: 2026-05-12
 ## 实体 (Entities)
 
 ### 云原生
-- [[kubernetes]] — 容器编排平台，云原生核心（6 篇源文件 + 资源编排 KEP 设计域）
+- [[kubernetes]] — 容器编排平台，云原生核心（6 篇源文件 + KEP 设计方案追踪入口）
 - [[argocd]] — Kubernetes GitOps 持续交付工具
 - [[gateway-api]] — K8s SIG-Network 新一代入口 API（agentgateway 控制面 API 基础）
 - [[kubectl-ai]] — kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）
@@ -142,10 +142,6 @@ date: 2026-05-12
 ### Kubernetes 控制面 / 工作负载
 - [[gitops]] — 以 Git 为单一事实来源的运维方法论
 - [[kubernetes-workload-automation]] — Kubernetes workload 自动化整体概念：workload enhancement、release governance、specialized workload、queueing、capacity、observability 和 controller operation boundary。
-- [[kubernetes-resource-orchestration]] — Kubernetes 调度、伸缩和节点执行的资源编排设计域，基于 scheduling/autoscaling/node KEP 整理。
-- [[kubernetes-scheduling-design]] — kube-scheduler framework、队列、抢占、workload/gang 和 DRA 调度语义。
-- [[kubernetes-autoscaling-design]] — HPA API、metrics、behavior、tolerance、scale from zero 和指标失败处理。
-- [[kubernetes-node-design]] — kubelet、CRI、CPU/Memory/Topology Manager、device plugin、DRA、cgroup、安全和节点健康反馈。
 - [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
 
 ### Kubernetes 资源 / 设备 / GPU
@@ -197,7 +193,7 @@ date: 2026-05-12
 ## 源文件摘要 (Sources)
 
 - [[src-k8s-v1.36-sneak-peek]] — K8s v1.36 新特性预览（弃用 externalIPs、SELinux GA）
-- [[src-kubernetes-resource-orchestration-keps]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计地图，开辟资源编排业务域。
+- [[src-kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案源摘要与追踪方法。
 - [[src-holmesgpt-k8s-alerts]] — HolmesGPT 自动诊断 K8s 告警（Runbook > 模型选择）
 - [[src-k3s-gitops-k0rdent]] — K3s + k0rdent GitOps 部署 On-Prem 集群
 - [[src-ai-vulnerability-discovery]] — AI 驱动的漏洞发现变革与应对策略
@@ -309,6 +305,7 @@ date: 2026-05-12
 
 ## 分析 (Analysis)
 
+- [[kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
