@@ -239,6 +239,29 @@
       "outbound": 46
     },
     {
+      "id": "kubernetes-dra-design-deep-dive",
+      "title": "Kubernetes DRA Design Deep Dive",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kubernetes-dra-design-deep-dive.html",
+      "tags": [
+        "analysis",
+        "kubernetes",
+        "kep",
+        "sig-node",
+        "sig-scheduling",
+        "dra",
+        "device",
+        "gpu",
+        "design-deep-dive"
+      ],
+      "date": "2026-07-07",
+      "description": "DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。",
+      "degree": 10,
+      "inbound": 3,
+      "outbound": 9
+    },
+    {
       "id": "k8s-gpu-device-stack",
       "title": "Kubernetes GPU / Device Stack 项目地图",
       "category": "analysis",
@@ -254,9 +277,54 @@
       ],
       "date": "2026-06-13",
       "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
-      "degree": 32,
-      "inbound": 11,
+      "degree": 33,
+      "inbound": 12,
       "outbound": 21
+    },
+    {
+      "id": "kubernetes-hpa-autoscaling-design",
+      "title": "Kubernetes HPA Autoscaling Design",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kubernetes-hpa-autoscaling-design.html",
+      "tags": [
+        "analysis",
+        "kubernetes",
+        "kep",
+        "sig-autoscaling",
+        "hpa",
+        "metrics",
+        "autoscaling",
+        "design-deep-dive"
+      ],
+      "date": "2026-07-07",
+      "description": "HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。",
+      "degree": 8,
+      "inbound": 3,
+      "outbound": 7
+    },
+    {
+      "id": "kubernetes-in-place-pod-resize-design",
+      "title": "Kubernetes In-Place Pod Resize Design",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kubernetes-in-place-pod-resize-design.html",
+      "tags": [
+        "analysis",
+        "kubernetes",
+        "kep",
+        "sig-node",
+        "sig-scheduling",
+        "kubelet",
+        "pod-resize",
+        "resource-management",
+        "design-deep-dive"
+      ],
+      "date": "2026-07-07",
+      "description": "Pod /resize、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。",
+      "degree": 8,
+      "inbound": 3,
+      "outbound": 7
     },
     {
       "id": "kubernetes-keps-design-tracking",
@@ -275,9 +343,30 @@
       ],
       "date": "2026-07-06",
       "description": "Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。",
-      "degree": 13,
-      "inbound": 2,
-      "outbound": 13
+      "degree": 17,
+      "inbound": 6,
+      "outbound": 17
+    },
+    {
+      "id": "kubernetes-workload-gang-scheduling-design",
+      "title": "Kubernetes Workload and Gang Scheduling Design",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kubernetes-workload-gang-scheduling-design.html",
+      "tags": [
+        "analysis",
+        "kubernetes",
+        "kep",
+        "sig-scheduling",
+        "gang-scheduling",
+        "workload-api",
+        "design-deep-dive"
+      ],
+      "date": "2026-07-07",
+      "description": "Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。",
+      "degree": 9,
+      "inbound": 3,
+      "outbound": 8
     },
     {
       "id": "llm-inference-serving-project-map",
@@ -592,8 +681,8 @@
       ],
       "date": "2026-06-12",
       "description": "Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec",
-      "degree": 12,
-      "inbound": 10,
+      "degree": 13,
+      "inbound": 11,
       "outbound": 6
     },
     {
@@ -724,8 +813,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制",
-      "degree": 8,
-      "inbound": 8,
+      "degree": 9,
+      "inbound": 9,
       "outbound": 5
     },
     {
@@ -743,8 +832,8 @@
       ],
       "date": "2026-06-12",
       "description": "Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径",
-      "degree": 12,
-      "inbound": 12,
+      "degree": 13,
+      "inbound": 13,
       "outbound": 7
     },
     {
@@ -762,8 +851,8 @@
       ],
       "date": "2026-06-16",
       "description": "Kubernetes workload 自动化整体概念：workload enhancement、release governance、specialized workload、queueing、capacity、observability 和 controller operation boundary。",
-      "degree": 25,
-      "inbound": 14,
+      "degree": 28,
+      "inbound": 17,
       "outbound": 18
     },
     {
@@ -1521,8 +1610,8 @@
       ],
       "date": "2026-06-12",
       "description": "NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）",
-      "degree": 12,
-      "inbound": 9,
+      "degree": 13,
+      "inbound": 10,
       "outbound": 8
     },
     {
@@ -1767,8 +1856,8 @@
       ],
       "date": "2026-06-14",
       "description": "JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。",
-      "degree": 10,
-      "inbound": 6,
+      "degree": 11,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -1823,8 +1912,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。",
-      "degree": 10,
-      "inbound": 8,
+      "degree": 14,
+      "inbound": 12,
       "outbound": 4
     },
     {
@@ -2081,9 +2170,9 @@
       ],
       "date": "2026-07-06",
       "description": "容器编排平台，云原生核心（6 篇源文件 + KEP 设计方案追踪入口）",
-      "degree": 131,
-      "inbound": 130,
-      "outbound": 12
+      "degree": 135,
+      "inbound": 134,
+      "outbound": 16
     },
     {
       "id": "gateway-api",
@@ -2153,8 +2242,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。",
-      "degree": 16,
-      "inbound": 13,
+      "degree": 17,
+      "inbound": 14,
       "outbound": 5
     },
     {
@@ -2207,8 +2296,8 @@
       ],
       "date": "2026-06-14",
       "description": "LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。",
-      "degree": 10,
-      "inbound": 6,
+      "degree": 11,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -2392,8 +2481,8 @@
       ],
       "date": "2026-06-13",
       "description": "llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）",
-      "degree": 13,
-      "inbound": 10,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 7
     },
     {
@@ -2522,8 +2611,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。",
-      "degree": 12,
-      "inbound": 9,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 5
     },
     {
@@ -2673,8 +2762,8 @@
       ],
       "date": "2026-06-14",
       "description": "Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。",
-      "degree": 8,
-      "inbound": 5,
+      "degree": 10,
+      "inbound": 7,
       "outbound": 4
     },
     {
@@ -2957,8 +3046,8 @@
       ],
       "date": "2026-06-14",
       "description": "Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。",
-      "degree": 12,
-      "inbound": 9,
+      "degree": 13,
+      "inbound": 10,
       "outbound": 5
     },
     {
@@ -3013,8 +3102,8 @@
       ],
       "date": "2026-06-14",
       "description": "scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。",
-      "degree": 8,
-      "inbound": 6,
+      "degree": 10,
+      "inbound": 8,
       "outbound": 3
     },
     {
@@ -4247,9 +4336,9 @@
       ],
       "date": "2026-07-06",
       "description": "Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案源摘要与追踪方法。",
-      "degree": 10,
+      "degree": 14,
       "inbound": 2,
-      "outbound": 10
+      "outbound": 14
     },
     {
       "id": "src-k8s-v1.36-sneak-peek",
@@ -9032,12 +9121,32 @@
     },
     {
       "source": "kubernetes",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes",
+      "target": "kubernetes-hpa-autoscaling-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes",
+      "target": "kubernetes-in-place-pod-resize-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes",
       "target": "kubernetes-keps-design-tracking",
       "kind": "related"
     },
     {
       "source": "kubernetes",
       "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -9101,6 +9210,121 @@
       "kind": "related"
     },
     {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "node-feature-discovery",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "metrics-server",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "prometheus-adapter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "metrics-server",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "node-feature-discovery",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "scheduler-plugins",
+      "kind": "related"
+    },
+    {
       "source": "kubernetes-keps-design-tracking",
       "target": "k8s-core-controller-map",
       "kind": "related"
@@ -9127,7 +9351,27 @@
     },
     {
       "source": "kubernetes-keps-design-tracking",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-design-tracking",
+      "target": "kubernetes-hpa-autoscaling-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-design-tracking",
+      "target": "kubernetes-in-place-pod-resize-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-design-tracking",
       "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-design-tracking",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -9254,6 +9498,46 @@
       "source": "kubernetes-workload-automation",
       "target": "prometheus-adapter",
       "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "scheduler-plugins",
+      "kind": "related"
     },
     {
       "source": "kubespray",
@@ -13667,12 +13951,32 @@
     },
     {
       "source": "src-kubernetes-keps-design-tracking",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubernetes-keps-design-tracking",
+      "target": "kubernetes-hpa-autoscaling-design",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubernetes-keps-design-tracking",
+      "target": "kubernetes-in-place-pod-resize-design",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubernetes-keps-design-tracking",
       "target": "kubernetes-keps-design-tracking",
       "kind": "related"
     },
     {
       "source": "src-kubernetes-keps-design-tracking",
       "target": "kubernetes-workload-automation",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubernetes-keps-design-tracking",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -15430,7 +15734,7 @@
     {
       "id": "analysis",
       "label": "分析",
-      "count": 20
+      "count": 24
     }
   ]
 }

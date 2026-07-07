@@ -306,6 +306,10 @@ date: 2026-05-12
 ## 分析 (Analysis)
 
 - [[kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。
+- [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。
+- [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。
+- [[kubernetes-hpa-autoscaling-design]] — HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。
+- [[kubernetes-in-place-pod-resize-design]] — Pod `/resize`、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
