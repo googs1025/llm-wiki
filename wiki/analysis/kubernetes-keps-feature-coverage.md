@@ -3,7 +3,7 @@ title: Kubernetes KEP Feature Coverage
 tags: [analysis, kubernetes, kep, feature-coverage, sig-scheduling, sig-autoscaling, sig-node]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]]
+related: [[kubernetes]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]]
 ---
 
 # Kubernetes KEP Feature Coverage
@@ -14,7 +14,7 @@ related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-sched
 
 - **重要 feature 都要入组**：P0/P1 必须进入一个合并设计组；P2 只作为历史或边界补充。
 - **相关设计合并讲**：例如 DRA 不拆成 node/scheduling 两套，而是合并为一个跨 SIG 设计组。
-- **总表追踪，详解讲设计**：[[kubernetes-keps-design-tracking]] 保留完整 KEP 表；本页说明 feature 覆盖；详解页解释为什么这样设计。
+- **总表追踪，矩阵看状态，详解讲设计**：[[kubernetes-keps-design-tracking]] 保留完整 KEP 表；[[kubernetes-keps-implementation-matrix]] 追踪 Alpha/Beta/GA、是否实现和 feature gates；本页说明 feature 覆盖；详解页解释为什么这样设计。
 - **优先覆盖影响生产系统的问题**：调度正确性、容量推理、autoscaling 可靠性、kubelet/runtime 边界、设备资源、可观测、安全和升级回滚。
 
 ## 当前合并设计组
@@ -27,6 +27,8 @@ related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-sched
 | HPA / metrics / scale from zero | autoscaling | `4951`, `853`, `2702`, `1610`, `117`, `5325`, `2021`, `5679`, `5030` | [[kubernetes-hpa-autoscaling-design]] | 已详解 |
 | In-place Pod resize / resource mutation | node + scheduling | `1287`, `5419`, `5526`, `5554`, `6122`, `5836` | [[kubernetes-in-place-pod-resize-design]] | 已详解 |
 | Node runtime / resource managers / observability / security | node | `2040`, `2221`, `585`, `3570`, `1769`, `693`, `753`, `127`, `2033`, `2371`, `4205`, `5394`, `4680`, `5328` | [[kubernetes-node-runtime-observability-security-design]] | 已详解 |
+
+实现状态、Alpha/Beta/GA、feature gates 和关键实现路径统一见 [[kubernetes-keps-implementation-matrix]]。这里的 “已详解” 只表示已经有设计讲解页，不等于所有 KEP 都已经 GA。
 
 ## SIG Scheduling Feature 覆盖
 

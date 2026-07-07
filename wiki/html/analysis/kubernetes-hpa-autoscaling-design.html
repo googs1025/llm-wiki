@@ -27,7 +27,7 @@
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-autoscaling</span><span class="tag">hpa</span><span class="tag">metrics</span><span class="tag">autoscaling</span><span class="tag">design-deep-dive</span></div>
   </header>
 
-  <p>这页拉出 <code>sig-autoscaling</code> 中最值得详细讲解的一组设计文档：HPA tolerance、container resource metrics、pod selection accuracy、scale from zero、external metric fallback，以及 Cluster Autoscaler 的 attach limit integration。</p>
+  <p>这页拉出 <code>sig-autoscaling</code> 中最值得详细讲解的一组设计文档：HPA tolerance、container resource metrics、pod selection accuracy、scale from zero、external metric fallback，以及 Cluster Autoscaler 的 attach limit integration。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>这组 KEP 的共同目标是让 HPA 从“基于粗粒度全局参数和 selector 的普通副本数调节器”，变成更可解释、更可靠、更适合高成本 workload 的 autoscaling 控制面。</p>
 <h2 id="hpa-的设计问题">HPA 的设计问题</h2>
@@ -190,6 +190,83 @@ scale subresource update
 <li><code>5679-external-metric-fallback</code>：理解外部指标失败策略。</li>
 <li><code>5030-attach-limit-autoscaler</code>：理解 autoscaler 和 scheduler 模拟一致性。</li>
 </ol>
+<h2 id="关键-kep-实现状态">关键 KEP 实现状态</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>KEP</th>
+<th>当前状态</th>
+<th>Alpha / Beta / GA</th>
+<th>Feature gate</th>
+<th>关键实现路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4951-configurable-hpa-tolerance</code></td>
+<td><code>implementable / stable</code>，GA 目标 v1.37</td>
+<td>v1.33 / v1.35 / v1.37</td>
+<td><code>HPAConfigurableTolerance</code></td>
+<td><code>HPAScalingRules.tolerance</code> 下放到单个 HPA 的 scaleUp/scaleDown。</td>
+</tr>
+<tr>
+<td><code>853-configurable-hpa-scale-velocity</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>- / - / -</td>
+<td>-</td>
+<td>HPA behavior policies、stabilization window、scale velocity。</td>
+</tr>
+<tr>
+<td><code>2702-graduate-hpa-api-to-GA</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>- / - / v1.23</td>
+<td>-</td>
+<td>HPA v2 API GA。</td>
+</tr>
+<tr>
+<td><code>1610-container-resource-autoscaling</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.20 / v1.27 / v1.30</td>
+<td><code>HPAContainerMetrics</code></td>
+<td>HPA 使用指定 container 的 CPU/memory 指标。</td>
+</tr>
+<tr>
+<td><code>117-hpa-metrics-specificity</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>- / - / -</td>
+<td>-</td>
+<td>custom/external metrics 支持 label selector。</td>
+</tr>
+<tr>
+<td><code>5325-hpa-pod-selection-accuracy</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.35 / v1.36 / v1.37</td>
+<td><code>HPASelectionStrategy</code></td>
+<td><code>OwnerReference</code> selection strategy，过滤非目标 workload Pod。</td>
+</tr>
+<tr>
+<td><code>2021-scale-from-zero</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.16 / v1.37 / x.y</td>
+<td><code>HPAScaleToZero</code></td>
+<td>HPA 基于 object/external metrics 从 0 恢复，并用 condition 标记自动缩零。</td>
+</tr>
+<tr>
+<td><code>5679-external-metric-fallback</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.36 / v1.37 / v1.38</td>
+<td><code>HPAExternalMetricFallback</code></td>
+<td>external metric 连续失败后用固定 fallback replicas 进入 max 合并。</td>
+</tr>
+<tr>
+<td><code>5030-attach-limit-autoscaler</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.35 / v1.37 / v1.38</td>
+<td><code>VolumeLimitScaling</code></td>
+<td>Cluster Autoscaler scale-up 模拟纳入 CSI attach limit。</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="追踪重点">追踪重点</h2>
 <ul>
 <li>HPA v2 API 新字段是否进入 stable，旧版本 conversion 是否完整。</li>
@@ -199,14 +276,14 @@ scale subresource update
 <li>DRA、PodGroup、volume attach、topology 等复杂约束是否继续进入 autoscaler 模拟。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li><li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li><li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-hpa-autoscaling-design.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-hpa-autoscaling-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes HPA A</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="178.0" cy="82.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Kubernetes Workload Automation</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>llm-d Workload Variant Autoscaler</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>metrics-server</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>prometheus-adapter</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEP Feature Coverage</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../concepts/kubernetes-workload-automation.html">Kubernetes Workload Automation</a><span>概念 · related</span></li><li><a href="../entities/llm-d-workload-variant-autoscaler.html">llm-d Workload Variant Autoscaler</a><span>实体 · related</span></li><li><a href="../entities/metrics-server.html">metrics-server</a><span>实体 · related</span></li><li><a href="../entities/prometheus-adapter.html">prometheus-adapter</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · wikilink</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#hpa-的设计问题">HPA 的设计问题</a></li><li class=""><a href="#configurable-hpa-tolerance">Configurable HPA Tolerance</a></li><li class=""><a href="#container-resource-autoscaling">Container Resource Autoscaling</a></li><li class=""><a href="#pod-selection-accuracy">Pod Selection Accuracy</a></li><li class=""><a href="#scale-from-zero">Scale From Zero</a></li><li class=""><a href="#external-metric-fallback">External Metric Fallback</a></li><li class=""><a href="#hpa-决策链路">HPA 决策链路</a></li><li class=""><a href="#cluster-autoscaler-attach-limit">Cluster Autoscaler Attach Limit</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#和指标生态的关系">和指标生态的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-hpa-autoscaling-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes HPA A</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="178.0" cy="82.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes KEP Implementation Matrix</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Kubernetes Workload Automation</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>llm-d Workload Variant Autoscaler</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>metrics-server</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>prometheus-adapter</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../concepts/kubernetes-workload-automation.html">Kubernetes Workload Automation</a><span>概念 · related</span></li><li><a href="../entities/llm-d-workload-variant-autoscaler.html">llm-d Workload Variant Autoscaler</a><span>实体 · related</span></li><li><a href="../entities/metrics-server.html">metrics-server</a><span>实体 · related</span></li><li><a href="../entities/prometheus-adapter.html">prometheus-adapter</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · wikilink</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#hpa-的设计问题">HPA 的设计问题</a></li><li class=""><a href="#configurable-hpa-tolerance">Configurable HPA Tolerance</a></li><li class=""><a href="#container-resource-autoscaling">Container Resource Autoscaling</a></li><li class=""><a href="#pod-selection-accuracy">Pod Selection Accuracy</a></li><li class=""><a href="#scale-from-zero">Scale From Zero</a></li><li class=""><a href="#external-metric-fallback">External Metric Fallback</a></li><li class=""><a href="#hpa-决策链路">HPA 决策链路</a></li><li class=""><a href="#cluster-autoscaler-attach-limit">Cluster Autoscaler Attach Limit</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#和指标生态的关系">和指标生态的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
 </div>
 
 <script>

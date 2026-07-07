@@ -3,12 +3,12 @@ title: Kubernetes In-Place Pod Resize Design
 tags: [analysis, kubernetes, kep, sig-node, sig-scheduling, kubelet, pod-resize, resource-management, design-deep-dive]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/1287-in-place-update-pod-resources/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/5419-pod-level-resources-in-place-resize/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/5526-pod-level-resource-managers/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/5554-in-place-update-pod-resources-alongside-static-cpu-manager-policy/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/6122-configurable-scaling-delay-with-pod-resource-exposure/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5836-scheduler-preemption-for-ippr/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-automation]], [[metrics-server]], [[karpenter]], [[node-feature-discovery]], [[scheduler-plugins]]
+related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-workload-automation]], [[metrics-server]], [[karpenter]], [[node-feature-discovery]], [[scheduler-plugins]]
 ---
 
 # Kubernetes In-Place Pod Resize Design
 
-这页拉出 `sig-node` 和 `sig-scheduling` 交叉的一组重要设计文档：`1287-in-place-update-pod-resources` 是主线，`5419`、`5526`、`5554`、`6122`、`5836` 继续扩展到 Pod-level resources、CPU/Memory manager、static CPU policy、延迟暴露和 scheduler preemption。
+这页拉出 `sig-node` 和 `sig-scheduling` 交叉的一组重要设计文档：`1287-in-place-update-pod-resources` 是主线，`5419`、`5526`、`5554`、`6122`、`5836` 继续扩展到 Pod-level resources、CPU/Memory manager、static CPU policy、延迟暴露和 scheduler preemption。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -207,6 +207,17 @@ In-place resize 是 VPA 和 HPA 之间的底层能力补位：
 3. `5526-pod-level-resource-managers`：理解 CPU/Memory/Topology manager 如何支持 Pod scope。
 4. `5554` / `6122`：理解 static CPU、exclusive CPUs 和 scaling delay。
 5. `5836-scheduler-preemption-for-ippr`：理解 scheduler 如何为 deferred resize 抢占。
+
+## 关键 KEP 实现状态
+
+| KEP | 当前状态 | Alpha / Beta / GA | Feature gate | 关键实现路径 |
+|---|---|---|---|---|
+| `1287-in-place-update-pod-resources` | `implemented / stable`，已实现/GA | v1.27 / v1.33 / v1.35 | `InPlacePodVerticalScaling`, `InPlacePodVerticalScalingAllocatedStatus` | Pod `/resize` subresource，desired/allocated/actual 状态和 kubelet resize loop。 |
+| `5419-pod-level-resources-in-place-resize` | `implementable / beta`，仍在 beta | v1.35 / v1.36 / - | `InPlacePodLevelResourcesVerticalScaling`, `PodLevelResources` | Pod-level resources 参与 in-place resize。 |
+| `5526-pod-level-resource-managers` | `implementable / beta`，仍在 beta | v1.36 / v1.37 / v1.39 | `PodLevelResources`, `PodLevelResourceManagers` | CPU/Memory/Topology Manager 支持 Pod scope 管理。 |
+| `5554-in-place-update-pod-resources-alongside-static-cpu-manager-policy` | `implementable / alpha`，仍在 alpha | v1.37 / v1.38 / v1.39 | `InPlacePodVerticalScalingExclusiveCPUs` | static CPU Manager exclusive CPUs 场景下支持 resize。 |
+| `6122-configurable-scaling-delay-with-pod-resource-exposure` | `implementable / alpha`，仍在 alpha | v1.37 / v1.39 / v1.40 | `DownwardAPIAssignedResources` 等 | 先向 Pod 暴露 assigned resources，再延迟收回 exclusive CPUs。 |
+| `5836-scheduler-preemption-for-ippr` | `implementable / alpha`，仍在 alpha | v1.37 / v1.38 / v1.39 | `SchedulerPreemptionForPodResize` | scheduler 为 `Deferred` resize 在已绑定节点上选择 victim。 |
 
 ## 追踪重点
 
