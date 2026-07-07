@@ -3,7 +3,7 @@ title: Kubernetes
 tags: [kubernetes, container-orchestration, cncf]
 date: 2026-07-06
 sources: [k8s-v1.36-sneak-peek.md, holmesgpt-k8s-alert-diagnosis.md, k3s-gitops-k0rdent.md, ai-vulnerability-discovery.md, src-kubernetes-keps-design-tracking.md]
-related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
+related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[kubernetes-hpa-autoscaling-design]]", "[[kubernetes-in-place-pod-resize-design]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
 ---
 
 # Kubernetes
@@ -37,6 +37,13 @@ related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[g
 - **SIG Node** — kubelet/CRI、CPU/Memory/Topology Manager、in-place resource resize、device plugin/DRA/CDI、pod lifecycle、security/isolation 和 node health。
 
 第一批 P0 追踪线包括 DRA device taints 与 partitionable devices、queueing hint / scheduler async preemption、HPA configurable tolerance / container resource metrics / scale-to-zero、in-place pod resize 与 sidecar containers。后续应优先补 `kep.yaml` / `prod-readiness.yaml` 中的 feature gates、metrics、rollback、scalability 和 upgrade/downgrade 信息。
+
+已拉出四篇重点设计文档详解：
+
+- [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 controller API building blocks。
+- [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和 autoscaler 可推理性。
+- [[kubernetes-hpa-autoscaling-design]] — HPA tolerance、container metrics、pod selection、scale from zero 和 external metric fallback。
+- [[kubernetes-in-place-pod-resize-design]] — Pod `/resize`、资源状态机、Pod-level resources、static CPU manager 和 resize-induced preemption。
 
 ## 相关概念
 - [[gitops]] — 声明式交付模式

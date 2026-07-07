@@ -3,7 +3,7 @@ title: Kubernetes KEPs Design Tracking
 tags: [analysis, kubernetes, kep, design-tracking, sig-scheduling, sig-autoscaling, sig-node]
 date: 2026-07-06
 sources: [src-kubernetes-keps-design-tracking.md]
-related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-d-kubernetes-sigs-candidate-map]]
+related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-d-kubernetes-sigs-candidate-map]]
 ---
 
 # Kubernetes KEPs Design Tracking
@@ -18,6 +18,15 @@ related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-d
   - `P0`：近期活跃、跨 SIG 影响大、或与 AI/HPC/GPU/平台工程强相关。
   - `P1`：稳定基础设计，适合作为背景知识或项目对照。
   - `P2`：历史、边缘或低频补充。
+
+## 重要设计文档详解
+
+| 设计文档 | 覆盖 KEP | 重点 |
+|---|---|---|
+| [[kubernetes-workload-gang-scheduling-design]] | `4671`, `5710`, `6012`, `6089`, `5732` | Workload / PodGroup API、gang scheduling、workload-aware preemption、topology-aware workload scheduling 和 controller API building blocks。 |
+| [[kubernetes-dra-design-deep-dive]] | `4381`, `3063`, `5007`, `5075`, `4815`, `4816`, `5055` | DRA structured parameters、ResourceSlice/ResourceClaim、scheduler plugin、kubelet plugin、CDI、autoscaler 可推理性和设备扩展 KEP。 |
+| [[kubernetes-hpa-autoscaling-design]] | `4951`, `2021`, `5679`, `1610`, `5325`, `5030` | HPA tolerance、container resource metrics、pod selection accuracy、scale from zero、external metric fallback 和 attach-limit autoscaler。 |
+| [[kubernetes-in-place-pod-resize-design]] | `1287`, `5419`, `5526`, `5554`, `6122`, `5836` | Pod `/resize` subresource、desired/allocated/actuated/actual 状态、Pod-level resources、static CPU manager、scheduler preemption for deferred resize。 |
 
 ## SIG Scheduling
 
@@ -217,6 +226,6 @@ related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-d
 ## 下一轮要补的数据
 
 1. 从 `prod-readiness/sig-scheduling/*.yaml`、`prod-readiness/sig-autoscaling/*.yaml`、`prod-readiness/sig-node/*.yaml` 补 feature gates、metrics、rollback、scalability、upgrade/downgrade。
-2. 对 P0 KEP 建单页深挖，优先顺序：`4671/5710`、`4381 + DRA scheduling KEPs`、`1287/5419/5836`、`4951/2021/5679`。
-3. 增加 “版本视图”：按 `latest-milestone` 输出 v1.35、v1.36、v1.37 的活跃 KEP 列表。
-4. 增加 “跨项目视图”：把 KEP 和 [[kueue]]、[[karpenter]]、[[scheduler-plugins]]、[[metrics-server]]、[[prometheus-adapter]]、[[node-feature-discovery]]、[[k8s-gpu-device-stack]] 对齐。
+2. 增加 “版本视图”：按 `latest-milestone` 输出 v1.35、v1.36、v1.37 的活跃 KEP 列表。
+3. 增加 “跨项目视图”：把 KEP 和 [[kueue]]、[[karpenter]]、[[scheduler-plugins]]、[[metrics-server]]、[[prometheus-adapter]]、[[node-feature-discovery]]、[[k8s-gpu-device-stack]] 对齐。
+4. 对 Node observability / security / lifecycle P0 KEP 继续补第二批详解页。
