@@ -3,7 +3,7 @@ title: Kubernetes
 tags: [kubernetes, container-orchestration, cncf]
 date: 2026-07-06
 sources: [k8s-v1.36-sneak-peek.md, holmesgpt-k8s-alert-diagnosis.md, k3s-gitops-k0rdent.md, ai-vulnerability-discovery.md, src-kubernetes-keps-design-tracking.md]
-related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-scheduler-core-design]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[kubernetes-hpa-autoscaling-design]]", "[[kubernetes-in-place-pod-resize-design]]", "[[kubernetes-node-runtime-observability-security-design]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
+related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-scheduler-core-design]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[kubernetes-hpa-autoscaling-design]]", "[[kubernetes-in-place-pod-resize-design]]", "[[kubernetes-node-runtime-observability-security-design]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
 ---
 
 # Kubernetes
@@ -36,11 +36,12 @@ related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[g
 - **SIG Autoscaling** — HPA API/behavior、tolerance、metrics specificity、container metrics、scale from zero、external metrics failure handling 和 cluster autoscaler integration。
 - **SIG Node** — kubelet/CRI、CPU/Memory/Topology Manager、in-place resource resize、device plugin/DRA/CDI、pod lifecycle、security/isolation 和 node health。
 
-第一批 P0 追踪线包括 DRA device taints 与 partitionable devices、queueing hint / scheduler async preemption、HPA configurable tolerance / container resource metrics / scale-to-zero、in-place pod resize 与 sidecar containers。后续应优先补 `kep.yaml` / `prod-readiness.yaml` 中的 feature gates、metrics、rollback、scalability 和 upgrade/downgrade 信息。
+第一批 P0 追踪线包括 DRA device taints 与 partitionable devices、queueing hint / scheduler async preemption、HPA configurable tolerance / container resource metrics / scale-to-zero、in-place pod resize 与 sidecar containers。[[kubernetes-keps-implementation-matrix]] 已把 P0/P1 的 `status`、Alpha/Beta/GA、feature gates 和关键实现路径拉成 KEP 级矩阵；后续再补 `prod-readiness.yaml` 中的 metrics、rollback、scalability 和 upgrade/downgrade 细节。
 
 已按合并设计组拉出 feature 覆盖矩阵和六篇重点设计文档详解：
 
 - [[kubernetes-keps-feature-coverage]] — 汇总 scheduling / autoscaling / node 的重要 feature 覆盖状态。
+- [[kubernetes-keps-implementation-matrix]] — 逐项追踪重要 KEP 是否实现、处于 alpha/beta/GA 哪个阶段、feature gate 和关键实现路径。
 - [[kubernetes-scheduler-core-design]] — Scheduler framework、profiles、queue/requeue、topology placement 和 async preemption。
 - [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 controller API building blocks。
 - [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和 autoscaler 可推理性。

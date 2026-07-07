@@ -3,12 +3,12 @@ title: Kubernetes Node Runtime Observability Security Design
 tags: [analysis, kubernetes, kep, sig-node, kubelet, cri, observability, security, lifecycle, design-deep-dive]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/2040-kubelet-cri/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/2221-remove-dockershim/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/585-runtime-class/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/3570-cpumanager/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/1769-memory-manager/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/693-topology-manager/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/753-sidecar-containers/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/127-user-namespaces/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/2033-kubelet-in-userns-aka-rootless/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/2371-cri-pod-container-stats/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/5394-psi-node-conditions/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/4680-add-resource-health-to-pod-status/README.md]
-related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-design-tracking]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-dra-design-deep-dive]], [[cri-tools]], [[security-profiles-operator]], [[node-feature-discovery]], [[metrics-server]]
+related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-dra-design-deep-dive]], [[cri-tools]], [[security-profiles-operator]], [[node-feature-discovery]], [[metrics-server]]
 ---
 
 # Kubernetes Node Runtime Observability Security Design
 
-这页合并讲 `sig-node` 里除 DRA 和 in-place resize 之外的核心 feature：kubelet/CRI runtime 边界、CPU/Memory/Topology Manager、Pod lifecycle、安全隔离、节点可观测和 resource health。
+这页合并讲 `sig-node` 里除 DRA 和 in-place resize 之外的核心 feature：kubelet/CRI runtime 边界、CPU/Memory/Topology Manager、Pod lifecycle、安全隔离、节点可观测和 resource health。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -149,6 +149,29 @@ container runtime + kernel
 | Pod root 权限过大 | user namespaces、rootless kubelet、seccomp。 |
 | 设备异常不可见 | resource health in Pod status。 |
 | 节点 pressure 只能靠人工看指标 | PSI metrics -> Node Conditions。 |
+
+## 关键 KEP 实现状态
+
+| KEP | 当前状态 | Alpha / Beta / GA | Feature gate | 关键实现路径 |
+|---|---|---|---|---|
+| `2040-kubelet-cri` | `implementable / beta`，CRI 支撑主线已长期使用但 metadata 未 GA | v1.5 / v1.23 / - | - | kubelet 通过 CRI 管理 runtime，Docker 细节退出 kubelet 核心。 |
+| `2221-remove-dockershim` | `implemented / stable`，已实现/GA | - / - / - | - | 移除 kubelet 内置 dockershim。 |
+| `585-runtime-class` | `implemented / stable`，已实现/GA | v1.12 / v1.14 / v1.20 | `RuntimeClass` | Pod 通过 `runtimeClassName` 选择 runtime handler。 |
+| `3570-cpumanager` | `implemented / stable`，已实现/GA | v1.8 / v1.10 / v1.26 | `CPUManager` | kubelet static policy 为 Guaranteed Pod 分配 cpuset。 |
+| `1769-memory-manager` | `implemented / stable`，已实现/GA | v1.21 / v1.22 / v1.32 | `MemoryManager` | kubelet 管理 NUMA-aware memory allocation。 |
+| `693-topology-manager` | `implemented / stable`，已实现/GA | v1.16 / v1.18 / v1.27 | `TopologyManager` | 聚合 CPU/memory/device hints，决定 NUMA 对齐。 |
+| `3573-device-plugin` | `implemented / stable`，已实现/GA | v1.8 / v1.10 / v1.26 | `DevicePlugins` | kubelet device plugin API。 |
+| `4009-add-cdi-devices-to-device-plugin-api` | `implemented / stable`，已实现/GA | v1.28 / v1.29 / v1.31 | `DevicePluginCDIDevices` | device plugin 可返回 CDI devices。 |
+| `3695-pod-resources-for-dra` | `implemented / stable`，已实现/GA | v1.27 / v1.34 / v1.36 | `KubeletPodResourcesDynamicResource` | PodResources API 暴露 DRA resources。 |
+| `753-sidecar-containers` | `implemented / stable`，已实现/GA | v1.28 / v1.29 / v1.33 | `SidecarContainers` | 用 restartable init containers 表达 sidecar lifecycle。 |
+| `127-user-namespaces` | `implemented / stable`，已实现/GA | v1.25 / v1.35 / v1.36 | `UserNamespacesSupport` | Pod user namespace 隔离。 |
+| `2033-kubelet-in-userns-aka-rootless` | `implementable / beta`，仍在 beta | v1.22 / v1.37 / - | `KubeletInUserNamespace` | kubelet rootless/user namespace 运行。 |
+| `5607-hostnetwork-userns` | `implementable / alpha`，仍在 alpha | v1.35 / - / - | `UserNamespacesHostNetworkSupport` | HostNetwork Pod 使用 user namespaces。 |
+| `2371-cri-pod-container-stats` | `implementable / beta`，仍在 beta | v1.29 / v1.37 / - | `PodAndContainerStatsFromCRI` | kubelet Pod/container stats 迁往 CRI。 |
+| `4205-psi-metric` | `implemented / stable`，已实现/GA | v1.33 / v1.34 / v1.36 | `KubeletPSI` | kubelet 暴露 PSI metrics。 |
+| `5394-psi-node-conditions` | `implementable / alpha`，仍在 alpha | v1.36 / - / - | `PSINodeCondition` | PSI pressure 转为 Node Conditions。 |
+| `4680-add-resource-health-to-pod-status` | `implementable / beta`，仍在 beta | v1.31 / v1.36 / v1.37 | `ResourceHealthStatus` | Device Plugin/DRA resource health 写入 Pod status。 |
+| `5328-node-declared-features` | `implementable / stable`，GA 目标已达 | v1.35 / v1.36 / v1.37 | `NodeDeclaredFeatures` | 节点能力结构化声明，供调度/控制器消费。 |
 
 ## 追踪重点
 

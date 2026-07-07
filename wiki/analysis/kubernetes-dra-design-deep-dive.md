@@ -3,12 +3,12 @@ title: Kubernetes DRA Design Deep Dive
 tags: [analysis, kubernetes, kep, sig-node, sig-scheduling, dra, device, gpu, design-deep-dive]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/4381-dra-structured-parameters/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/3063-dynamic-resource-allocation/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5007-device-attach-before-pod-scheduled/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5075-dra-consumable-capacity/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4815-dra-partitionable-devices/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4816-dra-prioritized-list/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5055-dra-device-taints-and-tolerations/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-dra]], [[k8s-gpu-device-stack]], [[device-plugin]], [[cdi]], [[node-feature-discovery]], [[dra-driver-nvidia-gpu]], [[karpenter]]
+related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-dra]], [[k8s-gpu-device-stack]], [[device-plugin]], [[cdi]], [[node-feature-discovery]], [[dra-driver-nvidia-gpu]], [[karpenter]]
 ---
 
 # Kubernetes DRA Design Deep Dive
 
-这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 `sig-node/4381-dra-structured-parameters`，它把早期 `3063-dynamic-resource-allocation` 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。
+这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 `sig-node/4381-dra-structured-parameters`，它把早期 `3063-dynamic-resource-allocation` 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -167,6 +167,24 @@ DRA 最重要的教训来自 `3063` 到 `4381` 的路线变化：Cluster Autosca
 3. `4815` / `5075` / `5941`：理解 partition 和 capacity。
 4. `5007`：理解 device attach/readiness 如何进入调度。
 5. `5055` / `4816` / `6080`：理解生产化调度表达。
+
+## 关键 KEP 实现状态
+
+| KEP | 当前状态 | Alpha / Beta / GA | Feature gate | 关键实现路径 |
+|---|---|---|---|---|
+| `4381-dra-structured-parameters` | `implemented / stable`，已实现/GA | v1.30 / v1.32 / v1.34 | `DynamicResourceAllocation`, `DRASchedulerFilterTimeout` | `ResourceSlice`/`ResourceClaim`/`DeviceClass` 结构化参数，scheduler 和 autoscaler 可推理。 |
+| `3063-dynamic-resource-allocation` | `withdrawn / alpha`，已撤回 | v1.26 / - / - | `DynamicResourceAllocation`, `DRAControlPlaneController` | opaque control-plane allocation 路线，因调度和 autoscaler 不可推理被 4381 取代。 |
+| `5007-device-attach-before-pod-scheduled` | `implementable / beta`，仍在 beta | v1.34 / v1.36 / v1.37 | `DRADeviceBindingConditions` | device binding/readiness 条件进入 scheduler PreBind 等待路径。 |
+| `5075-dra-consumable-capacity` | `implementable / beta`，仍在 beta | v1.34 / v1.36 / v1.38 | `DRAConsumableCapacity` | 设备可表达可消费 capacity，而不是只表达离散实例。 |
+| `5729-resourceclaim-support-for-workloads` | `implementable / beta`，仍在 beta | v1.36 / v1.37 / - | `DRAWorkloadResourceClaims` | ResourceClaim 支持 workload 级消费者，连接 DRA 和 PodGroup。 |
+| `5941-dra-shared-consumable-capacity` | `implementable / alpha`，仍在 alpha | v1.37 / v1.38 / v1.39 | `DRASharedConsumableCapacity` | 多个设备共享同一 capacity pool。 |
+| `5963-device-compatibility-groups` | `implementable / alpha`，仍在 alpha | v1.37 / v1.38 / v1.39 | `DRADeviceCompatibilityGroups` | 表达多设备组合兼容性。 |
+| `4815-dra-partitionable-devices` | `implementable / beta`，仍在 beta | v1.33 / v1.36 / - | `DRAPartitionableDevices` | 动态或逻辑分区设备进入 ResourceSlice 模型。 |
+| `4816-dra-prioritized-list` | `implementable / stable`，GA 目标已达 | v1.33 / v1.34 / v1.36 | `DRAPrioritizedList` | 用户可声明设备请求的优先级备选列表。 |
+| `5055-dra-device-taints-and-tolerations` | `implementable / stable`，GA 目标已达 | v1.33 / v1.36 / v1.37 | `DRADeviceTaints`, `DRADeviceTaintRules` | 设备级 taints/tolerations，支持健康和策略隔离。 |
+| `4817-resource-claim-device-status` | `implementable / stable`，GA 目标已达 | v1.32 / v1.33 / v1.37 | `DRAResourceClaimDeviceStatus` | 分配结果和设备信息进入 ResourceClaim status。 |
+| `5304-dra-attributes-downward-api` | `implementable / beta`，仍在 beta | v1.36 / v1.37 / v1.38 | `NA` | 将 DRA device attributes 暴露给 Pod 内 workload。 |
+| `4680-add-resource-health-to-pod-status` | `implementable / beta`，仍在 beta | v1.31 / v1.36 / v1.37 | `ResourceHealthStatus` | Device Plugin/DRA resource health 进入 Pod status。 |
 
 ## 追踪重点
 
