@@ -84,13 +84,13 @@ TOPIC_GROUPS = [
     },
     {
         "title": "Kubernetes / Cloud Native",
-        "description": "Kubernetes、GitOps、controller/operator、GPU 资源栈、安全和可观测。",
-        "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator"},
+        "description": "Kubernetes、KEP 设计追踪、GitOps、controller/operator、GPU 资源栈、安全和可观测。",
+        "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator", "kep"},
         "preferred": (
+            "kubernetes-keps-feature-coverage",
+            "kubernetes-keps-design-tracking",
             "kubernetes",
-            "gitops",
-            "argocd",
-            "cloud-native-security",
+            "kubernetes-scheduler-core-design",
         ),
     },
 ]
@@ -149,6 +149,16 @@ READING_PATHS = [
             ("地图", "k8s-gpu-device-stack"),
             ("机制", "kubernetes-dra"),
             ("实现", "hami"),
+        ),
+    },
+    {
+        "title": "Kubernetes KEP 设计追踪",
+        "description": "按 Scheduling、Autoscaling、Node 三个 SIG 看重要 KEP、合并 feature 和设计详解。",
+        "steps": (
+            ("覆盖", "kubernetes-keps-feature-coverage"),
+            ("追踪", "kubernetes-keps-design-tracking"),
+            ("调度", "kubernetes-scheduler-core-design"),
+            ("节点", "kubernetes-node-runtime-observability-security-design"),
         ),
     },
     {
