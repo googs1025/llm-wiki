@@ -27,7 +27,7 @@
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-node</span><span class="tag">sig-scheduling</span><span class="tag">dra</span><span class="tag">device</span><span class="tag">gpu</span><span class="tag">design-deep-dive</span></div>
   </header>
 
-  <p>这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 <code>sig-node/4381-dra-structured-parameters</code>，它把早期 <code>3063-dynamic-resource-allocation</code> 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。</p>
+  <p>这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 <code>sig-node/4381-dra-structured-parameters</code>，它把早期 <code>3063-dynamic-resource-allocation</code> 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>DRA 是 Kubernetes 对 GPU、NIC、FPGA、DPU、network-attached accelerator、可分区设备和共享容量的下一代设备资源模型。它不是 device plugin 的简单替代，而是把“设备发现、设备选择、claim 状态、节点准备、CDI 注入、scheduler 推理、autoscaler 模拟”放到同一个 API 体系里。</p>
 <h2 id="为什么-device-plugin-不够">为什么 device plugin 不够</h2>
@@ -256,6 +256,111 @@ deallocated / reusable
 <li><code>5007</code>：理解 device attach/readiness 如何进入调度。</li>
 <li><code>5055</code> / <code>4816</code> / <code>6080</code>：理解生产化调度表达。</li>
 </ol>
+<h2 id="关键-kep-实现状态">关键 KEP 实现状态</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>KEP</th>
+<th>当前状态</th>
+<th>Alpha / Beta / GA</th>
+<th>Feature gate</th>
+<th>关键实现路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4381-dra-structured-parameters</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.30 / v1.32 / v1.34</td>
+<td><code>DynamicResourceAllocation</code>, <code>DRASchedulerFilterTimeout</code></td>
+<td><code>ResourceSlice</code>/<code>ResourceClaim</code>/<code>DeviceClass</code> 结构化参数，scheduler 和 autoscaler 可推理。</td>
+</tr>
+<tr>
+<td><code>3063-dynamic-resource-allocation</code></td>
+<td><code>withdrawn / alpha</code>，已撤回</td>
+<td>v1.26 / - / -</td>
+<td><code>DynamicResourceAllocation</code>, <code>DRAControlPlaneController</code></td>
+<td>opaque control-plane allocation 路线，因调度和 autoscaler 不可推理被 4381 取代。</td>
+</tr>
+<tr>
+<td><code>5007-device-attach-before-pod-scheduled</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.34 / v1.36 / v1.37</td>
+<td><code>DRADeviceBindingConditions</code></td>
+<td>device binding/readiness 条件进入 scheduler PreBind 等待路径。</td>
+</tr>
+<tr>
+<td><code>5075-dra-consumable-capacity</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.34 / v1.36 / v1.38</td>
+<td><code>DRAConsumableCapacity</code></td>
+<td>设备可表达可消费 capacity，而不是只表达离散实例。</td>
+</tr>
+<tr>
+<td><code>5729-resourceclaim-support-for-workloads</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.36 / v1.37 / -</td>
+<td><code>DRAWorkloadResourceClaims</code></td>
+<td>ResourceClaim 支持 workload 级消费者，连接 DRA 和 PodGroup。</td>
+</tr>
+<tr>
+<td><code>5941-dra-shared-consumable-capacity</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.37 / v1.38 / v1.39</td>
+<td><code>DRASharedConsumableCapacity</code></td>
+<td>多个设备共享同一 capacity pool。</td>
+</tr>
+<tr>
+<td><code>5963-device-compatibility-groups</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.37 / v1.38 / v1.39</td>
+<td><code>DRADeviceCompatibilityGroups</code></td>
+<td>表达多设备组合兼容性。</td>
+</tr>
+<tr>
+<td><code>4815-dra-partitionable-devices</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.33 / v1.36 / -</td>
+<td><code>DRAPartitionableDevices</code></td>
+<td>动态或逻辑分区设备进入 ResourceSlice 模型。</td>
+</tr>
+<tr>
+<td><code>4816-dra-prioritized-list</code></td>
+<td><code>implementable / stable</code>，GA 目标已达</td>
+<td>v1.33 / v1.34 / v1.36</td>
+<td><code>DRAPrioritizedList</code></td>
+<td>用户可声明设备请求的优先级备选列表。</td>
+</tr>
+<tr>
+<td><code>5055-dra-device-taints-and-tolerations</code></td>
+<td><code>implementable / stable</code>，GA 目标已达</td>
+<td>v1.33 / v1.36 / v1.37</td>
+<td><code>DRADeviceTaints</code>, <code>DRADeviceTaintRules</code></td>
+<td>设备级 taints/tolerations，支持健康和策略隔离。</td>
+</tr>
+<tr>
+<td><code>4817-resource-claim-device-status</code></td>
+<td><code>implementable / stable</code>，GA 目标已达</td>
+<td>v1.32 / v1.33 / v1.37</td>
+<td><code>DRAResourceClaimDeviceStatus</code></td>
+<td>分配结果和设备信息进入 ResourceClaim status。</td>
+</tr>
+<tr>
+<td><code>5304-dra-attributes-downward-api</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.36 / v1.37 / v1.38</td>
+<td><code>NA</code></td>
+<td>将 DRA device attributes 暴露给 Pod 内 workload。</td>
+</tr>
+<tr>
+<td><code>4680-add-resource-health-to-pod-status</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.31 / v1.36 / v1.37</td>
+<td><code>ResourceHealthStatus</code></td>
+<td>Device Plugin/DRA resource health 进入 Pod status。</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="追踪重点">追踪重点</h2>
 <ul>
 <li>DRA API 版本从 beta 到 GA 的字段稳定性。</li>
@@ -265,14 +370,14 @@ deallocated / reusable
 <li>DRA 与 Workload/PodGroup、Topology Manager、NUMA、CDI 的联动是否形成闭环。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a></li><li><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></li><li><a class="wikilink" href="../concepts/device-plugin.html">device-plugin</a></li><li><a class="wikilink" href="../concepts/cdi.html">cdi</a></li><li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></li><li><a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a></li><li><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></li><li><a class="wikilink" href="../concepts/device-plugin.html">device-plugin</a></li><li><a class="wikilink" href="../concepts/cdi.html">cdi</a></li><li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></li><li><a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-dra-design-deep-dive.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-dra-design-deep-dive">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes DRA D</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Container Device Interface</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Kubernetes Device Plugin</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>Kubernetes Dynamic Resource Allocation</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/cdi.html">Container Device Interface</a><span>概念 · related</span></li><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/kubernetes-dra.html">Kubernetes Dynamic Resource Allocation</a><span>概念 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#为什么-device-plugin-不够">为什么 device plugin 不够</a></li><li class=""><a href="#4381-的核心模型">4381 的核心模型</a></li><li class=""><a href="#结构化参数的关键价值">结构化参数的关键价值</a></li><li class=""><a href="#scheduler-插件路径">Scheduler 插件路径</a></li><li class=""><a href="#resourceclaim-状态机">ResourceClaim 状态机</a></li><li class=""><a href="#kubelet-和-dra-plugin">kubelet 和 DRA plugin</a></li><li class=""><a href="#dra-与-autoscaler">DRA 与 Autoscaler</a></li><li class=""><a href="#关键扩展-kep">关键扩展 KEP</a></li><li class=""><a href="#失败模式和风险">失败模式和风险</a></li><li class=""><a href="#和-gpu-生态的关系">和 GPU 生态的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-dra-design-deep-dive">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes DRA D</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Container Device Interface</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Kubernetes Device Plugin</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>Kubernetes Dynamic Resource Allocation</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/cdi.html">Container Device Interface</a><span>概念 · related</span></li><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../concepts/kubernetes-dra.html">Kubernetes Dynamic Resource Allocation</a><span>概念 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#为什么-device-plugin-不够">为什么 device plugin 不够</a></li><li class=""><a href="#4381-的核心模型">4381 的核心模型</a></li><li class=""><a href="#结构化参数的关键价值">结构化参数的关键价值</a></li><li class=""><a href="#scheduler-插件路径">Scheduler 插件路径</a></li><li class=""><a href="#resourceclaim-状态机">ResourceClaim 状态机</a></li><li class=""><a href="#kubelet-和-dra-plugin">kubelet 和 DRA plugin</a></li><li class=""><a href="#dra-与-autoscaler">DRA 与 Autoscaler</a></li><li class=""><a href="#关键扩展-kep">关键扩展 KEP</a></li><li class=""><a href="#失败模式和风险">失败模式和风险</a></li><li class=""><a href="#和-gpu-生态的关系">和 GPU 生态的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
 </div>
 
 <script>

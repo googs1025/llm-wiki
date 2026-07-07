@@ -88,9 +88,9 @@ TOPIC_GROUPS = [
         "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator", "kep"},
         "preferred": (
             "kubernetes-keps-feature-coverage",
+            "kubernetes-keps-implementation-matrix",
             "kubernetes-keps-design-tracking",
             "kubernetes",
-            "kubernetes-scheduler-core-design",
         ),
     },
 ]
@@ -156,9 +156,9 @@ READING_PATHS = [
         "description": "按 Scheduling、Autoscaling、Node 三个 SIG 看重要 KEP、合并 feature 和设计详解。",
         "steps": (
             ("覆盖", "kubernetes-keps-feature-coverage"),
+            ("状态", "kubernetes-keps-implementation-matrix"),
             ("追踪", "kubernetes-keps-design-tracking"),
             ("调度", "kubernetes-scheduler-core-design"),
-            ("节点", "kubernetes-node-runtime-observability-security-design"),
         ),
     },
     {

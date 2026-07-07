@@ -307,6 +307,7 @@ date: 2026-05-12
 
 - [[kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。
 - [[kubernetes-keps-feature-coverage]] — Kubernetes scheduling / autoscaling / node 重要 feature 覆盖矩阵，按合并设计组追踪 P0/P1 KEP。
+- [[kubernetes-keps-implementation-matrix]] — Kubernetes 重要 KEP 的实现状态矩阵，逐项追踪 status、Alpha/Beta/GA、feature gates 和关键实现路径。
 - [[kubernetes-scheduler-core-design]] — Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。
 - [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。
 - [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。

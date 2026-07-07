@@ -3,12 +3,12 @@ title: Kubernetes Scheduler Core Design
 tags: [analysis, kubernetes, kep, sig-scheduling, scheduler, queue, placement, preemption, design-deep-dive]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/624-scheduling-framework/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/785-scheduler-component-config-api/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/1451-multi-scheduling-profiles/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4247-queueinghint/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6132-prequeueing-hints/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5598-opportunistic-batching/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/895-pod-topology-spread/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4832-async-preemption/README.md]
-related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[scheduler-plugins]], [[descheduler]], [[kube-scheduler-simulator]]
+related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[scheduler-plugins]], [[descheduler]], [[kube-scheduler-simulator]]
 ---
 
 # Kubernetes Scheduler Core Design
 
-这页合并讲 `sig-scheduling` 的 scheduler core feature：framework、component config、profiles、queue/requeue、topology placement、async preemption 和调度性能。Workload/Gang 和 DRA 已经有单独详解页，这页负责解释它们依赖的 scheduler 底座。
+这页合并讲 `sig-scheduling` 的 scheduler core feature：framework、component config、profiles、queue/requeue、topology placement、async preemption 和调度性能。Workload/Gang 和 DRA 已经有单独详解页，这页负责解释它们依赖的 scheduler 底座。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -127,6 +127,20 @@ bind or fail
 | Queueing hints 不改变调度结果 | 它只减少无意义重试，不应改变最终可调度性。 |
 | TopologySpread 不是 gang placement | 它仍然按 Pod 调度，只是计算 skew。 |
 | Preemption 不保证 PDB 绝不被破坏 | Kubernetes 尽量减少 disruption，但不能把 PDB 当硬约束。 |
+
+## 关键 KEP 实现状态
+
+| KEP | 当前状态 | Alpha / Beta / GA | Feature gate | 关键实现路径 |
+|---|---|---|---|---|
+| `624-scheduling-framework` | `implemented / stable`，已实现/GA | v1.16 / - / v1.19 | - | kube-scheduler 内部 extension points，替代大量 extender/fork 场景。 |
+| `785-scheduler-component-config-api` | `implemented / stable`，已实现/GA | - / v1.19 / v1.25 | - | versioned `KubeSchedulerConfiguration`，让调度器配置可升级。 |
+| `1451-multi-scheduling-profiles` | `implementable / beta`，设计可实现，metadata 未标 implemented | v1.18 / v1.19 / v1.22 | - | 一个 scheduler 进程多个 profile，Pod 通过 `schedulerName` 选择策略。 |
+| `3521-pod-scheduling-readiness` | `implemented / stable`，已实现/GA | v1.26 / v1.27 / v1.30 | `PodSchedulingReadiness` | `schedulingGates` 让 Pod 在外部条件满足前不进入普通调度。 |
+| `4247-queueinghint` | `implemented / stable`，已实现/GA | v1.26 / v1.32 / v1.34 | `SchedulerQueueingHints` | plugin 按事件判断是否 requeue pending Pod，降低调度风暴。 |
+| `6132-prequeueing-hints` | `implementable / beta`，仍在 beta | - / v1.37 / v1.39 | `SchedulerPreQueueingHints` | 在 activeQ 之前过滤无效唤醒，是 DRA/gang/resize 的性能补强。 |
+| `5598-opportunistic-batching` | `implementable / beta`，仍在 beta | - / v1.35 / v1.38 | `OpportunisticBatching` | 对可调度机会做批量化，减少重复 snapshot/filter/score 成本。 |
+| `895-pod-topology-spread` | `implemented / stable`，已实现/GA | v1.16 / v1.18 / v1.19 | `EvenPodsSpread` | scheduler filter/score 计算 topology domain skew。 |
+| `4832-async-preemption` | `implementable / beta`，仍在 beta | v1.32 / v1.33 / - | `SchedulerAsyncPreemption` | 抢占 victim 删除异步化，减少主调度循环阻塞。 |
 
 ## 和其他详解页的关系
 

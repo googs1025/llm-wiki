@@ -27,7 +27,7 @@
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-node</span><span class="tag">kubelet</span><span class="tag">cri</span><span class="tag">observability</span><span class="tag">security</span><span class="tag">lifecycle</span><span class="tag">design-deep-dive</span></div>
   </header>
 
-  <p>这页合并讲 <code>sig-node</code> 里除 DRA 和 in-place resize 之外的核心 feature：kubelet/CRI runtime 边界、CPU/Memory/Topology Manager、Pod lifecycle、安全隔离、节点可观测和 resource health。</p>
+  <p>这页合并讲 <code>sig-node</code> 里除 DRA 和 in-place resize 之外的核心 feature：kubelet/CRI runtime 边界、CPU/Memory/Topology Manager、Pod lifecycle、安全隔离、节点可观测和 resource health。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>SIG Node 的核心设计方向是把 kubelet 从“绑定某个 runtime 和一堆节点本地实现细节的执行器”，演进为“通过 CRI、resource managers、status/metrics、security primitives 管理节点执行状态的标准控制点”。</p>
 <h2 id="runtime-boundary-kubelet--cri--runtimeclass">Runtime Boundary: kubelet / CRI / RuntimeClass</h2>
@@ -291,6 +291,146 @@ container runtime + kernel
 </tr>
 </tbody>
 </table></div>
+<h2 id="关键-kep-实现状态">关键 KEP 实现状态</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>KEP</th>
+<th>当前状态</th>
+<th>Alpha / Beta / GA</th>
+<th>Feature gate</th>
+<th>关键实现路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2040-kubelet-cri</code></td>
+<td><code>implementable / beta</code>，CRI 支撑主线已长期使用但 metadata 未 GA</td>
+<td>v1.5 / v1.23 / -</td>
+<td>-</td>
+<td>kubelet 通过 CRI 管理 runtime，Docker 细节退出 kubelet 核心。</td>
+</tr>
+<tr>
+<td><code>2221-remove-dockershim</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>- / - / -</td>
+<td>-</td>
+<td>移除 kubelet 内置 dockershim。</td>
+</tr>
+<tr>
+<td><code>585-runtime-class</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.12 / v1.14 / v1.20</td>
+<td><code>RuntimeClass</code></td>
+<td>Pod 通过 <code>runtimeClassName</code> 选择 runtime handler。</td>
+</tr>
+<tr>
+<td><code>3570-cpumanager</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.8 / v1.10 / v1.26</td>
+<td><code>CPUManager</code></td>
+<td>kubelet static policy 为 Guaranteed Pod 分配 cpuset。</td>
+</tr>
+<tr>
+<td><code>1769-memory-manager</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.21 / v1.22 / v1.32</td>
+<td><code>MemoryManager</code></td>
+<td>kubelet 管理 NUMA-aware memory allocation。</td>
+</tr>
+<tr>
+<td><code>693-topology-manager</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.16 / v1.18 / v1.27</td>
+<td><code>TopologyManager</code></td>
+<td>聚合 CPU/memory/device hints，决定 NUMA 对齐。</td>
+</tr>
+<tr>
+<td><code>3573-device-plugin</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.8 / v1.10 / v1.26</td>
+<td><code>DevicePlugins</code></td>
+<td>kubelet device plugin API。</td>
+</tr>
+<tr>
+<td><code>4009-add-cdi-devices-to-device-plugin-api</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.28 / v1.29 / v1.31</td>
+<td><code>DevicePluginCDIDevices</code></td>
+<td>device plugin 可返回 CDI devices。</td>
+</tr>
+<tr>
+<td><code>3695-pod-resources-for-dra</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.27 / v1.34 / v1.36</td>
+<td><code>KubeletPodResourcesDynamicResource</code></td>
+<td>PodResources API 暴露 DRA resources。</td>
+</tr>
+<tr>
+<td><code>753-sidecar-containers</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.28 / v1.29 / v1.33</td>
+<td><code>SidecarContainers</code></td>
+<td>用 restartable init containers 表达 sidecar lifecycle。</td>
+</tr>
+<tr>
+<td><code>127-user-namespaces</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.25 / v1.35 / v1.36</td>
+<td><code>UserNamespacesSupport</code></td>
+<td>Pod user namespace 隔离。</td>
+</tr>
+<tr>
+<td><code>2033-kubelet-in-userns-aka-rootless</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.22 / v1.37 / -</td>
+<td><code>KubeletInUserNamespace</code></td>
+<td>kubelet rootless/user namespace 运行。</td>
+</tr>
+<tr>
+<td><code>5607-hostnetwork-userns</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.35 / - / -</td>
+<td><code>UserNamespacesHostNetworkSupport</code></td>
+<td>HostNetwork Pod 使用 user namespaces。</td>
+</tr>
+<tr>
+<td><code>2371-cri-pod-container-stats</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.29 / v1.37 / -</td>
+<td><code>PodAndContainerStatsFromCRI</code></td>
+<td>kubelet Pod/container stats 迁往 CRI。</td>
+</tr>
+<tr>
+<td><code>4205-psi-metric</code></td>
+<td><code>implemented / stable</code>，已实现/GA</td>
+<td>v1.33 / v1.34 / v1.36</td>
+<td><code>KubeletPSI</code></td>
+<td>kubelet 暴露 PSI metrics。</td>
+</tr>
+<tr>
+<td><code>5394-psi-node-conditions</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.36 / - / -</td>
+<td><code>PSINodeCondition</code></td>
+<td>PSI pressure 转为 Node Conditions。</td>
+</tr>
+<tr>
+<td><code>4680-add-resource-health-to-pod-status</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.31 / v1.36 / v1.37</td>
+<td><code>ResourceHealthStatus</code></td>
+<td>Device Plugin/DRA resource health 写入 Pod status。</td>
+</tr>
+<tr>
+<td><code>5328-node-declared-features</code></td>
+<td><code>implementable / stable</code>，GA 目标已达</td>
+<td>v1.35 / v1.36 / v1.37</td>
+<td><code>NodeDeclaredFeatures</code></td>
+<td>节点能力结构化声明，供调度/控制器消费。</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="追踪重点">追踪重点</h2>
 <ul>
 <li>CRI stats 是否足够替代 cAdvisor 依赖，并被 <a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> 稳定消费。</li>
@@ -300,14 +440,14 @@ container runtime + kernel
 <li>sidecar containers 与 Job、LWS、agent runtime 的实际行为是否符合用户直觉。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-feature-coverage.html">kubernetes-keps-feature-coverage</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-in-place-pod-resize-design.html">kubernetes-in-place-pod-resize-design</a></li><li><a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a></li><li><a class="wikilink" href="../entities/cri-tools.html">cri-tools</a></li><li><a class="wikilink" href="../entities/security-profiles-operator.html">security-profiles-operator</a></li><li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-feature-coverage.html">kubernetes-keps-feature-coverage</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-in-place-pod-resize-design.html">kubernetes-in-place-pod-resize-design</a></li><li><a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a></li><li><a class="wikilink" href="../entities/cri-tools.html">cri-tools</a></li><li><a class="wikilink" href="../entities/security-profiles-operator.html">security-profiles-operator</a></li><li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-node-runtime-observability-security-design.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-node-runtime-observability-security-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Node </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>CRI Tools</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="178.0" cy="82.0" r="7"><title>Kubernetes DRA Design Deep Dive</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes HPA Autoscaling Design</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes In-Place Pod Resize Design</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="123.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-analysis" cx="62.0" cy="82.0" r="7"><title>Kubernetes KEP Feature Coverage</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes Scheduler Core Design</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/cri-tools.html">CRI Tools</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-dra-design-deep-dive.html">Kubernetes DRA Design Deep Dive</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-hpa-autoscaling-design.html">Kubernetes HPA Autoscaling Design</a><span>分析 · wikilink</span></li><li><a href="../analysis/kubernetes-in-place-pod-resize-design.html">Kubernetes In-Place Pod Resize Design</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#runtime-boundary-kubelet--cri--runtimeclass">Runtime Boundary: kubelet / CRI / RuntimeClass</a></li><li class=""><a href="#resource-managers">Resource Managers</a></li><li class=""><a href="#device-plugin--cdi--podresources">Device Plugin / CDI / PodResources</a></li><li class=""><a href="#pod-lifecycle">Pod Lifecycle</a></li><li class=""><a href="#security--isolation">Security / Isolation</a></li><li class=""><a href="#observability--node-health">Observability / Node Health</a></li><li class=""><a href="#合并设计图">合并设计图</a></li><li class=""><a href="#和其他设计页的关系">和其他设计页的关系</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-node-runtime-observability-security-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Node </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>CRI Tools</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="178.0" cy="82.0" r="7"><title>Kubernetes DRA Design Deep Dive</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes HPA Autoscaling Design</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes In-Place Pod Resize Design</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="123.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-analysis" cx="62.0" cy="82.0" r="7"><title>Kubernetes KEP Feature Coverage</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEP Implementation Matrix</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/cri-tools.html">CRI Tools</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-dra-design-deep-dive.html">Kubernetes DRA Design Deep Dive</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-hpa-autoscaling-design.html">Kubernetes HPA Autoscaling Design</a><span>分析 · wikilink</span></li><li><a href="../analysis/kubernetes-in-place-pod-resize-design.html">Kubernetes In-Place Pod Resize Design</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#runtime-boundary-kubelet--cri--runtimeclass">Runtime Boundary: kubelet / CRI / RuntimeClass</a></li><li class=""><a href="#resource-managers">Resource Managers</a></li><li class=""><a href="#device-plugin--cdi--podresources">Device Plugin / CDI / PodResources</a></li><li class=""><a href="#pod-lifecycle">Pod Lifecycle</a></li><li class=""><a href="#security--isolation">Security / Isolation</a></li><li class=""><a href="#observability--node-health">Observability / Node Health</a></li><li class=""><a href="#合并设计图">合并设计图</a></li><li class=""><a href="#和其他设计页的关系">和其他设计页的关系</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
 </div>
 
 <script>

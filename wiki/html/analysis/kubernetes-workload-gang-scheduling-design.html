@@ -27,7 +27,7 @@
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-scheduling</span><span class="tag">gang-scheduling</span><span class="tag">workload-api</span><span class="tag">design-deep-dive</span></div>
   </header>
 
-  <p>这页专门讲 <code>sig-scheduling</code> 里最重要的一条设计线：从单 Pod 调度，走向 Workload / PodGroup 作为调度单位。核心 KEP 是 <code>4671-gang-scheduling</code>，后续由 <code>5710-workload-aware-preemption</code>、<code>6012-composite-podgroup-api</code>、<code>6089-was-controller-apis</code> 和 <code>5732-topology-aware-workload-scheduling</code> 继续展开。</p>
+  <p>这页专门讲 <code>sig-scheduling</code> 里最重要的一条设计线：从单 Pod 调度，走向 Workload / PodGroup 作为调度单位。核心 KEP 是 <code>4671-gang-scheduling</code>，后续由 <code>5710-workload-aware-preemption</code>、<code>6012-composite-podgroup-api</code>、<code>6089-was-controller-apis</code> 和 <code>5732-topology-aware-workload-scheduling</code> 继续展开。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>这组 KEP 的目标是让 Kubernetes 原生理解“一个 workload 由一组 Pod 构成，必须以组为单位做准入、放置、抢占和状态反馈”，而不是继续让每个 AI/HPC/batch controller 各自实现一套 gang scheduling 语义。</p>
 <h2 id="为什么重要">为什么重要</h2>
@@ -185,6 +185,55 @@
 <li><code>6089-was-controller-apis</code>：看 Job/JobSet/LWS 等 controller 如何对接。</li>
 <li><code>6012-composite-podgroup-api</code>：最后看多层 workload 如何表达。</li>
 </ol>
+<h2 id="关键-kep-实现状态">关键 KEP 实现状态</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>KEP</th>
+<th>当前状态</th>
+<th>Alpha / Beta / GA</th>
+<th>Feature gate</th>
+<th>关键实现路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>4671-gang-scheduling</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.35 / v1.37 / v1.38</td>
+<td><code>GenericWorkload</code></td>
+<td><code>Workload</code> / <code>PodGroup</code> 成为调度单位，scheduler 做 group-level scheduling cycle。</td>
+</tr>
+<tr>
+<td><code>5710-workload-aware-preemption</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.36 / v1.37 / v1.39</td>
+<td><code>GenericWorkload</code></td>
+<td>抢占逻辑从单 Pod 扩展到 PodGroup，避免先驱逐后发现整组仍不可运行。</td>
+</tr>
+<tr>
+<td><code>6012-composite-podgroup-api</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.37 / v1.38 / v1.40</td>
+<td><code>CompositePodGroup</code></td>
+<td>表达多组件 workload 的组合 PodGroup，适合 JobSet/LWS/训练任务。</td>
+</tr>
+<tr>
+<td><code>6089-was-controller-apis</code></td>
+<td><code>implementable / alpha</code>，仍在 alpha</td>
+<td>v1.37 / v1.38 / v1.39</td>
+<td><code>WorkloadWithJob</code></td>
+<td>给 workload controller 提供可嵌入 building blocks 和转换库。</td>
+</tr>
+<tr>
+<td><code>5732-topology-aware-workload-scheduling</code></td>
+<td><code>implementable / beta</code>，仍在 beta</td>
+<td>v1.36 / v1.37 / v1.39</td>
+<td><code>TopologyAwareWorkloadScheduling</code></td>
+<td>group-level placement，把一组 Pod 放到满足拓扑目标的节点集合。</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="追踪重点">追踪重点</h2>
 <p>后续要继续跟：</p>
 <ul>
@@ -195,14 +244,14 @@
 <li>生产指标：PodGroup scheduling latency、失败原因、binding 成功率、preemption 造成的 disruption。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/kueue.html">kueue</a></li><li><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></li><li><a class="wikilink" href="../entities/jobset.html">jobset</a></li><li><a class="wikilink" href="../entities/lws.html">lws</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li></ul></section>
+  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/kueue.html">kueue</a></li><li><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></li><li><a class="wikilink" href="../entities/jobset.html">jobset</a></li><li><a class="wikilink" href="../entities/lws.html">lws</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li></ul></section>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-workload-gang-scheduling-design.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-workload-gang-scheduling-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Workl</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>JobSet</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Kubernetes Workload Automation</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Kueue</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>LeaderWorkerSet</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>scheduler-plugins</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/jobset.html">JobSet</a><span>实体 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../concepts/kubernetes-workload-automation.html">Kubernetes Workload Automation</a><span>概念 · related</span></li><li><a href="../entities/kueue.html">Kueue</a><span>实体 · related</span></li><li><a href="../entities/lws.html">LeaderWorkerSet</a><span>实体 · related</span></li><li><a href="../entities/scheduler-plugins.html">scheduler-plugins</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#为什么重要">为什么重要</a></li><li class=""><a href="#核心对象">核心对象</a></li><li class=""><a href="#alpha-到-beta-的设计演进">Alpha 到 Beta 的设计演进</a></li><li class=""><a href="#workload-aware-preemption">Workload-aware Preemption</a></li><li class=""><a href="#priority-和-preemption-unit">Priority 和 Preemption Unit</a></li><li class=""><a href="#topology-aware-workload-scheduling">Topology-aware Workload Scheduling</a></li><li class=""><a href="#controller-api-设计">Controller API 设计</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#和现有项目的关系">和现有项目的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-workload-gang-scheduling-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Workl</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>JobSet</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes KEP Implementation Matrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Kubernetes Workload Automation</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Kueue</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>LeaderWorkerSet</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/jobset.html">JobSet</a><span>实体 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../concepts/kubernetes-workload-automation.html">Kubernetes Workload Automation</a><span>概念 · related</span></li><li><a href="../entities/kueue.html">Kueue</a><span>实体 · related</span></li><li><a href="../entities/lws.html">LeaderWorkerSet</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · related</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#为什么重要">为什么重要</a></li><li class=""><a href="#核心对象">核心对象</a></li><li class=""><a href="#alpha-到-beta-的设计演进">Alpha 到 Beta 的设计演进</a></li><li class=""><a href="#workload-aware-preemption">Workload-aware Preemption</a></li><li class=""><a href="#priority-和-preemption-unit">Priority 和 Preemption Unit</a></li><li class=""><a href="#topology-aware-workload-scheduling">Topology-aware Workload Scheduling</a></li><li class=""><a href="#controller-api-设计">Controller API 设计</a></li><li class=""><a href="#关键失败模式">关键失败模式</a></li><li class=""><a href="#和现有项目的关系">和现有项目的关系</a></li><li class=""><a href="#阅读顺序">阅读顺序</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
 </div>
 
 <script>

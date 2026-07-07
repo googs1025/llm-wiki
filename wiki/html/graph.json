@@ -257,9 +257,9 @@
       ],
       "date": "2026-07-07",
       "description": "DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。",
-      "degree": 13,
-      "inbound": 6,
-      "outbound": 9
+      "degree": 14,
+      "inbound": 7,
+      "outbound": 10
     },
     {
       "id": "k8s-gpu-device-stack",
@@ -299,9 +299,9 @@
       ],
       "date": "2026-07-07",
       "description": "HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。",
-      "degree": 10,
-      "inbound": 5,
-      "outbound": 7
+      "degree": 11,
+      "inbound": 6,
+      "outbound": 8
     },
     {
       "id": "kubernetes-in-place-pod-resize-design",
@@ -322,9 +322,9 @@
       ],
       "date": "2026-07-07",
       "description": "Pod /resize、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。",
-      "degree": 11,
-      "inbound": 6,
-      "outbound": 7
+      "degree": 12,
+      "inbound": 7,
+      "outbound": 8
     },
     {
       "id": "kubernetes-keps-feature-coverage",
@@ -343,9 +343,31 @@
       ],
       "date": "2026-07-07",
       "description": "Kubernetes scheduling / autoscaling / node 重要 feature 覆盖矩阵，按合并设计组追踪 P0/P1 KEP。",
-      "degree": 9,
-      "inbound": 5,
-      "outbound": 8
+      "degree": 10,
+      "inbound": 6,
+      "outbound": 9
+    },
+    {
+      "id": "kubernetes-keps-implementation-matrix",
+      "title": "Kubernetes KEP Implementation Matrix",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kubernetes-keps-implementation-matrix.html",
+      "tags": [
+        "analysis",
+        "kubernetes",
+        "kep",
+        "implementation",
+        "feature-gates",
+        "sig-scheduling",
+        "sig-autoscaling",
+        "sig-node"
+      ],
+      "date": "2026-07-07",
+      "description": "Kubernetes 重要 KEP 的实现状态矩阵，逐项追踪 status、Alpha/Beta/GA、feature gates 和关键实现路径。",
+      "degree": 10,
+      "inbound": 10,
+      "outbound": 9
     },
     {
       "id": "kubernetes-keps-design-tracking",
@@ -364,9 +386,9 @@
       ],
       "date": "2026-07-06",
       "description": "Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。",
-      "degree": 20,
-      "inbound": 9,
-      "outbound": 20
+      "degree": 21,
+      "inbound": 10,
+      "outbound": 21
     },
     {
       "id": "kubernetes-node-runtime-observability-security-design",
@@ -388,9 +410,9 @@
       ],
       "date": "2026-07-07",
       "description": "kubelet/CRI、resource managers、sidecar lifecycle、user namespace/rootless kubelet、CRI stats、PSI 和 resource health 设计详解。",
-      "degree": 12,
-      "inbound": 4,
-      "outbound": 11
+      "degree": 13,
+      "inbound": 5,
+      "outbound": 12
     },
     {
       "id": "kubernetes-scheduler-core-design",
@@ -411,9 +433,9 @@
       ],
       "date": "2026-07-07",
       "description": "Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。",
-      "degree": 12,
-      "inbound": 5,
-      "outbound": 10
+      "degree": 13,
+      "inbound": 6,
+      "outbound": 11
     },
     {
       "id": "kubernetes-workload-gang-scheduling-design",
@@ -432,9 +454,9 @@
       ],
       "date": "2026-07-07",
       "description": "Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。",
-      "degree": 11,
-      "inbound": 5,
-      "outbound": 8
+      "degree": 12,
+      "inbound": 6,
+      "outbound": 9
     },
     {
       "id": "llm-inference-serving-project-map",
@@ -2238,9 +2260,9 @@
       ],
       "date": "2026-07-06",
       "description": "容器编排平台，云原生核心（6 篇源文件 + KEP 设计方案追踪入口）",
-      "degree": 138,
-      "inbound": 137,
-      "outbound": 19
+      "degree": 139,
+      "inbound": 138,
+      "outbound": 20
     },
     {
       "id": "gateway-api",
@@ -4404,9 +4426,9 @@
       ],
       "date": "2026-07-06",
       "description": "Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案源摘要与追踪方法。",
-      "degree": 17,
+      "degree": 18,
       "inbound": 2,
-      "outbound": 17
+      "outbound": 18
     },
     {
       "id": "src-k8s-v1.36-sneak-peek",
@@ -9214,6 +9236,11 @@
     },
     {
       "source": "kubernetes",
+      "target": "kubernetes-keps-implementation-matrix",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes",
       "target": "kubernetes-node-runtime-observability-security-design",
       "kind": "related"
     },
@@ -9334,6 +9361,11 @@
     },
     {
       "source": "kubernetes-dra-design-deep-dive",
+      "target": "kubernetes-keps-implementation-matrix",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
       "target": "node-feature-discovery",
       "kind": "related"
     },
@@ -9350,6 +9382,11 @@
     {
       "source": "kubernetes-hpa-autoscaling-design",
       "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-hpa-autoscaling-design",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -9385,6 +9422,11 @@
     {
       "source": "kubernetes-in-place-pod-resize-design",
       "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-in-place-pod-resize-design",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -9450,6 +9492,11 @@
     {
       "source": "kubernetes-keps-design-tracking",
       "target": "kubernetes-keps-feature-coverage",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-design-tracking",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -9534,6 +9581,11 @@
     },
     {
       "source": "kubernetes-keps-feature-coverage",
+      "target": "kubernetes-keps-implementation-matrix",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-feature-coverage",
       "target": "kubernetes-node-runtime-observability-security-design",
       "kind": "related"
     },
@@ -9544,6 +9596,51 @@
     },
     {
       "source": "kubernetes-keps-feature-coverage",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-hpa-autoscaling-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-in-place-pod-resize-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-keps-feature-coverage",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-node-runtime-observability-security-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-keps-implementation-matrix",
       "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
@@ -9580,6 +9677,11 @@
     {
       "source": "kubernetes-node-runtime-observability-security-design",
       "target": "kubernetes-keps-feature-coverage",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-node-runtime-observability-security-design",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -9635,6 +9737,11 @@
     {
       "source": "kubernetes-scheduler-core-design",
       "target": "kubernetes-keps-feature-coverage",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -9760,6 +9867,11 @@
     {
       "source": "kubernetes-workload-gang-scheduling-design",
       "target": "kubernetes-keps-design-tracking",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes-keps-implementation-matrix",
       "kind": "related"
     },
     {
@@ -14219,6 +14331,11 @@
     },
     {
       "source": "src-kubernetes-keps-design-tracking",
+      "target": "kubernetes-keps-implementation-matrix",
+      "kind": "related"
+    },
+    {
+      "source": "src-kubernetes-keps-design-tracking",
       "target": "kubernetes-node-runtime-observability-security-design",
       "kind": "related"
     },
@@ -15992,7 +16109,7 @@
     {
       "id": "analysis",
       "label": "分析",
-      "count": 27
+      "count": 28
     }
   ]
 }

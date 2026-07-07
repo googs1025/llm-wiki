@@ -3,12 +3,12 @@ title: Kubernetes HPA Autoscaling Design
 tags: [analysis, kubernetes, kep, sig-autoscaling, hpa, metrics, autoscaling, design-deep-dive]
 date: 2026-07-07
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/4951-configurable-hpa-tolerance/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/2021-scale-from-zero/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5679-external-metric-fallback/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/1610-container-resource-autoscaling/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5325-hpa-pod-selection-accuracy/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5030-attach-limit-autoscaler/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[metrics-server]], [[prometheus-adapter]], [[karpenter]], [[kubernetes-workload-automation]], [[llm-d-workload-variant-autoscaler]]
+related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[metrics-server]], [[prometheus-adapter]], [[karpenter]], [[kubernetes-workload-automation]], [[llm-d-workload-variant-autoscaler]]
 ---
 
 # Kubernetes HPA Autoscaling Design
 
-这页拉出 `sig-autoscaling` 中最值得详细讲解的一组设计文档：HPA tolerance、container resource metrics、pod selection accuracy、scale from zero、external metric fallback，以及 Cluster Autoscaler 的 attach limit integration。
+这页拉出 `sig-autoscaling` 中最值得详细讲解的一组设计文档：HPA tolerance、container resource metrics、pod selection accuracy、scale from zero、external metric fallback，以及 Cluster Autoscaler 的 attach limit integration。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -163,6 +163,20 @@ scale subresource update
 4. `2021-scale-from-zero`：理解 0 副本状态语义。
 5. `5679-external-metric-fallback`：理解外部指标失败策略。
 6. `5030-attach-limit-autoscaler`：理解 autoscaler 和 scheduler 模拟一致性。
+
+## 关键 KEP 实现状态
+
+| KEP | 当前状态 | Alpha / Beta / GA | Feature gate | 关键实现路径 |
+|---|---|---|---|---|
+| `4951-configurable-hpa-tolerance` | `implementable / stable`，GA 目标 v1.37 | v1.33 / v1.35 / v1.37 | `HPAConfigurableTolerance` | `HPAScalingRules.tolerance` 下放到单个 HPA 的 scaleUp/scaleDown。 |
+| `853-configurable-hpa-scale-velocity` | `implemented / stable`，已实现/GA | - / - / - | - | HPA behavior policies、stabilization window、scale velocity。 |
+| `2702-graduate-hpa-api-to-GA` | `implemented / stable`，已实现/GA | - / - / v1.23 | - | HPA v2 API GA。 |
+| `1610-container-resource-autoscaling` | `implemented / stable`，已实现/GA | v1.20 / v1.27 / v1.30 | `HPAContainerMetrics` | HPA 使用指定 container 的 CPU/memory 指标。 |
+| `117-hpa-metrics-specificity` | `implemented / stable`，已实现/GA | - / - / - | - | custom/external metrics 支持 label selector。 |
+| `5325-hpa-pod-selection-accuracy` | `implementable / alpha`，仍在 alpha | v1.35 / v1.36 / v1.37 | `HPASelectionStrategy` | `OwnerReference` selection strategy，过滤非目标 workload Pod。 |
+| `2021-scale-from-zero` | `implementable / beta`，仍在 beta | v1.16 / v1.37 / x.y | `HPAScaleToZero` | HPA 基于 object/external metrics 从 0 恢复，并用 condition 标记自动缩零。 |
+| `5679-external-metric-fallback` | `implementable / alpha`，仍在 alpha | v1.36 / v1.37 / v1.38 | `HPAExternalMetricFallback` | external metric 连续失败后用固定 fallback replicas 进入 max 合并。 |
+| `5030-attach-limit-autoscaler` | `implementable / beta`，仍在 beta | v1.35 / v1.37 / v1.38 | `VolumeLimitScaling` | Cluster Autoscaler scale-up 模拟纳入 CSI attach limit。 |
 
 ## 追踪重点
 

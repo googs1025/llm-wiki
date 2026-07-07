@@ -3,12 +3,12 @@ title: Kubernetes KEPs Design Tracking
 tags: [analysis, kubernetes, kep, design-tracking, sig-scheduling, sig-autoscaling, sig-node]
 date: 2026-07-06
 sources: [src-kubernetes-keps-design-tracking.md]
-related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-keps-feature-coverage]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-d-kubernetes-sigs-candidate-map]]
+related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-d-kubernetes-sigs-candidate-map]]
 ---
 
 # Kubernetes KEPs Design Tracking
 
-这页是 KEP 设计方案追踪表，服务于后续长期更新。源摘要和设计脉络见 [[src-kubernetes-keps-design-tracking]]；按 feature 合并后的覆盖矩阵见 [[kubernetes-keps-feature-coverage]]。
+这页是 KEP 设计方案追踪表，服务于后续长期更新。源摘要和设计脉络见 [[src-kubernetes-keps-design-tracking]]；按 feature 合并后的覆盖矩阵见 [[kubernetes-keps-feature-coverage]]；逐个 KEP 的 Alpha/Beta/GA、是否实现、feature gates 和关键实现路径见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 使用方式
 
@@ -24,6 +24,7 @@ related: [[kubernetes]], [[src-kubernetes-keps-design-tracking]], [[kubernetes-k
 | 设计文档 | 覆盖 KEP | 重点 |
 |---|---|---|
 | [[kubernetes-keps-feature-coverage]] | all P0/P1 groups | 回答“整理了哪些 feature”，按合并设计组列出 scheduling / autoscaling / node 的覆盖状态。 |
+| [[kubernetes-keps-implementation-matrix]] | all P0/P1 KEPs | 逐个 KEP 追踪 `status`、`stage`、Alpha/Beta/GA milestones、feature gate、是否落地和关键实现路径。 |
 | [[kubernetes-scheduler-core-design]] | `624`, `785`, `1451`, `3521`, `4247`, `6132`, `5598`, `895`, `4832` | Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座。 |
 | [[kubernetes-workload-gang-scheduling-design]] | `4671`, `5710`, `6012`, `6089`, `5732` | Workload / PodGroup API、gang scheduling、workload-aware preemption、topology-aware workload scheduling 和 controller API building blocks。 |
 | [[kubernetes-dra-design-deep-dive]] | `4381`, `3063`, `5007`, `5075`, `4815`, `4816`, `5055` | DRA structured parameters、ResourceSlice/ResourceClaim、scheduler plugin、kubelet plugin、CDI、autoscaler 可推理性和设备扩展 KEP。 |
