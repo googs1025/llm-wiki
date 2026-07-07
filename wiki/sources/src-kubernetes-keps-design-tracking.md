@@ -3,7 +3,7 @@ title: Kubernetes KEP Design Tracking
 tags: [source, kubernetes, kep, sig-scheduling, sig-autoscaling, sig-node, design-tracking]
 date: 2026-07-06
 sources: [/Users/zhenyu.jiang/enhancements/keps/sig-scheduling, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling, /Users/zhenyu.jiang/enhancements/keps/sig-node]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[kueue]], [[karpenter]], [[metrics-server]], [[prometheus-adapter]], [[scheduler-plugins]], [[node-feature-discovery]]
+related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-feature-coverage]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[kueue]], [[karpenter]], [[metrics-server]], [[prometheus-adapter]], [[scheduler-plugins]], [[node-feature-discovery]]
 ---
 
 # Kubernetes KEP Design Tracking
@@ -12,12 +12,15 @@ related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-workl
 
 更偏清单和后续追踪的表格见 [[kubernetes-keps-design-tracking]]。
 
-本轮已把最重要的四组设计文档单独拉出详解：
+本轮已把最重要的合并设计组单独拉出详解：
 
+- [[kubernetes-keps-feature-coverage]]
+- [[kubernetes-scheduler-core-design]]
 - [[kubernetes-workload-gang-scheduling-design]]
 - [[kubernetes-dra-design-deep-dive]]
 - [[kubernetes-hpa-autoscaling-design]]
 - [[kubernetes-in-place-pod-resize-design]]
+- [[kubernetes-node-runtime-observability-security-design]]
 
 ## 范围和方法
 
