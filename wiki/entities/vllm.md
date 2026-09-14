@@ -1,14 +1,14 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-13
+date: 2026-09-14
 sources: [vllm-architecture-analysis.md]
 related: [sglang, paged-attention, radix-attention, flash-attention]
 ---
 
 # vLLM
 
-> 最新架构资料：[[src-vllm-architecture]]，基于官方 `main @ de50029` 的 README/docs。
+> 最新代码级架构资料：[[src-vllm-architecture]]，基于本地 HEAD `dc36fcce90`。
 
 **UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。** Apache 2.0，最早把 [[paged-attention]] 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。
 

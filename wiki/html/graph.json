@@ -1002,7 +1002,7 @@
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
       "degree": 79,
       "inbound": 66,
-      "outbound": 33
+      "outbound": 35
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -3336,7 +3336,7 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-14",
       "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
       "degree": 26,
       "inbound": 26,
@@ -3450,7 +3450,7 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-14",
       "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
       "degree": 39,
       "inbound": 39,
@@ -5483,10 +5483,10 @@
         "kv-cache",
         "inference-optimization"
       ],
-      "date": "2026-09-13",
-      "description": "SGLang 最新 main 的 RadixCache、HiCache、连续批、overlap、kernel 与 TP/PP/EP/DP。",
+      "date": "2026-09-14",
+      "description": "SGLang 本地 HEAD 2fd835b9c1 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。",
       "degree": 5,
-      "inbound": 3,
+      "inbound": 4,
       "outbound": 5
     },
     {
@@ -5594,10 +5594,10 @@
         "kv-cache",
         "inference-optimization"
       ],
-      "date": "2026-09-13",
-      "description": "vLLM 最新 main 的 V1 Engine Core、PagedAttention、连续批、kernel 融合与 TP/PP/EP/DP。",
+      "date": "2026-09-14",
+      "description": "vLLM 本地 HEAD dc36fcce90 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -11363,6 +11363,16 @@
     {
       "source": "llm-inference",
       "target": "src-k8s-serving-stack-comparison",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference",
+      "target": "src-sglang-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference",
+      "target": "src-vllm-architecture",
       "kind": "wikilink"
     },
     {

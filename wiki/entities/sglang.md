@@ -1,14 +1,14 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-13
+date: 2026-09-14
 sources: [sglang-architecture-analysis.md]
 related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
 ---
 
 # SGLang
 
-> 最新架构资料：[[src-sglang-architecture]]，基于官方 `main @ 7f1f8c7` 的 README/docs。
+> 最新代码级架构资料：[[src-sglang-architecture]]，基于本地 HEAD `2fd835b9c1`。
 
 **LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)，活跃主线（HEAD `50f4058` 时分析）。
 

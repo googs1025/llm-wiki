@@ -83,6 +83,30 @@ InferencePool / Endpoint Picker
 
 ## 核心技术主题
 
+## 代码阅读入口
+
+如果要从实现而不是概念开始，建议沿两条主链阅读：
+
+```text
+vLLM:
+EngineCore.step
+  → Scheduler.schedule
+  → KVCacheManager.allocate_slots
+  → GPUModelRunner.execute_model
+  → Attention selector/backend
+  → update_from_output
+
+SGLang:
+run_event_loop
+  → get_next_batch_to_run
+  → ScheduleBatch
+  → UnifiedRadixCache.match_prefix + allocation
+  → ModelRunner / ForwardMode backend
+  → process_batch_result
+```
+
+详细的文件路径、函数职责、状态对象和两者差异见 [[src-vllm-architecture]] 与 [[src-sglang-architecture]]。
+
 ### Prefill vs Decode
 
 Prefill 负责把 prompt/context 一次性编码成 KV cache，算力密集、吞吐敏感；Decode 每步生成一个 token，延迟敏感、状态持续时间长。[[disaggregated-serving]] 把两者拆到不同 GPU 池中分别扩缩，是 [[dynamo]]、[[llm-d]] 等系统的主线。

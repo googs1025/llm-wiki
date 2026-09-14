@@ -445,3 +445,7 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 
 - 补充 agent-sandbox、AgentCube、OpenKruise Agents、AgentScope Runtime、agentgateway 对照路径的生命周期、请求时序、执行边界与选型流程图。
 - 更新 Agent Runtime Substrate、项目地图和选型地图，明确 Agent 应用、session、sandbox、runtime enforcement、网络/凭据网关之间的关系。
+## [2026-09-14] ingest | vLLM 与 SGLang 代码级架构
+
+- 基于本地 `/Users/zhenyu.jiang/vllm` HEAD `dc36fcce90` 与 `/Users/zhenyu.jiang/sglang` HEAD `2fd835b9c1`，提取 Engine/Scheduler/Batch/KV/Attention/Speculative/P-D 关键调用路径。
+- 在两份架构源摘要中增加代码入口、状态对象、关键函数、生命周期流程和 vLLM/SGLang 实现对比。

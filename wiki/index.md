@@ -196,8 +196,8 @@ date: 2026-05-12
 
 ## 源文件摘要 (Sources)
 
-- [[src-vllm-architecture]] — vLLM 最新 main 的 V1 Engine Core、PagedAttention、连续批、kernel 融合与 TP/PP/EP/DP。
-- [[src-sglang-architecture]] — SGLang 最新 main 的 RadixCache、HiCache、连续批、overlap、kernel 与 TP/PP/EP/DP。
+- [[src-vllm-architecture]] — vLLM 本地 HEAD `dc36fcce90` 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。
+- [[src-sglang-architecture]] — SGLang 本地 HEAD `2fd835b9c1` 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。
 
 - [[src-k8s-v1.36-sneak-peek]] — K8s v1.36 新特性预览（弃用 externalIPs、SELinux GA）
 - [[src-kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案源摘要与追踪方法。
