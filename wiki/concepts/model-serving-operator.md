@@ -2,7 +2,7 @@
 title: Model Serving Operator
 tags: [concept, model-serving, kubernetes, operator, llm-serving]
 date: 2026-06-12
-sources: [kserve-architecture-analysis.md, ome-architecture-analysis.md, kubeai-architecture-analysis.md, gpustack-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, openkruise-projects-current-state.md]
+sources: [dynamo-architecture-analysis.md, kserve-architecture-analysis.md, ome-architecture-analysis.md, kubeai-architecture-analysis.md, gpustack-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, openkruise-projects-current-state.md]
 related: [[kserve]], [[llm-inference]], [[inference-routing]], [[kubernetes]], [[vllm]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-workload-variant-autoscaler]], [[llm-d-batch-gateway]], [[batch-inference]], [[kubernetes-workload-automation]]
 ---
 
@@ -20,6 +20,8 @@ Model serving operator 是在 Kubernetes 上声明式管理模型、runtime、en
 | [[gpustack]] | GPU cluster manager + vLLM/SGLang 编排 + observability |
 | [[llm-d-workload-variant-autoscaler]] | 针对同一模型多个 serving variant 的全局 autoscaling 决策层 |
 | [[llm-d-batch-gateway]] | 不管理模型部署，但把 batch job lifecycle 接到 model serving endpoint |
+| [[rbg]] | 用 RoleBasedGroup / RoleInstance / CoordinatedPolicy 表达多角色、有状态、跨角色协调的 inference workload |
+| [[kthena]] | 用 ModelBooster / ModelServing / ModelServer / ModelRoute 组合完整 K8s LLM serving control/data plane |
 | [[openkruise-kruise]] | 不直接管理模型服务，但提供 workload enhancement、image preheat、workload spread 等可借鉴的 K8s workload automation 模式 |
 
 ## 和 engine 的区别
@@ -42,4 +44,4 @@ Model serving operator 是在 Kubernetes 上声明式管理模型、runtime、en
 
 ## 和 Kubernetes 调度/指标外围的关系
 
-模型服务 operator 只管理模型服务生命周期还不够。[[kueue]] / [[jobset]] / [[lws]] 决定 batch 和分布式 workload 怎么表达与入队；[[karpenter]] 决定节点容量怎样按 pending pods 扩出；[[metrics-server]] / [[prometheus-adapter]] 决定 autoscaling 能看到哪些指标；[[inference-perf]] / [[llm-d-prism]] 决定实验结果怎样被复现和分析。[[kubernetes-workload-automation]] 则提供更上位的视角：OpenKruise、Kueue、Karpenter、JobSet/LWS 和 model serving operator 都是在把业务 workload 意图提升为 Kubernetes API。
+模型服务 operator 只管理模型服务生命周期还不够。[[dynamo]] 展示了另一条边界：DGDR/Profiler/AIConfigurator 负责部署前配置搜索，DGD/DCD/Operator 负责资源物化，Planner 负责运行时 P/D 容量控制，而 Router 留在请求热路径。[[kueue]] / [[jobset]] / [[lws]] 决定 batch 和分布式 workload 怎么表达与入队；[[karpenter]] 决定节点容量怎样按 pending pods 扩出；[[metrics-server]] / [[prometheus-adapter]] 决定 autoscaling 能看到哪些指标。[[kubernetes-workload-automation]] 提供更上位的整体视角。

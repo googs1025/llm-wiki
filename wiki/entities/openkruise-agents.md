@@ -1,7 +1,7 @@
 ---
 title: OpenKruise Agents
 tags: [ai-agent, agent-runtime, sandbox, kubernetes, openkruise, e2b]
-date: 2026-06-15
+date: 2026-09-14
 sources: [openkruise-agents-architecture-analysis.md]
 related: ["[[src-openkruise-agents-architecture]]", "[[agent-sandbox]]", "[[agentcube]]", "[[agent-runtime-substrate]]", "[[declarative-agent-management]]", "[[agent-credential-isolation]]", "[[cloud-native-security]]"]
 ---
@@ -23,6 +23,22 @@ OpenKruise Agents 是 OpenKruise 面向 AI Agent sandbox lifecycle management �
 - 典型场景：code interpreter、cloud desktop、Claude Code / OpenClaw sandbox、RL/HITL/open-world training、长寿命 workspace
 
 ## 架构定位
+
+## E2B 请求到 Sandbox 的流程
+
+```text
+E2B API / CRD request → sandbox-manager
+          ├─ create / claim / clone / checkpoint
+          └─ route + identity + key storage
+                         ↓
+             SandboxClaim / SandboxSet / Sandbox
+                         ↓
+                 agent-sandbox controller
+                         ↓
+             Pod + PVC + agent-runtime / CSI
+                         ↓
+              Envoy ext_proc → Sandbox Pod IP:port
+```
 
 OpenKruise Agents 处在 [[agent-sandbox]] 和 [[agentcube]] 中间偏平台化的一层：
 

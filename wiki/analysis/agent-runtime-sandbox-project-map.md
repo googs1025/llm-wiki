@@ -1,7 +1,7 @@
 ---
 title: Agent Runtime / Sandbox 项目地图
 tags: [ai-agent, agent-runtime, sandbox, project-map, cloud-native]
-date: 2026-06-15
+date: 2026-09-14
 sources: [src-agent-sandbox-architecture, src-openkruise-agents-architecture, src-agentcube-architecture, src-openshell-architecture, src-nemoclaw-architecture, src-hiclaw-architecture, src-agentscope-architecture, src-agentgateway-architecture]
 related: [[agent-sandbox]], [[openkruise-agents]], [[agentcube]], [[HiClaw]], [[agentgateway]], [[declarative-agent-management]], [[agent-credential-isolation]], [[cloud-native-security]], [[ai-agent-plugin-patterns]], [[mcp]]
 ---
@@ -22,6 +22,23 @@ sandbox lifecycle primitive
 runtime enforcement: container / supervisor / proxy / policy
         ↓
 network, credentials, storage, inference, tool access
+```
+
+## 通用 Agent Session 生命周期
+
+```text
+Create / Claim
+      ↓
+Provision or WarmPool adoption
+      ↓
+Ready + route + identity
+      ↓
+Running session
+  ├─ tool/model/network request → policy → external service
+  ├─ idle timeout → suspend / hibernate
+  ├─ checkpoint → snapshot / PVC / workspace
+  ├─ resume → restore route + identity
+  └─ expiry / delete → revoke → cleanup / retain data
 ```
 
 这个方向不能只看“能不能启动一个容器”。Agent runtime 的特殊性在于：它是长寿命、有状态、会执行不可信输入、会持有工具能力、会访问模型和外部网络，并且经常需要人类中途介入。真正的系统边界包括生命周期、身份、凭据、网络、文件、推理路由、工具权限和恢复。

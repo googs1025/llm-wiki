@@ -1,280 +1,292 @@
 ---
-title: NVIDIA Dynamo 架构与设计思路分析
-tags: [architecture, ai-infra, llm-inference, distributed-serving, kv-cache, kubernetes]
-date: 2026-05-15
+title: NVIDIA Dynamo 架构与业务问题（文档重构版）
+tags: [architecture, ai-infra, llm-inference, distributed-serving, kv-cache, kubernetes, autoscaling]
+date: 2026-09-13
 sources: [dynamo-architecture-analysis.md]
-related: [[dynamo]], [[vllm]], [[sglang]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]]
+related: [[dynamo]], [[llm-inference]], [[inference-routing]], [[disaggregated-serving]], [[kv-cache-offload]], [[model-serving-operator]], [[ai-gateway]], [[sglang]], [[vllm]]
 ---
 
-# NVIDIA Dynamo 架构与设计思路分析
+# NVIDIA Dynamo 架构与业务问题（文档重构版）
 
-> 原文：`raw/dynamo-architecture-analysis.md` · 仓库：https://github.com/ai-dynamo/dynamo · 分析版本 1.2.0（commit 7997117，2026-05-15）
+> 原文：`raw/dynamo-architecture-analysis.md` · 仓库：https://github.com/ai-dynamo/dynamo · 分析版本 HEAD `ed64b7d`
+> 本页按当前 README 与官方文档重构；“文档明确”与“架构推导”已尽量区分。
 
 ## 一句话定位
 
-[[dynamo]] 是 NVIDIA 开源的**数据中心级 [[llm-inference|LLM 推理]]编排层**：用 Rust 运行时 + Python 组件 + Go K8s Operator，把 [[sglang|SGLang]] / [[vllm|vLLM]] / TensorRT-LLM 等推理引擎拼成具备[[disaggregated-serving|分离式 prefill/decode]]、[[radix-attention|KV 感知路由]]、四级 KV 缓存（KVBM）和 SLA 自动扩缩容的协调集群。它不替代推理引擎，而是让一群 GPU/Node 变成"一个协调的推理系统"。
+[[dynamo]] 是位于 [[sglang|SGLang]]、[[vllm|vLLM]]、TensorRT-LLM 之上的数据中心级 [[llm-inference|LLM 推理编排层]]。它解决跨节点、P/D 分离、KV 局部性、SLA 扩缩和故障迁移问题，而不是替代推理引擎本身。
+
+## 它想解决的业务问题
+
+- 长 prompt 的 prefill 会阻塞 decode：用独立 prefill/decode 池和 NIXL KV transfer 做资源隔离。
+- 传统负载均衡不知道缓存：用 KV overlap + 活动负载做成本路由，减少重复 prefill。
+- GPU 容量靠人工试错：用 DGDR 描述意图，Profiler/AIConfigurator 生成 DGD，Planner 在线调整副本。
+- worker 故障直接暴露给用户：用 migration、worker inhibition、canary 和 graceful shutdown 保持服务连续性。
+- 平台入口各有标准：可选 Dynamo Frontend-native 路由，或 Gateway API + GAIE EPP，把入口治理和 serving selection 解耦。
 
 ## 核心架构图
 
 ```
-                    ┌─────────────────────────────────────────────┐
-                    │              Client (OpenAI API)            │
-                    └────────────────────┬────────────────────────┘
-                                         │ HTTP / SSE
-┌────────────────────────────────────────▼─────────────────────────────────────┐
-│ FRONTEND (Rust axum + Python wrapper)     lib/llm/src/http  +  components/  │
-│   /v1/chat/completions  ─► validate ─► preprocess ─► migration ─► route     │
-└────────────────────────────────────────┬─────────────────────────────────────┘
-                                         │
-            ┌────────────────────────────┼────────────────────────────┐
-            │     REQUEST PLANE          │      CONTROL PLANE         │
-            │   (TCP / NATS Core)        │   (etcd / K8s / file)      │
-            │                            │                            │
-            ▼                            ▼                            ▼
-┌──────────────────────┐  ┌────────────────────────┐  ┌────────────────────────┐
-│ KV-Aware Router      │  │ DistributedRuntime     │  │ Planner (Python)       │
-│ lib/kv-router        │  │ lib/runtime            │  │ components/.../planner │
-│ - Radix tree of      │  │ - Discovery trait      │  │ - Prometheus scrape    │
-│   block hashes/wkr   │  │ - Component registry   │  │ - Throughput + Load    │
-│ - Cost function:     │  │ - HealthCheckManager   │  │   scaling laws         │
-│   prefill_load +     │  │ - Pipeline framework   │  │ - Emits ScalingDecision│
-│   decode_cost -      │  │                        │  │   to K8s Operator      │
-│   overlap credits    │  └─────────┬──────────────┘  └──────────┬─────────────┘
-└──────────┬───────────┘            │                            │
-           │                        │ register / watch           │ patch DGD
-           ▼                        ▼                            ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ WORKER POOL (Python wrappers around backends via PyO3)                      │
-│                                                                             │
-│   Prefill Worker        ────KV transfer (NIXL/GDS)────►   Decode Worker    │
-│   ┌──────────────┐                                        ┌──────────────┐ │
-│   │ SGLang/vLLM/ │      ◄────KV-events (NATS JetStream)─► │ SGLang/vLLM/ │ │
-│   │ TRT-LLM      │                                        │ TRT-LLM      │ │
-│   │ + KVBM hooks │                                        │ + KVBM hooks │ │
-│   └──────┬───────┘                                        └──────┬───────┘ │
-└──────────┼───────────────────────────────────────────────────────┼─────────┘
-           │                                                       │
-┌──────────▼───────────────────────────────────────────────────────▼─────────┐
-│ STORAGE / EVENTS PLANE                                                      │
-│                                                                             │
-│   KVBM Tier Hierarchy (lib/kvbm-*)            NATS JetStream + Object Store │
-│   G1: GPU device memory   ──LRU──┐            - kv-events subject           │
-│   G2: CPU pinned          ──LFU──┤            - Radix tree snapshots        │
-│   G3: NVMe/SSD (NIXL)            │                                          │
-│   G4: S3/Azure/Object (NIXL)     │                                          │
-│                                  │                                          │
-│   Consolidator dedupes by         │                                          │
-│   SequenceHash (128-bit PLH)      │                                          │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                         ▲
-                                         │ topology-aware gang sched
-┌────────────────────────────────────────┴─────────────────────────────────────┐
-│ K8s Operator (Go, deploy/operator/)                                          │
-│   DGDR (request)  ─►  DGD (graph)  ─►  DCD (per-component pods)             │
-│   AIConfigurator profiles ─► Planner picks ─► Grove places (NVL72 aware)    │
-└──────────────────────────────────────────────────────────────────────────────┘
+                              ┌───────────────────────────────┐
+                              │        在线业务 / Agent        │
+                              │ OpenAI API · Responses · Tools │
+                              └───────────────┬───────────────┘
+                                              │ HTTP / SSE / gRPC
+                       ┌──────────────────────▼──────────────────────┐
+                       │             入口与请求编排层                 │
+                       │ Frontend / Gateway EPP / Standalone Router  │
+                       │ auth · protocol · tokenize · session hints  │
+                       └───────────────┬──────────────────┬───────────┘
+                                       │                  │
+                              route decision       request dispatch
+                                       │                  │
+                       ┌──────────────▼──────────────────▼───────────┐
+                       │                 Dynamo Runtime                │
+                       │ Namespace → Component → Endpoint             │
+                       │ discovery · request plane · event plane       │
+                       └───────┬───────────────────┬──────────────────┘
+                               │                   │
+                KV overlap + load          endpoint registration / health
+                               │                   │
+              ┌────────────────▼───────┐   ┌─────▼────────────────────┐
+              │     KV-aware Router     │   │ Discovery / Control       │
+              │ prefix index + scoring  │   │ etcd / Kubernetes / file  │
+              │ filters + worker choice │   │ EndpointSlice / metadata  │
+              └───────────┬─────────────┘   └──────────┬────────────────┘
+                          │                            │
+             ┌────────────▼────────────┐  ┌───────────▼───────────────┐
+             │      Serving graph       │  │    Capacity control       │
+             │  Prefill pool ↔ Decode   │  │ Profiler → Planner        │
+             │  pool; aggregated mode   │  │ Prometheus → scale target  │
+             └───────┬──────────┬───────┘  └───────────┬───────────────┘
+                     │          │                     │
+              KV via NIXL   engine API          DGD / DGDR reconcile
+                     │          │                     │
+        ┌────────────▼───┐ ┌────▼─────────────┐ ┌─────▼─────────────────┐
+        │ Prefill Worker  │ │ Decode Worker    │ │ Kubernetes Platform    │
+        │ prompt → KV     │ │ KV → tokens      │ │ Operator · DGD · DCD   │
+        │ SGLang/vLLM/TRT │ │ SGLang/vLLM/TRT  │ │ Grove / Gateway API     │
+        └────────┬────────┘ └──────┬──────────┘ └──────────┬────────────┘
+                 │                 │                       │
+                 └────────┬────────┴──────────────┬────────┘
+                          │                       │
+                ┌─────────▼─────────┐   ┌────────▼────────────────────┐
+                │ KV state & events │   │ Observability               │
+                │ GPU/CPU/NVMe/Blob │   │ Prometheus · OTLP · Grafana  │
+                │ KV events/index   │   │ traces · logs · FPM          │
+                └───────────────────┘   └─────────────────────────────┘
 ```
 
-## 模块分层
+## 模块分层与边界
 
-| 层 / 模块 | 职责 |
-|----------|------|
-| HTTP 前端（Rust axum + Python wrapper） | OpenAI 兼容入口、SSE 流式、聚合、validation |
-| 预处理流水线 | Tokenize、prompt template、多模态 decode、采样归一化 |
-| 迁移层（`migration.rs`） | 失败 worker 在飞请求自动迁移到新 worker（RetryManager） |
-| [[radix-attention\|KV-aware Router]] | XXH3 hash → radix tree → cost-based softmax 选 worker；多副本经 NATS JetStream 同步 |
-| 分布式运行时（`lib/runtime`） | Runtime/Endpoint/Discovery/Transport 抽象；TCP+NATS 双平面 |
-| KVBM（KV Block Manager） | G1-G4 四级 KV 缓存、NIXL 零拷贝、TinyLFU 升降级、SequenceHash 去重 |
-| Backend wrapper（Python） | [[sglang]]/[[vllm]]/TRT-LLM 适配；通过 PyO3 接入 Rust 运行时 |
-| Planner（SLA 自动扩缩） | Prometheus scrape + state machine + 推 K8s operator |
-| K8s 控制面（Go + Grove + Gateway plugin） | CRD: DGDR→DGD→DCD；拓扑感知 gang scheduling |
+| 层 | 功能 | 边界 |
+|---|---|---|
+| 入口 | Frontend、Gateway EPP、Standalone Router | 协议、tokenize、入口治理；不实现 GPU kernel |
+| 决策 | KV-aware Router、PrefillRouter | 选择 worker；不拥有全局 Kubernetes 状态 |
+| Runtime | Namespace、Component、Endpoint、discovery/request/event planes | 连接与生命周期；不替代 Operator |
+| 执行 | Prefill/Decode/Aggregated Workers + backend engine | batching、sampling、KV、token generation |
+| KV/传输 | NIXL、KV index/events、KVBM/offload | KV transfer 与分层存储；不等价于强一致数据库 |
+| 控制 | DGDR、Profiler、AIConfigurator、Planner、DGD/DCD、Operator、Grove | 配置搜索、扩缩、放置；不进入 token 热路径 |
+| 横切 | Prometheus、OTLP、canary、migration | 观测与可靠性；不能阻塞推理热路径 |
 
-**关键约束：**
+## 请求与控制流
 
-- 性能敏感路径（HTTP、tokenize、路由、KVBM）**全部在 Rust**；backend 适配薄到只剩 "engine.generate + publish KV events"。
-- K8s operator 不做 placement，**把拓扑感知外包给 Grove**。
-- 控制平面（discovery）和事件平面（KV events）**默认分离**：file/mem 用 ZMQ，etcd/K8s 用 NATS。
-
-## 关键数据流
-
-**端到端请求路径（HTTP arrival → token streaming）：**
+### 聚合请求
 
 ```
-[1] HTTP POST /v1/chat/completions
-        │
-        ▼
-[2] axum Router (lib/llm/src/http/service/openai.rs:2012)
-    └─► handler_chat_completions
-        │
-        ▼
-[3] Validate (openai.rs:1233-1254)
-    + Apply model/temperature/token defaults
-        │
-        ▼
-[4] Preprocessor pipeline (lib/llm/src/preprocessor/)
-    TokenizeOperator → PromptFormattingOperator → SamplingOperator
-    NvCreateChatCompletionRequest ──► PreprocessedRequest
-        │
-        ▼
-[5] Migration layer (lib/llm/src/migration.rs:115)
-    RetryManager wraps the call; on CannotConnect/Disconnected/
-    EngineShutdown (line 189) replays with Context::with_id(...)
-        │
-        ▼
-[6] KV-aware route decision
-    ├─ Hash prompt → PLH blocks (XXH3, block_size=128, LoRA-aware)
-    ├─ Query ConcurrentRadixTree per worker for prefix overlap
-    └─ Selector logit (lib/kv-router/src/scheduling/selector.rs:161):
-       cost = prefill_load_scale × adjusted_prefill_blocks + decode_cost_blocks
-       softmax(−cost) sample
-        │
-        ▼
-[7] Dispatch via Request Plane
-    └─ TCP (pooled) or NATS Core → worker generate endpoint
-        │
-        ▼
-[8] Worker (Python) calls backend engine
-    ├─ SGLang: sgl.Engine.async_generate(...)
-    ├─ vLLM:   AsyncLLMEngine.generate(...)
-    └─ TRT-LLM: trtllm executor
-        │
-        ▼ [if disaggregated]
-[9] PrefillRouter picks prefill worker → runs prefill
-    └─ disaggregated_params returned
-        │
-        ▼
-[10] PrefillRouter picks decode worker
-     └─ KV blocks transferred via NIXL/GPUDirect-RDMA
-        │
-        ▼
-[11] Decode generates tokens
-     ├─ Each new block: KVBM.OffloadManager computes SequenceHash
-     └─ publish to NATS "kv-events" subject
-        │
-        ▼
-[12] Tokens stream back through SSE
-     └─ ChatCompletionAggregator collapses if stream=false
-        │
-        ▼
-[13] Response to client (status 200, JSON or SSE)
+Client
+  │ 1. OpenAI-compatible request
+  ▼
+Frontend
+  │ 2. validate → chat template → tokenize → normalize sampling
+  ▼
+Router
+  │ 3. filter ready workers
+  │ 4. score KV overlap + active prefill + active decode + request count
+  ▼
+Selected aggregated worker
+  │ 5. continuous/inflight batching inside backend engine
+  │ 6. prefill + decode on the same worker pool
+  ▼
+Token stream
+  │ 7. detokenize / aggregate if non-streaming
+  ▼
+Frontend ───────────────────────────────────────────────► Client
 ```
 
-**容错路径：** worker 在 [8]–[11] 任意阶段挂掉 → `RetryManager` 检测 `is_migratable()` 错误 → 用同一个 `PreprocessedRequest` 重发到新 worker。guided decoding 和 n>1 sampling 因状态机不可复制而禁用迁移。
-
-**Planner 自动扩缩容循环：**
+### P/D 分离请求
 
 ```
-            ┌──────────────────────────────────────────────────────┐
-            │  Tick scheduler (load ~10s, throughput ~60s, "agg")  │
-            └────────────────────────┬─────────────────────────────┘
-                                     │
-                ┌────────────────────▼────────────────────┐
-                │  _gather_tick_input()                   │
-                │  - Prometheus: TTFT, ITL, ISL, OSL, QPS │
-                │  - FPM subscriber (ForwardPassMetrics)  │
-                │  - per-worker queue depth               │
-                └────────────────────┬────────────────────┘
-                                     │
-        ┌────────────────────────────┼────────────────────────────┐
-        │                            │                            │
-        ▼                            ▼                            ▼
-┌──────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
-│ Throughput branch│   │  Load branch         │   │ Correction factors:  │
-│ predict next-win │   │  estimate latency    │   │ prefill_correction = │
-│ traffic × safety │   │  from queue + FPM    │   │   actual_ttft /      │
-│ → replicas LB    │   │  vs SLA threshold    │   │   expected_ttft      │
-└────────┬─────────┘   └──────────┬───────────┘   │ decode_correction =  │
-         │                        │               │   actual_itl /       │
-         └──── load > throughput ─┤               │   expected_itl       │
-                                  │               └──────────────────────┘
-                                  ▼
-                   ScalingDecision(num_prefill, num_decode) | None
-                                  │
-                                  ▼
-                    _apply_effects() ──► K8s operator
-                                       ──► patches DGD replicas
-                                  │
-                                  ▼
-                   Prometheus counters + JSON diagnostics
+Client → Frontend → PrefillRouter
+                         │
+                         ├─① 选择 prefill worker
+                         │       │
+                         │       ├─计算 prompt
+                         │       ├─生成 KV blocks
+                         │       └─返回 disaggregated_params
+                         │
+                         ├─② 选择 decode worker
+                         │       │
+                         │       ├─注入 transfer metadata
+                         │       ├─通过 NIXL 协调 GPU↔GPU KV transfer
+                         │       └─使用 KV 开始逐 token decode
+                         │
+                         └─③ stream tokens → Frontend → Client
 ```
 
-**KV-aware Router cost function：**
-
-```text
-adjusted_prefill_blocks = max(
-    prefill_blocks
-    - overlap_score_credit * device_overlap_blocks
-    - host_cache_hit_weight * host_overlap_blocks
-    - disk_cache_hit_weight * disk_overlap_blocks
-    - shared_cache_multiplier * shared_beyond_blocks,
-    0,
-)
-cost = prefill_load_scale * adjusted_prefill_blocks + decode_blocks
-```
-
-## 设计决策与哲学
-
-- **三平面架构解耦**：请求平面（低延迟，TCP/NATS Core）、控制平面（desired-state，etcd/K8s/file）、存储+事件平面（[[radix-attention|KV 可见性]]，NATS JetStream + Object Store）三者独立演进。事件平面持久化保证 router 副本重启后能 replay。
-
-- **Rust 内核 + Python 适配 + Go 控制器**三语言协作：性能敏感路径全在 Rust（1000 个 .rs 文件）；backend 适配做到薄薄一层 Python（896 个 .py）；K8s CRD 控制循环用 Go（258 个 .go）。
-
-- **请求迁移是默认能力**：`RetryManager` 把 worker 死亡变成对客户端透明的事件。这是 Dynamo 区别于纯推理引擎（[[vllm]]、[[sglang]]）的根本特征——它把"集群"当作一等公民。
-
-- **KV 块的全局身份 = SequenceHash**：128-bit PositionalLineageHash（XXH3, seed=1337，混入 LoRA id）让一个 KV 块在 GPU/CPU/SSD/远端 + 多 worker 之间有同一个名字。Consolidator 去重、router 前缀匹配、KVBM 升降级都用它。
-
-- **KVBM 四级层次（G1-G4）与 NIXL 统一传输**：G1=GPU device、G2=CPU pinned、G3=NVMe/SSD、G4=S3/Azure。LRU 管 G1→G2，TinyLFU + presence filter 管 G2→G3。所有层都包装成 NIXL MemType，使得不同 tier 间的代码路径几乎同形。参见 [[kv-cache-offload]]。
-
-- **KV-aware 路由 ≠ 最大化命中率**：成本函数同时惩罚 prefix overlap 不足和当前 worker 负载。多 router 副本通过 NATS JetStream 同步活跃块视图。softmax(−cost) 采样而非 argmin，留出概率分散负载。
-
-- **AIConfigurator → Planner → Operator 三段式 SLA 闭环**：AIConfigurator 离线扫 10K+ TP/EP/DEP 配置选 Pareto 前沿 → Planner 在线决策扩缩 → Operator 物化 K8s 资源。这是 1.0 "zero-config DGDR" 的实现基础。
-
-- **拓扑感知外包给 Grove**：Operator 不做 NVL72/rack/host placement，把 component group 翻译成 Grove `PodCliqueSet` + `PodCliqueScalingGroup` 交给外部 scheduler，只读 Grove condition 反传 DGD status。
-
-- **Discovery backend 是 trait，不是硬编码**：`KVStoreDiscovery`（etcd/file/memory）/`KubeDiscoveryClient`（EndpointSlice）/`MockDiscovery` 三种实现可热切。模型注册有身份冲突检测——不同模型注册同一 endpoint 会被拒绝（LoRA adapter 除外）。
-
-- **canary 健康检查 + 自愈再注册**：每个 endpoint 独立 health check task，超时则标 `NotReady` 并触发 re-register，K8s 拉起新 pod 后立即恢复路由。
-
-## KVBM 四级层次（核心组件深入）
+### KV-aware 路由反馈环
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ GPU Memory (G1)                    lib/kvbm-engine │
-│ - Fastest, smallest capacity                        │
-│ - Active compute blocks                             │
-└──────────────┬──────────────────────────────────────┘
-               │ Offload G1→G2 (LRU pop_lru)
-               ↓
-┌─────────────────────────────────────────────────────┐
-│ CPU/Host Memory (G2)     lib/kvbm-logical (pools)  │
-│ - Pinned DRAM staging                               │
-│ - µs-latency RDMA ready  lib/kvbm-physical         │
-└──────────────┬──────────────────────────────────────┘
-               │ Offload G2→G3 (TinyLFU + presence filter)
-               ↓
-┌─────────────────────────────────────────────────────┐
-│ NVMe/SSD (G3)           lib/kvbm-physical/storage  │
-│ - Persistent warm cache                             │
-│ - ms-latency disk ops                               │
-└──────────────┬──────────────────────────────────────┘
-               │ Offload G3→G4 (NIXL OBJ backend)
-               ↓
-┌─────────────────────────────────────────────────────┐
-│ Object Storage (G4)      lib/llm/block_manager/    │
-│ - S3/MinIO/Azure Blob    storage/object.rs         │
-│ - Unlimited capacity, seconds+ latency              │
-└─────────────────────────────────────────────────────┘
+              ┌──────────────────────────────────────────┐
+              │              Request arrives              │
+              └────────────────────┬─────────────────────┘
+                                   ▼
+                         tokenize / normalize
+                                   │
+                 ┌─────────────────┴─────────────────┐
+                 ▼                                   ▼
+        KV prefix index                         active-load snapshot
+        cached block overlap                    prefill/decode/request
+                 └─────────────────┬─────────────────┘
+                                   ▼
+                       worker filters + cost score
+                                   │
+                                   ▼
+                              worker choice
+                                   │
+                 ┌─────────────────┴─────────────────┐
+                 ▼                                   ▼
+           request dispatch                    KV lifecycle events
+                                                     │
+                                                     └──► index refresh
 ```
 
-块生命周期 8 阶段：Allocate → Fill → Schedule → Compute → Hash（128-bit SequenceHash）→ Register → Consolidate（按 SequenceHash 去重）→ Evict/Restore（weak ref demotion）。
+路由本质是把 cache locality 转成成本折扣，同时惩罚已分配的 prefill/decode 工作：`adjusted_prefill = max(raw_prefill - overlap_credit, 0)`，再与 projected decode blocks、active request penalty 合并。它不是“永远选择 cache 命中最多的 worker”。详见 [[inference-routing]] 与 [[radix-attention]]。
 
-NIXL 把 GPUDirect RDMA、NVMe-oF、对象存储都包装成统一 MemType，G1↔G2↔G3↔G4 的传输代码路径同形。详见 raw 中的"关键组件深入解读 / KVBM" 节。
+### DGDR → DGD → Serving
+
+```
+用户意图
+  │ model + backend + hardware + workload + SLA + optional planner
+  ▼
+DGDR
+  │ discover GPU type / memory / node capacity
+  ▼
+Profiler
+  │ rapid: performance estimates
+  │ thorough: deploy candidates and benchmark on real GPUs
+  ▼
+AIConfigurator
+  │ enumerate → evaluate → rank candidate topology / parallelism / replicas
+  ▼
+Generated DGD
+  │ autoApply=true  ───────────────┐
+  │ autoApply=false → user review   │
+  ▼                                ▼
+Operator reconcile                 DGD applied
+  │ create worker graph / DCD / services / optional planner
+  ▼
+Serving deployment
+```
+
+### Planner 扩缩闭环
+
+```
+┌─────────┐   ┌─────────┐   ┌───────────┐   ┌──────────────┐
+│ OBSERVE │ → │ PREDICT │ → │ PROPOSE   │ → │ RECONCILE    │
+│ metrics │   │ req/ISL │   │ replicas  │   │ constraints  │
+└─────────┘   └─────────┘   └───────────┘   └──────┬───────┘
+                                                   ▼
+                                           ┌──────────────┐
+                                           │ CONSTRAIN    │
+                                           │ min/GPU/SLA  │
+                                           └──────┬───────┘
+                                                  ▼
+                                           ┌──────────────┐
+                                           │ EXECUTE      │
+                                           │ scale_to     │
+                                           └──────┬───────┘
+                                                  ▼
+                                  Operator / connector changes replicas
+                                                  │
+                                                  └──── feedback ────► OBSERVE
+```
+
+throughput loop 预测持续需求并提供下界，load loop 快速纠正 SLA 压力。它们共享 worker inventory、性能模型、KV hit rate、speculative accept length 与 GPU budget；因此 Planner 不是普通 CPU utilization HPA。
+
+### Gateway API 路由
+
+```
+Client
+  │
+  ▼
+Kubernetes Gateway / HTTPRoute
+  │ 入口策略、认证、限流、边缘观测
+  ▼
+GAIE Endpoint Picker Plugin (EPP)
+  │ 复用 Dynamo KV-aware selection
+  ▼
+Selected worker Frontend sidecar
+  │ router-mode=direct
+  ▼
+Worker / engine
+```
+
+### 故障迁移
+
+```
+request in flight
+      │
+      ▼
+worker error / timeout / disconnect
+      │
+      ├─不可迁移错误 → reject / return error
+      │
+      └─可迁移错误
+            │ cache token/request state
+            │ inhibit failed worker locally
+            ▼
+      choose healthy endpoint
+            │ migration_limit not exceeded
+            ├───────────────┐
+            ▼               │
+      replay request        │ limit reached
+            │               ▼
+            └──────► stream response or final failure
+```
+
+### 可观测性
+
+```
+Dynamo processes
+  ├─ pull /metrics ─────────────► Prometheus ───────► Grafana
+  ├─ OTLP traces/logs ──────────► OTel Collector ───► Tempo / Loki
+  ├─ FPM event publication ─────► event plane
+  │                                └─ bounded trace queue → JSONL(.gz)
+  └─ request trace rows ─────────► JSONL / NATS / OTLP / stderr sinks
+```
+
+## 关键设计判断
+
+- **Engine 与 orchestration 分离**：复用 backend 的 kernel、batching、sampling 专业能力。
+- **KV 是集群级资源**：既影响路由，也影响 P/D transfer 和分层存储。
+- **三平面解耦**：request、discovery、event 具有不同延迟与一致性目标。
+- **Profiler 与 Planner 分工**：部署前找配置，部署后调容量。
+- **Operator 与 Router 分工**：最终一致地物化资源，毫秒级做在线选择。
+- **入口可替换**：Frontend-native 与 Gateway API/EPP 共用 serving selection。
+- **旁路可观测**：观测落后时丢 trace，不阻塞推理热路径。
+
+## 选型与限制
+
+适合长上下文、多 GPU/多节点、P/D 分离、需要 KV-aware routing、SLA autoscaling 或快速扩容的生产推理。单模型、单 GPU、没有跨节点协调需求时，直接使用 [[vllm]] 或 [[sglang]] 更简单。
+
+P/D 分离会增加 KV transfer；Planner 依赖指标与性能模型；migration 需要请求幂等；远端 KV 需要额外的数据驻留和租户隔离治理。README 中的 2x TTFT、7x 启动等数字是特定 benchmark，不应视为通用保证；本次没有运行 GPU benchmark。
 
 ## 相关页面
 
-- [[dynamo]] — 项目主页
-- [[vllm]] — 支持的推理 backend 之一
-- [[sglang]] — 支持的推理 backend 之一
-- [[paged-attention]] — KV cache 分块管理基础理念
-- [[radix-attention]] — KV-aware 路由的算法基础
-- [[disaggregated-serving]] — 分离式 prefill/decode 概念
-- [[kv-cache-offload]] — KV 多级缓存方法论
+- [[dynamo]]
+- [[llm-inference]]
+- [[inference-routing]]
+- [[disaggregated-serving]]
+- [[kv-cache-offload]]
+- [[model-serving-operator]]
+- [[ai-gateway]]

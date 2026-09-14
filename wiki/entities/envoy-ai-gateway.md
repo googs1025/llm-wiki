@@ -1,28 +1,25 @@
 ---
 title: Envoy AI Gateway
-tags: [entity, ai-gateway, envoy, llm, mcp, kubernetes]
-date: 2026-06-13
-sources: [ai-gateway-architecture-analysis.md]
-related: [[ai-gateway]], [[mcp-gateway-tooling-map]], [[agentgateway]], [[gateway-api]], [[mcp]], [[higress]], [[kgateway]]
+tags: [entity, ai-gateway, envoy, kubernetes, llm, provider-routing]
+date: 2026-09-13
+sources: [k8s-gateway-routing-comparison-2026-09-13.md]
+related: [[ai-gateway]], [[inference-routing]], [[gateway-api]], [[gateway-api-inference-extension]], [[llm-d-router]], [[semantic-router]]
 ---
 
 # Envoy AI Gateway
 
-Envoy AI Gateway 是 Envoy Gateway 生态的 GenAI gateway。它包含 CRD API、controller、extproc、provider translators、backend auth、body/header mutator、rate limit、redaction、MCP proxy、metrics/tracing 和 data-plane/e2e tests。详见 [[src-ai-gateway-architecture]]。
+Envoy AI Gateway 是基于 Envoy Gateway 的开源 GenAI traffic gateway，用于把应用请求接入多个 hosted provider 或 self-hosted model serving cluster。
 
-## 架构边界
+## 解决的问题
 
-Envoy AI Gateway 解决的是 LLM/API 访问治理，不是模型 serving engine。它建立在 Envoy Gateway 上，通过 External Processing 和 provider translator 处理 OpenAI、Bedrock 等模型 API 差异，再叠加鉴权、限流、脱敏和观测。
+企业需要统一处理 provider 认证、顶层路由、global rate limit、协议和失败边界，同时又希望把自托管集群内部的细粒度 endpoint picking 交给专用 inference router。
 
-## 关键设计
+## 核心架构
 
-- CRD/API 描述 GenAI gateway 所需后端、策略和路由能力。
-- Controller 把声明式配置转成 Envoy Gateway 可执行配置。
-- extproc 数据面处理请求/响应修改、校验、治理和路由。
-- translator 隔离不同 provider 协议差异。
-- MCP proxy 说明边界正在从 LLM gateway 扩展到 tool gateway。
+README 采用 two-tier gateway：Tier One 负责 authentication、top-level routing 和 global rate limiting；Tier Two 负责 self-hosted model access，并可接 endpoint picker / LLM-aware routing。它支持 OpenAI、Azure OpenAI、Gemini、Bedrock、Anthropic 等 provider 方向。
 
-## 选型判断
+## 边界与选型
 
-已经使用 Envoy Gateway 并希望 GenAI 专用治理时看 Envoy AI Gateway。需要 LLM/MCP/A2A 三协议统一 Rust 数据面看 [[agentgateway]]；需要通用 Gateway API + AI policy 看 [[kgateway]]；需要阿里系 API gateway 与 WASM 插件生态看 [[higress]]。
+它是 edge/provider governance，不是 P/D worker router，也不是模型质量路由算法。典型组合是 Envoy AI Gateway → [[semantic-router]]（可选）→ [[llm-d-router]] / [[gateway-api-inference-extension]] → model server。
 
+详见 [[src-ai-gateway-architecture]]、[[src-k8s-gateway-routing-comparison]]。

@@ -1,7 +1,7 @@
 ---
 title: Agent Runtime / Sandbox 细分选型地图
 tags: [agent-runtime, sandbox, project-map, selection, cloud-native]
-date: 2026-06-15
+date: 2026-09-14
 sources: [src-agent-sandbox-architecture, src-openkruise-agents-architecture, src-agentcube-architecture, src-openshell-architecture, src-nemoclaw-architecture, src-hiclaw-architecture, src-agentscope-architecture, src-agentgateway-architecture]
 related: [[agent-runtime-sandbox-project-map]], [[agent-sandbox]], [[openkruise-agents]], [[agentcube]], [[HiClaw]], [[agentgateway]], [[agent-credential-isolation]]
 ---
@@ -53,6 +53,19 @@ network / credential / tool gateway
 ```
 
 [[agent-sandbox]] 处在 sandbox lifecycle primitive；[[openkruise-agents]] 处在 sandbox platform layer，把 CRD、E2B API、Envoy route、runtime/CSI/identity 扩展组合起来；[[src-openshell-architecture|OpenShell]] 处在 runtime enforcement；[[agentgateway]] 处在 network/tool gateway；[[HiClaw]] 和 [[agentcube]] 是上层产品化编排；[[src-agentscope-architecture|AgentScope]] 是应用框架层。
+
+## 按问题定位项目
+
+```text
+我要解决什么问题？
+  ├─ 写 Agent 应用 / event loop       → AgentScope
+  ├─ 提供 session / invocation API    → AgentCube
+  ├─ 管理 K8s sandbox 生命周期        → agent-sandbox
+  ├─ 做 E2B-like 平台                 → OpenKruise Agents
+  ├─ 做进程/网络/凭据强制隔离          → OpenShell
+  ├─ 做多人协作与人在回路              → HiClaw
+  └─ 管理 LLM/MCP/A2A 出口            → agentgateway
+```
 
 ## 关键对比
 

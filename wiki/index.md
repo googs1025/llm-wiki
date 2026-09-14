@@ -103,6 +103,7 @@ date: 2026-05-12
 - [[llm-d-benchmark]] — llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）
 - [[llm-d-workload-variant-autoscaler]] — llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）
 - [[llm-d-inference-sim]] — 无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）
+- [[llm-d-planner]] — llm-d-incubation 部署规划器（业务意图 + SLO + GPU capacity + quality/cost/latency 推荐 + Kubernetes YAML）
 - [[inference-perf]] — GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。
 - [[llm-d-latency-predictor]] — llm-d Latency Predictor 是给 llm-d inference scheduler 的 ML-based latency scoring service，用预测延迟信号增强 endpoint picking。
 - [[llm-d-prism]] — llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。
@@ -120,6 +121,8 @@ date: 2026-05-12
 - [[gpustack]] — GPU cluster manager / model serving platform（server/worker/scheduler/gateway）
 - [[ome]] — Open Model Engine，K8s model serving operator（CRD/controller + runtime selector + accelerator configs）
 - [[kubeai]] — Kubernetes AI inference operator（Model CRD + OpenAI-compatible proxy/autoscaler/loader）
+- [[rbg]] — RoleBasedGroup workload API，用多角色、有状态、协调式 workload 表达 gateway/router/prefill/decode 推理服务。
+- [[kthena]] — Volcano 社区 Kubernetes-native AI serving platform，整合 ModelServing、ModelServer、ModelRoute、P/D、路由、扩缩与拓扑/gang scheduling。
 
 ### Kubernetes GPU / Device
 - [[hami]] — Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）
@@ -152,6 +155,7 @@ date: 2026-05-12
 - [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
+- [[vllm]] / [[sglang]] 最新架构与推理优化：V1、RadixCache、KV、连续批、融合 kernel 与 TP/PP/EP/DP 对照
 - [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
 - [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
 - [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
@@ -192,6 +196,9 @@ date: 2026-05-12
 
 ## 源文件摘要 (Sources)
 
+- [[src-vllm-architecture]] — vLLM 最新 main 的 V1 Engine Core、PagedAttention、连续批、kernel 融合与 TP/PP/EP/DP。
+- [[src-sglang-architecture]] — SGLang 最新 main 的 RadixCache、HiCache、连续批、overlap、kernel 与 TP/PP/EP/DP。
+
 - [[src-k8s-v1.36-sneak-peek]] — K8s v1.36 新特性预览（弃用 externalIPs、SELinux GA）
 - [[src-kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案源摘要与追踪方法。
 - [[src-holmesgpt-k8s-alerts]] — HolmesGPT 自动诊断 K8s 告警（Runbook > 模型选择）
@@ -207,7 +214,8 @@ date: 2026-05-12
 - [[src-agentcube-architecture]] — AgentCube 架构（HEAD `208da32`，Volcano 社区 AI Agent / Code Interpreter 会话编排层，基于 agent-sandbox 做 Router + WorkloadManager + WarmPool）
 - [[src-agentgateway-architecture]] — agentgateway 架构（v1.2.0-alpha.2，Istio 系骨架 + Rust 数据面，LLM/MCP/A2A 三协议 AI Gateway）
 - [[src-powermem-architecture]] — PowerMem 架构（v1.1.1，OceanBase 持久化记忆中间件，向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
-- [[src-dynamo-architecture]] — NVIDIA Dynamo 架构（v1.2.0，数据中心级 LLM 推理编排层，分离式 P/D + KV 感知路由 + 四级 KV 缓存 KVBM + SLA 自动扩缩）
+- [[src-dynamo-architecture]] — NVIDIA Dynamo 文档重构架构（Frontend/Gateway + KV-aware Router + P/D + Runtime 三平面 + DGDR/Planner SLA 闭环）
+- [[src-k8s-serving-stack-comparison]] — Kubernetes serving stack 对比（llm-d、AIBrix、KServe、KubeAI、OME、GPUStack、RBG、Kthena）
 - [[src-nanobot-architecture]] — nanobot 架构（v0.2.0，HKUDS 个人 AI Agent 框架，8 态状态机 + 17 渠道 + Fallback Provider + Mid-turn 注入）
 - [[src-agentmemory-architecture]] — agentmemory 架构（v0.9.21，本地化跨 Agent 记忆服务，iii-engine 总线 + BM25+Vector+Graph 三流 RRF + 12 hooks + 53 MCP tools，零 LLM 压缩默认）
 - [[src-agent-recall-architecture]] — agent-recall 架构（HEAD `dcf21b5`，本地优先 MCP-native Agent 记忆库，SQLite + scope hierarchy + bitemporal slots + AI briefing cache）
@@ -236,6 +244,7 @@ date: 2026-05-12
 - [[src-llm-d-benchmark-architecture]] — llm-d Benchmark 架构（HEAD `bd8dc5e`，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）
 - [[src-llm-d-workload-variant-autoscaler-architecture]] — llm-d WVA 架构（HEAD `526ce85`，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）
 - [[src-llm-d-inference-sim-architecture]] — llm-d Inference Sim 架构（HEAD `6fb66f3`，无 GPU vLLM 行为模拟：OpenAI/vLLM API、KV cache events、latency/failure/metrics）
+- [[src-llm-d-core-projects-architecture]] — llm-d 核心项目群 2026-09 再调研（llm-d / Router / KV / WVA / Batch / Benchmark / Simulator / Planner 的作用、架构图、业务问题、方法与集成）
 - [[src-kueue-architecture]] — Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）
 - [[src-karpenter-architecture]] — Karpenter 架构（P0，节点弹性 / 成本：Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。）
 - [[src-metrics-server-architecture]] — metrics-server 架构（P0，可观测 / autoscaling：Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k8s.io`，供 HPA/VPA/kubectl top 使用。）
@@ -277,6 +286,7 @@ date: 2026-05-12
 - [[src-kubewall-architecture]] — kubewall 架构（HEAD `fd575ff`，single-binary Kubernetes dashboard：Go backend + client + charts，把 AI integration 作为 dashboard 增强而非主 agent loop）
 - [[src-gateway-api-inference-extension-architecture]] — Gateway API Inference Extension 架构（HEAD `974d27c`，Kubernetes Gateway API 推理扩展：InferencePool API + EPP/LWEPP + conformance/benchmarking，标准化 inference endpoint picking）
 - [[src-ai-gateway-architecture]] — Envoy AI Gateway 架构（HEAD `9a4b02c`，Envoy Gateway 上的 GenAI gateway：CRD/controller + extproc + provider translators + rate limit/auth/redaction/MCP proxy）
+- [[src-k8s-gateway-routing-comparison]] — LLM 网关与路由层对比（llm-d-router、Semantic Router、RouteLLM、Gateway API Inference Extension、Envoy AI Gateway）
 - [[src-kgateway-architecture]] — kgateway 架构（HEAD `1560573`，cloud-native API/AI Gateway：Gateway API controller + Envoy xDS + plugins/policies/SDS，AI Gateway 是其能力分支）
 - [[src-higress-architecture]] — Higress 架构（HEAD `2897c1e`，AI Native API Gateway：Envoy/Istio/control plane + WASM plugins + model-router/MCP/credential governance，HiClaw 背景依赖）
 - [[src-semantic-router-architecture]] — vLLM Semantic Router 架构（HEAD `9893c2c`，system-level intelligent router：Go/Rust bindings + semantic decision/config + dashboard/operator/deploy recipes；仓库 241MB，分析聚焦源码核心）
@@ -308,6 +318,7 @@ date: 2026-05-12
 - [[kubernetes-keps-design-tracking]] — Kubernetes scheduling / autoscaling / node 三个 SIG 的 KEP 设计方案分类与追踪表。
 - [[kubernetes-keps-feature-coverage]] — Kubernetes scheduling / autoscaling / node 重要 feature 覆盖矩阵，按合并设计组追踪 P0/P1 KEP。
 - [[kubernetes-keps-implementation-matrix]] — Kubernetes 重要 KEP 的实现状态矩阵，逐项追踪 status、Alpha/Beta/GA、feature gates 和关键实现路径。
+- [[k8s-v1.37-scheduling-node-dra-progress]] — 2026-07-15 复核 upstream `kubernetes/enhancements` 后的 v1.37 调度、Node、DRA 和 autoscaling 进展。
 - [[kubernetes-scheduler-core-design]] — Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。
 - [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。
 - [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。

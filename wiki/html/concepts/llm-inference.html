@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>LLM Inference</h1>
-    <p class="page-meta">2026-06-12 · 来源：dynamo-architecture-analysis.md、vllm-architecture-analysis.md、sglang-architecture-analysis.md、llm-d-architecture-analysis.md、llm-d-router-architecture-analysis.md、llm-d-kv-cache-architecture-analysis.md、aibrix-architecture-analysis.md、kserve-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、llm-d-benchmark-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-inference-sim-architecture-analysis.md</p>
+    <p class="page-meta">2026-06-12 · 来源：dynamo-architecture-analysis.md、k8s-serving-stack-comparison-2026-09-13.md、vllm-architecture-analysis.md、sglang-architecture-analysis.md、llm-d-architecture-analysis.md、llm-d-router-architecture-analysis.md、llm-d-kv-cache-architecture-analysis.md、aibrix-architecture-analysis.md、kserve-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、llm-d-benchmark-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-inference-sim-architecture-analysis.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span></div>
   </header>
 
@@ -46,12 +46,12 @@
 <tr>
 <td>数据中心编排</td>
 <td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
-<td>P/D 分离、KV transfer/offload、router、planner、operator</td>
+<td>P/D 分离、KV transfer/offload、router、planner、operator；把 engine 变成可扩缩、可迁移的集群服务</td>
 </tr>
 <tr>
 <td>K8s serving stack</td>
-<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a>, <a class="wikilink" href="../entities/kserve.html">kserve</a>, <a class="wikilink" href="../entities/kubeai.html">kubeai</a>, <a class="wikilink" href="../entities/ome.html">ome</a>, <a class="wikilink" href="../entities/gpustack.html">gpustack</a></td>
-<td>CRD/operator、gateway、autoscaling、endpoint picking、GPU 资源</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a>, <a class="wikilink" href="../entities/kserve.html">kserve</a>, <a class="wikilink" href="../entities/kubeai.html">kubeai</a>, <a class="wikilink" href="../entities/ome.html">ome</a>, <a class="wikilink" href="../entities/gpustack.html">gpustack</a>, <a class="wikilink" href="../entities/rbg.html">rbg</a>, <a class="wikilink" href="../entities/kthena.html">kthena</a></td>
+<td>从标准模型 API、runtime/operator、LLM 路由、P/D workload 到 GPU/MaaS 的不同控制面</td>
 </tr>
 <tr>
 <td>路由 / 网关</td>
@@ -75,6 +75,106 @@
 </tr>
 </tbody>
 </table></div>
+<h2 id="k8s-serving-stack-扩展比较">K8s serving stack 扩展比较</h2>
+<p>这八个项目不是同一层的替代品，建议先按抽象层分类：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>项目</th>
+<th>核心对象/入口</th>
+<th>主要解决的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>分布式 LLM serving</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>Gateway/EPP、InferencePool、model server</td>
+<td>K8s 标准入口下的 endpoint picking、KV/P/D 和分布式推理</td>
+</tr>
+<tr>
+<td>GenAI 基础组件</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>Gateway、CRD、Unified AI Runtime、KV/LoRA 组件</td>
+<td>vLLM fleet 的路由、adapter、KV、autoscaling、故障检测和异构成本优化</td>
+</tr>
+<tr>
+<td>通用模型平台</td>
+<td><a class="wikilink" href="../entities/kserve.html">kserve</a></td>
+<td>InferenceService、LLMInferenceService、InferenceGraph</td>
+<td>用统一 API/operator 承载 predictive + generative AI，并支持 canary、缓存、KV offload 与 scale-to-zero</td>
+</tr>
+<tr>
+<td>轻量 AI operator</td>
+<td><a class="wikilink" href="../entities/kubeai.html">kubeai</a></td>
+<td>Model CRD、model proxy、loader、autoscaler</td>
+<td>快速把 LLM/VLM/embedding/speech 模型变成 OpenAI-compatible API</td>
+</tr>
+<tr>
+<td>Runtime/operator 抽象</td>
+<td><a class="wikilink" href="../entities/ome.html">ome</a></td>
+<td>model agent、runtime selector、accelerator config</td>
+<td>把模型生命周期、推理 runtime 和加速器配置解耦</td>
+</tr>
+<tr>
+<td>GPU/MaaS 平台</td>
+<td><a class="wikilink" href="../entities/gpustack.html">gpustack</a></td>
+<td>server、worker、scheduler、gateway、model service</td>
+<td>跨本地/K8s/云管理 GPU，并提供多模型 API、计量、认证和运维</td>
+</tr>
+<tr>
+<td>Workload 原语</td>
+<td><a class="wikilink" href="../entities/rbg.html">rbg</a></td>
+<td>RoleBasedGroup、Role、RoleInstance、CoordinatedPolicy</td>
+<td>表达 gateway/router/prefill/decode 多角色有状态服务，保证拓扑和跨角色原子操作</td>
+</tr>
+<tr>
+<td>一体化 LLM serving</td>
+<td><a class="wikilink" href="../entities/kthena.html">kthena</a></td>
+<td>ModelBooster、ModelServing、ModelServer、ModelRoute</td>
+<td>在 K8s/Volcano 内整合路由、P/D、限流、canary、扩缩、拓扑和 gang scheduling</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="选型不要只问哪个最好">选型不要只问“哪个最好”</h3>
+<ul>
+<li>要 <strong>Gateway API + InferencePool 标准化</strong>：优先研究 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> / <a class="wikilink" href="../entities/kserve.html">kserve</a>。</li>
+<li>要 <strong>vLLM 生态的 LoRA、KV、企业组件</strong>：研究 <a class="wikilink" href="../entities/aibrix.html">aibrix</a>。</li>
+<li>要 <strong>最短路径把模型暴露成 OpenAI API</strong>：研究 <a class="wikilink" href="../entities/kubeai.html">kubeai</a>。</li>
+<li>要 <strong>模型 runtime/accelerator 生命周期抽象</strong>：研究 <a class="wikilink" href="../entities/ome.html">ome</a>。</li>
+<li>要 <strong>GPU 集群、多云、MaaS、token/API 计量</strong>：研究 <a class="wikilink" href="../entities/gpustack.html">gpustack</a>。</li>
+<li>要 <strong>多角色、有状态、P/D workload 的原子升级/扩缩</strong>：研究 <a class="wikilink" href="../entities/rbg.html">rbg</a>。</li>
+<li>要 <strong>K8s 原生完整 LLM serving，并深度结合 Volcano 拓扑/gang</strong>：研究 <a class="wikilink" href="../entities/kthena.html">kthena</a>。</li>
+</ul>
+<p>完整的 README/文档驱动对比、能力矩阵和选型流程见 <a class="wikilink" href="../sources/src-k8s-serving-stack-comparison.html">src-k8s-serving-stack-comparison</a>。</p>
+<h2 id="总体架构与请求流程">总体架构与请求流程</h2>
+<pre><code class="language-text">Client / Application
+        │ OpenAI / Anthropic / gRPC
+        ▼
+Gateway / Semantic Router
+        │ auth · quota · model · KV locality
+        ▼
+InferencePool / Endpoint Picker
+        │ queue · health · topology
+        ▼
+┌────────────────────── Serving Runtime ──────────────────────┐
+│  Prefill Worker          KV Transfer          Decode Worker  │
+│  tokenizer → scheduler ───────────────► scheduler → stream │
+│       │                         │                          │
+│       └──── attention / kernel / TP-PP-EP-DP ───────────────┘
+└───────────────────────────┬─────────────────────────────────┘
+                            ▼
+                    GPU / CPU / NVMe KV tiers
+                            │
+                            ▼
+                 Metrics → Autoscaling → Recovery
+</code></pre>
+<pre><code class="language-text">请求进入 → 认证/限流 → KV-aware endpoint
+       → Prefill → Decode → Sampling → Streaming
+       ├─ 完成：释放 KV → 返回结果
+       └─ 故障：重试 / 迁移 / 重新计算
+</code></pre>
 <h2 id="核心技术主题">核心技术主题</h2>
 <h3 id="prefill-vs-decode">Prefill vs Decode</h3>
 <p>Prefill 负责把 prompt/context 一次性编码成 KV cache，算力密集、吞吐敏感；Decode 每步生成一个 token，延迟敏感、状态持续时间长。<a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a> 把两者拆到不同 GPU 池中分别扩缩，是 <a class="wikilink" href="../entities/dynamo.html">dynamo</a>、<a class="wikilink" href="../entities/llm-d.html">llm-d</a> 等系统的主线。</p>
@@ -108,14 +208,14 @@
 <li>需要离线批处理、评测、仿真或 variant autoscaling：看 <a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a> / <a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a> / <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> / <a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>。</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/gpu-programming-learning.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">GPU 编程学习</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/paged-attention.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">PagedAttention</strong></a></div><span class="page-navigation-progress">阅读顺序 128/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../entities/kubeai.html">kubeai</a></li><li><a class="wikilink" href="../entities/ome.html">ome</a></li><li><a class="wikilink" href="../entities/gpustack.html">gpustack</a></li><li><a class="wikilink" href="../entities/rbg.html">rbg</a></li><li><a class="wikilink" href="../entities/kthena.html">kthena</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/llm-inference.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>AI Gateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Gateway API Inference Extension</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>NVIDIA GPU Operator</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/ai-gateway.html">AI Gateway</a><span>概念 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · wikilink</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/descheduler.html">Descheduler</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#系统分层">系统分层</a></li><li class=""><a href="#核心技术主题">核心技术主题</a></li><li class="level-3"><a href="#prefill-vs-decode">Prefill vs Decode</a></li><li class="level-3"><a href="#batching">Batching</a></li><li class="level-3"><a href="#kv-cache">KV cache</a></li><li class="level-3"><a href="#chunked-prefill">Chunked Prefill</a></li><li class="level-3"><a href="#speculative-decoding">Speculative Decoding</a></li><li class="level-3"><a href="#lora--adapter-serving">LoRA / Adapter Serving</a></li><li class="level-3"><a href="#multi-modal-serving">Multi-modal Serving</a></li><li class="level-3"><a href="#quantization">Quantization</a></li><li class="level-3"><a href="#batch-inference">Batch Inference</a></li><li class="level-3"><a href="#benchmark--simulator">Benchmark / Simulator</a></li><li class="level-3"><a href="#variant-autoscaling">Variant Autoscaling</a></li><li class=""><a href="#选型入口">选型入口</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>AI Gateway</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Gateway API Inference Extension</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>NVIDIA GPU Operator</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/ai-gateway.html">AI Gateway</a><span>概念 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · wikilink</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/descheduler.html">Descheduler</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#系统分层">系统分层</a></li><li class=""><a href="#k8s-serving-stack-扩展比较">K8s serving stack 扩展比较</a></li><li class="level-3"><a href="#选型不要只问哪个最好">选型不要只问“哪个最好”</a></li><li class=""><a href="#总体架构与请求流程">总体架构与请求流程</a></li><li class=""><a href="#核心技术主题">核心技术主题</a></li><li class="level-3"><a href="#prefill-vs-decode">Prefill vs Decode</a></li><li class="level-3"><a href="#batching">Batching</a></li><li class="level-3"><a href="#kv-cache">KV cache</a></li><li class="level-3"><a href="#chunked-prefill">Chunked Prefill</a></li><li class="level-3"><a href="#speculative-decoding">Speculative Decoding</a></li><li class="level-3"><a href="#lora--adapter-serving">LoRA / Adapter Serving</a></li><li class="level-3"><a href="#multi-modal-serving">Multi-modal Serving</a></li><li class="level-3"><a href="#quantization">Quantization</a></li><li class="level-3"><a href="#batch-inference">Batch Inference</a></li><li class="level-3"><a href="#benchmark--simulator">Benchmark / Simulator</a></li><li class="level-3"><a href="#variant-autoscaling">Variant Autoscaling</a></li><li class=""><a href="#选型入口">选型入口</a></li></ul></aside></aside>
 </div>
 
 <script>

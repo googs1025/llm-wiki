@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-15</span>
+  <span class="meta">2026-09-13</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,13 +23,26 @@
 
   <header class="page-header">
     <h1>vLLM</h1>
-    <p class="page-meta">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+    <p class="page-meta">2026-09-13 · 来源：vllm-architecture-analysis.md</p>
     <div class="tags"><span class="tag">entity</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">oss</span></div>
   </header>
 
-  <p><strong>UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。</strong> Apache 2.0，最早把 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。</p>
+  <blockquote>
+<p>最新架构资料：<a class="wikilink" href="../sources/src-vllm-architecture.html">src-vllm-architecture</a>，基于官方 <code>main @ de50029</code> 的 README/docs。</p>
+</blockquote>
+<p><strong>UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。</strong> Apache 2.0，最早把 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>LLM serving 的"事实标准基线"：用 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV 缓存按 16-token block 管理（类比 OS 虚存分页），把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 <a class="wikilink" href="../entities/sglang.html">sglang</a> / TensorRT-LLM / TGI 都把 vLLM 当对标。</p>
+<h2 id="最小架构图">最小架构图</h2>
+<pre><code class="language-text">API / Offline LLM → V1 Engine Core
+                    ├─ Scheduler：token budget、waiting/running
+                    ├─ KV Manager：block allocator、block table
+                    └─ Model Input：sampling / attention metadata
+                              ↓
+                 GPU ModelRunner → Attention / Fused MoE
+                              ↓
+                    TP · PP · EP · DP → Sampler → Stream
+</code></pre>
 <h2 id="关键能力与-sglang-对照">关键能力（与 <a class="wikilink" href="../entities/sglang.html">sglang</a> 对照）</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -101,14 +114,14 @@
 <li><strong>vLLM 投机解码生态较窄</strong>：EAGLE + Medusa；SGLang 7 算法</li>
 </ul>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span></li></ul></section>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../entities/dynamo.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Dynamo</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../entities/sglang.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">SGLang</strong></a></div><span class="page-navigation-progress">阅读顺序 80/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><span class="wikilink wikilink-missing" title="未建页：flash-attention">flash-attention</span></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/vllm.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=vllm">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">vLLM</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>AI Infra 中文学习项目地图</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>GPUStack</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#关键能力与-sglang-对照">关键能力（与 sglang 对照）</a></li><li class=""><a href="#历史与影响">历史与影响</a></li><li class=""><a href="#与-sglang-的差异点基于-sglang-架构分析">与 SGLang 的差异点（基于 sglang 架构分析）</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=vllm">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">vLLM</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="161.0" cy="123.0" r="7"><title>vLLM 架构与推理优化</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>AI Infra 中文学习项目地图</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Dynamo</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-vllm-architecture.html">vLLM 架构与推理优化</a><span>源文件 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kthena.html">Kthena</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#最小架构图">最小架构图</a></li><li class=""><a href="#关键能力与-sglang-对照">关键能力（与 sglang 对照）</a></li><li class=""><a href="#历史与影响">历史与影响</a></li><li class=""><a href="#与-sglang-的差异点基于-sglang-架构分析">与 SGLang 的差异点（基于 sglang 架构分析）</a></li></ul></aside></aside>
 </div>
 
 <script>

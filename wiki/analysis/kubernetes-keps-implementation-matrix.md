@@ -1,7 +1,7 @@
 ---
 title: Kubernetes KEP Implementation Matrix
 tags: [analysis, kubernetes, kep, implementation, feature-gates, sig-scheduling, sig-autoscaling, sig-node]
-date: 2026-07-07
+date: 2026-07-15
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps]
 related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-design-tracking]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]]
 ---
@@ -24,6 +24,8 @@ related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps
 ## P0 Landmark KEPs
 
 这些是当前最重要、最应该逐个追踪的 KEP。`著名度` 不是社区 star，而是这里的阅读优先级：是否改变核心 API、是否跨 SIG、是否影响调度/弹性/节点生产路径。
+
+2026-07-15 已用 GitHub API 复核 upstream `kubernetes/enhancements` `master` 中活跃 KEP 的 `status`、`stage`、`latest-milestone` 和 Alpha/Beta/GA milestones。v1.37 汇总页见 [[k8s-v1.37-scheduling-node-dra-progress]]。本页仍以 KEP 元数据为准；是否真正可生产采用还要继续核验 `kubernetes/kubernetes` 实现 PR、feature gate 默认值和 release notes。
 
 | KEP | SIG | 著名度 | 状态 | Alpha / Beta / GA | Feature gate | 关键实现 / 设计 |
 |---|---|---|---|---|---|---|

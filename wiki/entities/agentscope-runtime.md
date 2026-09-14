@@ -1,7 +1,7 @@
 ---
 title: AgentScope Runtime
 tags: [entity, agent-runtime, agent-as-a-service, sandbox, ai-agent]
-date: 2026-06-12
+date: 2026-09-14
 sources: [agentscope-runtime-architecture-analysis.md]
 related: [[agent-runtime-substrate]], [[agent-runtime-sandbox-selection-map]], [[agent-sandbox]], [[agentcube]], [[agentgateway]]
 ---
@@ -13,6 +13,22 @@ AgentScope 生态的生产化 Agent-as-a-Service runtime，把 AgentApp、Runner
 ## 架构边界
 
 它处在 framework app 与生产 runtime 之间：比 [[agent-sandbox]] 更上层，比完整 managed teammate 产品更底层。仓库 README 已提示能力并入 AgentScope 2.0，所以更适合作为架构迁移参考。
+
+## AgentApp 执行流程
+
+```text
+AgentApp / Agent definition
+             ↓
+Runner：session + event loop
+             ↓
+Protocol Adapter：HTTP / SSE / RPC
+             ↓
+Workspace / Tool / MCP
+             ↓
+Sandbox Manager 或 K8s/Serverless Deployer
+             ↓
+AgentEvent / stream / persistence
+```
 
 ## 选型判断
 
