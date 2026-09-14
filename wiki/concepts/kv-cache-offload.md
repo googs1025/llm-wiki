@@ -50,6 +50,23 @@ GPU 显存有限（A100 80GB / H200 141GB / B200 192GB），但生产 LLM servin
 └──────────────────────────────────────────────────────┘
 ```
 
+## KV 查找、提升与重新计算流程
+
+```text
+请求需要 prefix KV → GPU 命中？
+                         ├─ 是 → 直接 attention
+                         └─ 否 → CPU 命中？
+                                   ├─ 是 → async load → promote GPU
+                                   └─ 否 → NVMe/远端命中？
+                                             ├─ 是 → transfer → promote
+                                             └─ 否 → 重新 prefill
+```
+
+```text
+GPU pressure → 选择 refcount=0 的 block → 写入下层 tier
+             → 更新 block identity/locality → 发布 cache event
+```
+
 ## 关键机制
 
 - **块身份必须全局唯一**：KV block 在所有层、所有 worker 中需要有同一个名字。Dynamo 用 128-bit `SequenceHash`（XXH3 + LoRA id），让块在 GPU/CPU/SSD/S3 之间认得出。

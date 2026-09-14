@@ -2,8 +2,8 @@
 title: LLM Inference
 tags: [concept, ai-infra, llm-inference, llm-serving]
 date: 2026-06-12
-sources: [dynamo-architecture-analysis.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: [[vllm]], [[sglang]], [[dynamo]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[aibrix]], [[kserve]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[inference-routing]], [[batch-inference]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
+sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
+related: [[vllm]], [[sglang]], [[dynamo]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[inference-routing]], [[batch-inference]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
 ---
 
 # LLM Inference
@@ -15,12 +15,71 @@ LLM 推理（inference / serving）指把训练好的大语言模型部署成在
 | 层级 | 代表项目 | 关注点 |
 |------|----------|--------|
 | 推理引擎 | [[vllm]], [[sglang]] | KV cache 管理、batching、scheduler、kernel、模型加载 |
-| 数据中心编排 | [[dynamo]] | P/D 分离、KV transfer/offload、router、planner、operator |
-| K8s serving stack | [[llm-d]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]] | CRD/operator、gateway、autoscaling、endpoint picking、GPU 资源 |
+| 数据中心编排 | [[dynamo]] | P/D 分离、KV transfer/offload、router、planner、operator；把 engine 变成可扩缩、可迁移的集群服务 |
+| K8s serving stack | [[llm-d]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]] | 从标准模型 API、runtime/operator、LLM 路由、P/D workload 到 GPU/MaaS 的不同控制面 |
 | 路由 / 网关 | [[llm-d-router]], [[semantic-router]], [[routellm]], [[gateway-api-inference-extension]], [[ai-gateway]] | 模型选择、endpoint picking、成本/质量/语义/KV-aware routing |
 | KV locality / cache signal | [[llm-d-kv-cache]], [[dynamo]], [[kv-cache-offload]] | KV block index、cache-hit scoring、KV transfer/offload tiers |
 | 离线 / 实验 / 扩缩外围 | [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]] | batch job、benchmark、variant autoscaling、无 GPU simulator |
 | 硬件资源层 | [[hami]], [[gpu-operator]], [[k8s-device-plugin]], [[dra-driver-nvidia-gpu]] | GPU discovery、device plugin、DRA/CDI、sharing/vGPU/MIG |
+
+## K8s serving stack 扩展比较
+
+这八个项目不是同一层的替代品，建议先按抽象层分类：
+
+| 类别 | 项目 | 核心对象/入口 | 主要解决的问题 |
+|---|---|---|---|
+| 分布式 LLM serving | [[llm-d]] | Gateway/EPP、InferencePool、model server | K8s 标准入口下的 endpoint picking、KV/P/D 和分布式推理 |
+| GenAI 基础组件 | [[aibrix]] | Gateway、CRD、Unified AI Runtime、KV/LoRA 组件 | vLLM fleet 的路由、adapter、KV、autoscaling、故障检测和异构成本优化 |
+| 通用模型平台 | [[kserve]] | InferenceService、LLMInferenceService、InferenceGraph | 用统一 API/operator 承载 predictive + generative AI，并支持 canary、缓存、KV offload 与 scale-to-zero |
+| 轻量 AI operator | [[kubeai]] | Model CRD、model proxy、loader、autoscaler | 快速把 LLM/VLM/embedding/speech 模型变成 OpenAI-compatible API |
+| Runtime/operator 抽象 | [[ome]] | model agent、runtime selector、accelerator config | 把模型生命周期、推理 runtime 和加速器配置解耦 |
+| GPU/MaaS 平台 | [[gpustack]] | server、worker、scheduler、gateway、model service | 跨本地/K8s/云管理 GPU，并提供多模型 API、计量、认证和运维 |
+| Workload 原语 | [[rbg]] | RoleBasedGroup、Role、RoleInstance、CoordinatedPolicy | 表达 gateway/router/prefill/decode 多角色有状态服务，保证拓扑和跨角色原子操作 |
+| 一体化 LLM serving | [[kthena]] | ModelBooster、ModelServing、ModelServer、ModelRoute | 在 K8s/Volcano 内整合路由、P/D、限流、canary、扩缩、拓扑和 gang scheduling |
+
+### 选型不要只问“哪个最好”
+
+- 要 **Gateway API + InferencePool 标准化**：优先研究 [[llm-d]] / [[kserve]]。
+- 要 **vLLM 生态的 LoRA、KV、企业组件**：研究 [[aibrix]]。
+- 要 **最短路径把模型暴露成 OpenAI API**：研究 [[kubeai]]。
+- 要 **模型 runtime/accelerator 生命周期抽象**：研究 [[ome]]。
+- 要 **GPU 集群、多云、MaaS、token/API 计量**：研究 [[gpustack]]。
+- 要 **多角色、有状态、P/D workload 的原子升级/扩缩**：研究 [[rbg]]。
+- 要 **K8s 原生完整 LLM serving，并深度结合 Volcano 拓扑/gang**：研究 [[kthena]]。
+
+完整的 README/文档驱动对比、能力矩阵和选型流程见 [[src-k8s-serving-stack-comparison]]。
+
+## 总体架构与请求流程
+
+```text
+Client / Application
+        │ OpenAI / Anthropic / gRPC
+        ▼
+Gateway / Semantic Router
+        │ auth · quota · model · KV locality
+        ▼
+InferencePool / Endpoint Picker
+        │ queue · health · topology
+        ▼
+┌────────────────────── Serving Runtime ──────────────────────┐
+│  Prefill Worker          KV Transfer          Decode Worker  │
+│  tokenizer → scheduler ───────────────► scheduler → stream │
+│       │                         │                          │
+│       └──── attention / kernel / TP-PP-EP-DP ───────────────┘
+└───────────────────────────┬─────────────────────────────────┘
+                            ▼
+                    GPU / CPU / NVMe KV tiers
+                            │
+                            ▼
+                 Metrics → Autoscaling → Recovery
+```
+
+```text
+请求进入 → 认证/限流 → KV-aware endpoint
+       → Prefill → Decode → Sampling → Streaming
+       ├─ 完成：释放 KV → 返回结果
+       └─ 故障：重试 / 迁移 / 重新计算
+```
 
 ## 核心技术主题
 

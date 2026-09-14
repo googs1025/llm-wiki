@@ -1,7 +1,7 @@
 ---
 title: agent-sandbox
 tags: [k8s-operator, agent-runtime, ai-infra, sig-apps]
-date: 2026-06-12
+date: 2026-09-14
 sources: [agent-sandbox-architecture-analysis.md]
 related: [[HiClaw]], [[k8s-operator]], [[gvisor]], [[kata-containers]], [[declarative-agent-management]]
 ---
@@ -11,6 +11,26 @@ related: [[HiClaw]], [[k8s-operator]], [[gvisor]], [[kata-containers]], [[declar
 `kubernetes-sigs/agent-sandbox` 是 **K8s SIG Apps 官方孵化**的 Sandbox CRD + controller。把 AI Agent runtime 那种"长寿命、有状态、单实例、可暂停、有稳定身份"的容器形态建模成第一类 K8s 资源——比 Deployment（无状态副本）和 StatefulSet（编号 Pod）都更精准。**隔离机制完全委托给标准 K8s 原语**（[[gvisor]] / [[kata-containers]] / [[network-policy]]），controller 只做生命周期编排。
 
 详细架构见 [[src-agent-sandbox-architecture]]。
+
+## Sandbox 生命周期图
+
+```text
+SandboxTemplate / SandboxWarmPool
+              ↓
+       SandboxClaim 创建
+              ↓
+┌─────────── Pending ───────────┐
+│ controller 创建/领取 Sandbox  │
+└──────────────┬────────────────┘
+               ↓
+        Pod + PVC + Service
+               ↓ Ready
+        Agent / Tool Session
+          ├─ suspend → replicas=0
+          ├─ resume  → replicas=1
+          ├─ shutdownTime → Terminating
+          └─ delete → GC / PVC policy
+```
 
 ## 关键事实
 

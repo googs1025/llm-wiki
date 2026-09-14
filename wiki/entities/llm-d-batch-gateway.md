@@ -1,8 +1,8 @@
 ---
 title: llm-d Batch Gateway
 tags: [entity, llm-serving, batch-inference, llm-d]
-date: 2026-06-13
-sources: [llm-d-batch-gateway-architecture-analysis.md]
+date: 2026-09-13
+sources: [llm-d-core-projects-research-2026-09-13.md]
 related: [[llm-d]], [[batch-inference]], [[llm-inference]], [[model-serving-operator]], [[inference-routing]]
 ---
 

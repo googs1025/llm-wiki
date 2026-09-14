@@ -1,18 +1,33 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-05-15
-sources: [sglang-architecture-analysis.md]
+date: 2026-09-13
+sources: [vllm-architecture-analysis.md]
 related: [sglang, paged-attention, radix-attention, flash-attention]
 ---
 
 # vLLM
+
+> 最新架构资料：[[src-vllm-architecture]]，基于官方 `main @ de50029` 的 README/docs。
 
 **UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。** Apache 2.0，最早把 [[paged-attention]] 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。
 
 ## 一句话定位
 
 LLM serving 的"事实标准基线"：用 [[paged-attention]] 把 KV 缓存按 16-token block 管理（类比 OS 虚存分页），把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 [[sglang]] / TensorRT-LLM / TGI 都把 vLLM 当对标。
+
+## 最小架构图
+
+```text
+API / Offline LLM → V1 Engine Core
+                    ├─ Scheduler：token budget、waiting/running
+                    ├─ KV Manager：block allocator、block table
+                    └─ Model Input：sampling / attention metadata
+                              ↓
+                 GPU ModelRunner → Attention / Fused MoE
+                              ↓
+                    TP · PP · EP · DP → Sampler → Stream
+```
 
 ## 关键能力（与 [[sglang]] 对照）
 

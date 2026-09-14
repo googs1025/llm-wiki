@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-05-15</span>
+  <span class="meta">2026-09-13</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>RadixAttention</h1>
-    <p class="page-meta">2026-05-15 · 来源：sglang-architecture-analysis.md</p>
+    <p class="page-meta">2026-09-13 · 来源：sglang-architecture-analysis.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span><span class="tag">prefix-sharing</span></div>
   </header>
 
@@ -71,6 +71,19 @@ return (device_indices, last_node)
 <h3 id="eviction">Eviction</h3>
 <p>4 策略：LRU / LFU / FIFO / SLRU / Priority。<br>
 evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>value</code> 指向的 KV 槽位 → 递归向上 unlock。<code>lock_ref &gt; 0</code> 的节点跳过（保护 in-flight 请求）。</p>
+<h2 id="前缀命中与分叉流程">前缀命中与分叉流程</h2>
+<pre><code class="language-text">输入 token prefix → Radix root → longest-prefix match
+        ┌───────────────┴────────────────┐
+        │ 完整命中                        │ 部分命中/未命中
+        │ 复用已有 KV 节点                │ split node / 新建 suffix
+        └───────────────┬────────────────┘
+                        ↓
+             只对未命中 suffix 执行 prefill
+                        ↓
+             insert token → KV pool → radix tree
+                        ↓
+             eviction 从可回收叶节点释放
+</code></pre>
 <h2 id="vs-paged-attention-关键差异">vs <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 关键差异</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -128,14 +141,14 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 <h2 id="出处">出处</h2>
 <p>Zheng et al., <em>"SGLang: Efficient Execution of Structured Language Model Programs"</em>, NeurIPS 2024。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/paged-attention.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">PagedAttention</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/disaggregated-serving.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Disaggregated Serving</strong></a></div><span class="page-navigation-progress">阅读顺序 130/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/radix-attention.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=radix-attention">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">RadixAttention</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="178.0" cy="82.0" r="7"><title>SGLang 架构与设计思路分析</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>vLLM</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>AI Infra 中文学习项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>GPU 编程学习</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-sglang-architecture.html">SGLang 架构与设计思路分析</a><span>源文件 · wikilink</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-serving-engine-selection-map.html">LLM Serving / 推理引擎选型地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心数据结构">核心数据结构</a></li><li class="level-3"><a href="#treenode">TreeNode</a></li><li class="level-3"><a href="#两级-kv-pool">两级 KV pool</a></li><li class=""><a href="#核心算法">核心算法</a></li><li class="level-3"><a href="#match_prefixinput_ids">match_prefix(input_ids)</a></li><li class="level-3"><a href="#insertreq">insert(req)</a></li><li class="level-3"><a href="#eviction">Eviction</a></li><li class=""><a href="#vs-paged-attention-关键差异">vs paged-attention 关键差异</a></li><li class=""><a href="#工程要点">工程要点</a></li><li class=""><a href="#出处">出处</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=radix-attention">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">RadixAttention</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="178.0" cy="82.0" r="7"><title>SGLang 架构与推理优化</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>vLLM</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>AI Infra 中文学习项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>GPU 编程学习</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-sglang-architecture.html">SGLang 架构与推理优化</a><span>源文件 · wikilink</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · wikilink</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-serving-engine-selection-map.html">LLM Serving / 推理引擎选型地图</a><span>分析 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心数据结构">核心数据结构</a></li><li class="level-3"><a href="#treenode">TreeNode</a></li><li class="level-3"><a href="#两级-kv-pool">两级 KV pool</a></li><li class=""><a href="#核心算法">核心算法</a></li><li class="level-3"><a href="#match_prefixinput_ids">match_prefix(input_ids)</a></li><li class="level-3"><a href="#insertreq">insert(req)</a></li><li class="level-3"><a href="#eviction">Eviction</a></li><li class=""><a href="#前缀命中与分叉流程">前缀命中与分叉流程</a></li><li class=""><a href="#vs-paged-attention-关键差异">vs paged-attention 关键差异</a></li><li class=""><a href="#工程要点">工程要点</a></li><li class=""><a href="#出处">出处</a></li></ul></aside></aside>
 </div>
 
 <script>

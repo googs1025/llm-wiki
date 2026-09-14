@@ -1,8 +1,8 @@
 ---
 title: llm-d Benchmark
 tags: [entity, llm-serving, benchmark, llm-d]
-date: 2026-06-13
-sources: [llm-d-benchmark-architecture-analysis.md]
+date: 2026-09-13
+sources: [llm-d-core-projects-research-2026-09-13.md]
 related: [[llm-d]], [[llm-d-inference-sim]], [[llm-inference]], [[model-serving-operator]]
 ---
 

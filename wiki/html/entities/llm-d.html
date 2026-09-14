@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-12</span>
+  <span class="meta">2026-09-13</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,61 +23,27 @@
 
   <header class="page-header">
     <h1>llm-d</h1>
-    <p class="page-meta">2026-06-12 · 来源：llm-d-architecture-analysis.md、llm-d-router-architecture-analysis.md、llm-d-kv-cache-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、llm-d-benchmark-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-inference-sim-architecture-analysis.md</p>
-    <div class="tags"><span class="tag">entity</span><span class="tag">llm-serving</span><span class="tag">kubernetes</span><span class="tag">gateway-api</span><span class="tag">inference-routing</span></div>
+    <p class="page-meta">2026-09-13 · 来源：k8s-serving-stack-comparison-2026-09-13.md</p>
+    <div class="tags"><span class="tag">entity</span><span class="tag">llm-serving</span><span class="tag">kubernetes</span><span class="tag">gateway-api</span><span class="tag">inference-routing</span><span class="tag">distributed-inference</span></div>
   </header>
 
-  <p>CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、model server、KV cache management、P/D disaggregation、autoscaling、batch、benchmark 和 simulator 组织。详见 <a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a>。</p>
-<h2 id="架构边界">架构边界</h2>
-<p>llm-d 是 serving system，不是推理 engine。<a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> 负责 LLM-aware entry point，<a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a> 负责 KV cache aware routing/indexing library；外围项目继续补齐 <a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 和 <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>。它与 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 同属 K8s serving control plane，与 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> 同属分布式 serving 系统，但更贴近 Gateway API / InferencePool 标准化路线。</p>
-<h2 id="选型判断">选型判断</h2>
-<div class="table-wrap"><table>
-<thead>
-<tr>
-<th>需求</th>
-<th>关注点</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Gateway API/InferencePool 路由</td>
-<td><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> / <a class="wikilink" href="../sources/src-llm-d-router-architecture.html">src-llm-d-router-architecture</a></td>
-</tr>
-<tr>
-<td>KV cache aware route/index</td>
-<td><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a> / <a class="wikilink" href="../sources/src-llm-d-kv-cache-architecture.html">src-llm-d-kv-cache-architecture</a></td>
-</tr>
-<tr>
-<td>完整 K8s serving stack</td>
-<td><a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a></td>
-</tr>
-<tr>
-<td>OpenAI Batch API / 离线推理</td>
-<td><a class="wikilink" href="../sources/src-llm-d-batch-gateway-architecture.html">src-llm-d-batch-gateway-architecture</a></td>
-</tr>
-<tr>
-<td>serving benchmark / 实验复现</td>
-<td><a class="wikilink" href="../sources/src-llm-d-benchmark-architecture.html">src-llm-d-benchmark-architecture</a></td>
-</tr>
-<tr>
-<td>多 variant autoscaling</td>
-<td><a class="wikilink" href="../sources/src-llm-d-workload-variant-autoscaler-architecture.html">src-llm-d-workload-variant-autoscaler-architecture</a></td>
-</tr>
-<tr>
-<td>无 GPU 控制面与路由验证</td>
-<td><a class="wikilink" href="../sources/src-llm-d-inference-sim-architecture.html">src-llm-d-inference-sim-architecture</a></td>
-</tr>
-</tbody>
-</table></div>
+  <p>llm-d 是 Kubernetes-native distributed inference stack，围绕 Gateway API/Inference Extension、EPP、InferencePool 和 model server 组织，并扩展 KV cache、P/D、autoscaling、benchmark、batch 与 simulator。</p>
+<h2 id="解决的问题">解决的问题</h2>
+<p>它把单机 vLLM/SGLang engine 提升为可在 Kubernetes 上运行的分布式 LLM 服务：请求要按 endpoint 状态、KV locality 和推理负载选择，P/D worker 要能协同，多个 serving variant 要能做容量分配。</p>
+<h2 id="核心边界">核心边界</h2>
+<p>llm-d 是 serving ecosystem，不是新的推理 engine，也不是单一 operator。Gateway/EPP 负责入口和 endpoint picking，InferencePool 表达后端集合，KV/P/D/variant autoscaling 等项目补充性能关键路径。</p>
+<h2 id="适用场景">适用场景</h2>
+<p>适合已经采用 Gateway API、希望标准化多模型/多 endpoint 入口，并需要分布式推理性能的 Kubernetes 平台。若只需单模型快速部署，<a class="wikilink" href="../entities/kubeai.html">kubeai</a> 更轻；若需要更深的 engine runtime/P-D/KV 一体化，可比较 <a class="wikilink" href="../entities/dynamo.html">dynamo</a>；若需要 GPU 集群 MaaS，可比较 <a class="wikilink" href="../entities/gpustack.html">gpustack</a>。</p>
+<p>详见 <a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a> 与 <a class="wikilink" href="../sources/src-k8s-serving-stack-comparison.html">src-k8s-serving-stack-comparison</a>。</p>
 
-  <section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li></ul></section>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../entities/aibrix.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">AIBrix</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../entities/llm-d-router.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">llm-d Router</strong></a></div><span class="page-navigation-progress">阅读顺序 83/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/llm-d.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes Gateway API</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>llm-d Batch Gateway</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>llm-d Benchmark</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>llm-d Inference Sim</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · wikilink</span></li><li><a href="../entities/gateway-api.html">Kubernetes Gateway API</a><span>实体 · related</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/llm-d-batch-gateway.html">llm-d Batch Gateway</a><span>实体 · related</span></li><li><a href="../entities/llm-d-benchmark.html">llm-d Benchmark</a><span>实体 · related</span></li><li><a href="../entities/llm-d-inference-sim.html">llm-d Inference Sim</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/gateway-api.html">Kubernetes Gateway API</a><span>实体 · wikilink</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · related</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · wikilink</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#架构边界">架构边界</a></li><li class=""><a href="#选型判断">选型判断</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-d">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">llm-d</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes Gateway API</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>GPUStack</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>KubeAI</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>LLM Inference</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/gateway-api.html">Kubernetes Gateway API</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · related</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · wikilink</span></li><li><a href="../entities/gateway-api.html">Kubernetes Gateway API</a><span>实体 · wikilink</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#解决的问题">解决的问题</a></li><li class=""><a href="#核心边界">核心边界</a></li><li class=""><a href="#适用场景">适用场景</a></li></ul></aside></aside>
 </div>
 
 <script>

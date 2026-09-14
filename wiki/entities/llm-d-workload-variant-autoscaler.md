@@ -1,9 +1,9 @@
 ---
 title: llm-d Workload Variant Autoscaler
 tags: [entity, llm-serving, autoscaling, kubernetes, llm-d]
-date: 2026-06-13
-sources: [llm-d-workload-variant-autoscaler-architecture-analysis.md]
-related: [[llm-d]], [[gateway-api-inference-extension]], [[model-serving-operator]], [[llm-inference]], [[kubernetes]]
+date: 2026-09-13
+sources: [llm-d-core-projects-research-2026-09-13.md]
+related: [[llm-d]], [[src-llm-d-core-projects-architecture]], [[gateway-api-inference-extension]], [[model-serving-operator]], [[llm-inference]], [[kubernetes]]
 ---
 
 # llm-d Workload Variant Autoscaler

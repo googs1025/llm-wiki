@@ -1,27 +1,25 @@
 ---
 title: llm-d
-tags: [entity, llm-serving, kubernetes, gateway-api, inference-routing]
-date: 2026-06-12
-sources: [llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: [[inference-routing]], [[kv-cache-offload]], [[model-serving-operator]], [[gateway-api]], [[vllm]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
+tags: [entity, llm-serving, kubernetes, gateway-api, inference-routing, distributed-inference]
+date: 2026-09-13
+sources: [k8s-serving-stack-comparison-2026-09-13.md]
+related: [[llm-inference]], [[inference-routing]], [[model-serving-operator]], [[gateway-api]], [[kserve]], [[aibrix]], [[dynamo]], [[vllm]], [[sglang]]
 ---
 
 # llm-d
 
-CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、model server、KV cache management、P/D disaggregation、autoscaling、batch、benchmark 和 simulator 组织。详见 [[src-llm-d-architecture]]。
+llm-d 是 Kubernetes-native distributed inference stack，围绕 Gateway API/Inference Extension、EPP、InferencePool 和 model server 组织，并扩展 KV cache、P/D、autoscaling、benchmark、batch 与 simulator。
 
-## 架构边界
+## 解决的问题
 
-llm-d 是 serving system，不是推理 engine。[[llm-d-router]] 负责 LLM-aware entry point，[[llm-d-kv-cache]] 负责 KV cache aware routing/indexing library；外围项目继续补齐 [[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-workload-variant-autoscaler]] 和 [[llm-d-inference-sim]]。它与 [[aibrix]] 同属 K8s serving control plane，与 [[dynamo]] 同属分布式 serving 系统，但更贴近 Gateway API / InferencePool 标准化路线。
+它把单机 vLLM/SGLang engine 提升为可在 Kubernetes 上运行的分布式 LLM 服务：请求要按 endpoint 状态、KV locality 和推理负载选择，P/D worker 要能协同，多个 serving variant 要能做容量分配。
 
-## 选型判断
+## 核心边界
 
-| 需求 | 关注点 |
-|---|---|
-| Gateway API/InferencePool 路由 | [[llm-d-router]] / [[src-llm-d-router-architecture]] |
-| KV cache aware route/index | [[llm-d-kv-cache]] / [[src-llm-d-kv-cache-architecture]] |
-| 完整 K8s serving stack | [[src-llm-d-architecture]] |
-| OpenAI Batch API / 离线推理 | [[src-llm-d-batch-gateway-architecture]] |
-| serving benchmark / 实验复现 | [[src-llm-d-benchmark-architecture]] |
-| 多 variant autoscaling | [[src-llm-d-workload-variant-autoscaler-architecture]] |
-| 无 GPU 控制面与路由验证 | [[src-llm-d-inference-sim-architecture]] |
+llm-d 是 serving ecosystem，不是新的推理 engine，也不是单一 operator。Gateway/EPP 负责入口和 endpoint picking，InferencePool 表达后端集合，KV/P/D/variant autoscaling 等项目补充性能关键路径。
+
+## 适用场景
+
+适合已经采用 Gateway API、希望标准化多模型/多 endpoint 入口，并需要分布式推理性能的 Kubernetes 平台。若只需单模型快速部署，[[kubeai]] 更轻；若需要更深的 engine runtime/P-D/KV 一体化，可比较 [[dynamo]]；若需要 GPU 集群 MaaS，可比较 [[gpustack]]。
+
+详见 [[src-llm-d-architecture]] 与 [[src-k8s-serving-stack-comparison]]。

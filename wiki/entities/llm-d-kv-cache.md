@@ -1,9 +1,9 @@
 ---
 title: llm-d KV Cache
 tags: [entity, llm-serving, kv-cache, inference-routing, llm-d]
-date: 2026-06-16
-sources: [llm-d-kv-cache-architecture-analysis.md]
-related: [[llm-d]], [[llm-d-router]], [[kv-cache-offload]], [[inference-routing]], [[vllm]], [[sglang]], [[dynamo]]
+date: 2026-09-13
+sources: [llm-d-core-projects-research-2026-09-13.md]
+related: [[llm-d]], [[llm-d-core-projects-architecture]], [[llm-d-router]], [[kv-cache-offload]], [[inference-routing]], [[vllm]], [[sglang]], [[disaggregated-serving]]
 ---
 
 # llm-d KV Cache

@@ -1,7 +1,7 @@
 ---
 title: Kubernetes KEP Design Tracking
 tags: [source, kubernetes, kep, sig-scheduling, sig-autoscaling, sig-node, design-tracking]
-date: 2026-07-06
+date: 2026-07-15
 sources: [/Users/zhenyu.jiang/enhancements/keps/sig-scheduling, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling, /Users/zhenyu.jiang/enhancements/keps/sig-node]
 related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]], [[kubernetes-dra]], [[kubernetes-workload-automation]], [[kueue]], [[karpenter]], [[metrics-server]], [[prometheus-adapter]], [[scheduler-plugins]], [[node-feature-discovery]]
 ---
@@ -22,6 +22,8 @@ related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-
 - [[kubernetes-hpa-autoscaling-design]]
 - [[kubernetes-in-place-pod-resize-design]]
 - [[kubernetes-node-runtime-observability-security-design]]
+
+2026-07-15 新增 upstream refresh：[[k8s-v1.37-scheduling-node-dra-progress]] 记录 `kubernetes/enhancements` 当前 `master` 中调度、Node、DRA 和 autoscaling 的 v1.37 进展。它不是新的源码摄入，而是对本源摘要和 [[kubernetes-keps-implementation-matrix]] 的状态刷新入口。
 
 ## 范围和方法
 

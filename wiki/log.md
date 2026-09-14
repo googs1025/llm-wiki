@@ -5,6 +5,10 @@ date: 2026-04-22
 
 # 操作日志
 
+## [2026-07-15] query | Kubernetes v1.37 Scheduling / Node / DRA 进展
+
+根据用户要求，把 2026-07-15 对 `kubernetes/enhancements` upstream `master` 的调度、Node、DRA 和 autoscaling KEP 进展写入 wiki。新增 [[k8s-v1.37-scheduling-node-dra-progress]]，并更新 [[kubernetes]]、[[kubernetes-dra]]、[[src-kubernetes-keps-design-tracking]]、[[kubernetes-keps-feature-coverage]]、[[kubernetes-keps-implementation-matrix]] 和索引。核心结论：v1.37 主线集中在 workload-aware scheduling、DRA workload/capacity/NUMA/status 语义、Pod-level resource managers、Memory QoS、rootless kubelet 和 HPA/Cluster Autoscaler 约束联动。
+
 ## [2026-04-22] init | 知识库初始化
 
 创建基础目录结构和 Schema（CLAUDE.md）。
@@ -408,3 +412,36 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 
 - 新增 [[kubernetes-keps-implementation-matrix]]，按 P0 landmark 和 P1 foundation 逐项记录重要 KEP 的 `status`、Alpha/Beta/GA milestones、feature gates、是否已实现和关键实现路径。
 - 将六篇设计详解补上 “关键 KEP 实现状态” 小节，区分 `implemented/stable`、`implementable/beta`、`implementable/alpha`、`provisional` 和 `withdrawn`，避免把“已详解”误读成“全部已 GA”。
+
+## [2026-09-13] query | llm-d 核心项目群架构再调研
+
+- 基于当前 GitHub 上游 HEAD 重新核验 llm-d、llm-d-router、llm-d-kv-cache、llm-d-autoscaling、llm-d-batch-gateway、llm-d-benchmark、llm-d-inference-sim 和 llm-d-incubation/llm-d-planner。
+- 新增 raw/llm-d-core-projects-research-2026-09-13.md 与 [[src-llm-d-core-projects-architecture]]，补充每个项目的作用、业务问题、架构图、关键方法、接口和集成边界。
+- 更新 [[llm-d]] 及 7 个已有 llm-d 实体页，新增 [[llm-d-planner]]，并将当前上游 commit 与历史调研区分开。
+
+## [2026-09-13] ingest | Dynamo 架构
+
+- 根据当前 Dynamo HEAD `ed64b7d` 的 README 与官方文档重新整理架构，聚焦业务问题、模块边界、在线请求、DGDR 部署、Planner 扩缩、Gateway API、故障迁移和可观测性。
+- 覆盖旧版 [[src-dynamo-architecture]]、[[dynamo]] 实体页，并同步更新 [[inference-routing]]、[[model-serving-operator]] 与 [[llm-inference]] 的关系说明。
+
+## [2026-09-13] query | Kubernetes serving stack 扩展
+
+- 基于各项目当前 README/官方文档扩充 [[llm-inference]] 的 K8s serving stack，对比 [[llm-d]]、[[aibrix]]、[[kserve]]、[[kubeai]]、[[ome]]、[[gpustack]]、[[rbg]]、[[kthena]]。
+- 新增 [[src-k8s-serving-stack-comparison]]、[[rbg]] 与 [[kthena]]，并深化 6 个已有实体页，明确区分 serving stack、model operator、GPU/MaaS 平台和多角色 workload 原语。
+
+## [2026-09-13] query | LLM 网关与路由层扩展
+
+- 基于 README/官方文档整理 [[llm-d-router]]、[[semantic-router]]、[[routellm]]、[[gateway-api-inference-extension]] 与 [[envoy-ai-gateway]] 的分层、架构图和请求流程。
+- 新增 [[src-k8s-gateway-routing-comparison]]，更新 [[inference-routing]]、[[ai-gateway]] 及五个网关/路由实体页，区分 provider governance、model/ability routing、InferencePool endpoint picking 和 engine scheduling。
+## [2026-09-13] ingest | vLLM 与 SGLang 最新架构
+
+- 基于官方 GitHub README/docs 的最新 main：vLLM `de50029`、SGLang `7f1f8c7`。
+- 更新两份架构源摘要，覆盖 V1/Tokenizer/Scheduler/ModelRunner、KV cache、连续批、算子融合、TP/PP/EP/DP、HiCache 与 P/D/EPD。
+## [2026-09-14] optimize | LLM 推理架构图与流程图
+
+- 重新审视 wiki 的 LLM serving 知识路径，补充总架构、请求时序、Scheduler、Paged/Radix KV、P/D、KV offload、KV-aware routing 与 K8s serving 流程图。
+- 更新 [[llm-inference]]、[[vllm]]、[[sglang]]、[[paged-attention]]、[[radix-attention]]、[[disaggregated-serving]]、[[inference-routing]]、[[kv-cache-offload]] 与 [[llm-inference-serving-project-map]]。
+## [2026-09-14] optimize | Agent Runtime / Sandbox 架构图
+
+- 补充 agent-sandbox、AgentCube、OpenKruise Agents、AgentScope Runtime、agentgateway 对照路径的生命周期、请求时序、执行边界与选型流程图。
+- 更新 Agent Runtime Substrate、项目地图和选型地图，明确 Agent 应用、session、sandbox、runtime enforcement、网络/凭据网关之间的关系。

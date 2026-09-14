@@ -1,7 +1,7 @@
 ---
 title: AgentCube
 tags: [ai-agent, code-interpreter, kubernetes, volcano, agent-sandbox, serverless]
-date: 2026-06-12
+date: 2026-09-14
 sources: [agentcube-architecture-analysis.md]
 related: ["[[agent-sandbox]]", "[[kubernetes]]", "[[declarative-agent-management]]", "[[agent-credential-isolation]]", "[[src-agentcube-architecture]]"]
 ---

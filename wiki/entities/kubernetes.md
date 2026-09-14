@@ -1,9 +1,9 @@
 ---
 title: Kubernetes
 tags: [kubernetes, container-orchestration, cncf]
-date: 2026-07-06
+date: 2026-07-15
 sources: [k8s-v1.36-sneak-peek.md, holmesgpt-k8s-alert-diagnosis.md, k3s-gitops-k0rdent.md, ai-vulnerability-discovery.md, src-kubernetes-keps-design-tracking.md]
-related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-scheduler-core-design]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[kubernetes-hpa-autoscaling-design]]", "[[kubernetes-in-place-pod-resize-design]]", "[[kubernetes-node-runtime-observability-security-design]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
+related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[gitops]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-keps-implementation-matrix]]", "[[k8s-v1.37-scheduling-node-dra-progress]]", "[[kubernetes-scheduler-core-design]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[kubernetes-hpa-autoscaling-design]]", "[[kubernetes-in-place-pod-resize-design]]", "[[kubernetes-node-runtime-observability-security-design]]", "[[kubernetes-dra]]", "[[kubernetes-workload-automation]]"]
 ---
 
 # Kubernetes
@@ -29,6 +29,8 @@ related: ["[[argocd]]", "[[gateway-api]]", "[[opentelemetry]]", "[[ebpf]]", "[[g
 ## KEP 设计追踪
 
 [[src-kubernetes-keps-design-tracking]] 把本地 Kubernetes enhancements 中 `sig-scheduling`、`sig-autoscaling`、`sig-node` 三个 SIG 的 KEP 整理成 [[kubernetes-keps-design-tracking]]，用于持续追踪不同 SIG 的设计方案，而不是只按单一“资源编排”概念归档。
+
+2026-07-15 对 upstream `kubernetes/enhancements` 的刷新见 [[k8s-v1.37-scheduling-node-dra-progress]]。当前 v1.37 进展主线集中在三处：`Gang Scheduling` / `Topology-aware workload scheduling` 进入 beta，DRA 的 `ResourceClaim for workloads` / `Consumable Capacity` / `numaNode` / device status 持续成熟，Node 侧 `Pod-level resource managers`、`Memory QoS`、rootless kubelet 和 Pod checkpoint/restore 继续推进。
 
 当前追踪模型按 SIG、设计分类、status、stage、latest milestone、优先级和跨 SIG 依赖组织：
 

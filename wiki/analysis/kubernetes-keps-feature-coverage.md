@@ -1,7 +1,7 @@
 ---
 title: Kubernetes KEP Feature Coverage
 tags: [analysis, kubernetes, kep, feature-coverage, sig-scheduling, sig-autoscaling, sig-node]
-date: 2026-07-07
+date: 2026-07-15
 sources: [src-kubernetes-keps-design-tracking.md]
 related: [[kubernetes]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-scheduler-core-design]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[kubernetes-hpa-autoscaling-design]], [[kubernetes-in-place-pod-resize-design]], [[kubernetes-node-runtime-observability-security-design]]
 ---
@@ -29,6 +29,18 @@ related: [[kubernetes]], [[kubernetes-keps-implementation-matrix]], [[kubernetes
 | Node runtime / resource managers / observability / security | node | `2040`, `2221`, `585`, `3570`, `1769`, `693`, `753`, `127`, `2033`, `2371`, `4205`, `5394`, `4680`, `5328` | [[kubernetes-node-runtime-observability-security-design]] | 已详解 |
 
 实现状态、Alpha/Beta/GA、feature gates 和关键实现路径统一见 [[kubernetes-keps-implementation-matrix]]。这里的 “已详解” 只表示已经有设计讲解页，不等于所有 KEP 都已经 GA。
+
+## 2026-07-15 Upstream Refresh
+
+最新 `kubernetes/enhancements` 复核见 [[k8s-v1.37-scheduling-node-dra-progress]]。本轮没有新增合并设计组，但 v1.37 的重心更清楚：
+
+| 方向 | 近期状态 | 影响 |
+|---|---|---|
+| Workload-aware scheduling | `4671`、`5732` 进入 beta；`6089`、`6012` 进入 alpha | Workload / PodGroup 不再只是历史 coscheduling 替代，而是在 API、拓扑、controller building blocks 上成组推进。 |
+| Scheduler queue / batching | `6132` beta，`5598` 继续扩展 rescoring | gang、DRA、resize 等等待型调度场景需要更精准的事件唤醒和批量处理。 |
+| DRA 设备资源模型 | `5729`、`5075` beta；`5941`、`5963`、`5517` alpha；`4817`、`6072` stable | DRA 从基础 claim/slice 走向 workload 级、capacity 型、NUMA/topology-aware 的设备资源语义。 |
+| Node resource management | `5526`、`2570`、`2033` beta；`6122`、`5823`、`4563` alpha | Pod scope 资源管理、Memory QoS、rootless kubelet 和 checkpoint/eviction API 补齐节点执行面。 |
+| Autoscaling 联动 | `4951` stable，`2021` / `5030` beta | autoscaler 必须理解调度约束、指标失败和从 0 恢复，不再只是副本数算法。 |
 
 ## SIG Scheduling Feature 覆盖
 

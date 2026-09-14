@@ -45,6 +45,26 @@ Prefill 完算出的 KV 必须传到 decode 池才能续写：
 - **GPUDirect-RDMA**：GPU 之间直接 RDMA，绕过 CPU
 - **MooncakeConnector**（vLLM 实现）：基于 Mooncake 项目的 P/D 解耦传输
 
+## 聚合式与分离式时序
+
+```text
+聚合式：Client → GPU Instance ── Prefill ── Decode ── Stream
+分离式：Client → Router ──► Prefill Pool ── KV Transfer ──► Decode Pool ──► Stream
+                         └──── queue / health / SLO / autoscaling ────┘
+```
+
+## KV Transfer 失败恢复
+
+```text
+Prefill 完成 → 登记 KV metadata → 网络传输
+                  ┌──────┼──────────────┐
+                成功   超时/部分失败    worker 故障
+                  ↓        ↓              ↓
+                Decode   Retry/resume    重新路由
+                           ↓              ↓
+                         重算 suffix ─────┘
+```
+
 ## [[dynamo|Dynamo]] 中的实现
 
 Dynamo 把分离式做成第一类公民：

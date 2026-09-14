@@ -1,7 +1,7 @@
 ---
 title: RadixAttention
 tags: [concept, ai-infra, kv-cache, llm-inference, prefix-sharing]
-date: 2026-05-15
+date: 2026-09-13
 sources: [sglang-architecture-analysis.md]
 related: [sglang, paged-attention, vllm]
 ---
@@ -67,6 +67,22 @@ return (device_indices, last_node)
 
 4 策略：LRU / LFU / FIFO / SLRU / Priority。  
 evict 时 pop `evictable_leaves` 堆顶 → free 该节点 `value` 指向的 KV 槽位 → 递归向上 unlock。`lock_ref > 0` 的节点跳过（保护 in-flight 请求）。
+
+## 前缀命中与分叉流程
+
+```text
+输入 token prefix → Radix root → longest-prefix match
+        ┌───────────────┴────────────────┐
+        │ 完整命中                        │ 部分命中/未命中
+        │ 复用已有 KV 节点                │ split node / 新建 suffix
+        └───────────────┬────────────────┘
+                        ↓
+             只对未命中 suffix 执行 prefill
+                        ↓
+             insert token → KV pool → radix tree
+                        ↓
+             eviction 从可回收叶节点释放
+```
 
 ## vs [[paged-attention]] 关键差异
 

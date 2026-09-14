@@ -1,18 +1,32 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-05-15
+date: 2026-09-13
 sources: [sglang-architecture-analysis.md]
 related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
 ---
 
 # SGLang
 
+> 最新架构资料：[[src-sglang-architecture]]，基于官方 `main @ 7f1f8c7` 的 README/docs。
+
 **LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)，活跃主线（HEAD `50f4058` 时分析）。
 
 ## 一句话定位
 
 把 LLM 推理引擎的**所有"差异化轴"**做到接近开源极致：[[radix-attention]] 取代 [[paged-attention]] 把 KV 复用做到 token 级；4 进程异步流水线 + Scheduler 内 overlap 把 GPU 利用率拉到 95%+；7 套投机解码 + 5 KV transfer backend + 10+ attention backend + 4 grammar backend 全部可插拔；统一 OpenAI / Anthropic / Ollama 协议入口。论文里还提出"SGLang DSL"（fork / gen / select）做结构化生成的前端编译。
+
+## 最小架构图
+
+```text
+HTTP / gRPC / SGLang DSL → TokenizerManager
+                                  ↓ ZMQ / shared memory
+Scheduler：EXTEND / DECODE / MIXED · RadixCache · overlap
+                                  ↓
+ModelRunner：attention backend · fused kernel · TP/PP/EP/DP
+                                  ↓
+DetokenizerManager → streaming response
+```
 
 ## 关键能力
 

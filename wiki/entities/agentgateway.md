@@ -20,6 +20,21 @@ Solo.io / Istio 系出品的 **AI-native L7 网关**（Apache 2.0）。把三种
 - **数据面**（Rust）：tokio + hyper + rustls，proxy/gateway → http/route → llm|mcp|a2a → upstream，[[cel|CEL]] 做策略 IR，[[hbone|HBONE]] 跟 [[istio|Istio]] mesh 互操作
 - **UI**（TypeScript）：Next.js 管理界面
 
+## Agent 出口请求流程
+
+```text
+Agent / Sandbox
+      ↓ LLM · MCP · A2A request
+agentgateway data plane（Rust）
+      ↓ route + CEL policy + credential lookup
+┌───────────────┬────────────────┬───────────────┐
+│ LLM Provider  │ MCP Federation │ A2A Agent Card│
+│ OpenAI/etc.   │ tools/servers  │ upstream      │
+└───────────────┴────────────────┴───────────────┘
+      ↓ telemetry / audit / mTLS
+Control plane：Gateway API · CRD · xDS · Secret
+```
+
 ## 核心设计哲学
 
 1. **沿用 Istio 基建做 AI Gateway**：Gateway API + KRT + xDS + HBONE 全套复用，只把数据面换成专为 AI 协议优化的 Rust 代理

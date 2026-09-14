@@ -1,14 +1,14 @@
 ---
 title: PagedAttention
 tags: [concept, ai-infra, kv-cache, llm-inference]
-date: 2026-05-15
-sources: [sglang-architecture-analysis.md]
+date: 2026-09-13
+sources: [vllm-architecture-analysis.md]
 related: [vllm, radix-attention, sglang]
 ---
 
 # PagedAttention
 
-[[vllm]] 论文（Kwon et al., SOSP 2023）提出的 **block 级 KV 缓存管理机制**。把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache，**16 token 为一个 block**，每个请求用 **block table** 记录"逻辑序列位置 → 物理 block"映射。
+[[vllm]] 论文（Kwon et al., SOSP 2023）提出的 **block 级 KV 缓存管理机制**；当前官方架构仍以 block table、attention backend 与 prefix caching 组合扩展。把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache，**16 token 为一个 block**，每个请求用 **block table** 记录"逻辑序列位置 → 物理 block"映射。
 
 ## 核心思想
 
@@ -43,6 +43,16 @@ PagedAttention:
 - **首创性**：2023 年第一个把虚存分页引入 LLM serving，HuggingFace TGI / Ray Serve / Anyscale / Together AI 都基于此或受启发
 - **吞吐量**：典型 2-4× over HF transformers
 - **简单可靠**：block table 是数组，无需锁，调度逻辑直接
+
+## 逻辑地址到物理 KV 的流程
+
+```text
+请求 token 位置 i → 逻辑 block = i // block_size
+        → block table[logical block]
+        → 物理 GPU KV block
+        → attention kernel gather K/V
+        → 写入新 token block 或触发扩容
+```
 
 ## 局限与 [[radix-attention]] 的对比
 

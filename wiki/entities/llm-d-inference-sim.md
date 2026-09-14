@@ -1,8 +1,8 @@
 ---
 title: llm-d Inference Sim
 tags: [entity, llm-serving, simulator, benchmark, llm-d]
-date: 2026-06-13
-sources: [llm-d-inference-sim-architecture-analysis.md]
+date: 2026-09-13
+sources: [llm-d-core-projects-research-2026-09-13.md]
 related: [[llm-d]], [[llm-d-benchmark]], [[inference-routing]], [[llm-inference]], [[kv-cache-offload]]
 ---
 

@@ -28,6 +28,25 @@ infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observabilit
 peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
 ```
 
+## 控制面到数据面的完整流程
+
+```text
+业务意图 / Model / SLO
+          ↓
+Gateway API / CRD / Deployment
+          ↓
+Operator / Planner / Autoscaler
+          ↓
+InferencePool + Endpoint Picker
+          ↓
+┌────────────── Data Plane ──────────────┐
+│ vLLM / SGLang → Scheduler → KV → GPU  │
+│ Prefill Pool ── KV transfer ─ Decode  │
+└──────────────────┬────────────────────┘
+                   ↓ metrics / KV events
+        Routing · Scaling · Recovery feedback
+```
+
 ## 一句话分层
 
 | 项目 / 概念 | 一句话定位 | 抽象层 |

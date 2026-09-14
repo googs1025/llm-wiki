@@ -267,6 +267,67 @@ class Resolver:
         return f"../{target_path}"
 
 
+@dataclass(frozen=True)
+class NavigationItem:
+    category: str
+    stem: str
+    title: str
+    href: str
+
+
+def reading_order(
+    resolver: Resolver,
+    index_md: str | None = None,
+) -> list[tuple[str, str]]:
+    """Return resolved wiki pages in first-seen order from wiki/index.md."""
+    if index_md is None:
+        index_md = (WIKI / "index.md").read_text(encoding="utf-8")
+
+    order: list[tuple[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in WIKILINK_RE.findall(index_md):
+        resolved = resolver.resolve(raw)
+        if resolved and resolved not in seen:
+            seen.add(resolved)
+            order.append(resolved)
+    return order
+
+
+def navigation_for(
+    category: str,
+    stem: str,
+    resolver: Resolver,
+    order: list[tuple[str, str]],
+) -> tuple[NavigationItem | None, NavigationItem | None]:
+    """Return the previous and next resolved pages for the current page."""
+    current = (category, stem)
+    try:
+        index = order.index(current)
+    except ValueError:
+        return None, None
+
+    previous = navigation_item_for(order[index - 1], resolver, category) if index > 0 else None
+    following = (
+        navigation_item_for(order[index + 1], resolver, category)
+        if index + 1 < len(order)
+        else None
+    )
+    return previous, following
+
+
+def navigation_item_for(
+    target: tuple[str, str],
+    resolver: Resolver,
+    from_cat: str | None,
+) -> NavigationItem:
+    target_category, target_stem = target
+    target_page = load_page(WIKI / target_category / f"{target_stem}.md", target_category)
+    href = resolver.href(target_stem, from_cat=from_cat)
+    if href is None:
+        raise ValueError(f"unresolved navigation target: {target_stem}")
+    return NavigationItem(target_category, target_stem, target_page.title, href)
+
+
 # ── Wikilink preprocessing ───────────────────────────────────────
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 
@@ -371,7 +432,7 @@ SHELL = """<!doctype html>
 
   {body_html}
 
-  {related_html}
+  {navigation_html}
 
   <div class="footer">
     🦊 llm-wiki · {category_label} · <a href="{md_href}">查看 Markdown 源</a>
@@ -618,7 +679,12 @@ def strip_markdown_related_section(body: str) -> str:
     return RELATED_SECTION_RE.sub("", body).rstrip() + "\n"
 
 
-def build_page(page: Page, resolver: Resolver, graph_data: dict[str, object] | None = None) -> str:
+def build_page(
+    page: Page,
+    resolver: Resolver,
+    graph_data: dict[str, object] | None = None,
+    order: list[tuple[str, str]] | None = None,
+) -> str:
     body_md = strip_markdown_related_section(page.body_md) if page.fm.related else page.body_md
     body_with_ids = inject_heading_ids(body_md)
     body_with_links = rewrite_wikilinks(body_with_ids, resolver, from_cat=page.category if page.category != "ROOT" else None)
@@ -638,6 +704,8 @@ def build_page(page: Page, resolver: Resolver, graph_data: dict[str, object] | N
     toc_html = render_toc(toc)
     relation_html = render_page_relations(page, graph_data)
     sidebar_html = render_sidebar(toc_html, relation_html)
+    related_html = render_related(page.fm.related, resolver, from_cat=page.category if page.category != "ROOT" else None)
+    navigation_html = render_navigation(page, resolver, order or [], related_html)
 
     is_root = page.category == "ROOT"
     style_href = ASSETS_REL if is_root else f"../{ASSETS_REL}"
@@ -658,7 +726,7 @@ def build_page(page: Page, resolver: Resolver, graph_data: dict[str, object] | N
         subtitle_html=render_subtitle(page.fm),
         tags_html=render_tags(page.fm.tags),
         body_html=body_html,
-        related_html=render_related(page.fm.related, resolver, from_cat=page.category if not is_root else None),
+        navigation_html=navigation_html,
         category_label=category_label,
         md_href=md_href,
         sidebar_html=sidebar_html,
@@ -676,11 +744,131 @@ def load_page(md_path: Path, category: str) -> Page:
     return Page(md_path=md_path, category=category, fm=fm, body_md=body, title=title)
 
 
+def render_root_navigation(
+    resolver: Resolver,
+    order: list[tuple[str, str]],
+    *,
+    include_return: bool,
+    related_html: str = "",
+) -> str:
+    """Render navigation for root-level pages whose paths are relative to wiki/html/."""
+    index_href = htmllib.escape("./index.html", quote=True)
+    actions: list[str] = []
+    if include_return:
+        actions.append(
+            f'<a class="page-navigation-link previous" href="{index_href}">'
+            '<span class="navigation-label">← 返回索引</span></a>'
+        )
+
+    if order:
+        first = navigation_item_for(order[0], resolver, None)
+        href = htmllib.escape(first.href, quote=True)
+        title = htmllib.escape(first.title)
+        actions.append(
+            f'<a class="page-navigation-link next recommended" href="{href}">'
+            '<span class="navigation-label">推荐阅读第一篇 →</span>'
+            f'<strong class="navigation-title">{title}</strong></a>'
+        )
+
+    if not actions and not related_html:
+        return ""
+    return (
+        '<nav class="page-navigation" aria-label="页面阅读导航">'
+        f'<div class="page-navigation-actions">{"".join(actions)}</div>'
+        f'{related_html}</nav>'
+    )
+
+
+def render_navigation(
+    page: Page,
+    resolver: Resolver,
+    order: list[tuple[str, str]],
+    related_html: str = "",
+) -> str:
+    """Render navigation, owning the single related panel for this page."""
+    if page.category == "ROOT":
+        return render_root_navigation(
+            resolver,
+            order,
+            include_return=page.md_path.name != "index.md",
+            related_html=related_html,
+        )
+
+    previous, following = navigation_for(page.category, page.md_path.stem, resolver, order)
+    index_href = htmllib.escape("../index.html", quote=True)
+
+    if (page.category, page.md_path.stem) not in order:
+        return (
+            '<nav class="page-navigation" aria-label="页面阅读导航">'
+            '<div class="page-navigation-actions">'
+            f'<a class="page-navigation-index" href="{index_href}">返回索引</a>'
+            f'</div>{related_html}</nav>'
+        )
+
+    def render_page_link(
+        item: NavigationItem | None,
+        class_name: str,
+        label: str,
+        boundary_label: str,
+    ) -> str:
+        if item is None:
+            return (
+                f'<a class="page-navigation-link {class_name} boundary" href="{index_href}">'
+                f'<span class="navigation-label">{htmllib.escape(boundary_label)}</span></a>'
+            )
+        href = htmllib.escape(item.href, quote=True)
+        title = htmllib.escape(item.title)
+        return (
+            f'<a class="page-navigation-link {class_name}" href="{href}">'
+            f'<span class="navigation-label">{htmllib.escape(label)}</span>'
+            f'<strong class="navigation-title">{title}</strong></a>'
+        )
+
+    position = None
+    current = (page.category, page.md_path.stem)
+    if current in order:
+        position = order.index(current) + 1
+    progress_html = (
+        f'<span class="page-navigation-progress">阅读顺序 {position}/{len(order)}</span>'
+        if position is not None
+        else ""
+    )
+
+    return (
+        '<nav class="page-navigation" aria-label="页面阅读导航">'
+        '<div class="page-navigation-actions">'
+        f'{render_page_link(previous, "previous", "← 上一页", "← 返回索引")}'
+        f'<a class="page-navigation-index" href="{index_href}">返回索引</a>'
+        f'{render_page_link(following, "next recommended", "推荐阅读下一页 →", "返回索引 →")}'
+        f'</div>{progress_html}{related_html}</nav>'
+    )
+
+
 def should_write(dst: Path, force: bool) -> bool:
     if force or not dst.exists():
         return True
     head = dst.read_text(encoding="utf-8", errors="replace")[:2000]
     return AUTO_MARKER in head
+
+
+def inject_navigation_into_handcrafted(dst: Path, navigation_html: str, dry_run: bool) -> bool:
+    """Add navigation to preserved HTML without replacing its hand-crafted body."""
+    if not dst.exists() or not navigation_html:
+        return False
+    text = dst.read_text(encoding="utf-8")
+    if 'class="page-navigation"' in text:
+        return False
+    anchor = re.search(r"\n\s*<div class=\"footer\">", text)
+    if not anchor:
+        anchor = re.search(r"\n\s*</main>", text)
+    if not anchor:
+        anchor = re.search(r"\n\s*</body>", text)
+    if not anchor:
+        return False
+    updated = text[:anchor.start()] + "\n\n" + navigation_html + text[anchor.start():]
+    if not dry_run:
+        dst.write_text(updated, encoding="utf-8")
+    return True
 
 
 def sync_html_assets(dry_run: bool) -> None:
@@ -1572,7 +1760,11 @@ GRAPH_PAGE_SCRIPT = r"""
 """
 
 
-def build_graph_page(graph_data: dict[str, object]) -> str:
+def build_graph_page(
+    graph_data: dict[str, object],
+    resolver: Resolver,
+    order: list[tuple[str, str]],
+) -> str:
     graph_json = escape_script_json(json.dumps(graph_data, ensure_ascii=False, separators=(",", ":")))
     category_buttons = "".join(
         f'<button type="button" class="graph-filter is-active" data-graph-category="{esc(cat["id"])}" aria-pressed="true">'
@@ -1626,6 +1818,7 @@ def build_graph_page(graph_data: dict[str, object]) -> str:
     </div>
     <aside id="graph-inspector" class="graph-inspector" aria-live="polite"></aside>
   </section>
+  {render_root_navigation(resolver, order, include_return=True)}
 </main>
 
 <script type="application/json" id="graph-data">{graph_json}</script>
@@ -1650,10 +1843,12 @@ def build_site_index(
     resolver: Resolver,
     body_html: str | None = None,
     descriptions: dict[str, str] | None = None,
+    order: list[tuple[str, str]] | None = None,
 ) -> str:
     """Generate wiki/html/index.html — mirrors wiki/index.md structure with search."""
     if body_html is None or descriptions is None:
         body_html, descriptions = collect_index_descriptions(resolver)
+    order = order if order is not None else reading_order(resolver)
 
     # All pages for search index
     pages = collect_page_meta(descriptions)
@@ -1778,6 +1973,8 @@ def build_site_index(
 
   {extra_body}
 
+  {render_root_navigation(resolver, order, include_return=False)}
+
   <div class="footer">
     🦊 llm-wiki · 由 <code>wiki/html-assets/build.py</code> 自动生成
   </div>
@@ -1809,6 +2006,7 @@ def main() -> int:
     args = ap.parse_args()
 
     resolver = Resolver()
+    order = reading_order(resolver)
     OUT.mkdir(parents=True, exist_ok=True)
     sync_html_assets(args.dry_run)
     index_body_html, descriptions = collect_index_descriptions(resolver)
@@ -1825,11 +2023,17 @@ def main() -> int:
         dst_dir.mkdir(parents=True, exist_ok=True)
         for md_path in sorted(src_dir.glob("*.md")):
             page = load_page(md_path, cat)
-            html = build_page(page, resolver, graph_data)
+            html = build_page(page, resolver, graph_data, order)
             dst = dst_dir / f"{md_path.stem}.html"
             stats["total"] += 1
             if not should_write(dst, args.force):
                 normalize_stylesheet_href(dst, args.dry_run)
+                navigation_match = re.search(r'<nav class="page-navigation".*?</nav>', html, flags=re.DOTALL)
+                inject_navigation_into_handcrafted(
+                    dst,
+                    navigation_match.group(0) if navigation_match else "",
+                    args.dry_run,
+                )
                 stats["skipped"] += 1
                 print(f"  skip (hand-crafted): {dst.relative_to(ROOT)}")
                 continue
@@ -1845,7 +2049,7 @@ def main() -> int:
     if log_md.exists():
         page = load_page(log_md, "ROOT")
         page.body_md = sort_log_entries_newest_first(page.body_md)
-        html = build_page(page, resolver, graph_data)
+        html = build_page(page, resolver, graph_data, order)
         dst = OUT / "log.html"
         stats["total"] += 1
         if should_write(dst, args.force):
@@ -1860,7 +2064,7 @@ def main() -> int:
     dst = OUT / "index.html"
     stats["total"] += 1
     if should_write(dst, args.force):
-        html = build_site_index(resolver, index_body_html, descriptions)
+        html = build_site_index(resolver, index_body_html, descriptions, order)
         if not args.dry_run:
             dst.write_text(html, encoding="utf-8")
         stats["written"] += 1
@@ -1879,7 +2083,7 @@ def main() -> int:
     dst = OUT / "graph.html"
     stats["total"] += 1
     if should_write(dst, args.force):
-        html = build_graph_page(graph_data)
+        html = build_graph_page(graph_data, resolver, order)
         if args.dry_run:
             print(f"  would write: {dst.relative_to(ROOT)}")
         else:
