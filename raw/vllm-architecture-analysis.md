@@ -1,6 +1,6 @@
 # vLLM 架构与设计思路分析
 
-> 仓库：https://github.com/vllm-project/vllm · 分析日期：2026-09-13 · 版本：main @ `de50029`（官方 README/docs）
+> 仓库：`/Users/zhenyu.jiang/vllm` · 分析日期：2026-09-14 · 版本：local HEAD `dc36fcce90`
 
 ## 一句话定位
 
@@ -120,6 +120,143 @@ Attention 不读取连续的 `[sequence, token, head, dim]` 大数组，而是�
 vLLM 的核心优势是成熟、通用的 block allocator 与广泛模型/部署生态；SGLang 以 radix tree 做 token 级 prefix sharing，更适合高度重复的结构化程序、agent prompt 和多轮共享前缀。两者都已扩展到量化、投机解码、P/D 分离及 TP/PP/DP/EP，实际选择应以 workload、硬件和 benchmark 为准。
 
 ## 来源
+
+## 代码级关键流程
+
+### 1. Engine Core → Scheduler → GPU Worker
+
+关键入口：`vllm/v1/engine/core.py:589`、`vllm/v1/core/sched/scheduler.py:562`、`vllm/v1/worker/gpu_model_runner.py:4187`。
+
+```text
+EngineCore.step()
+  ├─ scheduler.has_requests()
+  ├─ Scheduler.schedule()
+  │    ├─ new_step_starts()
+  │    ├─ 先遍历 running requests
+  │    ├─ 再从 waiting queue admission
+  │    ├─ KVCacheManager.allocate_slots()
+  │    ├─ 空间不足 → preempt lowest-priority / tail request
+  │    └─ 生成 SchedulerOutput
+  ├─ model_executor.execute_model(non_block=True)
+  ├─ future.result() / sample_tokens()
+  └─ scheduler.update_from_output()
+```
+
+V1 的核心抽象不是固定的 prefill/decode 两个 scheduler，而是每个 request 的 `num_computed_tokens` 追赶 `num_tokens_with_spec`。因此 chunked prefill、普通 decode、speculative decode 和未来的 jump decoding 都能落在同一个 `schedule()` 中。`token_budget` 控制本轮总 token，`input_budget` 约束 batch 输入；scheduler 先推进 running，再尝试 waiting admission。
+
+### 2. KV Cache 分配、命中与抢占
+
+关键入口：`vllm/v1/core/kv_cache_manager.py:370`、`vllm/v1/core/sched/scheduler.py:700-820`。
+
+```text
+waiting Request
+    ↓ get_computed_blocks(request)
+local prefix hit + external connector hit
+    ↓
+num_computed_tokens / shared_prefix_boundary
+    ↓ allocate_slots(num_new_tokens, num_lookahead_tokens)
+ ┌───────────────┴────────────────┐
+ │ 有足够 block                   │ 无足够 block
+ │ 返回 new_blocks                │ 选择 running victim
+ │                                │ _preempt_request()
+ └───────────────┬────────────────┘
+                 ↓
+SchedulerOutput.req_to_new_blocks
+                 ↓
+GPU ModelRunner 写入 KV block table
+```
+
+`allocate_slots()` 同时处理本地 prefix、connector 提供的 external KV、待计算 token 和 speculative lookahead token；这意味着 KV admission 与 scheduler admission 是一个原子决策，而不是“先排队、后发现显存不够”。vLLM 当前还支持 hybrid KV cache group、sliding window、Mamba state、KV connector watermark 和 DP 下的 dummy forward 协调。
+
+### 3. ModelRunner 与 Attention Backend
+
+`GPUModelRunner.execute_model()` 先同步/更新 persistent batch state，再调用 `_prepare_inputs()` 构造 token、slot mapping、block table 和 attention metadata，之后按 token 数、请求数、uniform decode、DP 等条件决定 eager/CUDA Graph/ubatching。模型层的 `Attention` 在 `vllm/model_executor/layers/attention/attention.py:225` 初始化时通过 `vllm.v1.attention.selector.get_attn_backend()` 选择 backend，具体 backend 再消费统一 metadata。
+
+```text
+SchedulerOutput
+    ↓
+_prepare_inputs()
+    ├─ token ids / positions
+    ├─ slot mapping / block table
+    ├─ CommonAttentionMetadata
+    └─ speculative metadata
+    ↓
+determine batch execution
+    ├─ eager
+    ├─ CUDA Graph
+    └─ ubatching / DP synchronization
+    ↓
+Transformer Attention.forward()
+    ↓ selected backend (FlashAttention / FlashInfer / Triton / ...)
+    ↓ logits → proposer/target verify → sampler
+```
+
+这里的“算子融合”主要发生在 backend、compiled graph、quantization/fused MoE 和 cache write 路径；scheduler 不直接操作 kernel，只负责把动态请求压缩成 GPU 可消费的 metadata。
+
+### 4. Speculative Decode
+
+当前 vLLM V1 通过 `vllm/v1/spec_decode/*` 的 proposer 体系选择 EAGLE、DFlash、MTP、Medusa、N-gram、Suffix 等实现。scheduler 为 speculative lookahead 预留 KV slots，并在 `scheduled_spec_decode_tokens` 中携带已生成 draft；GPU runner 的 proposer 生成 draft，target model 在同一执行框架内验证，随后 scheduler 根据 accepted/rejected token 修正 request 的 computed token 数和 KV 状态。
+
+```text
+running request
+    ↓ allocate main + lookahead slots
+draft proposer
+    ↓ draft tokens / draft KV
+target model verify
+    ↓ accepted prefix + rejected tail
+update computed tokens / output placeholders
+    ↓
+next schedule()；只保留可验证 token 的 KV
+```
+
+### 5. P/D 与 KV Connector
+
+KV connector 的统一接口在 `vllm/distributed/kv_transfer/kv_connector/v1/base.py:185`：scheduler 侧可调用 `get_num_new_matched_tokens()`，worker 侧调用 `start_load_kv()` / `wait_for_save()`，并通过 `KVConnectorMetadata` 把 transfer state 放入 `SchedulerOutput`。因此 P/D 分离、CPU offload、NIXL、Mooncake、LMCache 和其他 connector 共享同一条 scheduler/worker 边界。
+
+### 6. TP / PP / EP / DP 的通信边界
+
+并行初始化入口是 `vllm/distributed/parallel_state.py:1977`；基础 collective 通过 `vllm/distributed/communication_op.py:12-31` 暴露。模型层把这些原语封装进列并行/行并行 Linear（`vllm/model_executor/layers/linear.py:428`、`:1621`）、pipeline tensor dict send/recv（`vllm/v1/worker/gpu_worker.py:1179`、`:1216`）以及 MoE all-to-all（`vllm/model_executor/layers/fused_moe/all2all_utils.py`）。
+
+```text
+initialize_model_parallel(TP, PP, DP, EP)
+          ↓ process groups / rank mapping
+Transformer block
+  ├─ ColumnParallelLinear → local shard
+  │       └─ optional all-gather
+  ├─ RowParallelLinear → local partial output
+  │       └─ tensor_model_parallel_all_reduce
+  ├─ PP stage boundary → send/recv intermediate tensors
+  └─ MoE gate → expert token dispatch all-to-all
+          ↓
+logits / sampler → DP shard gather or rank-local result
+```
+
+DP 不是简单复制后完全独立：MoE/EP 需要 rank 对齐，DP attention 还可能要求空 rank 做 dummy forward；因此调度器、model runner 和 collective group 三者必须共同定义同步点。
+
+## Attention 与并行的实现对比
+
+vLLM 的 backend selector 偏向“按模型配置/硬件选择一个 AttentionBackend class，再由统一 metadata 执行”；TP/PP/EP 的通信更多下沉到 Linear、MoE、worker 和 parallel_state。SGLang 则显式把 `ForwardMode` 传入 backend，在同一个 runner 中按 EXTEND/DECODE/TARGET_VERIFY 切换子 backend，并把 DP attention/PP/EP 的状态放进 `ForwardBatch`/`ScheduleBatch`。
+
+## vLLM 代码设计要点
+
+- `Scheduler.schedule()` 把 token budget、KV capacity、prefix hit、preemption、spec lookahead 和 DP/encoder 限制汇总成一个输出对象。
+- `KVCacheManager` 通过 coordinator/single-type managers 支持多种 KV cache group，而不是只维护一个简单 block pool。
+- `Attention` 通过 selector/registry 选择 backend，模型实现可以针对 MLA、Mamba、cross attention 包装或替换底层 backend。
+- `EngineCore` 可用 batch queue 把下一轮 scheduling 与上一轮 GPU future 重叠，形成 CPU/GPU pipeline。
+
+## 代码级与 SGLang 的实现对照
+
+| 维度 | vLLM | SGLang |
+|---|---|---|
+| 主循环 | `EngineCore.step()` 显式串起 schedule/execute/update | Scheduler event loop + `get_next_batch_to_run/run_batch/process_batch_result` |
+| batch 状态 | `SchedulerOutput` + request 字段 | 大型 `ScheduleBatch`，由 mixin/组件持续变换 |
+| 调度单位 | 每 request 的 computed token 追赶目标 token | batch 的 forward mode、request 队列与动态 chunk |
+| KV 索引 | block table + block pool/coordinator | radix/unified tree + token pool / page allocator |
+| Prefix sharing | hash 完整 block，connector 可提供 external hit | `match_prefix()` 最长 radix prefix，支持 token 边界 split |
+| Spec decode | scheduler lookahead + v1 proposer/target verify | `BaseSpecWorker` + `SpecInput/spec_info` + target verify mode |
+| backend 选择 | `get_attn_backend()` selector/enum/class | `ATTENTION_BACKENDS` registry + `get_attention_backend()`，还可按 forward mode 二次选择 |
+| P/D | KVConnectorBase_V1 metadata/worker hooks | disaggregation mixin、DecodeRequest/receiver/transfer queue 与多种 backend |
+
 
 - https://github.com/vllm-project/vllm/blob/main/README.md
 - https://github.com/vllm-project/vllm/blob/main/docs/design/arch_overview.md

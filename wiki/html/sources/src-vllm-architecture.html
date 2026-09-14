@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · sources</span>
   <span class="spacer"></span>
-  <span class="meta">2026-09-13</span>
+  <span class="meta">2026-09-14</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,12 +23,12 @@
 
   <header class="page-header">
     <h1>vLLM 架构与推理优化</h1>
-    <p class="page-meta">2026-09-13 · 来源：vllm-architecture-analysis.md</p>
+    <p class="page-meta">2026-09-14 · 来源：vllm-architecture-analysis.md</p>
     <div class="tags"><span class="tag">architecture</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">inference-optimization</span></div>
   </header>
 
   <blockquote>
-<p>原文：<code>raw/vllm-architecture-analysis.md</code> · 资料：官方 README/docs · 版本：main @ <code>de50029</code></p>
+<p>原文：<code>raw/vllm-architecture-analysis.md</code> · 仓库：<code>/Users/zhenyu.jiang/vllm</code> · 版本：local HEAD <code>dc36fcce90</code></p>
 </blockquote>
 <h2 id="一句话定位">一句话定位</h2>
 <p><a class="wikilink" href="../entities/vllm.html">vllm</a> 是高吞吐 LLM serving 引擎：以 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 管理 KV block，以 continuous batching、编译/融合 kernel 和 TP/PP/EP/DP 扩展推理容量与吞吐。</p>
@@ -93,6 +93,98 @@
 <li>固定 block 换取可预测的内存管理；代价是 prefix sharing 受 block 边界影响。</li>
 <li>后端可替换，允许按硬件、shape 和 prefill/decode 阶段选择不同 kernel。</li>
 </ul>
+<h2 id="代码级关键路径">代码级关键路径</h2>
+<pre><code class="language-text">EngineCore.step()
+  → Scheduler.schedule()
+  → KVCacheManager.allocate_slots()
+  → SchedulerOutput
+  → GPUModelRunner.execute_model()
+  → _prepare_inputs() / attention metadata
+  → Attention backend
+  → sampler
+  → Scheduler.update_from_output()
+</code></pre>
+<pre><code class="language-text">EngineCore.step()
+  ├─ scheduler.has_requests()
+  ├─ Scheduler.schedule()
+  │    ├─ new_step_starts()
+  │    ├─ 先遍历 running requests
+  │    ├─ 再从 waiting queue admission
+  │    ├─ KVCacheManager.allocate_slots()
+  │    ├─ 空间不足 → preempt lowest-priority / tail request
+  │    └─ 生成 SchedulerOutput
+  ├─ model_executor.execute_model(non_block=True)
+  ├─ future.result() / sample_tokens()
+  └─ scheduler.update_from_output()
+</code></pre>
+<pre><code class="language-text">waiting Request
+    ↓ get_computed_blocks(request)
+local prefix hit + external connector hit
+    ↓
+num_computed_tokens / shared_prefix_boundary
+    ↓ allocate_slots(num_new_tokens, num_lookahead_tokens)
+ ┌───────────────┴────────────────┐
+ │ 有足够 block                   │ 无足够 block
+ │ 返回 new_blocks                │ 选择 running victim
+ │                                │ _preempt_request()
+ └───────────────┬────────────────┘
+                 ↓
+SchedulerOutput.req_to_new_blocks
+                 ↓
+GPU ModelRunner 写入 KV block table
+</code></pre>
+<p>vLLM V1 用 request 的 <code>num_computed_tokens</code> 统一描述 chunked prefill、decode 和 speculative lookahead；KV admission 与 preemption 在 <code>schedule()</code> 内完成。<code>Attention</code> 通过 selector 选择 FlashAttention、FlashInfer、Triton 等后端；P/D、CPU offload 和远端 KV 通过 <code>KVConnectorBase_V1</code> 的 scheduler/worker metadata 接口接入。</p>
+<h2 id="与-sglang-的代码实现对比">与 SGLang 的代码实现对比</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>vLLM</th>
+<th>SGLang</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主循环</td>
+<td><code>EngineCore.step()</code></td>
+<td>Scheduler event loop + <code>run_batch/process_batch_result</code></td>
+</tr>
+<tr>
+<td>Batch 状态</td>
+<td><code>SchedulerOutput</code> + request state</td>
+<td><code>ScheduleBatch</code> + mixin/组件</td>
+</tr>
+<tr>
+<td>KV</td>
+<td>block table / coordinator</td>
+<td>radix/unified tree + token pool</td>
+</tr>
+<tr>
+<td>Spec</td>
+<td>lookahead slots + proposer/verify</td>
+<td><code>BaseSpecWorker</code> + <code>spec_info</code> + target verify</td>
+</tr>
+<tr>
+<td>Attention</td>
+<td>selector/enum/class</td>
+<td>registry + forward-mode backend selection</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="tp--pp--ep--dp-代码路径">TP / PP / EP / DP 代码路径</h2>
+<pre><code class="language-text">initialize_model_parallel(TP, PP, DP, EP)
+          ↓ process groups / rank mapping
+Transformer block
+  ├─ ColumnParallelLinear → local shard
+  │       └─ optional all-gather
+  ├─ RowParallelLinear → local partial output
+  │       └─ tensor_model_parallel_all_reduce
+  ├─ PP stage boundary → send/recv intermediate tensors
+  └─ MoE gate → expert token dispatch all-to-all
+          ↓
+logits / sampler → DP shard gather or rank-local result
+</code></pre>
+<p>代码入口：<code>distributed/parallel_state.py:1977</code>、<code>distributed/communication_op.py:12-31</code>、<code>model_executor/layers/linear.py:428/1621</code>、<code>v1/worker/gpu_worker.py:1179/1216</code>、<code>layers/fused_moe/all2all_utils.py</code>。</p>
 
   <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/agent-credential-isolation.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Agent 凭据隔离</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../sources/src-sglang-architecture.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">SGLang 架构与推理优化</strong></a></div><span class="page-navigation-progress">阅读顺序 155/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li></ul></section></nav>
 
@@ -101,7 +193,7 @@
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=src-vllm-architecture">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="175.2" y2="64.1" /><line x1="120.0" y1="82.0" x2="154.1" y2="128.9" /><line x1="120.0" y1="82.0" x2="85.9" y2="128.9" /><line x1="120.0" y1="82.0" x2="64.8" y2="64.1" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">vLLM 架构与推理优化</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-concepts" cx="175.2" cy="64.1" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="154.1" cy="128.9" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="85.9" cy="128.9" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="64.8" cy="64.1" r="7"><title>vLLM</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/vllm.html">vLLM</a><span>实体 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#请求与-kv-数据流">请求与 KV 数据流</a></li><li class=""><a href="#推理优化要点">推理优化要点</a></li><li class=""><a href="#关键设计">关键设计</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=src-vllm-architecture">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="175.2" y2="64.1" /><line x1="120.0" y1="82.0" x2="154.1" y2="128.9" /><line x1="120.0" y1="82.0" x2="85.9" y2="128.9" /><line x1="120.0" y1="82.0" x2="64.8" y2="64.1" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">vLLM 架构与推理优化</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-concepts" cx="175.2" cy="64.1" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="154.1" cy="128.9" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="85.9" cy="128.9" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="64.8" cy="64.1" r="7"><title>vLLM</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · wikilink</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#核心架构图">核心架构图</a></li><li class=""><a href="#请求与-kv-数据流">请求与 KV 数据流</a></li><li class=""><a href="#推理优化要点">推理优化要点</a></li><li class=""><a href="#关键设计">关键设计</a></li><li class=""><a href="#代码级关键路径">代码级关键路径</a></li><li class=""><a href="#与-sglang-的代码实现对比">与 SGLang 的代码实现对比</a></li><li class=""><a href="#tp--pp--ep--dp-代码路径">TP / PP / EP / DP 代码路径</a></li></ul></aside></aside>
 </div>
 
 <script>
