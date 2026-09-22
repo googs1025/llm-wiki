@@ -1,12 +1,25 @@
 ---
 title: Kubernetes Core / Controller 项目地图
 tags: [kubernetes, controller, operator, crd, project-map]
-date: 2026-06-13
-sources: [src-k8s-core-controllers-stars]
-related: [[kubernetes]], [[gateway-api]], [[gitops]], [[ai-ops]], [[declarative-agent-management]], [[agent-sandbox]], [[agentcube]], [[llm-d-kubernetes-sigs-candidate-map]], [[kubernetes-workload-automation]], [[openkruise-kruise]], [[cloud-native-security]]
+date: 2026-09-22
+sources: [src-k8s-core-controllers-stars, src-controller-runtime-architecture, src-kubebuilder-architecture, src-controller-tools-architecture]
+related: ["[[kubernetes]]", "[[gateway-api]]", "[[gitops]]", "[[ai-ops]]", "[[declarative-agent-management]]", "[[agent-sandbox]]", "[[agentcube]]", "[[llm-d-kubernetes-sigs-candidate-map]]", "[[kubernetes-workload-automation]]", "[[openkruise-kruise]]", "[[cloud-native-security]]", "[[controller-runtime]]", "[[kubebuilder]]", "[[controller-tools]]"]
 ---
 
 # Kubernetes Core / Controller 项目地图
+
+## 当前上游核验（2026-09-22）
+
+本节是对官方仓库默认分支的当前观察；[[src-controller-runtime-architecture]]、[[src-kubebuilder-architecture]] 与 [[src-controller-tools-architecture]] 则是 2026-06-14 摄入的 raw-backed Source 快照，保留当时的代码结构与设计语境。
+
+| 项目 | 当前证据 | 稳定职责边界 | M5-A 位置 |
+|---|---|---|---|
+| [[controller-runtime]] | [`6ab2188a1fb1`](https://github.com/kubernetes-sigs/controller-runtime/commit/6ab2188a1fb14a8c4837b418bc0a20049682cde4) | 组合 Manager、Cache、Client、Controller/Reconciler、Scheme、Webhook 与 envtest；不负责项目脚手架 | controller runtime composition |
+| [[kubebuilder]] | [`5f31d1f3c075`](https://github.com/kubernetes-sigs/kubebuilder/commit/5f31d1f3c075507fb99c432babeb1469a07f0cb6) | 面向作者的 Kubernetes API/CRD/controller/webhook 脚手架、插件与开发工作流，建立在 controller-runtime 和 controller-tools 之上 | author workflow / scaffolding |
+| [[controller-tools]] | [`030a93937cbb`](https://github.com/kubernetes-sigs/controller-tools/commit/030a93937cbbd72cc02cc2fe943f1df6e4b1f115) | 用 marker 驱动 `controller-gen` 生成 CRD、RBAC、webhook、deepcopy/object 与 apply-configuration 等资产 | marker / type generation |
+| client-go | Kubernetes staged 基座（本次不单独锚定 HEAD） | 提供 clientset、discovery/dynamic client、transport 与 controller 所需 cache/informer/workqueue 机制；必须按 Kubernetes minor 版本选择匹配的 `client-go` / `k8s.io/*` 依赖 | client foundation |
+
+上表的三个 commit 是本次执行时默认分支锚点，不代表 release；生产项目应按 controller-runtime / controller-tools / Kubebuilder 与 `client-go` / Kubernetes 的兼容矩阵锁定版本。官方入口：[controller-runtime repo](https://github.com/kubernetes-sigs/controller-runtime)、[Kubebuilder repo](https://github.com/kubernetes-sigs/kubebuilder)、[Kubebuilder Book](https://book.kubebuilder.io/)、[controller-tools repo](https://github.com/kubernetes-sigs/controller-tools)、[client-go docs](https://github.com/kubernetes/client-go#readme)。
 
 这页把 [[src-k8s-core-controllers-stars]] 从 359 个 star 项目整理成 Kubernetes controller/operator 学习与选型地图。核心结论：K8s 平台工程的主线不是“会写一个 reconcile”，而是理解 API machinery、client/cache/workqueue、CRD/webhook、controller-runtime/kubebuilder、调度/多集群/安全/可观测这些层如何组合。
 
