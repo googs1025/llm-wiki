@@ -92,11 +92,11 @@ date: 2026-05-12
 - [[mcp-lifecycle-operator]] — MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。
 
 ### LLM Serving / AI Gateway
-- [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
-- [[vllm]] — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）
-- [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
-- [[aibrix]] — vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）
-- [[llm-d]] — CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
+- [[dynamo]] — NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
+- [[vllm]] — engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）
+- [[sglang]] — engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）
+- [[aibrix]] — K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）
+- [[llm-d]] — CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
 - [[llm-d-router]] — llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。
 - [[llm-d-kv-cache]] — llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。
 - [[llm-d-batch-gateway]] — llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）
@@ -155,11 +155,12 @@ date: 2026-05-12
 - [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
+- **M4 模块地图**：[[llm-inference-serving-project-map]] → [[llm-serving-engine-selection-map]]；engine → routing → distributed runtime / K8s control plane → KV/GPU infrastructure。
 - [[vllm]] / [[sglang]] 最新架构与推理优化：V1、RadixCache、KV、连续批、融合 kernel 与 TP/PP/EP/DP 对照
 - [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
 - [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
 - [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
-- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 默认架构）
+- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）
 - [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
 
 ### LLM Serving 流量 / 网关 / 批处理
@@ -327,12 +328,12 @@ date: 2026-05-12
 - [[kubernetes-node-runtime-observability-security-design]] — kubelet/CRI、resource managers、sidecar lifecycle、user namespace/rootless kubelet、CRI stats、PSI 和 resource health 设计详解。
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
-- [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
+- [[llm-inference-serving-project-map]] — LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。
 - [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
 - [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
 - [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）
 - [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
-- [[llm-serving-engine-selection-map]] — LLM Serving / 推理引擎选型地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack）
+- [[llm-serving-engine-selection-map]] — LLM Serving 分层选型地图：先选架构层，再选项目组合。
 - [[mcp-gateway-tooling-map]] — MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）
 - [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）
 - [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）
