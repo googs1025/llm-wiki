@@ -8,7 +8,7 @@ related: [dynamo, vllm, sglang, paged-attention, kv-cache-offload, llm-inference
 
 # Disaggregated Serving（分离式服务）
 
-把 LLM 推理的 **prefill（首 token 计算）** 与 **decode（后续 token 流式生成）** 拆到独立的 GPU 池中分别扩缩的部署模式。[[dynamo|NVIDIA Dynamo]] 把它做成默认架构，[[vllm]] / [[sglang]] / TensorRT-LLM 都开始实验性支持。
+把 LLM 推理的 **prefill（首 token 计算）** 与 **decode（后续 token 流式生成）** 拆到独立的 GPU 池中分别扩缩的部署模式。[[dynamo|NVIDIA Dynamo]] 将 P/D 分离作为一等的可选部署模式，同时支持聚合式 worker 和部署；具体拓扑需根据工作负载、SLO 与硬件条件选择。相关能力通过 [[vllm]]、[[sglang]] 和 TensorRT-LLM 各自的集成或 connector 接入，成熟度和功能覆盖应以所选 release 与 backend 为准。
 
 ## 在 M4 中的位置
 
@@ -77,7 +77,7 @@ Dynamo 把分离式做成第一类公民：
 3. KV blocks 经 NIXL 跨 worker 传输
 4. Decode worker 开始流式生成
 
-支持矩阵：[[sglang]] ✅、TensorRT-LLM ✅、[[vllm]] ✅（含 MooncakeConnector）。
+后端集成范围包括 [[sglang]]、TensorRT-LLM 与 [[vllm]]（其中 vLLM 可使用 MooncakeConnector 等 connector）；可用 connector、成熟度与功能覆盖需按目标 release/backend 验证。
 
 ## 收益与代价
 

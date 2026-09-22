@@ -14,7 +14,7 @@ related: [sglang, paged-attention, radix-attention, flash-attention]
 
 ## 一句话定位
 
-LLM serving 的"事实标准基线"：用 [[paged-attention]] 把 KV 缓存按 16-token block 管理（类比 OS 虚存分页），把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 [[sglang]] / TensorRT-LLM / TGI 都把 vLLM 当对标。
+LLM serving 的"事实标准基线"：用 [[paged-attention]] 将 KV 缓存组织为固定大小的逻辑/物理 block（类比 OS 虚存分页），并通过 block table 建立映射；具体 block 大小取决于配置、attention backend 和版本。这把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 [[sglang]] / TensorRT-LLM / TGI 都把 vLLM 当对标。
 
 ## 最小架构图
 
@@ -33,8 +33,8 @@ API / Offline LLM → V1 Engine Core
 
 | 维度 | vLLM | [[sglang]] |
 |------|------|---------|
-| **KV 缓存粒度** | 16-token block（[[paged-attention]]） | token 级（[[radix-attention]]） |
-| **前缀共享** | 整 block 才能 share，碎片化严重 | 任意分叉点自动 share |
+| **KV 缓存粒度** | 固定大小的逻辑/物理 block + block table（大小依配置/backend/版本） | token 级（[[radix-attention]]） |
+| **前缀共享** | 按 block 边界共享；末尾未填满的 partial block 在完整前可能无法复用 | 任意分叉点自动 share |
 | **投机解码** | EAGLE / Medusa（少量） | 7 算法（EAGLE / NGRAM / MTP / DFLASH / Standalone / 多层 EAGLE / v2） |
 | **P/D 分离** | 实验性 | 生产级 + 5 transfer backend |
 | **Attention 后端** | FlashAttn / xFormers / TorchSDPA | 10+ 后端 |
@@ -51,8 +51,8 @@ API / Offline LLM → V1 Engine Core
 
 ## 与 SGLang 的差异点（基于 sglang 架构分析）
 
-- **vLLM block table 强制 token 对齐**：16 token block 内即使只用 7 个也占满一格；SGLang flat KV pool 不浪费
-- **vLLM PrefixCache 同 block 才共享**：system prompt 长度不是 16 倍数 → 末尾几个 token 无法被共享；SGLang radix 树天然支持任意 token 边界 split
+- **vLLM PagedAttention 使用 block table**：将固定大小的逻辑 KV block 映射到物理 KV block；具体 block 大小和未用容量行为随配置、attention backend 与版本而异
+- **vLLM PrefixCache 按 block 边界共享**：末尾未填满的 partial block 在完整前可能无法复用；SGLang radix 树支持在任意 token 边界 split
 - **vLLM 单进程主导**：scheduler + tokenizer + worker 多线程；SGLang 4 进程异步流水线
 - **vLLM 投机解码生态较窄**：EAGLE + Medusa；SGLang 7 算法
 
