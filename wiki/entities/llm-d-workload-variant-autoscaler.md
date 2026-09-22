@@ -1,14 +1,17 @@
 ---
 title: llm-d Workload Variant Autoscaler
 tags: [entity, llm-serving, autoscaling, kubernetes, llm-d]
-date: 2026-09-13
+date: 2026-09-22
 sources: [llm-d-core-projects-research-2026-09-13.md]
-related: [[llm-d]], [[src-llm-d-core-projects-architecture]], [[gateway-api-inference-extension]], [[model-serving-operator]], [[llm-inference]], [[kubernetes]]
+related: ["[[llm-d]]", "[[src-llm-d-core-projects-architecture]]", "[[gateway-api-inference-extension]]", "[[model-serving-operator]]", "[[llm-inference]]", "[[kubernetes]]"]
 ---
 
 # llm-d Workload Variant Autoscaler
 
 llm-d Workload Variant Autoscaler（WVA）是面向分布式 [[llm-inference]] 的 Kubernetes variant autoscaler，用 `VariantAutoscaling` CRD 把同一模型/InferencePool 下不同硬件、角色、成本或配置的 serving variant 纳入一个全局扩缩决策。详见 [[src-llm-d-workload-variant-autoscaler-architecture]]。
+
+> [!warning] Conflict
+> 截至 2026-09-22，llm-d 当前 [dev 架构文档](https://llm-d.ai/docs/dev/architecture#autoscaling)已将 Workload Variant Autoscaler 标为 deprecated，并描述 EPP metrics → KEDA Prometheus scaler → HPA 的扩缩路径。本 Entity 及 [[src-llm-d-workload-variant-autoscaler-architecture]] 保留其所记录版本的历史架构，不构成当前采用建议；当前采用前需重新核验。参见 [[llm-inference-serving-project-map]]。
 
 ## 架构边界
 

@@ -1,16 +1,19 @@
 ---
 title: llm-d / Kubernetes SIGs 候选项目地图
 tags: [kubernetes, llm-serving, project-map, backlog, ai-infra]
-date: 2026-06-13
+date: 2026-09-22
 sources: [src-k8s-core-controllers-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
-related: [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[kubernetes]], [[k8s-core-controller-map]], [[k8s-gpu-device-stack]], [[llm-inference-serving-project-map]], [[model-serving-operator]], [[inference-routing]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
+related: ["[[llm-d]]", "[[llm-d-router]]", "[[llm-d-kv-cache]]", "[[kubernetes]]", "[[k8s-core-controller-map]]", "[[k8s-gpu-device-stack]]", "[[llm-inference-serving-project-map]]", "[[model-serving-operator]]", "[[inference-routing]]", "[[llm-d-batch-gateway]]", "[[llm-d-benchmark]]", "[[llm-d-workload-variant-autoscaler]]", "[[llm-d-inference-sim]]"]
 ---
 
 # llm-d / Kubernetes SIGs 候选项目地图
 
 这页把 `llm-d` 组织和 `kubernetes-sigs` 组织里值得继续加入 wiki 的项目，按工程维度拆成候选清单。它不是 star 排行榜，而是服务于当前知识库的补全路线：哪些项目能帮助理解 [[llm-inference]]、[[model-serving-operator]]、[[kubernetes-dra]]、[[inference-routing]]、[[cloud-native-security]] 和 Kubernetes 控制器生态。
 
-本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 [[llm-d]]、[[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-workload-variant-autoscaler]]、[[llm-d-inference-sim]]、[[gateway-api]]、[[gateway-api-inference-extension]]、[[agent-sandbox]]、[[dra-driver-nvidia-gpu]]。
+> [!warning] 2026-09-22 当前状态
+> [[llm-d-workload-variant-autoscaler]] 的摄入/架构研究已完成，但它现为 deprecated 的历史设计，不应用于当前采用。llm-d 新部署的当前路径是 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)。
+
+本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 [[llm-d]]、[[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-workload-variant-autoscaler]]（已完成摄入的 deprecated/历史研究）、[[llm-d-inference-sim]]、[[gateway-api]]、[[gateway-api-inference-extension]]、[[agent-sandbox]]、[[dra-driver-nvidia-gpu]]。
 
 ## 总体优先级
 
@@ -24,7 +27,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 |---|---|---|---|
 | P0 已完成 | [[llm-d-batch-gateway]] | LLM batch serving | 已补正式源码架构页，把 [[llm-d]] 从在线 inference 扩展到 OpenAI Batch API / 离线 batch workload。 |
 | P0 已完成 | [[llm-d-benchmark]] | LLM serving benchmark | 已补正式源码架构页，作为 [[llm-inference-serving-project-map]] 的性能评测入口。 |
-| P0 已完成 | [[llm-d-workload-variant-autoscaler]] | serving autoscaling | 已补正式源码架构页，补齐 variant / workload autoscaling 和资源经济链路。 |
+| P0 已完成（历史研究） | [[llm-d-workload-variant-autoscaler]] | deprecated serving autoscaling | 已补正式源码架构页，保留 variant / workload autoscaling 和资源经济的历史设计；不用于当前采用。 |
 | P0 已完成 | [[llm-d-inference-sim]] | inference simulator | 已补正式源码架构页，无 GPU 模拟 vLLM 行为，适合研究调度、benchmark 和路由策略。 |
 | P0 已完成 | [[kueue]] | 调度 / 队列 | K8s 原生 Job queueing，是 AI/HPC/batch workload 控制面的核心项目。 |
 | P0 已完成 | [[karpenter]] | 节点弹性 / 成本 | Node autoscaler，连接 serving SLO、GPU 成本和容量弹性。 |
@@ -42,7 +45,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 |---|---|---|---|
 | [[llm-d-batch-gateway]] | P0 已完成 | OpenAI-compatible `/v1/batches` 和 `/v1/files`，把 batch job 分成 API server、processor、queue、storage、GC 等组件。 | [[llm-inference-serving-project-map]]、[[batch-inference]]、[[model-serving-operator]] |
 | [[llm-d-benchmark]] | P0 已完成 | llm-d benchmark lifecycle/workspace/harness 编排。 | LLM serving benchmark、[[llm-inference]] |
-| [[llm-d-workload-variant-autoscaler]] | P0 已完成 | distributed inference workload variant autoscaler。 | autoscaling、K8s resource economics、[[model-serving-operator]] |
+| [[llm-d-workload-variant-autoscaler]] | P0 已完成（历史研究） | Deprecated 的 distributed inference workload variant autoscaler 架构快照，仅供迁移/设计研究。 | 历史 autoscaling、K8s resource economics、[[model-serving-operator]] |
 | [[llm-d-inference-sim]] | P0 已完成 | 轻量模拟 vLLM 行为，不需要 GPU 或真实大模型。 | simulator、scheduler、benchmark |
 | [[llm-d-latency-predictor]] | P1 已完成 | 给 inference scheduler 的 ML-based latency scoring service。 | latency predictor、[[inference-routing]] |
 | [[llm-d-prism]] | P1 已完成 | 分布式推理性能分析 dashboard，把 benchmark 数据做交互式分析。 | observability、performance analysis |
@@ -58,7 +61,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 - **Batch inference**：[[llm-d-batch-gateway]] 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。
 - **Performance evaluation**：[[llm-d-benchmark]] / `llm-d-prism` / [[llm-d-inference-sim]] 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。
-- **Autoscaling/resource economics**：[[llm-d-workload-variant-autoscaler]] 可连接 `Kueue`、`Karpenter`、GPU 资源层。
+- **Autoscaling/resource economics（历史）**：[[llm-d-workload-variant-autoscaler]] 是 deprecated 的历史设计研究，曾探索与 `Kueue`、`Karpenter`、GPU 资源层的连接；当前新部署采用 EPP metrics → KEDA/HPA。
 - **P/D deployment diagnostics**：`llm-d-pd-utils` 把 GPU topology、RDMA、NCCL、NIXL 等实际部署问题显性化。
 
 ## Kubernetes SIGs 候选：按工程维度
@@ -151,7 +154,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 1. [[llm-d-batch-gateway]]（已完成）
 2. [[llm-d-benchmark]]（已完成）
-3. [[llm-d-workload-variant-autoscaler]]（已完成）
+3. [[llm-d-workload-variant-autoscaler]]（历史研究已完成；deprecated，不用于当前采用）
 4. [[llm-d-inference-sim]]（已完成）
 5. [[kueue]]（已完成）
 6. [[karpenter]]（已完成）
@@ -161,7 +164,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 10. [[lws]]（已完成）
 11. [[jobset]]（已完成）
 
-这批可以让 [[llm-inference-serving-project-map]] 从“引擎/serving stack”扩展到 batch、benchmark、queueing、autoscaling、distributed workload API。
+这批可以让 [[llm-inference-serving-project-map]] 从“引擎/serving stack”扩展到 batch、benchmark、queueing、当前 EPP metrics → KEDA/HPA autoscaling 与 distributed workload API；WVA 仅保留为历史研究。
 
 ### 第二批：补 Kubernetes 控制器和平台工程底座
 
@@ -187,7 +190,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 
 ## 和现有页面的关系
 
-- 更新 [[llm-inference-serving-project-map]]：加入 batch gateway、benchmark、simulator、autoscaler、Kueue/Karpenter/LWS/JobSet 这条 serving control plane 扩展线。
+- 更新 [[llm-inference-serving-project-map]]：加入 batch gateway、benchmark、simulator、Kueue/Karpenter/LWS/JobSet 与当前 EPP metrics → KEDA/HPA 扩缩路径；deprecated WVA 只作为历史 autoscaler 研究。
 - 更新 [[k8s-core-controller-map]]：从 controller-runtime/kubebuilder 学习路径，扩展成网络、存储、调度、可观测、计算、API/operator 的维度地图。
 - 更新 [[k8s-gpu-device-stack]]：把 `node-feature-discovery`、`Kueue`、`Karpenter`、`JobSet`、`LWS` 放入 GPU/AI workload 的调度前置层。
 - 更新 [[cloud-native-security]]：把 `secrets-store-csi-driver`、`security-profiles-operator`、`kube-agentic-networking` 作为 runtime/credential/network policy 三条线。

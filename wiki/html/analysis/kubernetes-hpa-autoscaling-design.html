@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-07-07</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>Kubernetes HPA Autoscaling Design</h1>
-    <p class="page-meta">2026-07-07 · 来源：src-kubernetes-keps-design-tracking.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/4951-configurable-hpa-tolerance/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/2021-scale-from-zero/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5679-external-metric-fallback/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/1610-container-resource-autoscaling/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5325-hpa-pod-selection-accuracy/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5030-attach-limit-autoscaler/README.md</p>
+    <p class="page-meta">2026-09-22 · 来源：src-kubernetes-keps-design-tracking.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/4951-configurable-hpa-tolerance/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/2021-scale-from-zero/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5679-external-metric-fallback/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/1610-container-resource-autoscaling/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5325-hpa-pod-selection-accuracy/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5030-attach-limit-autoscaler/README.md</p>
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-autoscaling</span><span class="tag">hpa</span><span class="tag">metrics</span><span class="tag">autoscaling</span><span class="tag">design-deep-dive</span></div>
   </header>
 
@@ -179,7 +179,7 @@ scale subresource update
 <ul>
 <li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> 提供 resource/container resource metrics，是 HPA resource path 的基础。</li>
 <li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 提供 custom/external metrics，是 scale-from-zero、external fallback、business metric scaling 的关键路径。</li>
-<li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 这类项目如果要和原生 HPA/KEDA 对接，需要特别关注 external metrics fallback 和 selection accuracy。</li>
+<li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 是 deprecated 的历史设计快照，只用于迁移/设计研究，不再作为当前集成建议。llm-d 新部署使用 <a href="https://llm-d.ai/docs/dev/architecture/advanced/autoscaling">EPP metrics → KEDA Prometheus scaler → HPA</a>；<a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> / <a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 仍是指标管道参考，不等于采用 WVA。</li>
 </ul>
 <h2 id="阅读顺序">阅读顺序</h2>
 <ol>
@@ -276,7 +276,7 @@ scale subresource update
 <li>DRA、PodGroup、volume attach、topology 等复杂约束是否继续进入 autoscaler 模拟。</li>
 </ul>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/kubernetes-dra-design-deep-dive.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes DRA Design Deep Dive</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/kubernetes-in-place-pod-resize-design.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes In-Place Pod Resize Design</strong></a></div><span class="page-navigation-progress">阅读顺序 277/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li><li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/kubernetes-dra-design-deep-dive.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes DRA Design Deep Dive</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/kubernetes-in-place-pod-resize-design.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes In-Place Pod Resize Design</strong></a></div><span class="page-navigation-progress">阅读顺序 279/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../entities/metrics-server.html">metrics-server</a></li><li><a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-hpa-autoscaling-design.md">查看 Markdown 源</a>

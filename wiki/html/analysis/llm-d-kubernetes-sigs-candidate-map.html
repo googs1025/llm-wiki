@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-13</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,12 +23,16 @@
 
   <header class="page-header">
     <h1>llm-d / Kubernetes SIGs 候选项目地图</h1>
-    <p class="page-meta">2026-06-13 · 来源：src-k8s-core-controllers-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
+    <p class="page-meta">2026-09-22 · 来源：src-k8s-core-controllers-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
     <div class="tags"><span class="tag">kubernetes</span><span class="tag">llm-serving</span><span class="tag">project-map</span><span class="tag">backlog</span><span class="tag">ai-infra</span></div>
   </header>
 
   <p>这页把 <code>llm-d</code> 组织和 <code>kubernetes-sigs</code> 组织里值得继续加入 wiki 的项目，按工程维度拆成候选清单。它不是 star 排行榜，而是服务于当前知识库的补全路线：哪些项目能帮助理解 <a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a>、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a>、<a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a>、<a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>、<a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a> 和 Kubernetes 控制器生态。</p>
-<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>、<a class="wikilink" href="../entities/gateway-api.html">gateway-api</a>、<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>、<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a>。</p>
+<blockquote>
+<p>[!warning] 2026-09-22 当前状态<br>
+<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 的摄入/架构研究已完成，但它现为 deprecated 的历史设计，不应用于当前采用。llm-d 新部署的当前路径是 <a href="https://llm-d.ai/docs/dev/architecture/advanced/autoscaling">EPP metrics → KEDA Prometheus scaler → HPA</a>。</p>
+</blockquote>
+<p>本次核验基于 GitHub API 当前公开仓库元数据（2026-06-13）。当前已收录的同域项目包括 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>（已完成摄入的 deprecated/历史研究）、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>、<a class="wikilink" href="../entities/gateway-api.html">gateway-api</a>、<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a>、<a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a>。</p>
 <h2 id="总体优先级">总体优先级</h2>
 <pre><code>P0: 直接补当前 AI Infra / LLM serving / K8s control plane 选型缺口
 P1: 强相关，但更偏评测、诊断、迁移、配套或特定场景
@@ -57,10 +61,10 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <td>已补正式源码架构页，作为 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 的性能评测入口。</td>
 </tr>
 <tr>
-<td>P0 已完成</td>
+<td>P0 已完成（历史研究）</td>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>serving autoscaling</td>
-<td>已补正式源码架构页，补齐 variant / workload autoscaling 和资源经济链路。</td>
+<td>deprecated serving autoscaling</td>
+<td>已补正式源码架构页，保留 variant / workload autoscaling 和资源经济的历史设计；不用于当前采用。</td>
 </tr>
 <tr>
 <td>P0 已完成</td>
@@ -149,9 +153,9 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>P0 已完成</td>
-<td>distributed inference workload variant autoscaler。</td>
-<td>autoscaling、K8s resource economics、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></td>
+<td>P0 已完成（历史研究）</td>
+<td>Deprecated 的 distributed inference workload variant autoscaler 架构快照，仅供迁移/设计研究。</td>
+<td>历史 autoscaling、K8s resource economics、<a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></td>
@@ -208,7 +212,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <ul>
 <li><strong>Batch inference</strong>：<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a> 让在线 serving 与离线 batch workload 可以共享下游 router/model server，但 SLO、队列、存储和计费边界不同。</li>
 <li><strong>Performance evaluation</strong>：<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a> / <code>llm-d-prism</code> / <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 可以把“架构上可行”推进到“如何测、如何复现、如何调参”。</li>
-<li><strong>Autoscaling/resource economics</strong>：<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 可连接 <code>Kueue</code>、<code>Karpenter</code>、GPU 资源层。</li>
+<li><strong>Autoscaling/resource economics（历史）</strong>：<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 是 deprecated 的历史设计研究，曾探索与 <code>Kueue</code>、<code>Karpenter</code>、GPU 资源层的连接；当前新部署采用 EPP metrics → KEDA/HPA。</li>
 <li><strong>P/D deployment diagnostics</strong>：<code>llm-d-pd-utils</code> 把 GPU topology、RDMA、NCCL、NIXL 等实际部署问题显性化。</li>
 </ul>
 <h2 id="kubernetes-sigs-候选按工程维度">Kubernetes SIGs 候选：按工程维度</h2>
@@ -536,7 +540,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <ol>
 <li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>（已完成）</li>
-<li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>（已完成）</li>
+<li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>（历史研究已完成；deprecated，不用于当前采用）</li>
 <li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/kueue.html">kueue</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/karpenter.html">karpenter</a>（已完成）</li>
@@ -546,7 +550,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 <li><a class="wikilink" href="../entities/lws.html">lws</a>（已完成）</li>
 <li><a class="wikilink" href="../entities/jobset.html">jobset</a>（已完成）</li>
 </ol>
-<p>这批可以让 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 从“引擎/serving stack”扩展到 batch、benchmark、queueing、autoscaling、distributed workload API。</p>
+<p>这批可以让 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 从“引擎/serving stack”扩展到 batch、benchmark、queueing、当前 EPP metrics → KEDA/HPA autoscaling 与 distributed workload API；WVA 仅保留为历史研究。</p>
 <h3 id="第二批补-kubernetes-控制器和平台工程底座">第二批：补 Kubernetes 控制器和平台工程底座</h3>
 <ol>
 <li><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a>（已完成）</li>
@@ -570,7 +574,7 @@ P2: 后续补充，先进入 backlog，不急于做完整源码架构页
 </ul>
 <h2 id="和现有页面的关系">和现有页面的关系</h2>
 <ul>
-<li>更新 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>：加入 batch gateway、benchmark、simulator、autoscaler、Kueue/Karpenter/LWS/JobSet 这条 serving control plane 扩展线。</li>
+<li>更新 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>：加入 batch gateway、benchmark、simulator、Kueue/Karpenter/LWS/JobSet 与当前 EPP metrics → KEDA/HPA 扩缩路径；deprecated WVA 只作为历史 autoscaler 研究。</li>
 <li>更新 <a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a>：从 controller-runtime/kubebuilder 学习路径，扩展成网络、存储、调度、可观测、计算、API/operator 的维度地图。</li>
 <li>更新 <a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a>：把 <code>node-feature-discovery</code>、<code>Kueue</code>、<code>Karpenter</code>、<code>JobSet</code>、<code>LWS</code> 放入 GPU/AI workload 的调度前置层。</li>
 <li>更新 <a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a>：把 <code>secrets-store-csi-driver</code>、<code>security-profiles-operator</code>、<code>kube-agentic-networking</code> 作为 runtime/credential/network policy 三条线。</li>

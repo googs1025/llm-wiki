@@ -1,7 +1,7 @@
 ---
 title: metrics-server
 tags: [entity, kubernetes, observability, autoscaling]
-date: 2026-06-14
+date: 2026-09-22
 sources: [metrics-server-architecture-analysis.md]
 related: ["[[metrics-server]]", "[[kubernetes]]", "[[llm-inference]]", "[[model-serving-operator]]", "[[llm-d-workload-variant-autoscaler]]"]
 ---
@@ -20,7 +20,7 @@ metrics-server 只服务资源指标，不是 Prometheus 替代品；custom/exte
 |---|---|
 | 需要 `可观测 / autoscaling` 能力 | 适合，metrics-server 正是这一层的代表项目。 |
 | 需要和 Kubernetes API / controller / runtime 集成 | 适合，它的主要价值来自 Kubernetes-native 工作流。 |
-| 需要替代相邻层全部职责 | 不适合，应和 [[llm-inference]], [[model-serving-operator]], [[llm-d-workload-variant-autoscaler]] 组合。 |
+| 需要替代相邻层全部职责 | 不适合；metrics-server 只提供 resource metrics plumbing。当前 llm-d 新部署使用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；[[llm-d-workload-variant-autoscaler]] 是 deprecated 的历史设计，仅保留供迁移/研究参考。 |
 
 ## 核心组件
 

@@ -449,3 +449,10 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 
 - 基于本地 `/Users/zhenyu.jiang/vllm` HEAD `dc36fcce90` 与 `/Users/zhenyu.jiang/sglang` HEAD `2fd835b9c1`，提取 Engine/Scheduler/Batch/KV/Attention/Speculative/P-D 关键调用路径。
 - 在两份架构源摘要中增加代码入口、状态对象、关键函数、生命周期流程和 vLLM/SGLang 实现对比。
+
+## [2026-09-22] query | M4 Inference / Serving / Routing 模块地图更新
+
+- 基于 vLLM、SGLang、Dynamo、llm-d、AIBrix 当前官方仓库与文档，重构 [[llm-inference-serving-project-map]]，新增模块边界、在线请求、控制循环、KV 生命周期和故障边界图。
+- 更新 [[llm-serving-engine-selection-map]]，把“引擎选型”改成 engine、distributed runtime、Kubernetes routing/control plane 和 infrastructure 的分层组合决策。
+- 同步相关 Entity、Concept、[[Wiki 索引]] 与生成 HTML；保留 2026-09-13/14 Source 摘要的历史图，并为当前 llm-d WVA deprecated 状态补充双向 Conflict 注记。
+- 修正 Dynamo P/D 拓扑与 vLLM KV block size / P-D maturity 的绝对化历史表述。

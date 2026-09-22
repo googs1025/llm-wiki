@@ -1,14 +1,18 @@
 ---
 title: Inference Routing
 tags: [concept, inference-routing, llm-serving, ai-gateway, gateway-api]
-date: 2026-09-13
+date: 2026-09-22
 sources: [k8s-gateway-routing-comparison-2026-09-13.md, dynamo-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, semantic-router-architecture-analysis.md, gateway-api-inference-extension-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md]
-related: [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[semantic-router]], [[routellm]], [[ai-gateway]], [[envoy-ai-gateway]], [[gateway-api-inference-extension]], [[gateway-api]], [[kv-cache-offload]], [[llm-d-inference-sim]], [[llm-d-batch-gateway]], [[batch-inference]]
+related: ['[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[semantic-router]]', '[[routellm]]', '[[ai-gateway]]', '[[envoy-ai-gateway]]', '[[gateway-api-inference-extension]]', '[[gateway-api]]', '[[kv-cache-offload]]', '[[llm-d-inference-sim]]', '[[llm-d-batch-gateway]]', '[[batch-inference]]']
 ---
 
 # Inference Routing
 
 Inference routing 指 LLM/模型服务请求进入 serving fleet 后，如何选择 provider、模型、endpoint、pod、prefill/decode worker 或 KV cache 命中路径。
+
+## 在 M4 中的位置
+
+Routing 位于流量入口与 engine 执行之间。[[llm-inference-serving-project-map]] 的 D1/D2 分别展示职责边界与请求路径，区分 Gateway、Proxy/EPP/Router 和 Model Server。路由负责选择请求去向，engine 负责执行推理；选型时不能把两者当作替代品。
 
 ## 四类路由
 
