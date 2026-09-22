@@ -1,25 +1,26 @@
 ---
 title: LLM Serving / 推理引擎选型地图
 tags: [llm-inference, llm-serving, kv-cache, selection, ai-infra]
-date: 2026-06-11
-sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars]
-related: [[llm-inference-serving-project-map]], [[vllm]], [[sglang]], [[dynamo]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]]
+date: 2026-09-22
+sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-vllm-architecture, src-aibrix-architecture, src-k8s-serving-stack-comparison]
+related: [[llm-inference-serving-project-map]], [[vllm]], [[sglang]], [[dynamo]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[aibrix]], [[inference-routing]], [[model-serving-operator]]
 ---
 
 # LLM Serving / 推理引擎选型地图
 
 已有 [[llm-inference-serving-project-map]] 把层次铺开。这页面向选型：单机推理引擎、集群 serving 编排、多云算力控制和 K8s GPU 底座不要混为一谈。
 
-## GitHub 当前核验
+## 当前上游核验（2026-09-22）
 
-截至 2026-06-11 通过 GitHub API 重新核验：
+截至 2026-09-22，通过 GitHub API 与官方文档核验以下 HEAD；职责摘要与项目地图保持一致，详细架构证据仍见对应 Source 页面。
 
-| 项目 | 仓库 | 最近 push | stars | 主语言 | 当前定位 |
-|------|------|-----------|-------|--------|----------|
-| [[vllm]] | https://github.com/vllm-project/vllm | 2026-06-11 | 82k | Python | high-throughput, memory-efficient inference engine |
-| [[sglang]] | https://github.com/sgl-project/sglang | 2026-06-11 | 28k | Python | high-performance serving framework |
-| [[dynamo]] | https://github.com/ai-dynamo/dynamo | 2026-06-11 | 7.2k | Rust | datacenter scale distributed inference serving |
-| [[src-skypilot-architecture|SkyPilot]] | https://github.com/skypilot-org/skypilot | 2026-06-11 | 10k | Python | any-cloud AI workload control plane |
+| 项目 | 核验版本 | 当前职责 |
+|------|----------|----------|
+| [[vllm]] | `HEAD d50723df04f7` | engine scheduler、model execution、local KV |
+| [[sglang]] | `HEAD 04c0913434c4` | engine/runtime、RadixCache、distributed/P-D integration |
+| [[dynamo]] | `HEAD f36d2fab37fd` | distributed request/control/state runtime、routing、KV transfer、planner |
+| [[llm-d]] | `HEAD 1e9a86a3a9da` | Proxy/EPP、InferencePool、Model Server 与 routing signals |
+| [[aibrix]] | `HEAD 96056b47f158` | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration |
 
 ## 选型结论
 
@@ -54,4 +55,3 @@ related: [[llm-inference-serving-project-map]], [[vllm]], [[sglang]], [[dynamo]]
 - 不要把 [[src-skypilot-architecture|SkyPilot]] 当成 inference engine；它是资源控制面。
 - P/D 分离只有在 prompt/decode 负载、KV transfer、路由和扩缩都配套时才有收益。
 - KV cache 已经是一等资源，路由、迁移、offload 都要显式建模。
-

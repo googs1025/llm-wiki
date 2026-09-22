@@ -1,12 +1,27 @@
 ---
 title: LLM Inference / Serving 项目地图
 tags: [llm-inference, llm-serving, kv-cache, project-map, ai-infra]
-date: 2026-06-09
-sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture]
-related: [[dynamo]], [[vllm]], [[sglang]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]], [[batch-inference]], [[llm-inference]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[kubernetes]], [[llm-d-kubernetes-sigs-candidate-map]]
+date: 2026-09-22
+sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-llm-d-architecture, src-llm-d-router-architecture, src-llm-d-kv-cache-architecture, src-llm-d-batch-gateway-architecture, src-llm-d-benchmark-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-inference-sim-architecture, src-vllm-architecture, src-aibrix-architecture, src-k8s-serving-stack-comparison]
+related: [[dynamo]], [[vllm]], [[sglang]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]], [[batch-inference]], [[llm-inference]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[kubernetes]], [[llm-d-kubernetes-sigs-candidate-map]], [[aibrix]], [[inference-routing]], [[model-serving-operator]]
 ---
 
 # LLM Inference / Serving 项目地图
+
+## 当前上游核验（2026-09-22）
+
+本页把官方仓库/文档的当前观察与既有 raw-backed Source 摘要分开。Source 摘要仍保存其分析时点；下表用于判断本次横向地图是否需要调整。
+
+| 项目 | 核验版本 | 当前稳定职责 | 本次处理 |
+|------|----------|--------------|----------|
+| [[vllm]] | `HEAD d50723df04f7` | engine scheduler、model execution、local KV | 保留内部图，补外部边界 |
+| [[sglang]] | `HEAD 04c0913434c4` | engine/runtime、RadixCache、distributed/P-D integration | 保留内部图，补集成边界 |
+| [[dynamo]] | `HEAD f36d2fab37fd` | distributed request/control/state runtime、routing、KV transfer、planner | 更新平台层关系 |
+| [[llm-d]] | `HEAD 1e9a86a3a9da` | Proxy/EPP、InferencePool、Model Server 与 routing signals | 更新 Gateway/EPP 热路径 |
+| [[aibrix]] | `HEAD 96056b47f158` | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration | 纳入核心比较 |
+
+> [!note] 证据边界
+> 当前职责来自本次官方仓库与文档核验；内部调用路径仍以对应 Source 页面为准。
 
 这页把当前知识库里的 LLM 推理与 serving 相关材料横向整理。核心结论：LLM serving 已经从“单机推理引擎优化”演进成多层系统工程：KV cache 管理、batch 调度、P/D 分离、KV-aware routing、多级 offload、SLA 扩缩、GPU 资源调度和多云控制面都在同一条链路上。
 
