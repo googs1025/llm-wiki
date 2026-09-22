@@ -25,7 +25,7 @@ LLM 推理（inference / serving）指把训练好的大语言模型部署成在
 | K8s serving stack | [[llm-d]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]] | 从标准模型 API、runtime/operator、LLM 路由、P/D workload 到 GPU/MaaS 的不同控制面 |
 | 路由 / 网关 | [[llm-d-router]], [[semantic-router]], [[routellm]], [[gateway-api-inference-extension]], [[ai-gateway]] | 模型选择、endpoint picking、成本/质量/语义/KV-aware routing |
 | KV locality / cache signal | [[llm-d-kv-cache]], [[dynamo]], [[kv-cache-offload]] | KV block index、cache-hit scoring、KV transfer/offload tiers |
-| 离线 / 实验 / 扩缩外围 | [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]] | batch job、benchmark、variant autoscaling、无 GPU simulator |
+| 离线 / 实验 / 历史扩缩外围 | [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-inference-sim]], [[llm-d-workload-variant-autoscaler]]（deprecated / 历史设计） | batch job、benchmark、无 GPU simulator，以及仅供迁移/设计参考的 variant autoscaling 历史方案 |
 | 硬件资源层 | [[hami]], [[gpu-operator]], [[k8s-device-plugin]], [[dra-driver-nvidia-gpu]] | GPU discovery、device plugin、DRA/CDI、sharing/vGPU/MIG |
 
 ## K8s serving stack 扩展比较
@@ -155,7 +155,7 @@ FP8 / INT4 / AWQ / GPTQ 等量化路线降低显存和带宽压力，但会影�
 
 ### Variant Autoscaling
 
-普通 HPA/KEDA 面向单 workload 或通用 event source；LLM serving 进入 P/D 分离、多 GPU 型号、多成本池之后，需要按同一模型的多个 serving variant 做全局 allocation。[[llm-d-workload-variant-autoscaler]] 把 InferencePool、Prometheus、GPU inventory、capacity model 和 HPA/KEDA 串起来，是 [[model-serving-operator]] 之外更细粒度的资源经济层。
+普通 HPA/KEDA 面向单 workload 或通用 event source；LLM serving 进入 P/D 分离、多 GPU 型号、多成本池之后，如何按同一模型的多个 serving variant 做全局 allocation 是一个重要历史问题。[[llm-d-workload-variant-autoscaler]] 曾将 InferencePool、Prometheus、GPU inventory、capacity model 和 HPA/KEDA 串起来，但现在只作为 deprecated 的历史设计快照保留。当前 llm-d dev 指南为新部署采用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；WVA 的冲突状态与迁移/设计历史见 [[llm-d-workload-variant-autoscaler]]。
 
 ## 选型入口
 
@@ -164,4 +164,5 @@ FP8 / INT4 / AWQ / GPTQ 等量化路线降低显存和带宽压力，但会影�
 - 需要 Kubernetes model serving API：看 [[kserve]] / [[kubeai]] / [[ome]]。
 - 需要多租户平台和 GPU 集群管理：看 [[aibrix]] / [[gpustack]]。
 - 需要路由模型或 endpoint：看 [[inference-routing]]、[[llm-d-router]]、[[semantic-router]]、[[gateway-api-inference-extension]]。
-- 需要离线批处理、评测、仿真或 variant autoscaling：看 [[llm-d-batch-gateway]] / [[llm-d-benchmark]] / [[llm-d-inference-sim]] / [[llm-d-workload-variant-autoscaler]]。
+- 需要离线批处理、评测或仿真：看 [[llm-d-batch-gateway]] / [[llm-d-benchmark]] / [[llm-d-inference-sim]]。
+- 需要当前 llm-d autoscaling：采用 EPP metrics → KEDA Prometheus scaler → HPA 路径，并结合 [[model-serving-operator]] 的生命周期边界；[[llm-d-workload-variant-autoscaler]] 仅作为迁移/设计参考。

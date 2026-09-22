@@ -8,9 +8,11 @@ related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-
 
 # SGLang
 
-> 最新代码级架构资料：[[src-sglang-architecture]]，基于本地 HEAD `2fd835b9c1`。
+> 2026-09-14 本地代码分析快照：[[src-sglang-architecture]]，HEAD `2fd835b9c1`。当前 upstream 证据维护在 [[llm-inference-serving-project-map]] 的“当前上游核验（2026-09-22）”小节。
 
-**LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)，活跃主线（HEAD `50f4058` 时分析）。
+**LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)。
+
+> 下述能力数量、默认值与性能数字反映上述 2026-09-14 本地快照；当前 release/backend 需重新核验。
 
 ## 一句话定位
 
@@ -32,7 +34,7 @@ DetokenizerManager → streaming response
 
 | 维度 | 能力 |
 |------|------|
-| **KV 缓存** | [[radix-attention]] —— token 级 radix 树；4 RadixCache 变体（vanilla / hi / mamba / swa / cpp）|
+| **KV 缓存** | [[radix-attention]] —— token 级 radix 树；5 RadixCache 变体（vanilla / hi / mamba / swa / cpp）|
 | **批量化** | 连续批 + chunked prefill + EXTEND/DECODE/MIXED 三态调度 + CUDA Graph 替换 decode 路径 |
 | **多进程流水线** | HTTP / TokenizerManager（主） / Scheduler（GPU subprocess） / DetokenizerManager（subprocess），ZMQ pyobj 三段管道 |
 | **投机解码** | 7 算法：EAGLE-2 / EAGLE-v2 / 多层 EAGLE / FrozenKV-MTP / NGRAM / DFLASH / Standalone，走 `BaseSpecWorker` + `spec_registry` |
@@ -57,7 +59,7 @@ DetokenizerManager → streaming response
 
 ## 设计哲学（与 [[vllm]] 等同类对照）
 
-- **Token 级 KV 复用 vs [[vllm]] block 级**：vLLM 16-token block 对长 system prompt / few-shot / agent template 浪费严重；SGLang 用 token-level radix 树 + flat KV pool 让任意 token 边界都能 split & share，论文 throughput 1.6-6.4× over vLLM
+- **Token 级 KV 复用 vs [[vllm]] block 级**：vLLM 使用固定大小 block，具体大小取决于配置、backend 和版本，前缀复用按 block 边界对齐；SGLang 用 token-level radix 树 + flat KV pool 支持任意 token 边界 split & share。历史 RadixAttention 论文仅在其 LLaMA-7B tree-of-thought / few-shot 工作负载上报告 1.6–6.4× over vLLM，不代表当前通用吞吐结论
 - **4 进程异步流水线**：Tokenize / Forward / Detokenize 拆到不同 OS 进程，ZMQ 串联；任何一环堵塞都不卡其他环，GPU 维持高占用
 - **Mixin 拼装 Scheduler**：4000+ 行的 `scheduler.py` 通过 10+ Mixin 把 disagg/PP/DPAttn/Dllm/Profiler/UpdateWeights 等横切关注点解耦，open-closed 友好；新加 disagg 后端不改主类
 - **可插拔哲学贯穿整栈**：attention backend / spec algorithm / KV transfer / grammar / quantization / model 全可注册可替换；服务启动时按 `server_args` 选择
@@ -67,7 +69,7 @@ DetokenizerManager → streaming response
 
 | 指标 | 实际表现 |
 |------|---------|
-| **prefix 缓存收益** | RadixAttention 论文：LLaMA-7B tree-of-thought / few-shot throughput **1.6-6.4×** over vLLM |
+| **prefix 缓存收益** | 历史 RadixAttention 论文在 LLaMA-7B tree-of-thought / few-shot 特定工作负载上报告 throughput **1.6–6.4×** over vLLM，非当前通用结论 |
 | **decode latency** | CUDA graph replay → 单步 ≈ kernel-only |
 | **投机解码加速** | EAGLE-2 默认 topk=5 step=5：典型 **1.5-2.5×** decode 加速 |
 | **P/D 分离收益** | 长 prefill / 长 decode 场景吞吐 **1.3-2×** over collocated |

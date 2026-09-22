@@ -1035,7 +1035,7 @@
         "operator",
         "llm-serving"
       ],
-      "date": "2026-06-12",
+      "date": "2026-09-22",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
       "degree": 60,
       "inbound": 51,
@@ -2456,7 +2456,7 @@
       "description": "CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
       "degree": 43,
       "inbound": 39,
-      "outbound": 15
+      "outbound": 16
     },
     {
       "id": "llm-d-batch-gateway",
@@ -2641,7 +2641,7 @@
       "date": "2026-09-22",
       "description": "Deprecated / 历史实现（截至 2026-09-22）；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。",
       "degree": 15,
-      "inbound": 11,
+      "inbound": 12,
       "outbound": 9
     },
     {
@@ -10553,6 +10553,11 @@
     {
       "source": "llm-d",
       "target": "kubeai",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-workload-variant-autoscaler",
       "kind": "wikilink"
     },
     {

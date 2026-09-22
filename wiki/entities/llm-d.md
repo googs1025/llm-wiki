@@ -12,11 +12,11 @@ llm-d 是 Kubernetes-native distributed inference stack，围绕 Gateway API/Inf
 
 ## 解决的问题
 
-它把单机 vLLM/SGLang engine 提升为可在 Kubernetes 上运行的分布式 LLM 服务：请求要按 endpoint 状态、KV locality 和推理负载选择，P/D worker 要能协同，多个 serving variant 要能做容量分配。
+它把单机 vLLM/SGLang engine 提升为可在 Kubernetes 上运行的分布式 LLM 服务：请求要按 endpoint 状态、KV locality 和推理负载选择，P/D worker 要能协同，容量还需依据可观测指标扩缩。
 
 ## 核心边界
 
-llm-d 是 serving ecosystem，不是新的推理 engine，也不是单一 operator。Gateway/EPP 负责入口和 endpoint picking，InferencePool 表达后端集合，KV/P/D/variant autoscaling 等项目补充性能关键路径。
+llm-d 是 serving ecosystem，不是新的推理 engine，也不是单一 operator。Gateway/EPP 负责入口和 endpoint picking，InferencePool 表达后端集合，KV/P/D 组件补充性能关键路径。[[llm-d-workload-variant-autoscaler]] 已是 deprecated 的历史设计；新部署应按当前官方指南采用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)。
 
 ## 适用场景
 

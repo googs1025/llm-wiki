@@ -28,9 +28,12 @@
   </header>
 
   <blockquote>
-<p>最新代码级架构资料：<a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a>，基于本地 HEAD <code>2fd835b9c1</code>。</p>
+<p>2026-09-14 本地代码分析快照：<a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a>，HEAD <code>2fd835b9c1</code>。当前 upstream 证据维护在 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 的“当前上游核验（2026-09-22）”小节。</p>
 </blockquote>
-<p><strong>LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。</strong> Apache 2.0，Python 3.10+，主仓库 <a href="https://github.com/sgl-project/sglang">github.com/sgl-project/sglang</a>，活跃主线（HEAD <code>50f4058</code> 时分析）。</p>
+<p><strong>LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。</strong> Apache 2.0，Python 3.10+，主仓库 <a href="https://github.com/sgl-project/sglang">github.com/sgl-project/sglang</a>。</p>
+<blockquote>
+<p>下述能力数量、默认值与性能数字反映上述 2026-09-14 本地快照；当前 release/backend 需重新核验。</p>
+</blockquote>
 <h2 id="一句话定位">一句话定位</h2>
 <p>把 LLM 推理引擎的<strong>所有"差异化轴"</strong>做到接近开源极致：<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 取代 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV 复用做到 token 级；4 进程异步流水线 + Scheduler 内 overlap 把 GPU 利用率拉到 95%+；7 套投机解码 + 5 KV transfer backend + 10+ attention backend + 4 grammar backend 全部可插拔；统一 OpenAI / Anthropic / Ollama 协议入口。论文里还提出"SGLang DSL"（fork / gen / select）做结构化生成的前端编译。</p>
 <h2 id="最小架构图">最小架构图</h2>
@@ -53,7 +56,7 @@ DetokenizerManager → streaming response
 <tbody>
 <tr>
 <td><strong>KV 缓存</strong></td>
-<td><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> —— token 级 radix 树；4 RadixCache 变体（vanilla / hi / mamba / swa / cpp）</td>
+<td><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> —— token 级 radix 树；5 RadixCache 变体（vanilla / hi / mamba / swa / cpp）</td>
 </tr>
 <tr>
 <td><strong>批量化</strong></td>
@@ -116,7 +119,7 @@ DetokenizerManager → streaming response
 </ul>
 <h2 id="设计哲学与-vllm-等同类对照">设计哲学（与 <a class="wikilink" href="../entities/vllm.html">vllm</a> 等同类对照）</h2>
 <ul>
-<li><strong>Token 级 KV 复用 vs <a class="wikilink" href="../entities/vllm.html">vllm</a> block 级</strong>：vLLM 16-token block 对长 system prompt / few-shot / agent template 浪费严重；SGLang 用 token-level radix 树 + flat KV pool 让任意 token 边界都能 split &amp; share，论文 throughput 1.6-6.4× over vLLM</li>
+<li><strong>Token 级 KV 复用 vs <a class="wikilink" href="../entities/vllm.html">vllm</a> block 级</strong>：vLLM 使用固定大小 block，具体大小取决于配置、backend 和版本，前缀复用按 block 边界对齐；SGLang 用 token-level radix 树 + flat KV pool 支持任意 token 边界 split &amp; share。历史 RadixAttention 论文仅在其 LLaMA-7B tree-of-thought / few-shot 工作负载上报告 1.6–6.4× over vLLM，不代表当前通用吞吐结论</li>
 <li><strong>4 进程异步流水线</strong>：Tokenize / Forward / Detokenize 拆到不同 OS 进程，ZMQ 串联；任何一环堵塞都不卡其他环，GPU 维持高占用</li>
 <li><strong>Mixin 拼装 Scheduler</strong>：4000+ 行的 <code>scheduler.py</code> 通过 10+ Mixin 把 disagg/PP/DPAttn/Dllm/Profiler/UpdateWeights 等横切关注点解耦，open-closed 友好；新加 disagg 后端不改主类</li>
 <li><strong>可插拔哲学贯穿整栈</strong>：attention backend / spec algorithm / KV transfer / grammar / quantization / model 全可注册可替换；服务启动时按 <code>server_args</code> 选择</li>
@@ -133,7 +136,7 @@ DetokenizerManager → streaming response
 <tbody>
 <tr>
 <td><strong>prefix 缓存收益</strong></td>
-<td>RadixAttention 论文：LLaMA-7B tree-of-thought / few-shot throughput <strong>1.6-6.4×</strong> over vLLM</td>
+<td>历史 RadixAttention 论文在 LLaMA-7B tree-of-thought / few-shot 特定工作负载上报告 throughput <strong>1.6–6.4×</strong> over vLLM，非当前通用结论</td>
 </tr>
 <tr>
 <td><strong>decode latency</strong></td>

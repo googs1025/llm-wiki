@@ -8,7 +8,7 @@ related: [sglang, paged-attention, radix-attention, flash-attention]
 
 # vLLM
 
-> 最新代码级架构资料：[[src-vllm-architecture]]，基于本地 HEAD `dc36fcce90`。
+> 2026-09-14 本地代码分析快照：[[src-vllm-architecture]]，HEAD `dc36fcce90`。当前 upstream 证据维护在 [[llm-inference-serving-project-map]] 的“当前上游核验（2026-09-22）”小节。
 
 **UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。** Apache 2.0，最早把 [[paged-attention]] 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。
 

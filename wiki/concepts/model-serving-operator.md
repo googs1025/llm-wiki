@@ -1,9 +1,9 @@
 ---
 title: Model Serving Operator
 tags: [concept, model-serving, kubernetes, operator, llm-serving]
-date: 2026-06-12
+date: 2026-09-22
 sources: [dynamo-architecture-analysis.md, kserve-architecture-analysis.md, ome-architecture-analysis.md, kubeai-architecture-analysis.md, gpustack-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, openkruise-projects-current-state.md]
-related: [[kserve]], [[llm-inference]], [[inference-routing]], [[kubernetes]], [[vllm]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[llm-d-workload-variant-autoscaler]], [[llm-d-batch-gateway]], [[batch-inference]], [[kubernetes-workload-automation]]
+related: ["[[kserve]]", "[[llm-inference]]", "[[inference-routing]]", "[[kubernetes]]", "[[vllm]]", "[[llm-d]]", "[[llm-d-router]]", "[[llm-d-kv-cache]]", "[[llm-d-workload-variant-autoscaler]]", "[[llm-d-batch-gateway]]", "[[batch-inference]]", "[[kubernetes-workload-automation]]"]
 ---
 
 # Model Serving Operator
@@ -18,7 +18,7 @@ Model serving operator 是在 Kubernetes 上声明式管理模型、runtime、en
 | [[ome]] | Open Model Engine，CRD/controller + runtime selector + accelerator configs |
 | [[kubeai]] | Model CRD + OpenAI-compatible proxy + autoscaler + model loader |
 | [[gpustack]] | GPU cluster manager + vLLM/SGLang 编排 + observability |
-| [[llm-d-workload-variant-autoscaler]] | 针对同一模型多个 serving variant 的全局 autoscaling 决策层 |
+| [[llm-d-workload-variant-autoscaler]] | Deprecated 的历史 variant autoscaling 设计，仅供迁移/设计参考 |
 | [[llm-d-batch-gateway]] | 不管理模型部署，但把 batch job lifecycle 接到 model serving endpoint |
 | [[rbg]] | 用 RoleBasedGroup / RoleInstance / CoordinatedPolicy 表达多角色、有状态、跨角色协调的 inference workload |
 | [[kthena]] | 用 ModelBooster / ModelServing / ModelServer / ModelRoute 组合完整 K8s LLM serving control/data plane |
@@ -30,16 +30,16 @@ Model serving operator 是在 Kubernetes 上声明式管理模型、runtime、en
 
 ## 和 llm-d 外围组件的关系
 
-[[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-workload-variant-autoscaler]]、[[llm-d-inference-sim]] 说明 model serving operator 周围还有一圈工程能力：
+[[llm-d-batch-gateway]]、[[llm-d-benchmark]]、[[llm-d-inference-sim]]，以及 deprecated/历史的 [[llm-d-workload-variant-autoscaler]]，说明 model serving operator 周围还有一圈工程能力：
 
 | 能力 | 代表 | 和 operator 的边界 |
 |---|---|---|
 | Batch job control plane | [[llm-d-batch-gateway]] | 不创建模型服务，复用已有 endpoint 执行异步 JSONL job。 |
-| Variant autoscaling | [[llm-d-workload-variant-autoscaler]] | 不替代 HPA/KEDA，而是为多个 variant 计算 desired allocation。 |
+| Variant autoscaling（历史） | [[llm-d-workload-variant-autoscaler]] | Deprecated 设计曾为多个 variant 计算 desired allocation；现仅供迁移/设计参考。 |
 | Benchmark lifecycle | [[llm-d-benchmark]] | 不是生产 controller，而是部署、运行、收集和分析实验。 |
 | Simulator | [[llm-d-inference-sim]] | 不是真实模型服务，用于验证 controller/router/benchmark 闭环。 |
 
-选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark、simulator、variant autoscaling 分别补异步任务、评测、测试替身和资源经济。
+选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark 和 simulator 分别补异步任务、评测和测试替身。对新部署，llm-d 当前路径是 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；[[llm-d-workload-variant-autoscaler]] 的 Entity Conflict 注记及历史设计仅用于迁移/设计参考。
 
 
 ## 和 Kubernetes 调度/指标外围的关系
