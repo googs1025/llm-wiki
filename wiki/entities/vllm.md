@@ -36,7 +36,7 @@ API / Offline LLM → V1 Engine Core
 | **KV 缓存粒度** | 固定大小的逻辑/物理 block + block table（大小依配置/backend/版本） | token 级（[[radix-attention]]） |
 | **前缀共享** | 按 block 边界共享；末尾未填满的 partial block 在完整前可能无法复用 | 任意分叉点自动 share |
 | **投机解码** | EAGLE / Medusa（少量） | 7 算法（EAGLE / NGRAM / MTP / DFLASH / Standalone / 多层 EAGLE / v2） |
-| **P/D 分离** | 实验性 | 生产级 + 5 transfer backend |
+| **P/D 分离** | 通过 KV connector 等 backend-specific 集成接入；成熟度/功能覆盖需按所选 release/backend 验证 | 通过 transfer backend 等 backend-specific 集成接入；成熟度/功能覆盖需按所选 release/backend 验证 |
 | **Attention 后端** | FlashAttn / xFormers / TorchSDPA | 10+ 后端 |
 | **结构化输出** | outlines | 4 backend |
 | **协议入口** | OpenAI | OpenAI / Anthropic / Ollama / gRPC / Engine |
