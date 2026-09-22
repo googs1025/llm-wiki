@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-14</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>prometheus-adapter</h1>
-    <p class="page-meta">2026-06-14 · 来源：prometheus-adapter-architecture-analysis.md</p>
+    <p class="page-meta">2026-09-22 · 来源：prometheus-adapter-architecture-analysis.md</p>
     <div class="tags"><span class="tag">entity</span><span class="tag">kubernetes</span><span class="tag">observability</span><span class="tag">autoscaling</span></div>
   </header>
 
@@ -49,7 +49,7 @@
 </tr>
 <tr>
 <td>需要替代相邻层全部职责</td>
-<td>不适合，应和 <a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a>, <a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a>, <a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 组合。</td>
+<td>不适合；prometheus-adapter 只提供 custom/external metrics plumbing。当前 llm-d 新部署使用 <a href="https://llm-d.ai/docs/dev/architecture/advanced/autoscaling">EPP metrics → KEDA Prometheus scaler → HPA</a>；<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 是 deprecated 的历史设计，仅保留供迁移/研究参考。</td>
 </tr>
 </tbody>
 </table></div>

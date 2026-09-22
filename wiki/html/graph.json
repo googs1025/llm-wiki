@@ -297,7 +297,7 @@
         "autoscaling",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
+      "date": "2026-09-22",
       "description": "HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。",
       "degree": 11,
       "inbound": 6,
@@ -531,7 +531,7 @@
         "backlog",
         "ai-infra"
       ],
-      "date": "2026-06-13",
+      "date": "2026-09-22",
       "description": "llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）",
       "degree": 64,
       "inbound": 3,
@@ -1053,7 +1053,7 @@
         "kv-cache",
         "llm-inference"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-22",
       "description": "KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）",
       "degree": 13,
       "inbound": 13,
@@ -1072,7 +1072,7 @@
         "llm-inference",
         "prefix-sharing"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-22",
       "description": "KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）",
       "degree": 14,
       "inbound": 14,
@@ -2768,7 +2768,7 @@
         "observability",
         "autoscaling"
       ],
-      "date": "2026-06-14",
+      "date": "2026-09-22",
       "description": "Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。",
       "degree": 14,
       "inbound": 11,
@@ -3204,7 +3204,7 @@
         "observability",
         "autoscaling"
       ],
-      "date": "2026-06-14",
+      "date": "2026-09-22",
       "description": "Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。",
       "degree": 12,
       "inbound": 9,

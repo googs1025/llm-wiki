@@ -1,14 +1,14 @@
 ---
 title: PagedAttention
 tags: [concept, ai-infra, kv-cache, llm-inference]
-date: 2026-09-13
+date: 2026-09-22
 sources: [vllm-architecture-analysis.md]
 related: [vllm, radix-attention, sglang]
 ---
 
 # PagedAttention
 
-[[vllm]] 论文（Kwon et al., SOSP 2023）提出的 **block 级 KV 缓存管理机制**；当前官方架构仍以 block table、attention backend 与 prefix caching 组合扩展。把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache，**16 token 为一个 block**，每个请求用 **block table** 记录"逻辑序列位置 → 物理 block"映射。
+[[vllm]] 论文（Kwon et al., SOSP 2023）提出的 **block 级 KV 缓存管理机制**；当前官方架构仍以 block table、attention backend 与 prefix caching 组合扩展。它把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache：在一个确定的配置内，KV 按固定大小的逻辑/物理 block 管理，每个请求用 **block table** 记录"逻辑序列位置 → 物理 block"映射。具体 block 大小取决于配置、attention backend 和版本。
 
 ## 核心思想
 
@@ -20,10 +20,10 @@ related: [vllm, radix-attention, sglang]
   [req1 used][        unused        ]
 
 PagedAttention:
-  按 block 按需分配                几乎无浪费
-  Block 0: ████████████████ (16 tokens)
-  Block 1: ████████████░░░░ (12 tokens used)
-  Block 2: ░░░░░░░░░░░░░░░░ (free)
+  按 block 按需分配（block size = B）
+  Block 0: [████████]  complete (B/B tokens)
+  Block 1: [█████░░░]  partial tail (k/B tokens, 0 < k < B)
+  Block 2: [░░░░░░░░]  free (B slots)
 
   Block Table per req:
     req0: [B0, B1]
@@ -33,8 +33,8 @@ PagedAttention:
 ## 关键机制
 
 - **Block table**：每个请求有一个 `int32 list[blocks]`，attention kernel 用它把"逻辑 token 索引"翻译成"物理 KV 位置"
-- **Block 大小固定**：默认 16 token，是性能 / 碎片权衡的产物
-- **Prefix sharing**：多个请求共享同一个 system prompt block，引用计数管理；释放时只有 ref=0 才回收
+- **Block 大小固定于当前配置**：逻辑/物理 block 使用同一 block size `B`；具体 `B` 依配置、attention backend 和版本而定
+- **Prefix sharing**：多个请求按 block 边界共享 system prompt，引用计数管理；partial tail 在形成完整 block 前不可复用，释放时只有 ref=0 才回收
 - **Copy-on-write**：beam search 等场景 fork 同一个 block table，写入时拷贝
 - **Swap to CPU**：内存紧张时把不活跃 block swap 到 CPU pinned memory
 
@@ -56,9 +56,9 @@ PagedAttention:
 
 ## 局限与 [[radix-attention]] 的对比
 
-- **16 token 边界刚性**：长度 17 的 system prompt 占 2 个 block 但第 2 个 block 浪费 15 槽
-- **共享只能整 block**：末尾不满 16 token 的尾巴无法被复用
-- **碎片放大效应**：上千请求时累计碎片显著
+- **Block 边界刚性**：前缀共享按当前 block size `B` 对齐，不能在 block 内任意分叉
+- **Partial tail 暂不可共享**：末尾未满的 block 在形成完整 block 前无法被前缀复用
+- **内部碎片依负载而定**：程度取决于 block size、请求长度分布与实现配置
 
 [[radix-attention]]（[[sglang]] 提出）通过 token 级 radix 树 + flat KV pool 解决这些限制。
 
