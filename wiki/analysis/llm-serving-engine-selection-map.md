@@ -3,7 +3,7 @@ title: LLM Serving / 推理引擎选型地图
 tags: [llm-inference, llm-serving, kv-cache, selection, ai-infra]
 date: 2026-09-22
 sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-vllm-architecture, src-aibrix-architecture, src-k8s-serving-stack-comparison]
-related: [[llm-inference-serving-project-map]], [[vllm]], [[sglang]], [[dynamo]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[aibrix]], [[inference-routing]], [[model-serving-operator]]
+related: ["[[llm-inference-serving-project-map]]", "[[vllm]]", "[[sglang]]", "[[dynamo]]", "[[paged-attention]]", "[[radix-attention]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[aibrix]]", "[[inference-routing]]", "[[model-serving-operator]]"]
 ---
 
 # LLM Serving / 推理引擎选型地图
@@ -12,15 +12,15 @@ related: [[llm-inference-serving-project-map]], [[vllm]], [[sglang]], [[dynamo]]
 
 ## 当前上游核验（2026-09-22）
 
-截至 2026-09-22，通过 GitHub API 与官方文档核验以下 HEAD；职责摘要与项目地图保持一致，详细架构证据仍见对应 Source 页面。
+截至 2026-09-22，通过 GitHub API 与官方文档核验以下 HEAD；详细架构证据见 [[llm-inference-serving-project-map]]。
 
 | 项目 | 核验版本 | 当前职责 |
 |------|----------|----------|
-| [[vllm]] | `HEAD d50723df04f7` | engine scheduler、model execution、local KV |
-| [[sglang]] | `HEAD 04c0913434c4` | engine/runtime、RadixCache、distributed/P-D integration |
-| [[dynamo]] | `HEAD f36d2fab37fd` | distributed request/control/state runtime、routing、KV transfer、planner |
-| [[llm-d]] | `HEAD 1e9a86a3a9da` | Proxy/EPP、InferencePool、Model Server 与 routing signals |
-| [[aibrix]] | `HEAD 96056b47f158` | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration |
+| [[vllm]] | `HEAD [d50723df04f7](https://github.com/vllm-project/vllm/commit/d50723df04f7)` | engine scheduler、model execution、local KV |
+| [[sglang]] | `HEAD [04c0913434c4](https://github.com/sgl-project/sglang/commit/04c0913434c4)` | engine/runtime、RadixCache、distributed/P-D integration |
+| [[dynamo]] | `HEAD [f36d2fab37fd](https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd)` | distributed request/control/state runtime、routing、KV transfer、planner |
+| [[llm-d]] | `HEAD [1e9a86a3a9da](https://github.com/llm-d/llm-d/commit/1e9a86a3a9da)` | Proxy/EPP、InferencePool、Model Server 与 routing signals |
+| [[aibrix]] | `HEAD [96056b47f158](https://github.com/vllm-project/aibrix/commit/96056b47f158)` | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration |
 
 ## 选型结论
 
