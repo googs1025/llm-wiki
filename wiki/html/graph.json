@@ -2639,7 +2639,7 @@
         "llm-d"
       ],
       "date": "2026-09-22",
-      "description": "llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）",
+      "description": "Deprecated / 历史实现（截至 2026-09-22）；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。",
       "degree": 15,
       "inbound": 11,
       "outbound": 9
@@ -4846,7 +4846,7 @@
         "kubernetes"
       ],
       "date": "2026-06-13",
-      "description": "llm-d WVA 架构（HEAD 526ce85，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）",
+      "description": "历史架构快照（HEAD 526ce85，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。",
       "degree": 6,
       "inbound": 2,
       "outbound": 6

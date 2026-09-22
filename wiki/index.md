@@ -101,7 +101,7 @@ date: 2026-05-12
 - [[llm-d-kv-cache]] — llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。
 - [[llm-d-batch-gateway]] — llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）
 - [[llm-d-benchmark]] — llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）
-- [[llm-d-workload-variant-autoscaler]] — llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）
+- [[llm-d-workload-variant-autoscaler]] — **Deprecated / 历史实现（截至 2026-09-22）**；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。
 - [[llm-d-inference-sim]] — 无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）
 - [[llm-d-planner]] — llm-d-incubation 部署规划器（业务意图 + SLO + GPU capacity + quality/cost/latency 推荐 + Kubernetes YAML）
 - [[inference-perf]] — GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。
@@ -243,7 +243,7 @@ date: 2026-05-12
 - [[src-llm-d-kv-cache-architecture]] — llm-d KV Cache 架构（HEAD `26e2b6f`，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）
 - [[src-llm-d-batch-gateway-architecture]] — llm-d Batch Gateway 架构（HEAD `66fae7e`，OpenAI Batch API / 离线推理：API server + PostgreSQL/Redis/Object Store + processor/GC + 下游 llm-d Router）
 - [[src-llm-d-benchmark-architecture]] — llm-d Benchmark 架构（HEAD `bd8dc5e`，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）
-- [[src-llm-d-workload-variant-autoscaler-architecture]] — llm-d WVA 架构（HEAD `526ce85`，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）
+- [[src-llm-d-workload-variant-autoscaler-architecture]] — 历史架构快照（HEAD `526ce85`，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。
 - [[src-llm-d-inference-sim-architecture]] — llm-d Inference Sim 架构（HEAD `6fb66f3`，无 GPU vLLM 行为模拟：OpenAI/vLLM API、KV cache events、latency/failure/metrics）
 - [[src-llm-d-core-projects-architecture]] — llm-d 核心项目群 2026-09 再调研（llm-d / Router / KV / WVA / Batch / Benchmark / Simulator / Planner 的作用、架构图、业务问题、方法与集成）
 - [[src-kueue-architecture]] — Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）
