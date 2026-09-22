@@ -1,9 +1,9 @@
 ---
 title: Dynamo
 tags: [entity, ai-infra, llm-inference, llm-serving, distributed-serving, kv-cache, kubernetes, autoscaling, nvidia]
-date: 2026-09-13
+date: 2026-09-22
 sources: [dynamo-architecture-analysis.md]
-related: [[llm-inference]], [[inference-routing]], [[disaggregated-serving]], [[kv-cache-offload]], [[model-serving-operator]], [[ai-gateway]], [[sglang]], [[vllm]]
+related: ['[[llm-inference]]', '[[inference-routing]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[model-serving-operator]]', '[[ai-gateway]]', '[[sglang]]', '[[vllm]]']
 ---
 
 # Dynamo
@@ -35,3 +35,7 @@ Frontend / Gateway EPP → KV-aware Router → backend workers 是请求路径�
 | [[kserve]] / [[ome]] | 模型服务 CRD/operator | 更偏声明式生命周期，Dynamo 提供更深的 serving runtime 协调 |
 
 详细架构与业务问题见 [[src-dynamo-architecture]]。
+
+## 在 M4 模块地图中的位置
+
+Dynamo 围绕可插拔 engine 提供分布式 serving runtime，协调 frontend/routing、服务发现与事件、worker 角色、KV transfer 和容量规划。职责边界见 [[llm-inference-serving-project-map]]，与 engine、Kubernetes 组件的组合选择见 [[llm-serving-engine-selection-map]]。

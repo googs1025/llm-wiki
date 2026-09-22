@@ -1,7 +1,7 @@
 ---
 title: Disaggregated Serving
 tags: [concept, ai-infra, llm-inference, llm-serving, kv-cache]
-date: 2026-05-16
+date: 2026-09-22
 sources: [dynamo-architecture-analysis.md]
 related: [dynamo, vllm, sglang, paged-attention, kv-cache-offload, llm-inference]
 ---
@@ -9,6 +9,10 @@ related: [dynamo, vllm, sglang, paged-attention, kv-cache-offload, llm-inference
 # Disaggregated Serving（分离式服务）
 
 把 LLM 推理的 **prefill（首 token 计算）** 与 **decode（后续 token 流式生成）** 拆到独立的 GPU 池中分别扩缩的部署模式。[[dynamo|NVIDIA Dynamo]] 把它做成默认架构，[[vllm]] / [[sglang]] / TensorRT-LLM 都开始实验性支持。
+
+## 在 M4 中的位置
+
+P/D 分离同时改变 [[llm-inference-serving-project-map]] 的 D2 请求路径和 D4 KV 生命周期：Prefill 与 Decode 独立扩缩，交接时按明确的 backend contract 传递元数据与 KV。具体组合需要同时检查路由协调、engine 接口和传输后端。
 
 ## 为什么要分离
 

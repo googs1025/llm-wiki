@@ -1,7 +1,7 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-14
+date: 2026-09-22
 sources: [sglang-architecture-analysis.md]
 related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
 ---
@@ -78,6 +78,10 @@ DetokenizerManager → streaming response
 - **来源论文**：Zheng et al., *"SGLang: Efficient Execution of Structured Language Model Programs"* (NeurIPS 2024) —— 论文里 RadixAttention + SGLang DSL 是核心贡献
 - **组织起源**：LMSYS / UC Berkeley Sky Computing Lab 团队（FastChat / Chatbot Arena / vLLM 都来自相近社区）
 - **生态**：在 DeepSeek 官方推荐推理引擎之一；DeepSeek-V3 的 MTP / MLA 实现是 SGLang 主导贡献
+
+## 在 M4 模块地图中的位置
+
+SGLang 位于 engine/runtime 层，负责 Scheduler、RadixCache 和模型执行，通过 P/D 与分布式集成接口连接外围 serving 层。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
 
 ## 相关页面
 

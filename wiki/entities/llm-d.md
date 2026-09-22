@@ -1,9 +1,9 @@
 ---
 title: llm-d
 tags: [entity, llm-serving, kubernetes, gateway-api, inference-routing, distributed-inference]
-date: 2026-09-13
+date: 2026-09-22
 sources: [k8s-serving-stack-comparison-2026-09-13.md]
-related: [[llm-inference]], [[inference-routing]], [[model-serving-operator]], [[gateway-api]], [[kserve]], [[aibrix]], [[dynamo]], [[vllm]], [[sglang]]
+related: ['[[llm-inference]]', '[[inference-routing]]', '[[model-serving-operator]]', '[[gateway-api]]', '[[kserve]]', '[[aibrix]]', '[[dynamo]]', '[[vllm]]', '[[sglang]]']
 ---
 
 # llm-d
@@ -23,3 +23,7 @@ llm-d 是 serving ecosystem，不是新的推理 engine，也不是单一 operat
 适合已经采用 Gateway API、希望标准化多模型/多 endpoint 入口，并需要分布式推理性能的 Kubernetes 平台。若只需单模型快速部署，[[kubeai]] 更轻；若需要更深的 engine runtime/P-D/KV 一体化，可比较 [[dynamo]]；若需要 GPU 集群 MaaS，可比较 [[gpustack]]。
 
 详见 [[src-llm-d-architecture]] 与 [[src-k8s-serving-stack-comparison]]。
+
+## 在 M4 模块地图中的位置
+
+llm-d 位于 Kubernetes routing/serving stack 层，通过 Proxy/EPP 和 InferencePool 将 Gateway 流量、路由信号与 Model Server Pod 连接起来。职责边界见 [[llm-inference-serving-project-map]]，与 engine 及外围组件的组合选择见 [[llm-serving-engine-selection-map]]。

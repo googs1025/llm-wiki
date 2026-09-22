@@ -1,7 +1,7 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-14
+date: 2026-09-22
 sources: [vllm-architecture-analysis.md]
 related: [sglang, paged-attention, radix-attention, flash-attention]
 ---
@@ -55,6 +55,10 @@ API / Offline LLM → V1 Engine Core
 - **vLLM PrefixCache 同 block 才共享**：system prompt 长度不是 16 倍数 → 末尾几个 token 无法被共享；SGLang radix 树天然支持任意 token 边界 split
 - **vLLM 单进程主导**：scheduler + tokenizer + worker 多线程；SGLang 4 进程异步流水线
 - **vLLM 投机解码生态较窄**：EAGLE + Medusa；SGLang 7 算法
+
+## 在 M4 模块地图中的位置
+
+vLLM 位于 engine 层，负责请求调度、模型执行、attention backend 和本地 KV 管理；外部流量路由与自动扩缩由外围 serving 层承担。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
 
 ## 相关页面
 

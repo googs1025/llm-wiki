@@ -1,14 +1,20 @@
 ---
 title: LLM Inference
 tags: [concept, ai-infra, llm-inference, llm-serving]
-date: 2026-06-12
+date: 2026-09-22
 sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: [[vllm]], [[sglang]], [[dynamo]], [[llm-d]], [[llm-d-router]], [[llm-d-kv-cache]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[kv-cache-offload]], [[inference-routing]], [[batch-inference]], [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-workload-variant-autoscaler]], [[llm-d-inference-sim]]
+related: ['[[vllm]]', '[[sglang]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]']
 ---
 
 # LLM Inference
 
 LLM 推理（inference / serving）指把训练好的大语言模型部署成在线服务，对外提供 token 生成 API。核心挑战：高吞吐、低延迟、长 context、多并发、成本。
+
+## M4 阅读入口
+
+- 先看 [[llm-inference-serving-project-map]]：理解 engine、routing、distributed runtime、Kubernetes control plane 和 GPU infrastructure 的职责边界。
+- 再看 [[llm-serving-engine-selection-map]]：先选择缺失的架构层，再选择项目或组合。
+- 需要下钻时进入 [[vllm]]、[[sglang]]、[[dynamo]]、[[llm-d]]、[[aibrix]] 及对应 Source 页面。
 
 ## 系统分层
 
