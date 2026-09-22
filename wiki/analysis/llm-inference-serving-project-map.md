@@ -25,7 +25,7 @@ related: ["[[dynamo]]", "[[vllm]]", "[[sglang]]", "[[llm-d]]", "[[llm-d-router]]
 
 官方架构/文档入口：[vLLM](https://docs.vllm.ai/en/latest/design/arch_overview/)、[SGLang](https://docs.sglang.ai/)、[Dynamo](https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture)、[llm-d](https://llm-d.ai/docs/dev/architecture)、[AIBrix](https://aibrix.readthedocs.io/latest/getting_started/overview.html)。
 
-这页是 M4 的 L1 职责地图，用 D1–D5 连接入口、选点、推理引擎、KV 状态和部署控制。项目内部的完整调用图见各 Source；组合选型见 [[llm-serving-engine-selection-map]]。实线箭头表示请求、数据或明确的控制动作，`- - signal - ->` 表示异步观察；控制器不串入逐请求执行链。
+这页是 M4 的 L1 职责地图，用 D1–D5 连接入口、选点、推理引擎、KV 状态和部署控制。项目内部的完整调用图见各 Source；组合选型见 [[llm-serving-engine-selection-map]]。实线箭头只表示同步请求或数据传输，带标签的虚线箭头 `- - signal / control - ->` 表示异步观察或控制；控制器不串入逐请求执行链。D5 单独采用故障场景的因果记法，见该节说明。
 
 ## D1 · 模块边界图
 
@@ -88,17 +88,19 @@ P/D 模式还需要 [[disaggregated-serving|KV-transfer 契约]]：请求身份�
 
 ```text
 Model / SLO / topology intent
-             │
+             ┆ desired state
              ▼
 CRD / Deployment / InferencePool / platform config
-             │ reconcile
+             ┆ watch / reconcile
              ▼
-Operator / Planner / Autoscaler ───────→ worker pools / engine pods
-             ▲                                      │
-             └ - metrics / queue / KV / readiness - ┘
+Operator / Planner / Autoscaler
+             ┆ config / replica targets
+             ▼
+worker pools / engine pods
+  - - metrics / queue / KV / readiness - -> Operator / Planner / Autoscaler
 ```
 
-这是后台收敛循环。[[dynamo]] 的 Planner 与 Kubernetes Operator 可以分别承担容量决策和部署执行；[[llm-d]] 用 InferencePool 表达后端集合，部署和扩缩由配套的 Kubernetes 组件承担；[[aibrix]] 的 controllers 管理模型/adapter、角色组和副本，AI Runtime 协助 pod 内的模型生命周期。它们的 API、运行时依赖和控制对象不同，接入时要确认谁拥有副本目标，避免两个控制器竞争写入。见 [[model-serving-operator]]、[[src-dynamo-architecture]]、[[src-llm-d-architecture]]、[[src-aibrix-architecture]]。
+这是后台收敛循环，竖向的 `┆` 与横向的 `- -` 都表示异步观察/控制，副本目标并非同步请求调用。[[dynamo]] 的 Planner 与 Kubernetes Operator 可以分别承担容量决策和部署执行；[[llm-d]] 用 InferencePool 表达后端集合，部署和扩缩由配套的 Kubernetes 组件承担；[[aibrix]] 的 controllers 管理模型/adapter、角色组和副本，AI Runtime 协助 pod 内的模型生命周期。它们的 API、运行时依赖和控制对象不同，接入时要确认谁拥有副本目标，避免两个控制器竞争写入。见 [[model-serving-operator]]、[[src-dynamo-architecture]]、[[src-llm-d-architecture]]、[[src-aibrix-architecture]]。
 
 > [!warning] Conflict
 > 2026-09-22 的 [llm-d dev 架构文档](https://llm-d.ai/docs/dev/architecture#autoscaling)已将 Workload Variant Autoscaler 标为 deprecated，并描述 EPP metrics → KEDA Prometheus scaler → HPA 的扩缩路径。[[src-llm-d-workload-variant-autoscaler-architecture]] 与 [[llm-d-workload-variant-autoscaler]] 保存的是较早的 WVA 设计；本页将其作为历史设计参考。Source 保留原分析时点，版本迁移与实际发布适配仍需单独核验。
@@ -121,6 +123,8 @@ local KV blocks - - publish events/index - -> routing locality signal
 直接 P→D 传输、分层 offload 和事件发布是不同接口，不要求同时启用。CPU/SSD/remote tier 是候选层级；可用介质、格式兼容性、缓存失效和回收策略取决于版本及 backend。见 [[kv-cache-offload]]、[[paged-attention]]、[[radix-attention]]。
 
 ## D5 · 故障与降级边界
+
+本节的 `failure → conditional response` 箭头表示“故障发生后，按契约采取条件响应”的因果场景，不表示同步调用链；其中涉及的发现、摘除和扩缩仍遵循异步控制语义。
 
 ```text
 EPP/router unavailable → fail open / fail close / reject according to gateway policy
@@ -192,7 +196,7 @@ LLM serving 的很多架构分歧都来自 KV cache：
 
 结论：KV cache 已经从“GPU 内部 buffer”变成 serving 系统的一等资源。后续的路由、扩缩、迁移、offload、GPU sharing 都需要知道 KV 的存在。
 
-### 2. 单机引擎和集群编排是两层问题
+### 2. 引擎执行和集群编排是两层问题
 
 [[vllm]] / [[sglang]] 负责引擎内执行，实例本身也可使用跨设备/节点并行；[[dynamo]] 组织实例间 runtime，[[llm-d]] / [[aibrix]] 则从 Kubernetes serving 与 fleet 管理边界补齐路由和控制能力。
 
