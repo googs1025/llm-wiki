@@ -14,11 +14,11 @@ related: ["[[dynamo]]", "[[vllm]]", "[[sglang]]", "[[llm-d]]", "[[llm-d-router]]
 
 | 项目 | 核验版本 | 当前稳定职责 | 本次处理 |
 |------|----------|--------------|----------|
-| [[vllm]] | `HEAD [d50723df04f7](https://github.com/vllm-project/vllm/commit/d50723df04f7)` | engine scheduler、model execution、local KV | 保留内部图，补外部边界 |
-| [[sglang]] | `HEAD [04c0913434c4](https://github.com/sgl-project/sglang/commit/04c0913434c4)` | engine/runtime、RadixCache、distributed/P-D integration | 保留内部图，补集成边界 |
-| [[dynamo]] | `HEAD [f36d2fab37fd](https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd)` | distributed request/control/state runtime、routing、KV transfer、planner | 更新平台层关系 |
-| [[llm-d]] | `HEAD [1e9a86a3a9da](https://github.com/llm-d/llm-d/commit/1e9a86a3a9da)` | Proxy/EPP、InferencePool、Model Server 与 routing signals | 更新 Gateway/EPP 热路径 |
-| [[aibrix]] | `HEAD [96056b47f158](https://github.com/vllm-project/aibrix/commit/96056b47f158)` | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration | 纳入核心比较 |
+| [[vllm]] | HEAD [`d50723df04f7`](https://github.com/vllm-project/vllm/commit/d50723df04f7) | engine scheduler、model execution、local KV | 保留内部图，补外部边界 |
+| [[sglang]] | HEAD [`04c0913434c4`](https://github.com/sgl-project/sglang/commit/04c0913434c4) | engine/runtime、RadixCache、distributed/P-D integration | 保留内部图，补集成边界 |
+| [[dynamo]] | HEAD [`f36d2fab37fd`](https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd) | distributed request/control/state runtime、routing、KV transfer、planner | 更新平台层关系 |
+| [[llm-d]] | HEAD [`1e9a86a3a9da`](https://github.com/llm-d/llm-d/commit/1e9a86a3a9da) | Proxy/EPP、InferencePool、Model Server 与 routing signals | 更新 Gateway/EPP 热路径 |
+| [[aibrix]] | HEAD [`96056b47f158`](https://github.com/vllm-project/aibrix/commit/96056b47f158) | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration | 纳入核心比较 |
 
 > [!note] 证据边界
 > 当前职责来自本次官方仓库与文档核验；内部调用路径仍以对应 Source 页面为准。
