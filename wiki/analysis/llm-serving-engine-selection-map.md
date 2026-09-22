@@ -32,7 +32,7 @@ related: ["[[llm-inference-serving-project-map]]", "[[vllm]]", "[[sglang]]", "[[
 | [[sglang]] | 前缀复用、结构化生成、speculative decoding 或其执行路径更匹配 workload | 团队更看重保守生态基线，或关键模型/硬件适配尚未验证 | 低到中；高级特性和 distributed/P-D backend 会增加调优面 | 对同一流量回放，核验 [[radix-attention]] 命中、尾延迟、正确性和故障恢复 |
 | [[dynamo]] | 多节点 runtime、P/D、KV transfer、KV-aware routing 需要统一协调 | 单机或普通副本服务已满足目标，暂不需要跨节点状态协同 | 高；引入 router、worker pools、KV/control state 与额外可观测性 | 做端到端 P/D/KV transfer 基准，并演练 worker、网络和 KV tier 故障 |
 | [[llm-d]] | K8s 上需要 Gateway API、EPP endpoint picking 和 InferencePool | 不使用 K8s/Gateway API，或普通 Service/LB 已足够 | 中到高；新增 CRD、Gateway/EPP、升级兼容与运维责任 | 核验目标 Gateway/InferencePool 版本、路由信号、扩缩交互和故障回退 |
-| [[aibrix]] | 需要 autoscaling、LoRA/adapter、model lifecycle 及更广的 K8s inference operations | 只缺路由，或团队不需要其 lifecycle/control-plane 能力 | 中到高；应按组件渐进采用，不必部署全部能力 | 逐项验证所选 controller/CRD 的边界、升级路径、状态恢复和与现有平台的重叠 |
+| [[aibrix]] | 需要 autoscaling、LoRA/adapter、model lifecycle 及更广的 K8s inference operations | 现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益 | 中到高；应按组件渐进采用，不必部署全部能力 | 逐项验证所选 controller/CRD 的边界、升级路径、状态恢复和与现有平台的重叠 |
 
 ## 先选层，再选项目
 
@@ -69,24 +69,23 @@ related: ["[[llm-inference-serving-project-map]]", "[[vllm]]", "[[sglang]]", "[[
 
 ## 决策流程图
 
-以下分支不是互斥答案：先选 engine，后续命中的层可以继续组合；任何一步收益不明确，都停在当前最小充分栈。
+以下分支不是互斥答案：先确认或选择 engine，后续命中的层可以继续组合；任何一步收益不明确，都停在当前最小充分栈。
 
 ```text
-需要模型执行引擎？
-├─ 是 → 按模型、硬件、scheduler/KV 行为和运维适配选择 vLLM / SGLang
-│        │
-│        ├─ 需要 multi-node runtime 或 P/D、KV transfer 协调？
-│        │  ├─ 是 → 评估 Dynamo 与 engine-native integrations
-│        │  └─ 否 → 保持当前 engine 层
-│        │
-│        ├─ K8s 上需要 Gateway / EPP / InferencePool routing？
-│        │  ├─ 是 → 评估 llm-d
-│        │  └─ 否 → 使用普通 Service / Gateway
-│        │
-│        └─ 需要 autoscaling、adapters、model lifecycle 和更广 K8s operations？
-│           ├─ 是 → 评估 AIBrix 的所需组件
-│           └─ 否 → 不增加 inference control plane
-└─ 否 → 先确认问题是否其实属于 routing、control plane 或 infrastructure
+engine 起点
+├─ 尚未选择 → 按模型、硬件、scheduler/KV 行为和运维适配选择 vLLM / SGLang
+└─ 已有 engine → 保留并核验它是否满足当前 workload
+          │
+          └─ 两条路径汇合 → 独立评估以下能力（可组合、无先后依赖）
+             ├─ 需要 multi-node runtime 或 P/D、KV transfer 协调？
+             │  ├─ 是 → 评估 Dynamo 与 engine-native integrations
+             │  └─ 否 → 不增加 distributed runtime
+             ├─ K8s 上需要 Gateway / EPP / InferencePool routing？
+             │  ├─ 是 → 评估 llm-d
+             │  └─ 否 → 使用普通 Service / Gateway
+             └─ 需要 autoscaling、adapters、model lifecycle 和更广 K8s operations？
+                ├─ 是 → 评估 AIBrix 的所需组件
+                └─ 否 → 不增加 inference control plane
 
 所有分支结束 → 保留满足需求的最小组合；不因“平台完整”而默认叠加全部项目
 ```
@@ -98,7 +97,7 @@ related: ["[[llm-inference-serving-project-map]]", "[[vllm]]", "[[sglang]]", "[[
 | 最小 engine service | [[vllm]] 或 [[sglang]] + 普通 Service/Gateway | 单集群、普通副本路由，重点是尽快提供稳定推理 API | 已确认需要 KV-aware endpoint picking、P/D 或复杂 lifecycle | 低；主要是 engine、镜像、模型存储、指标和入口配置 | 回放真实流量，核验容量、P99、滚动升级和实例故障回退 |
 | K8s 智能路由 | engine + [[llm-d]] Router/InferencePool | K8s/Gateway API 环境需要根据 KV、负载或模型信号选择 endpoint | 普通 Service/LB 已达标，或不能承担 CRD/Gateway/EPP 运维 | 中到高；增加 routing control/data path 与版本兼容面 | 核验路由增益、信号陈旧行为、扩缩期间 endpoint 一致性和 fallback |
 | distributed runtime | engine + [[dynamo]] | 多节点 P/D、KV transfer 或跨 worker 状态协调能带来可测收益 | 单机/普通副本已满足 SLO，网络或 KV transfer 成本抵消收益 | 高；增加 runtime 服务、worker pools、状态/KV tier 和故障域 | 比较共置与分离部署，测端到端 TTFT/TPOT/P99，并做网络、worker、KV 故障演练 |
-| inference operations platform | engine + 选定的 [[aibrix]] 组件 | 需要 autoscaling、LoRA/adapters、model lifecycle 或多角色 K8s 运维 | 只缺一个小能力，现有平台已覆盖，或职责重叠无法收敛 | 中到高；按所选 controller/CRD 计，不要求全量采用 | 建立组件级 PoC，核验 reconciliation、升级/回滚、状态恢复及与现有 autoscaler/Gateway 的所有权 |
+| inference operations platform | engine + 选定的 [[aibrix]] 组件 | 需要 autoscaling、LoRA/adapters、model lifecycle 或多角色 K8s 运维 | 现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益 | 中到高；按所选 controller/CRD 计，不要求全量采用 | 建立组件级 PoC，核验 reconciliation、升级/回滚、状态恢复及与现有 autoscaler/Gateway 的所有权 |
 
 ## 避坑条件
 
