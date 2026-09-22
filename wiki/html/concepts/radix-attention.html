@@ -107,7 +107,7 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 <tr>
 <td><strong>任意分叉点 split</strong></td>
 <td>✅ 树节点动态 split</td>
-<td>❌ 前缀复用按 block 边界对齐</td>
+<td>默认 full-block APC 按 block 边界对齐；可选更细的可配置 match unit</td>
 </tr>
 <tr>
 <td><strong>碎片</strong></td>
@@ -116,8 +116,8 @@ evict 时 pop <code>evictable_leaves</code> 堆顶 → free 该节点 <code>valu
 </tr>
 <tr>
 <td><strong>共享 system prompt</strong></td>
-<td>支持任意 token 边界的前缀分叉</td>
-<td>partial tail 在形成完整 block 前不可复用</td>
+<td>Radix 树支持任意 token 边界的前缀分叉</td>
+<td>默认 full-block APC 路径需等待完整 block；当前 vLLM 可通过 <code>cache_partial_block</code> / 可配置 <code>prefix_match_unit</code> 使用更细的 partial entry，受配置/backend/版本与 match-unit 约束</td>
 </tr>
 <tr>
 <td><strong>实现复杂度</strong></td>

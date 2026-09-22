@@ -34,7 +34,7 @@ PagedAttention:
 
 - **Block table**：每个请求有一个 `int32 list[blocks]`，attention kernel 用它把"逻辑 token 索引"翻译成"物理 KV 位置"
 - **Block 大小固定于当前配置**：逻辑/物理 block 使用同一 block size `B`；具体 `B` 依配置、attention backend 和版本而定
-- **Prefix sharing**：多个请求按 block 边界共享 system prompt，引用计数管理；partial tail 在形成完整 block 前不可复用，释放时只有 ref=0 才回收
+- **Prefix sharing**：传统/默认 full-block APC 路径按 block 边界共享 system prompt，partial tail 在形成完整 block 前不可复用。当前 vLLM 可通过 `cache_partial_block` 与可配置的 `prefix_match_unit` 启用更细粒度的 partial entry，但仍受配置、backend、版本及整除/match-unit 约束。Block table 的共享使用引用计数管理，释放时只有 ref=0 才回收。详见 [Prefix Caching](https://docs.vllm.ai/en/latest/design/prefix_caching/) 与 [BlockPool API](https://docs.vllm.ai/en/latest/api/vllm/v1/core/block_pool/)
 - **Copy-on-write**：beam search 等场景 fork 同一个 block table，写入时拷贝
 - **Swap to CPU**：内存紧张时把不活跃 block swap 到 CPU pinned memory
 
@@ -57,7 +57,7 @@ PagedAttention:
 ## 局限与 [[radix-attention]] 的对比
 
 - **Block 边界刚性**：前缀共享按当前 block size `B` 对齐，不能在 block 内任意分叉
-- **Partial tail 暂不可共享**：末尾未满的 block 在形成完整 block 前无法被前缀复用
+- **默认 full-block APC 的 partial tail 限制**：在传统/默认路径中，末尾未满的 block 在形成完整 block 前无法被前缀复用；启用 `cache_partial_block` 并配置 `prefix_match_unit` 后可以更细粒度匹配，实际边界依配置/backend/版本与整除约束而定
 - **内部碎片依负载而定**：程度取决于 block size、请求长度分布与实现配置
 
 [[radix-attention]]（[[sglang]] 提出）通过 token 级 radix 树 + flat KV pool 解决这些限制。

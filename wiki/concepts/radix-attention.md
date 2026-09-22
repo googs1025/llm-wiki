@@ -90,9 +90,9 @@ evict 时 pop `evictable_leaves` 堆顶 → free 该节点 `value` 指向的 KV 
 |------|----------------|----------------|
 | **复用粒度** | token 级（树节点变长） | 配置内固定大小的 block（大小依配置/backend/版本） |
 | **索引结构** | Radix 树 + 两级 pool | Block table（数组） |
-| **任意分叉点 split** | ✅ 树节点动态 split | ❌ 前缀复用按 block 边界对齐 |
+| **任意分叉点 split** | ✅ 树节点动态 split | 默认 full-block APC 按 block 边界对齐；可选更细的可配置 match unit |
 | **碎片** | 区间连续 | partial block 可有未用槽，程度依 block size 与负载而定 |
-| **共享 system prompt** | 支持任意 token 边界的前缀分叉 | partial tail 在形成完整 block 前不可复用 |
+| **共享 system prompt** | Radix 树支持任意 token 边界的前缀分叉 | 默认 full-block APC 路径需等待完整 block；当前 vLLM 可通过 `cache_partial_block` / 可配置 `prefix_match_unit` 使用更细的 partial entry，受配置/backend/版本与 match-unit 约束 |
 | **实现复杂度** | 较高（树平衡 + lock_ref + evict） | 较低（block table 哈希） |
 | **历史论文工作负载** | LLaMA-7B tree-of-thought / few-shot 等工作负载报告 1.6–6.4× over vLLM，非当前通用结论 | 论文当时的对照实现 |
 
