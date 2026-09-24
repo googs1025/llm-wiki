@@ -1,14 +1,20 @@
 ---
 title: controller-runtime
 tags: [entity, kubernetes, controller, operator]
-date: 2026-06-14
+date: 2026-09-22
 sources: [controller-runtime-architecture-analysis.md]
-related: ["[[controller-runtime]]", "[[kubernetes]]", "[[model-serving-operator]]", "[[declarative-agent-management]]"]
+related: ["[[controller-runtime]]", "[[kubernetes]]", "[[model-serving-operator]]", "[[declarative-agent-management]]", "[[k8s-core-controller-map]]", "[[kubebuilder]]", "[[controller-tools]]"]
 ---
 
 # controller-runtime
 
 controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。 详见 [[src-controller-runtime-architecture]]。
+
+证据说明：本次官方默认分支快照为 [`6ab2188a1fb1`](https://github.com/kubernetes-sigs/controller-runtime/commit/6ab2188a1fb14a8c4837b418bc0a20049682cde4)，该 commit 不代表 release。[[src-controller-runtime-architecture]] 保留 2026-06-14 的 raw-backed Source 快照；当前跨项目证据与职责图见 [[k8s-core-controller-map]]。
+
+## 在 M5-A Controller 地图中的位置
+
+controller-runtime 在 client-go 基础上组合 Manager、Cache、Client、Controller/Reconciler 与 Webhook，并提供 envtest 测试支持，承担运行时框架职责。[[kubebuilder]] 负责作者工作流与项目脚手架，[[controller-tools]] 负责 CRD 等资产生成；controller-runtime 本身不承担这两类生成工作。三者的组合关系与控制循环见 [[k8s-core-controller-map]]。
 
 ## 架构边界
 
