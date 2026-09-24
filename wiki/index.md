@@ -20,9 +20,9 @@ date: 2026-05-12
 - [[prometheus-adapter]] — Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。
 - [[lws]] — LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。
 - [[jobset]] — JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。
-- [[controller-runtime]] — controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。
-- [[kubebuilder]] — Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。
-- [[controller-tools]] — controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。
+- [[controller-runtime]] — Kubernetes controller 运行时框架，组合 Manager、cache、client、reconcile、webhook，并提供 envtest 测试支持。
+- [[kubebuilder]] — Kubernetes API/controller 作者工作流与脚手架，组织项目布局、生成流程和运行时组件。
+- [[controller-tools]] — marker/type 解析与生成工具，产出 CRD、RBAC、webhook manifests、deepcopy/object 与 applyconfiguration 等资产。
 - [[cluster-api]] — Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。
 - [[external-dns]] — ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。
 - [[secrets-store-csi-driver]] — Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。
@@ -341,7 +341,8 @@ date: 2026-05-12
 - [[github-stars-backlog-implementation-map]] — GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
 - [[k8s-gpu-device-stack]] — Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）
-- [[k8s-core-controller-map]] — Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）
+- [[k8s-core-controller-map]] — M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。
+- M5-A 阅读路径：[[k8s-core-controller-map]] → [[controller-runtime]] → [[kubebuilder]] → [[controller-tools]]，串联运行时框架、作者工作流与生成工具。
 - [[llm-d-kubernetes-sigs-candidate-map]] — llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）
 - [[openkruise-project-candidate-map]] — OpenKruise 项目候选地图（kruise / rollouts / kruise-game / agents / observability / controller isolation）
 

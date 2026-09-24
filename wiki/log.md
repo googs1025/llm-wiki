@@ -449,3 +449,10 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 
 - 基于本地 `/Users/zhenyu.jiang/vllm` HEAD `dc36fcce90` 与 `/Users/zhenyu.jiang/sglang` HEAD `2fd835b9c1`，提取 Engine/Scheduler/Batch/KV/Attention/Speculative/P-D 关键调用路径。
 - 在两份架构源摘要中增加代码入口、状态对象、关键函数、生命周期流程和 vLLM/SGLang 实现对比。
+
+## [2026-09-24] query | M5-A Kubernetes Controller 工具链地图
+
+- 在 [[k8s-core-controller-map]] 记录当前官方默认分支证据：controller-runtime `6ab2188a1fb1`、Kubebuilder `5f31d1f3c075`、controller-tools `030a93937cbb`；区分 commit 快照与 release。
+- 区分 build-time 脚手架/marker 生成与 runtime 控制循环，补齐 D1 职责图、D3 Reconcile、D4 状态与一致性、D5 自动恢复与人工修复边界。
+- 更新 [[controller-runtime]]、[[kubebuilder]]、[[controller-tools]] 的证据说明、职责定位与双向关联；保留既有 raw、Source 和原始 ASCII 图不变。
+- 更新 Index 工具链描述和 M5-A 阅读路径，通过构建同步 HTML 页面与 graph 反向链接。

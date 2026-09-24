@@ -232,11 +232,11 @@
         "crd",
         "project-map"
       ],
-      "date": "2026-06-13",
-      "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
-      "degree": 50,
-      "inbound": 9,
-      "outbound": 46
+      "date": "2026-09-22",
+      "description": "M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。",
+      "degree": 53,
+      "inbound": 12,
+      "outbound": 49
     },
     {
       "id": "kubernetes-dra-design-deep-dive",
@@ -1610,11 +1610,11 @@
         "controller",
         "operator"
       ],
-      "date": "2026-06-14",
-      "description": "controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。",
-      "degree": 8,
-      "inbound": 5,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "Kubernetes controller 运行时框架，组合 Manager、cache、client、reconcile、webhook，并提供 envtest 测试支持。",
+      "degree": 10,
+      "inbound": 7,
+      "outbound": 7
     },
     {
       "id": "controller-tools",
@@ -1628,11 +1628,11 @@
         "crd",
         "codegen"
       ],
-      "date": "2026-06-14",
-      "description": "controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。",
-      "degree": 6,
-      "inbound": 3,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "marker/type 解析与生成工具，产出 CRD、RBAC、webhook manifests、deepcopy/object 与 applyconfiguration 等资产。",
+      "degree": 8,
+      "inbound": 5,
+      "outbound": 7
     },
     {
       "id": "controllermesh",
@@ -2270,11 +2270,11 @@
         "operator",
         "crd"
       ],
-      "date": "2026-06-14",
-      "description": "Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。",
-      "degree": 7,
-      "inbound": 4,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "Kubernetes API/controller 作者工作流与脚手架，组织项目布局、生成流程和运行时组件。",
+      "degree": 9,
+      "inbound": 6,
+      "outbound": 7
     },
     {
       "id": "kubectl-ai",
@@ -3885,8 +3885,8 @@
       ],
       "date": "2026-06-14",
       "description": "controller-runtime 架构（P0，Operator SDK：controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -3903,8 +3903,8 @@
       ],
       "date": "2026-06-14",
       "description": "controller-tools 架构（P0，API 生成工具：controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -4477,8 +4477,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubebuilder 架构（P0，CRD / controller 脚手架：Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -7392,7 +7392,22 @@
     },
     {
       "source": "controller-runtime",
+      "target": "controller-tools",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "kubebuilder",
       "kind": "related"
     },
     {
@@ -7412,7 +7427,22 @@
     },
     {
       "source": "controller-tools",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "kubebuilder",
       "kind": "related"
     },
     {
@@ -8718,12 +8748,12 @@
     {
       "source": "k8s-core-controller-map",
       "target": "controller-runtime",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
       "target": "controller-tools",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
@@ -8818,7 +8848,7 @@
     {
       "source": "k8s-core-controller-map",
       "target": "kubebuilder",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
@@ -8907,7 +8937,22 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "src-controller-runtime-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "src-controller-tools-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "src-k8s-core-controllers-stars",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "src-kubebuilder-architecture",
       "kind": "wikilink"
     },
     {
@@ -9537,7 +9582,22 @@
     },
     {
       "source": "kubebuilder",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "controller-tools",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "k8s-core-controller-map",
       "kind": "related"
     },
     {
