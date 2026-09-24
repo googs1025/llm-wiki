@@ -27,15 +27,15 @@ related: ["[[kubernetes]]", "[[gateway-api]]", "[[gitops]]", "[[ai-ops]]", "[[de
 
 ```text
 BUILD-TIME（作者与生成链）
-[[kubebuilder]] CLI ── scaffold ──> Go API types / markers / project layout
+Kubebuilder CLI ── scaffold ──> Go API types / markers / project layout
                                    controller / webhook / test 骨架
-Go API types / markers ── parse ──> [[controller-tools]] / controller-gen
+Go API types / markers ── parse ──> controller-tools / controller-gen
 controller-gen ── generate ──> CRD / RBAC / webhook manifests
                ── generate ──> deepcopy（object generator）/ applyconfiguration
 作者补齐业务逻辑，构建 controller 镜像并安装生成的 manifests
 
 RUNTIME（控制器执行链）
-controller 二进制使用 [[controller-runtime]] 的组合层
+controller 二进制使用 controller-runtime 的组合层
   Manager：管理 Cache / Client / Controller-Reconciler / Webhook 生命周期
   Scheme：Go types 与 GVK 映射；供 Client 等组件使用
   client-go 基座：REST client / watch / informer / cache / workqueue
