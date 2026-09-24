@@ -22,7 +22,103 @@ related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes
 
 官方依据：[Kueue Concepts](https://kueue.sigs.k8s.io/docs/concepts/) 与 [当前 v1beta2 API 源码](https://github.com/kubernetes-sigs/kueue/tree/2a766717037ac8c8ca8ee03539e7504db2a56008/apis/kueue/v1beta2)、[JobSet Concepts](https://jobset.sigs.k8s.io/docs/concepts/) 与 [v1alpha2 API](https://jobset.sigs.k8s.io/docs/reference/jobset.v1alpha2/)、[LWS Concepts](https://lws.sigs.k8s.io/docs/concepts/)、[Scheduler Plugins 文档](https://scheduler-plugins.sigs.k8s.io/docs/)、[Karpenter NodePools](https://karpenter.sh/docs/concepts/nodepools/) 与 [NodeClaims](https://karpenter.sh/docs/concepts/nodeclaims/)。安装时仍需核对所选 release 的 CRD、feature gates 和 Kubernetes 兼容矩阵。
 
-这页专门讲 `sig-scheduling` 里最重要的一条设计线：从单 Pod 调度，走向 Workload / PodGroup 作为调度单位。核心 KEP 是 `4671-gang-scheduling`，后续由 `5710-workload-aware-preemption`、`6012-composite-podgroup-api`、`6089-was-controller-apis` 和 `5732-topology-aware-workload-scheduling` 继续展开。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
+## D1 · Workload / Admission / Placement / Capacity
+
+```text
+WORKLOAD EXPRESSION
+  JobSet / LeaderWorkerSet (LWS) / DisaggregatedSet (DS)
+    - - supported integration / PodSets - -> ADMISSION AND QUOTA
+
+ADMISSION AND QUOTA
+  Kueue: Workload / LocalQueue / ClusterQueue
+         ResourceFlavor / Cohort / AdmissionCheck / Topology
+    - - admitted: unsuspend / remove scheduling gates - -> POD PLACEMENT
+
+POD PLACEMENT
+  kube-scheduler framework + configured scheduler-plugins
+    ── select feasible Node / bind Pod ──> existing Node
+    - - unschedulable Pod feedback - -> NODE CAPACITY
+
+NODE CAPACITY
+  Karpenter: Pod requirements + NodePool + provider-specific NodeClass
+    ── create capacity request ──> NodeClaim
+    ── launch / register / initialize ──> Node
+  Node - - capacity / readiness events: requeue - -> POD PLACEMENT
+```
+
+图例：实线 `── label ──>` 表示顺序控制动作或同步 API 操作，不承诺跨控制器原子完成；虚线 `- - label - ->` 表示带条件的集成、事件、准入反馈或重试。分区表示职责，既有 Node 能放下 Pod 时无需进入扩容路径。
+
+[[jobset]]、[[lws]] 及 LWS 仓库中的 DisaggregatedSet 表达组、角色、子资源与生命周期。[[kueue]] 决定 Workload 何时取得配额和准入，选择 flavor、必要时约束拓扑域；它不负责最终 Node 选择或 Pod binding。kube-scheduler 完成 placement/binding，[[scheduler-plugins]] 扩展其 framework 插件能力。[[karpenter]] 负责节点容量及生命周期，不绑定 Pod。图中的 integration 是条件关系：只有已启用且受当前版本支持的工作负载集成才走 Kueue 路径。
+
+## D2 · Admission 与 Scheduling 路径
+
+```text
+Create JobSet / LWS / DS (roles -> child LWS)
+  - - supported integration / Pod templates - -> Kueue Workload / PodSets
+Workload ── resolve queueName ──> LocalQueue ── resolve reference ──> ClusterQueue
+ClusterQueue + optional Cohort ── evaluate ──> quota / ResourceFlavor
+  + configured AdmissionChecks + optional Topology constraints
+  ── record reservation / check state ──> Workload admission status
+  - - admitted feedback - -> integration controller
+integration controller ── unsuspend workload OR remove Pod scheduling gates ──> Pods
+Pods - - watch / enqueue - -> kube-scheduler
+  QueueSort ──> PreFilter ──> Filter ──> PreScore / Score ──> Reserve ──> Permit
+  Permit approved ──> PreBind ──> Bind ──> PostBind
+```
+
+这是成功路径，省略 PreEnqueue、PostFilter 等分支；完整 cycle 与失败回退见 [[kubernetes-scheduler-core-design]]。LocalQueue 引用 ClusterQueue；Cohort 是配额共享关系，不是所有任务必经的另一条队列。QuotaReserved 与 Admitted 也不是同一个完成条件：已配置的 AdmissionCheck 必须满足要求，启用 topology-aware scheduling 时还要满足对应容量/拓扑条件。准入成功不保证所有 Pod 已绑定或业务已就绪，依据见 [Kueue Concepts](https://kueue.sigs.k8s.io/docs/concepts/)。
+
+集成差异决定“允许开始”的具体操作：JobSet 集成通过工作负载 suspend 状态控制启动；[LWS 集成](https://kueue.sigs.k8s.io/docs/tasks/run/leaderworkerset/) 基于 Plain Pod Group，以每个 LWS group 为准入单元，Pod 可以先存在并由 scheduling gate 暂停调度。DS 先编排子 LWS；本图不据此推定存在 DS 整体原子准入，仍需验证角色标签传递、子 LWS 集成和所用版本。不能把三种 API 都画成同一个 owner controller 创建全部 Workload 后统一 unsuspend。
+
+## D3 · Capacity Feedback
+
+```text
+Pod: PodScheduled=False / Unschedulable
+  - - observed condition / Pod event - -> Karpenter provisioning controller
+Karpenter ── combine constraints ──> pending Pod requirements
+                                    + NodePool
+                                    + provider-specific NodeClass
+  ── create immutable capacity request ──> NodeClaim
+NodeClaim lifecycle (controller + provider + kubelet)
+  ── launch instance ──> register Node ──> initialize resources ──> Node ready
+Node - - watched capacity / readiness changes - -> scheduler queue / retry
+kube-scheduler ── re-evaluate feasible Nodes / bind ──> Pod placement
+```
+
+NodeClaim 是容量请求；不可变的是容量规格，不是随阶段推进的 status。检查 `Launched`、`Registered`、`Initialized` 等条件，可以区分云侧启动、Node 注册和资源初始化问题。Node Ready 也不替代 scheduler 的约束检查；即使扩容成功，Pod 仍可能因 affinity、taint 或拓扑约束无法放置。Karpenter 观察 Pod/NodePool/NodeClass 并重新计算需求，事件是触发重新评估的反馈，不是 scheduler 向它发送的同步“创建指定节点”请求。参见 [NodeClaims](https://karpenter.sh/docs/concepts/nodeclaims/)。
+
+Disruption 是独立于扩容的控制路径：drift/consolidation 受相应 NodePool disruption budgets 和驱逐约束影响，必要时先 pre-spin replacement，再 drain/terminate。Expiration 属于 forceful 路径，不受 NodePool disruption budgets 限速，也不保证先等待替代节点就绪；PDB、`do-not-disrupt` 与 `terminationGracePeriod` 对排空和强制终止有不同作用，不能统一理解成“有预算就可安全回收”。参见 [Karpenter Disruption](https://karpenter.sh/docs/concepts/disruption/)。
+
+## D4 · Workload 生命周期
+
+| API / 所有权单位 | 子资源 / 关键状态 | 成功、失败与重启语义 | 扩缩 / 发布边界 | API / 快照注意事项 |
+|---|---|---|---|---|
+| [[jobset]]：一组 ReplicatedJobs | 子 Job、Pod；DependsOn、coordinator；可配置共享 PVC 与 retention | success/failure policy 汇总子 Job 结果；按规则与 maxRestarts 执行 restart strategy，不等于无限重试 | ReplicatedJob 的副本、依赖与 JobSet 重启由 JobSet controller 管理；不是 serving group 的滚动发布模型 | `jobset.x-k8s.io/v1alpha2`；字段可用性以表首 commit 和部署 release 为准 |
+| [[lws]] / LeaderWorkerSet：一个 replica 是 leader/worker Pod 组 | controller 管理 StatefulSet/Pod 组与服务发现，观察副本 readiness | 按配置的 group restart policy 恢复受影响组；持续 serving 的 Ready 不等于 batch Completed | replicas 按组扩缩，LWS controller 负责组发布、placement/subgroup 约束 | `leaderworkerset.x-k8s.io/v1`；Kueue group admission 不提供跨所有 replicas 的原子启动 |
+| DisaggregatedSet：多角色 serving topology / slices | 角色映射到子 LWS；跨角色 revision、readiness、drain 状态 | 组内失败由子 LWS 策略处理，DS 协调角色发布与 drain；不套用 JobSet 完成策略 | 支持角色维度与 slice 维度扩缩，由 DS 协调跨角色 rollout | `disaggregatedset.x-k8s.io/v1`；当前能力不能回写成 2026-06-14 Source 已覆盖的结论 |
+| [[kueue]] Workload：一次准入所需 PodSets | queue 引用、QuotaReserved/Admitted、AdmissionCheck 状态、eviction/requeue；业务子资源仍由原 controller 管理 | 准入、驱逐与重新排队按策略推进，业务成功/失败由集成反映；释放配额不等于重启业务 | PodSet 变化、扩缩和重新准入取决于具体 integration；Kueue 不接管 rollout | 当前 `kueue.x-k8s.io/v1beta2`；不要与 Kubernetes KEP 中的 Workload/PodGroup 混为一种 API |
+
+生命周期依据：[JobSet v1alpha2 API](https://jobset.sigs.k8s.io/docs/reference/jobset.v1alpha2/)、[JobSet 当前 API 定义](https://github.com/kubernetes-sigs/jobset/blob/03f9dccef945c12e6ea9a35c524b928b9599cd87/api/jobset/v1alpha2/jobset_types.go)、[LWS / DisaggregatedSet Concepts](https://lws.sigs.k8s.io/docs/concepts/)。
+
+## D5 · 失败边界
+
+| 失败点 / 直接影响 | 自动重试 / 控制器恢复边界 | 需要人工处理的情况 |
+|---|---|---|
+| LocalQueue / ClusterQueue 缺失或 inactive：Workload 无法正常准入 | 队列恢复、相关依赖就绪后，Kueue 可重新评估；重试不会自动创建租户所需配置 | 修正 queue-name、引用、stop policy、权限或缺失依赖，检查 queue conditions |
+| quota / flavor 不足：排队或不能完成 reservation | 配额释放、共享配额可用后重试；borrowing/preemption 只按已配置策略执行 | 调整配额、flavor 约束、共享/抢占策略或业务规模；加 Node 不会自动增加配额 |
+| AdmissionCheck / 外部 provisioning 卡住：有配额仍未 Admitted | 对应 check controller 恢复后更新状态；Retry/Rejected 的处理依集成和策略 | 修复 check controller、外部凭据/服务、provisioning 配置；Kueue 不能保证外部供应成功 |
+| topology 无解：Kueue TAS 无可用域或后续 placement 仍不满足 | 域内容量或标签变化后重算；不自动放宽 required topology | 校验 Topology/ResourceFlavor、PodSet 分组、节点标签与硬约束，避免假设任意新增 Node 都有效 |
+| scheduler Filter 无 feasible Node：Pod 未绑定 | 相关事件触发 requeue；PostFilter/preemption 仅在策略允许且能产生可行结果时有帮助 | 修复互斥 affinity/taint/资源条件，或增加满足约束的容量；抢占不能解决所有不可行条件 |
+| NodeClaim launch / register / initialize 失败：容量请求未变成可用 Node | Karpenter/provider 按错误和超时路径重试或清理，仍需观察阶段 conditions；不承诺每种错误无限自愈 | 分别检查云配额/可用性/权限、启动与注册配置、网络与初始化资源；修复 NodeClass / NodePool |
+| JobSet child Job failure：JobSet 可能重启或终止失败 | 按 failure rules、restart strategy、maxRestarts 恢复；达到终止条件后不会靠排队重试继续运行 | 修复镜像/应用/数据或依赖问题，评估共享 PVC retention 后重新提交/恢复任务 |
+| LWS group / DS role-slice 失败：副本不可用或 rollout/drain 停滞 | LWS 按组策略恢复，DS 按角色 readiness 和发布策略继续协调；不保证跨角色业务状态一致 | 检查 restart policy、readiness、角色依赖和 drain 协议，修复持续故障或不兼容版本 |
+| PDB / do-not-disrupt / termination 约束冲突：节点排空停滞或被强制终止 | 自愿 disruption 等待条件允许；配置的 NodeClaim terminationGracePeriod 到期可强制删除剩余 Pod | 核对预算、保护注解、checkpoint/drain 所需时间；排空完成与保住业务进度是不同结果 |
+
+排障时先定位停在“准入、放置、节点容量、业务生命周期”的哪一层，再看该层的 status/conditions 和 events。上述自动路径依赖有效配置及可恢复的外部条件；细化证据见 [Kueue 队列排障](https://kueue.sigs.k8s.io/docs/tasks/troubleshooting/troubleshooting_queues/)、[[kubernetes-scheduler-core-design]] 与 D3/D4 的官方文档。
+
+## KEP 背景与演进（历史设计）
+
+下面保留 `sig-scheduling` 的设计线：从单 Pod 调度，走向 Workload / PodGroup 作为调度单位。核心 KEP 是 `4671-gang-scheduling`，后续由 `5710-workload-aware-preemption`、`6012-composite-podgroup-api`、`6089-was-controller-apis` 和 `5732-topology-aware-workload-scheduling` 继续展开。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]；这里的设计与状态表沿用历史笔记，不作为当前发布状态的重新核验。
 
 ## 一句话定位
 
@@ -41,19 +137,7 @@ related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes
 
 ## 核心对象
 
-```text
-True workload controller
-  |
-  +-- Workload
-  |     static scheduling policy / template
-  |
-  +-- PodGroup
-  |     runtime scheduling unit
-  |     minCount / priority / status / conditions
-  |
-  +-- Pods
-        spec.schedulingGroup -> PodGroup
-```
+在这组 KEP 的对象模型中，业务 workload controller 创建或映射三类对象：`Workload` 保存静态调度策略/模板；`PodGroup` 承载运行时调度单元及 `minCount`、priority、status/conditions；Pod 通过 `spec.schedulingGroup` 引用所属 PodGroup。这里的对象层级不同于 D1 中 Kueue 的准入 API。
 
 `Workload` 是策略模板，表达这个 workload 的调度层级和规则。它应该相对稳定，适合由 Job、JobSet、LWS、TrainJob、MPIJob 等 controller 创建或映射。
 
@@ -73,16 +157,10 @@ Pod 只引用自己所属的 `PodGroup`。scheduler 看到 Pod 后，通过这�
 
 Beta 方向引入 `Workload Scheduling Cycle`：
 
-```text
-activeQ pops PodGroup
-  |
-  +-- take one cluster snapshot
-  +-- collect pending pods in the group
-  +-- run group-level placement algorithm
-  +-- if minCount fits: enter binding path
-  +-- if preemption needed: trigger group-aware preemption and retry
-  +-- if still not fit: mark PodGroup unschedulable/backoff
-```
+1. 从 activeQ 取出 PodGroup，获取一次 cluster snapshot。
+2. 收集该组 pending Pods，执行 group-level placement。
+3. 满足 minCount 时进入 binding 路径。
+4. 需要抢占时执行 group-aware preemption 并重试；仍无法放置时标记 PodGroup unschedulable/backoff。
 
 这个变化很关键：scheduler 不再把 group 成员当作独立 Pod 分散处理，而是在一次调度循环里看完整组的可行性。
 
@@ -150,8 +228,8 @@ Gang scheduling 只解决“是否整组一起调度”，还没有解决“这�
 
 - [[kueue]] 更偏 admission control / quota / queueing。Workload API 让底层 scheduler 有机会原生理解 gang 语义。
 - [[scheduler-plugins]] 里的 coscheduling 是历史上 out-of-tree 的对照实现；KEP 线是在把相关能力标准化。
-- [[jobset]]、[[lws]] 是最直接的用户侧 workload API 候选。
-- [[karpenter]] / Cluster Autoscaler 后续需要理解 PodGroup，否则可能错误判断加节点是否有用。
+- [[jobset]] 管理一组 Job；[[lws]] 管理 leader/worker 组，其当前 DisaggregatedSet 进一步组合多角色子 LWS。业务 API 的生命周期编排与 KEP 的 scheduler-facing 对象需要通过具体集成衔接。
+- [[karpenter]] / Cluster Autoscaler 的现有容量反馈不能直接等同于理解原生 PodGroup 全部约束；历史 KEP 所指的 group-aware 扩容协同仍须按当前版本和集成另行核验。
 
 ## 阅读顺序
 
