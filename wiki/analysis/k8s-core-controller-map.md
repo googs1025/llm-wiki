@@ -39,7 +39,7 @@ controller 二进制使用 [[controller-runtime]] 的组合层
   Manager：管理 Cache / Client / Controller-Reconciler / Webhook 生命周期
   Scheme：Go types 与 GVK 映射；供 Client 等组件使用
   client-go 基座：REST client / watch / informer / cache / workqueue
-  Client ── API read/write ──> Kubernetes API server
+  Client ── write / uncached read ──> Kubernetes API server
   Kubernetes API server ── admission request ──> Webhook（同步响应）
 
 测试支持（不属于生产 reconcile 路径）：controller-runtime / envtest
