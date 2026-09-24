@@ -1,14 +1,18 @@
 ---
 title: KV Cache Offload（KV 多级缓存）
 tags: [concept, ai-infra, kv-cache, llm-inference, memory-hierarchy]
-date: 2026-05-16
+date: 2026-09-22
 sources: [dynamo-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md]
-related: [[dynamo]], [[llm-d-kv-cache]], [[llm-d-router]], [[paged-attention]], [[radix-attention]], [[disaggregated-serving]], [[vllm]], [[sglang]], [[llm-inference]], [[inference-routing]]
+related: ['[[dynamo]]', '[[llm-d-kv-cache]]', '[[llm-d-router]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[vllm]]', '[[sglang]]', '[[llm-inference]]', '[[inference-routing]]']
 ---
 
 # KV Cache Offload（KV 多级缓存）
 
 把 LLM KV 缓存按访问频率分布在 **GPU 显存 → CPU pinned → 本地 NVMe → 远端对象存储** 多级存储层上，自动升降级，扩展 effective context length 超出单 GPU 显存上限的方法论。
+
+## 在 M4 中的位置
+
+KV offload 是 [[llm-inference-serving-project-map]] 中 D4 KV 生命周期的一条分支。Engine 管理本地 KV 布局；索引、感知 KV locality 的路由、跨 worker 传输和远端存储层可由外围 serving 层提供。评估时要明确这些能力分别由哪个组件承担。
 
 ## 为什么需要多级
 

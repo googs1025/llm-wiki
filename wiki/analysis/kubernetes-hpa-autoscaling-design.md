@@ -1,9 +1,9 @@
 ---
 title: Kubernetes HPA Autoscaling Design
 tags: [analysis, kubernetes, kep, sig-autoscaling, hpa, metrics, autoscaling, design-deep-dive]
-date: 2026-07-07
+date: 2026-09-22
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/4951-configurable-hpa-tolerance/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/2021-scale-from-zero/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5679-external-metric-fallback/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/1610-container-resource-autoscaling/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5325-hpa-pod-selection-accuracy/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-autoscaling/5030-attach-limit-autoscaler/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[metrics-server]], [[prometheus-adapter]], [[karpenter]], [[kubernetes-workload-automation]], [[llm-d-workload-variant-autoscaler]]
+related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-implementation-matrix]]", "[[metrics-server]]", "[[prometheus-adapter]]", "[[karpenter]]", "[[kubernetes-workload-automation]]", "[[llm-d-workload-variant-autoscaler]]"]
 ---
 
 # Kubernetes HPA Autoscaling Design
@@ -153,7 +153,7 @@ scale subresource update
 
 - [[metrics-server]] 提供 resource/container resource metrics，是 HPA resource path 的基础。
 - [[prometheus-adapter]] 提供 custom/external metrics，是 scale-from-zero、external fallback、business metric scaling 的关键路径。
-- [[llm-d-workload-variant-autoscaler]] 这类项目如果要和原生 HPA/KEDA 对接，需要特别关注 external metrics fallback 和 selection accuracy。
+- [[llm-d-workload-variant-autoscaler]] 是 deprecated 的历史设计快照，只用于迁移/设计研究，不再作为当前集成建议。llm-d 新部署使用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；[[metrics-server]] / [[prometheus-adapter]] 仍是指标管道参考，不等于采用 WVA。
 
 ## 阅读顺序
 

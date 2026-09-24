@@ -3,12 +3,15 @@ title: llm-d 架构与设计思路分析
 tags: [architecture, llm-serving, kubernetes, inference, ai-infra]
 date: 2026-06-12
 sources: [llm-d-architecture-analysis.md]
-related: [[[llm-serving-engine-selection-map]], [[llm-inference-serving-project-map]], [[vllm]], [[kubernetes]], [[kv-cache-offload]], [[disaggregated-serving]], [[dynamo]]]
+related: ["[[llm-serving-engine-selection-map]]", "[[llm-inference-serving-project-map]]", "[[vllm]]", "[[kubernetes]]", "[[kv-cache-offload]]", "[[disaggregated-serving]]", "[[dynamo]]"]
 ---
 
 # llm-d 架构与设计思路分析
 
 `llm-d/llm-d` 是 Kubernetes 上的分布式 LLM serving stack 总入口。它本身更像 docs/guides/recipes/architecture hub，把 `llm-d-router`、Gateway API Inference Extension 的 `InferencePool`、vLLM/SGLang model server、KV cache management、P/D disaggregation、latency predictor、batch gateway、autoscaling 等组件组织成 well-lit paths。
+
+> [!warning] Conflict
+> 截至 2026-09-22，llm-d 当前 [dev 架构文档](https://llm-d.ai/docs/dev/architecture#autoscaling)已将 Workload Variant Autoscaler 标为 deprecated，并描述 EPP metrics → KEDA Prometheus scaler → HPA 的扩缩路径。本页保留其所记录版本的历史设计与实现；当前采用前需重新核验。参见 [[llm-inference-serving-project-map]]。
 
 ## 核心架构图
 

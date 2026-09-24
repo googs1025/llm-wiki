@@ -1,9 +1,9 @@
 ---
 title: AIBrix
 tags: [entity, llm-serving, kubernetes, vllm, ai-infra, kv-cache]
-date: 2026-09-13
+date: 2026-09-22
 sources: [k8s-serving-stack-comparison-2026-09-13.md]
-related: [[llm-inference]], [[inference-routing]], [[model-serving-operator]], [[vllm]], [[dynamo]], [[llm-d]], [[kv-cache-offload]]
+related: ['[[llm-inference]]', '[[inference-routing]]', '[[model-serving-operator]]', '[[vllm]]', '[[dynamo]]', '[[llm-d]]', '[[kv-cache-offload]]']
 ---
 
 # AIBrix
@@ -23,3 +23,7 @@ AIBrix 更贴近 vLLM 生态和企业控制面，不是新的推理 engine，也
 适合已有 vLLM 技术栈、希望逐步加入 LoRA、KV、Gateway、异构 GPU 和企业运维能力的团队。需要 Gateway API/InferencePool 标准化时比较 [[llm-d]]；需要完整 P/D/KV runtime 时比较 [[dynamo]]。
 
 详见 [[src-aibrix-architecture]] 与 [[src-k8s-serving-stack-comparison]]。
+
+## 在 M4 模块地图中的位置
+
+AIBrix 位于 Kubernetes 推理控制面层，覆盖 routing、autoscaling、模型与 adapter 生命周期、runtime，以及 KV 和多角色编排。职责边界见 [[llm-inference-serving-project-map]]，与 engine 及其他 serving 层的组合选择见 [[llm-serving-engine-selection-map]]。

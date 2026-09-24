@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-09</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,43 +23,148 @@
 
   <header class="page-header">
     <h1>LLM Inference / Serving 项目地图</h1>
-    <p class="page-meta">2026-06-09 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture</p>
+    <p class="page-meta">2026-09-22 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-llm-d-architecture、src-llm-d-router-architecture、src-llm-d-kv-cache-architecture、src-llm-d-batch-gateway-architecture、src-llm-d-benchmark-architecture、src-llm-d-workload-variant-autoscaler-architecture、src-llm-d-inference-sim-architecture、src-vllm-architecture、src-aibrix-architecture、src-k8s-serving-stack-comparison</p>
     <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">project-map</span><span class="tag">ai-infra</span></div>
   </header>
 
-  <p>这页把当前知识库里的 LLM 推理与 serving 相关材料横向整理。核心结论：LLM serving 已经从“单机推理引擎优化”演进成多层系统工程：KV cache 管理、batch 调度、P/D 分离、KV-aware routing、多级 offload、SLA 扩缩、GPU 资源调度和多云控制面都在同一条链路上。</p>
-<pre><code>Client API / OpenAI-compatible protocol
-        ↓
-serving frontend: HTTP/SSE/gRPC, tokenizer, request validation
-        ↓
-scheduler: continuous batching, prefill/decode, admission, chunking
-        ↓
-KV cache manager: paged blocks / radix tree / offload tiers
-        ↓
-GPU execution: attention backend, CUDA graph, speculative decoding
-        ↓
-cluster orchestration: P/D pools, routing, KV transfer, autoscaling
-        ↓
-infrastructure control plane: Kubernetes, GPU sharing, multi-cloud, observability
-        ↓
-peripheral control planes: batch jobs, benchmark, simulator, variant autoscaling
+  <h2 id="当前上游核验2026-09-22">当前上游核验（2026-09-22）</h2>
+<p>本页把官方仓库/文档的当前观察与既有 raw-backed Source 摘要分开。Source 摘要仍保存其分析时点；下表用于判断本次横向地图是否需要调整。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>核验版本</th>
+<th>当前稳定职责</th>
+<th>本次处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
+<td>HEAD <a href="https://github.com/vllm-project/vllm/commit/d50723df04f7"><code>d50723df04f7</code></a></td>
+<td>engine scheduler、model execution、local KV</td>
+<td>保留内部图，补外部边界</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+<td>HEAD <a href="https://github.com/sgl-project/sglang/commit/04c0913434c4"><code>04c0913434c4</code></a></td>
+<td>engine/runtime、RadixCache、distributed/P-D integration</td>
+<td>保留内部图，补集成边界</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+<td>HEAD <a href="https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd"><code>f36d2fab37fd</code></a></td>
+<td>distributed request/control/state runtime、routing、KV transfer、planner</td>
+<td>更新平台层关系</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>HEAD <a href="https://github.com/llm-d/llm-d/commit/1e9a86a3a9da"><code>1e9a86a3a9da</code></a></td>
+<td>Proxy/EPP、InferencePool、Model Server 与 routing signals</td>
+<td>更新 Gateway/EPP 热路径</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>HEAD <a href="https://github.com/vllm-project/aibrix/commit/96056b47f158"><code>96056b47f158</code></a></td>
+<td>K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration</td>
+<td>纳入核心比较</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>[!note] 证据边界<br>
+当前职责来自本次官方仓库与文档核验；内部调用路径仍以对应 Source 页面为准。</p>
+</blockquote>
+<p>官方架构/文档入口：<a href="https://docs.vllm.ai/en/latest/design/arch_overview/">vLLM</a>、<a href="https://docs.sglang.ai/">SGLang</a>、<a href="https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture">Dynamo</a>、<a href="https://llm-d.ai/docs/dev/architecture">llm-d</a>、<a href="https://aibrix.readthedocs.io/latest/getting_started/overview.html">AIBrix</a>。</p>
+<p>这页是 M4 的 L1 职责地图，用 D1–D5 连接入口、选点、推理引擎、KV 状态和部署控制。项目内部的完整调用图见各 Source；组合选型见 <a class="wikilink" href="../analysis/llm-serving-engine-selection-map.html">llm-serving-engine-selection-map</a>。实线箭头只表示同步请求或数据传输，带标签的虚线箭头 <code>- - signal / control - -&gt;</code> 表示异步观察或控制；控制器不串入逐请求执行链。D5 单独采用故障场景的因果记法，见该节说明。</p>
+<h2 id="d1--模块边界图">D1 · 模块边界图</h2>
+<pre><code class="language-text">Application / Agent / Batch Client
+                  │ OpenAI-compatible API
+                  ▼
+┌──────────────── Gateway / Traffic ────────────────┐
+│ Gateway API / HTTPRoute / Proxy / auth / policy    │
+└───────────────────────┬───────────────────────────┘
+                        │ endpoint decision
+                        ▼
+┌──────────────── Routing / Serving Platform ───────┐
+│ EPP / Router / InferencePool / discovery           │
+│ Dynamo / llm-d / AIBrix runtime integration        │
+└──────────────┬───────────────────────┬─────────────┘
+               │ aggregated            │ disaggregated
+               ▼                       ▼
+┌──────────────── Inference Engines ────────────────┐
+│ vLLM / SGLang / TensorRT-LLM                       │
+│ scheduler → model runner → attention → local KV    │
+└───────────────────────┬───────────────────────────┘
+                        │ allocate / transfer / offload
+                        ▼
+┌──────────────── Compute and State ────────────────┐
+│ GPU / HBM / CPU / SSD / object store / KV index    │
+└───────────────────────────────────────────────────┘
+
+control plane beside the request path:
+┌───────────────────────────────────────────────────┐
+│ CRD / deployment / planner / autoscaler / operator │
+│ Dynamo / llm-d ecosystem / AIBrix control parts    │
+└───────────────────────────────────────────────────┘
+workers / runtime - - metrics · KV events · readiness - -&gt; control plane
+Model / SLO intent - - desired state - -&gt; control plane
+control plane - - config / replica targets - -&gt; runtime / worker pools
 </code></pre>
-<h2 id="控制面到数据面的完整流程">控制面到数据面的完整流程</h2>
-<pre><code class="language-text">业务意图 / Model / SLO
-          ↓
-Gateway API / CRD / Deployment
-          ↓
+<p>这是职责地图，不表示每个部署都包含每个方框。<a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 是推理引擎；<a class="wikilink" href="../entities/dynamo.html">dynamo</a>、<a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/aibrix.html">aibrix</a> 覆盖的外围 runtime、路由和控制面范围不同，不能把三者当成同一种 engine。Gateway API、HTTPRoute、InferencePool 是配置/发现契约，实际接收请求的是 Proxy/Frontend；KV index 保存位置线索，不等同于 KV 数据存储。D1 表示依赖边界，实际请求和异步循环分别展开在 D2、D3。</p>
+<h2 id="d2--在线请求热路径">D2 · 在线请求热路径</h2>
+<pre><code class="language-text">aggregated:
+Client → Gateway/Frontend → Router/EPP → Engine Scheduler → Model Runner → stream
+
+disaggregated:
+Client → Gateway/Frontend → Router/EPP
+                              │
+                              ├→ Prefill worker ── KV metadata/data ─┐
+                              │                                     ▼
+                              └───────────────────────────────→ Decode worker → stream
+</code></pre>
+<p>连接处理、endpoint 选择、token 执行是三项不同职责。Gateway/Frontend 接收连接、执行入口策略并转发流；Router/EPP 根据模型、负载和 KV locality 选 worker；引擎 Scheduler 组成 batch，Model Runner 执行模型。图中 Router/EPP 是逻辑选点步骤：在 <a href="https://llm-d.ai/docs/dev/architecture">llm-d 的 Proxy/EPP 结构</a>和 <a href="https://aibrix.readthedocs.io/latest/getting_started/overview.html">AIBrix 的 ext_proc 结构</a>中，Proxy 咨询选点服务后直接向 engine 转发，请求流不必穿过 EPP 进程。</p>
+<p>P/D 模式还需要 <a class="wikilink" href="../concepts/disaggregated-serving.html">KV-transfer 契约</a>：请求身份、KV 布局/传输元数据、接收完成条件、超时和取消必须由 backend 组合共同定义。图中的双分支表示角色协作，不规定统一的触发顺序；具体由谁发起 prefill、谁等待 KV、谁返回 stream，要查该部署的 engine/connector/router 配置。</p>
+<h2 id="d3--扩缩与部署控制循环">D3 · 扩缩与部署控制循环</h2>
+<pre><code class="language-text">Model / SLO / topology intent
+             ┆ desired state
+             ▼
+CRD / Deployment / InferencePool / platform config
+             ┆ watch / reconcile
+             ▼
 Operator / Planner / Autoscaler
-          ↓
-InferencePool + Endpoint Picker
-          ↓
-┌────────────── Data Plane ──────────────┐
-│ vLLM / SGLang → Scheduler → KV → GPU  │
-│ Prefill Pool ── KV transfer ─ Decode  │
-└──────────────────┬────────────────────┘
-                   ↓ metrics / KV events
-        Routing · Scaling · Recovery feedback
+             ┆ config / replica targets
+             ▼
+worker pools / engine pods
+  - - metrics / queue / KV / readiness - -&gt; Operator / Planner / Autoscaler
 </code></pre>
+<p>这是后台收敛循环，竖向的 <code>┆</code> 与横向的 <code>- -</code> 都表示异步观察/控制，副本目标并非同步请求调用。<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 的 Planner 与 Kubernetes Operator 可以分别承担容量决策和部署执行；<a class="wikilink" href="../entities/llm-d.html">llm-d</a> 用 InferencePool 表达后端集合，部署和扩缩由配套的 Kubernetes 组件承担；<a class="wikilink" href="../entities/aibrix.html">aibrix</a> 的 controllers 管理模型/adapter、角色组和副本，AI Runtime 协助 pod 内的模型生命周期。它们的 API、运行时依赖和控制对象不同，接入时要确认谁拥有副本目标，避免两个控制器竞争写入。见 <a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a>、<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a>、<a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a>、<a class="wikilink" href="../sources/src-aibrix-architecture.html">src-aibrix-architecture</a>。</p>
+<blockquote>
+<p>[!warning] Conflict<br>
+2026-09-22 的 <a href="https://llm-d.ai/docs/dev/architecture#autoscaling">llm-d dev 架构文档</a>已将 Workload Variant Autoscaler 标为 deprecated，并描述 EPP metrics → KEDA Prometheus scaler → HPA 的扩缩路径。<a class="wikilink" href="../sources/src-llm-d-workload-variant-autoscaler-architecture.html">src-llm-d-workload-variant-autoscaler-architecture</a> 与 <a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 保存的是较早的 WVA 设计；本页将其作为历史设计参考。Source 保留原分析时点，版本迁移与实际发布适配仍需单独核验。</p>
+</blockquote>
+<h2 id="d4--kv-状态生命周期">D4 · KV 状态生命周期</h2>
+<pre><code class="language-text">prompt tokens
+     │ prefill
+     ▼
+local KV blocks - - publish events/index - -&gt; routing locality signal
+     │
+     ├── direct P→D transfer ─────────────→ decode-local KV
+     ├── offload → CPU / SSD / remote tier → recall/promote
+     └── pressure / expiry / model change ─→ evict or recompute
+</code></pre>
+<p>引擎拥有 local KV 的表示、分配和有效性判断，包括 block/page、prefix identity 与模型布局约束。外围层可以索引、路由、传输和 offload：<a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a> 的 locality signal 帮助选点，<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 的传输/缓存组件和 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 的 KV 能力则按具体集成参与跨 worker 或跨存储层的复用。路由索引里的“可能命中”不能代替引擎对 KV 的验证。</p>
+<p>直接 P→D 传输、分层 offload 和事件发布是不同接口，不要求同时启用。CPU/SSD/remote tier 是候选层级；可用介质、格式兼容性、缓存失效和回收策略取决于版本及 backend。见 <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>、<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a>、<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>。</p>
+<h2 id="d5--故障与降级边界">D5 · 故障与降级边界</h2>
+<p>本节的 <code>failure → conditional response</code> 箭头表示“故障发生后，按契约采取条件响应”的因果场景，不表示同步调用链；其中涉及的发现、摘除和扩缩仍遵循异步控制语义。</p>
+<pre><code class="language-text">EPP/router unavailable → fail open / fail close / reject according to gateway policy
+worker not ready        → discovery removes/inhibits endpoint → choose another worker
+prefill/decode failure  → cancel, retry, or recompute according to backend contract
+KV index stale          → lower hit quality; engine correctness remains independent
+autoscaler lag          → queue/load shedding protects the request path
+</code></pre>
+<p>这张图列的是部署时需要明确的故障契约，不表示所有项目都实现每一种 fallback。EPP 故障能否 fail open 取决于 Gateway 配置及是否存在合法的备用路由；worker 摘除依赖 readiness/discovery 的传播，新选点也可能遇到旧状态。P/D 已输出 token 后是否可重试或迁移，必须检查 backend 对流、采样状态和取消的支持，不能假定透明恢复。</p>
+<p>KV 索引只作为优化信号且引擎独立验证缓存身份时，索引过期通常影响命中率与排队质量；这不代表 KV 数据损坏或传输失败也无害。扩缩存在启动延迟，只有配置了有界队列、admission 或 load shedding，热路径才有相应保护。故障注入应分别覆盖 Gateway、worker、KV 通道和控制器，见 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>。</p>
 <h2 id="一句话分层">一句话分层</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -72,13 +177,13 @@ InferencePool + Endpoint Picker
 <tbody>
 <tr>
 <td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
-<td>LLM serving 的事实基线，<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV cache 按 block 管理</td>
-<td>单机推理引擎</td>
+<td>推理引擎基线，<a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV cache 按 block 管理，调度和模型执行在 engine 内完成</td>
+<td>推理引擎，可跨设备/节点并行</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
-<td>高性能推理引擎，<a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> token 级 KV 复用 + 4 进程流水线 + speculative decoding</td>
-<td>单机/多实例推理引擎</td>
+<td>以 <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>、Scheduler/ModelRunner 和执行优化组织 serving runtime</td>
+<td>推理引擎，可跨设备/节点并行</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
@@ -89,6 +194,11 @@ InferencePool + Endpoint Picker
 <td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
 <td>CNCF Sandbox 分布式 LLM inference serving stack，围绕 Router/EPP、InferencePool、KV/P-D/autoscaling 组织</td>
 <td>K8s serving control plane</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>围绕 engine fleet 提供路由、扩缩、model/adapter lifecycle、KV 和多角色编排</td>
+<td>K8s serving/control plane</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></td>
@@ -112,8 +222,8 @@ InferencePool + Endpoint Picker
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>同一模型多个 serving variant 的全局 autoscaling 决策层，经 Prometheus/HPA/KEDA 执行扩缩</td>
-<td>Variant autoscaling</td>
+<td>已摄入的多 variant 全局 allocation 设计；当前 dev 文档已标 deprecated，见 D3 冲突说明</td>
+<td>历史 autoscaling 设计</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></td>
@@ -133,89 +243,66 @@ InferencePool + Endpoint Picker
 </tbody>
 </table></div>
 <h2 id="横向对比">横向对比</h2>
+<p>按主要职责分组；同一项目可以跨多个边界，表中不把它们视为可直接互换的 engine。</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>维度</th>
-<th><a class="wikilink" href="../entities/vllm.html">vllm</a></th>
-<th><a class="wikilink" href="../entities/sglang.html">sglang</a></th>
-<th><a class="wikilink" href="../entities/dynamo.html">dynamo</a></th>
-<th><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></th>
-<th><a class="wikilink" href="../sources/src-k8s-gpu-device-plugins-stars.html">K8s GPU stack</a></th>
+<th>层</th>
+<th>项目</th>
+<th>核心抽象与职责</th>
+<th>KV / P-D 边界</th>
+<th>采用代价与下一步验证</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>主问题</td>
-<td>单机/单服务高吞吐推理</td>
-<td>极致推理执行和 KV 复用</td>
-<td>多 GPU/多节点协调 serving</td>
-<td>跨云/集群算力选择和作业控制</td>
-<td>GPU 设备暴露、共享、观测</td>
+<td>推理引擎</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
+<td>EngineCore / Scheduler / ModelRunner，batch 与模型执行</td>
+<td>local KV block；prefix cache、connector 随配置启用</td>
+<td>用目标模型/硬件验证吞吐、TTFT/ITL 和 connector；block 大小不能写成统一常量</td>
 </tr>
 <tr>
-<td>核心抽象</td>
-<td>Paged KV block table</td>
-<td>RadixCache + Scheduler pipeline</td>
-<td>Request/control/event planes + KVBM</td>
-<td>Task/Dag/Resources + Optimizer</td>
-<td>DevicePlugin/DRA/CDI/Operator</td>
+<td>推理引擎</td>
+<td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+<td>Scheduler / ModelRunner / RadixCache，执行优化与并行</td>
+<td>prefix reuse、HiCache、P/D integration 依 backend 而定</td>
+<td>验证投机解码、chunking、并行与传输的特性组合</td>
 </tr>
 <tr>
-<td>KV 粒度</td>
-<td>16-token block</td>
-<td>token-level radix tree</td>
-<td>SequenceHash + G1-G4 cache tiers</td>
-<td>不直接管理 KV</td>
-<td>不直接管理 KV，但影响显存资源</td>
+<td>分布式 runtime</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+<td>Frontend / Router / discovery / worker graph，另有 Planner/Operator</td>
+<td>可组织 aggregated 或 P/D workers，集成 KV events/transfer/offload</td>
+<td>需要运维 runtime 与控制组件；逐项验证 backend 支持和故障契约</td>
 </tr>
 <tr>
-<td>调度</td>
-<td>continuous batching</td>
-<td>4 进程 pipeline + Scheduler mixins</td>
-<td>KV-aware router + P/D pool + Planner</td>
-<td>Optimizer 选 cloud/region/instance</td>
-<td>kube-scheduler/device allocation</td>
+<td>K8s serving/control plane</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>Proxy + EPP / InferencePool / Model Server</td>
+<td>以事件、scorer 和可选 P/D 路径连接 engine</td>
+<td>需要 Gateway API/GAIE 兼容性；扩缩组件按当前版本验证，见 D3</td>
 </tr>
 <tr>
-<td>P/D 分离</td>
-<td>实验/生态扩展中</td>
-<td>多 backend 支持</td>
-<td>默认核心架构</td>
-<td>可部署 serving 集群</td>
-<td>提供底层 GPU 资源</td>
+<td>K8s serving/control plane</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>Gateway plugins / controllers / AI Runtime，管理 engine fleet</td>
+<td>KV、角色编排和 model/adapter lifecycle 按需组合</td>
+<td>验证引擎适配、CRD 生命周期、路由策略与副本归属</td>
 </tr>
 <tr>
-<td>扩缩</td>
-<td>通常交给外部平台</td>
-<td>外部平台或自建</td>
-<td>Planner + K8s Operator</td>
-<td>Managed jobs / serve / pools</td>
-<td>HPA/Kueue/GPU operator 等</td>
+<td>基础设施/算力控制</td>
+<td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
+<td>Task/Dag/Resources + Optimizer，资源选择与作业/服务生命周期</td>
+<td>部署引擎和服务，不定义 local KV 布局</td>
+<td>需对接云/K8s/Slurm 凭据、配额与容量；不解决模型执行性能</td>
 </tr>
 <tr>
-<td>容错</td>
-<td>引擎级错误处理</td>
-<td>引擎级错误处理</td>
-<td>RetryManager 迁移在飞请求</td>
-<td>provisioning failover</td>
-<td>节点/设备健康与重调度</td>
-</tr>
-<tr>
-<td>强项</td>
-<td>生态最大、基线稳</td>
-<td>KV 复用和执行路径激进</td>
-<td>集群协调、KV-aware、SLA</td>
-<td>多云和资源经济</td>
-<td>生产 GPU 集群底座</td>
-</tr>
-<tr>
-<td>代价</td>
-<td>block 级复用有碎片</td>
-<td>复杂度高、特性组合约束多</td>
-<td>系统栈重、组件多</td>
-<td>不优化内核推理路径</td>
-<td>只管资源，不管模型执行</td>
+<td>基础设施/设备</td>
+<td><a class="wikilink" href="../sources/src-k8s-gpu-device-plugins-stars.html">K8s GPU stack</a></td>
+<td>DevicePlugin / DRA / CDI / Operator / observability</td>
+<td>提供设备、拓扑和健康信号</td>
+<td>设备分配、隔离和驱动兼容性需独立验证</td>
 </tr>
 </tbody>
 </table></div>
@@ -231,8 +318,8 @@ InferencePool + Endpoint Picker
 <tbody>
 <tr>
 <td>KV cache 显式管理</td>
-<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></td>
-<td>KV cache 是 serving 吞吐和显存效率的核心资源，不再是模型内部细节</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>区分 engine 内 KV 分配、外部索引与存储层；职责见 D4</td>
 </tr>
 <tr>
 <td>前缀复用</td>
@@ -241,8 +328,8 @@ InferencePool + Endpoint Picker
 </tr>
 <tr>
 <td>Prefill/Decode 分离</td>
-<td><a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></td>
-<td>prefill 计算密集，decode 内存带宽密集，独立扩缩能提高资源利用</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a>, <a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../entities/llm-d.html">llm-d</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>engine connector 与平台路由协作；收益取决于 workload、带宽和传输契约</td>
 </tr>
 <tr>
 <td>多级 KV offload / locality signal</td>
@@ -256,8 +343,8 @@ InferencePool + Endpoint Picker
 </tr>
 <tr>
 <td>K8s 控制面</td>
-<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a>, <a class="wikilink" href="../sources/src-k8s-gpu-device-plugins-stars.html">K8s GPU stack</a></td>
-<td>serving 从进程问题变成 CRD/operator/scheduler 问题</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a>, <a class="wikilink" href="../entities/llm-d.html">llm-d</a>, <a class="wikilink" href="../entities/aibrix.html">aibrix</a>, <a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
+<td>不同系统分别收敛 serving graph、engine fleet 或底层算力，见 D3</td>
 </tr>
 <tr>
 <td>Batch / benchmark / simulator</td>
@@ -265,9 +352,9 @@ InferencePool + Endpoint Picker
 <td>serving 选型需要异步任务、可复现实验和低成本控制面替身</td>
 </tr>
 <tr>
-<td>Variant autoscaling</td>
+<td>Variant allocation（历史设计）</td>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>同一模型的多硬件/多角色/多成本 variant 需要全局 allocation，而不是单 Deployment 指标</td>
+<td>可研究多硬件/多角色的容量分配；当前采用路径须考虑 D3 的 deprecated 状态</td>
 </tr>
 <tr>
 <td>资源经济</td>
@@ -282,16 +369,14 @@ InferencePool + Endpoint Picker
 <ul>
 <li><a class="wikilink" href="../entities/vllm.html">vllm</a> 的 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 把 KV cache 切成 block，解决传统最大 seq_len 预分配浪费。</li>
 <li><a class="wikilink" href="../entities/sglang.html">sglang</a> 的 <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 把前缀共享做到 token 级，适合 agent template、few-shot、tree-of-thought 这类大量共享前缀场景。</li>
-<li><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 把 KV 块变成跨 worker、跨 GPU/CPU/NVMe/Object tier 的全局对象，用 SequenceHash 做身份，路由和 offload 都围绕它展开。</li>
+<li><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 在引擎外连接 KV events/index、传输与可选缓存层；<a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> 中的 KVBM/SequenceHash 细节属于该分析版本，部署时需核对 backend 集成。</li>
 </ul>
 <p>结论：KV cache 已经从“GPU 内部 buffer”变成 serving 系统的一等资源。后续的路由、扩缩、迁移、offload、GPU sharing 都需要知道 KV 的存在。</p>
-<h3 id="2-单机引擎和集群编排是两层问题">2. 单机引擎和集群编排是两层问题</h3>
-<p><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 解决的是“一个实例怎么高效执行请求”；<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 解决的是“一组实例怎么协调”。</p>
-<pre><code>single engine:
-  tokenizer → scheduler → model runner → KV cache → attention backend
-
-cluster serving:
-  frontend → route → prefill/decode worker pools → KV transfer → autoscale → recover
+<h3 id="2-引擎执行和集群编排是两层问题">2. 引擎执行和集群编排是两层问题</h3>
+<p><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 负责引擎内执行，实例本身也可使用跨设备/节点并行；<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 组织实例间 runtime，<a class="wikilink" href="../entities/llm-d.html">llm-d</a> / <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 则从 Kubernetes serving 与 fleet 管理边界补齐路由和控制能力。</p>
+<pre><code class="language-text">engine execution: tokenizer → scheduler → model runner → attention / local KV
+cluster requests: frontend → route → aggregated or P/D workers → stream
+cluster control:  metrics - - -&gt; capacity decision - - -&gt; deployment / replicas
 </code></pre>
 <p>把这两层混淆会导致选型误判。vLLM/SGLang 的强项是内核执行与 batching；Dynamo 的强项是多节点协调、KV-aware routing、P/D disaggregation 和 SLA planner。SkyPilot 再往上，解决集群/云在哪里、怎么拉起、失败怎么换区/换云。</p>
 <h3 id="3-pd-分离改变了-gpu-池形态">3. P/D 分离改变了 GPU 池形态</h3>
@@ -308,7 +393,7 @@ cluster serving:
 <li>prefill/decode 分别按什么指标扩缩。</li>
 <li>请求迁移时哪些状态可重建，哪些不可复制。</li>
 </ul>
-<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 把 P/D 分离做成默认集群架构；<a class="wikilink" href="../entities/sglang.html">sglang</a> 提供 Mooncake/NIXL/Mori/Ascend 等 KV transfer backend；<a class="wikilink" href="../entities/vllm.html">vllm</a> 仍更多是基线引擎和生态底座。</p>
+<p><a href="https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture">Dynamo 官方架构</a>覆盖 aggregated 与 disaggregated worker 组织；P/D 是需要选择的部署模式。<a class="wikilink" href="../entities/sglang.html">sglang</a> / <a class="wikilink" href="../entities/vllm.html">vllm</a> 的传输接口和 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> / <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 的外围编排应按 backend 组合核验，不能用项目名推断默认启用或完整兼容。</p>
 <h3 id="4-路由不再只是负载均衡">4. 路由不再只是负载均衡</h3>
 <p>传统 HTTP 负载均衡按连接数、延迟或权重分发。LLM serving 的路由还要考虑：</p>
 <ul>
@@ -318,7 +403,7 @@ cluster serving:
 <li>当前请求是否可迁移。</li>
 <li>LoRA/model adapter 是否匹配。</li>
 </ul>
-<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 的 KV-aware router 用 cost function 同时计算 prefix overlap credit 和 worker 负载，softmax 采样而不是绝对 argmin。这说明 serving router 的目标不是“最大化 cache hit”，而是在 cache hit、queue load、tail latency 之间做平衡。</p>
+<p><a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> 描述的 KV-aware routing 用 prefix overlap 与负载估计平衡复用和排队；cost/softmax 等策略细节应随版本核验。<a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> 和 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 也将 engine 状态纳入选点，但信号格式、策略插件和失败行为不同。见 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>。</p>
 <h3 id="5-gpu-资源层正在变成-serving-架构的一部分">5. GPU 资源层正在变成 serving 架构的一部分</h3>
 <p>K8s GPU 资源层不再只是 “NVIDIA device plugin 把 <code>/dev/nvidia0</code> 暴露给 Pod”。</p>
 <p>当前材料已经显示出完整栈：</p>
@@ -331,8 +416,8 @@ cluster serving:
 </ul>
 <p>当 serving 系统进入 P/D 分离、多级 KV、GPU sharing 后，K8s 的设备 API、DRA/CDI、GPU health 和调度策略会直接影响模型服务设计。</p>
 <h2 id="项目工程剖面">项目工程剖面</h2>
-<h3 id="vllm事实基线和-pagedattention"><a class="wikilink" href="../entities/vllm.html">vllm</a>：事实基线和 PagedAttention</h3>
-<p><a class="wikilink" href="../entities/vllm.html">vllm</a> 的最大价值是把 KV cache 管理变成一个系统问题。PagedAttention 的 block table 让显存按需分配，替代按最大序列长度预留。这是 LLM serving 的转折点。</p>
+<h3 id="vllm推理引擎基线和-pagedattention"><a class="wikilink" href="../entities/vllm.html">vllm</a>：推理引擎基线和 PagedAttention</h3>
+<p><a class="wikilink" href="../entities/vllm.html">vllm</a> 以 Scheduler、ModelRunner 和 local KV 管理承接 token 执行。PagedAttention 的 block table 让显存按需分配；内部调用图见 <a class="wikilink" href="../sources/src-vllm-architecture.html">src-vllm-architecture</a>，当前职责对应上方官方核验。</p>
 <p>适合借鉴的点：</p>
 <ul>
 <li>把 KV cache 从连续大 buffer 变成可管理 block。</li>
@@ -341,45 +426,35 @@ cluster serving:
 </ul>
 <p>主要局限：</p>
 <ul>
-<li>block 粒度共享会有碎片，system prompt 长度不对齐时复用不精细。</li>
-<li>P/D 分离和多节点协调不是它最强的原生边界。</li>
-<li>集群级 SLA、KV-aware routing、offload 需要外部系统补齐。</li>
+<li>KV page/block 粒度和 prefix reuse 需要按模型、attention/backend 与配置核验。</li>
+<li>引擎的分布式执行或 KV connector 不等于完整的 Gateway、fleet lifecycle 和容量控制。</li>
+<li>集群级 SLA 与跨副本路由需明确外部组件归属；offload 可以有 engine 侧接口及外围存储实现。</li>
 </ul>
-<h3 id="sglang执行路径极致模块化"><a class="wikilink" href="../entities/sglang.html">sglang</a>：执行路径极致模块化</h3>
-<p><a class="wikilink" href="../entities/sglang.html">sglang</a> 的工程特点是把推理执行的差异化轴都做成可插拔路径：</p>
+<h3 id="sglang执行路径与-kv-复用"><a class="wikilink" href="../entities/sglang.html">sglang</a>：执行路径与 KV 复用</h3>
+<p><a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a> 在 2026-09-14 的分析版本中展示了以下结构；进程数、backend 数和特性兼容性随版本与部署方式变化：</p>
 <ul>
-<li>HTTP / TokenizerManager / Scheduler / DetokenizerManager 四进程。</li>
+<li>HTTP / TokenizerManager / Scheduler / DetokenizerManager 的职责分离。</li>
 <li>RadixCache token 级 KV 复用。</li>
 <li>EXTEND / DECODE / MIXED 等 forward mode。</li>
-<li>10+ attention backend。</li>
-<li>7 套 speculative decoding。</li>
-<li>5 个 P/D KV transfer backend。</li>
+<li>可选 attention backend 与融合 kernel。</li>
+<li>speculative decoding 的 draft/verify 路径。</li>
+<li>P/D KV transfer backend 集成。</li>
 <li>OpenAI / Anthropic / Ollama / gRPC / Engine API。</li>
 </ul>
-<p>它的核心收益是性能和灵活性；代价是特性组合约束复杂，例如 speculative、chunked prefill、disagg 之间存在互斥/兼容边界。对于工程研究，它是理解现代推理引擎内部结构的最好材料之一。</p>
+<p>它提供了研究执行优化和缓存复用的具体路径；代价是特性组合约束复杂。speculative、chunked prefill、disagg 能否组合，需要目标版本、模型和硬件上的验证。</p>
 <h3 id="dynamo数据中心级-serving-编排"><a class="wikilink" href="../entities/dynamo.html">dynamo</a>：数据中心级 serving 编排</h3>
-<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 把 serving 从单实例推进到集群系统：</p>
-<pre><code>HTTP frontend
-        ↓
-preprocess / migration
-        ↓
-KV-aware routing
-        ↓
-prefill/decode worker pools
-        ↓
-KVBM G1-G4
-        ↓
-NATS JetStream KV events
-        ↓
-Planner + K8s Operator
-</code></pre>
+<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 把 engine backend 接入分布式 serving runtime。请求经 Frontend/Router 到 aggregated 或 P/D workers；KV events/index 为路由提供异步信号，Planner/Operator 在请求链外调整容量。完整内部图见 <a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a>，跨项目职责见 D1–D4。</p>
 <p>它的工程难点集中在三平面解耦：</p>
 <ul>
 <li>request plane：低延迟请求路径。</li>
-<li>control plane：discovery、desired state、K8s/file/etcd。</li>
-<li>storage/event plane：KV visibility、JetStream、object store。</li>
+<li>control plane：discovery、desired state、部署与容量收敛。</li>
+<li>storage/event plane：KV visibility、事件传播与可选 offload。</li>
 </ul>
-<p>它的独特价值不是替代 vLLM/SGLang，而是把它们当 backend，补上多节点路由、KV transfer、请求迁移、SLA 扩缩和拓扑感知部署。</p>
+<p>它把 <a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> / TensorRT-LLM 当 backend，围绕多节点路由、KV transfer 和容量管理组织协作。传输、事件后端、缓存层级及请求迁移能力都需按所选 backend 和配置确认，不能从 runtime 存在推断所有能力已启用。</p>
+<h3 id="llm-dgatewayepp-与-kubernetes-serving-组合"><a class="wikilink" href="../entities/llm-d.html">llm-d</a>：Gateway/EPP 与 Kubernetes serving 组合</h3>
+<p><a class="wikilink" href="../entities/llm-d.html">llm-d</a> 以 Proxy、EPP、InferencePool、Model Server 为主要边界：Proxy 承接连接，EPP 选 endpoint，engine 执行模型。KV、P/D、batch、benchmark 和扩缩是围绕这些边界组合的能力，具体采用路径随版本演进。当前扩缩状态见 D3；历史与内部架构见 <a class="wikilink" href="../sources/src-llm-d-architecture.html">src-llm-d-architecture</a>、<a class="wikilink" href="../sources/src-llm-d-router-architecture.html">src-llm-d-router-architecture</a>，对比见 <a class="wikilink" href="../sources/src-k8s-serving-stack-comparison.html">src-k8s-serving-stack-comparison</a>。</p>
+<h3 id="aibrixengine-fleet-的路由与生命周期管理"><a class="wikilink" href="../entities/aibrix.html">aibrix</a>：engine fleet 的路由与生命周期管理</h3>
+<p><a class="wikilink" href="../entities/aibrix.html">aibrix</a> 围绕 engine fleet 组合 Gateway routing、controllers、autoscaling 与 AI Runtime，并提供 model/adapter、KV 和多角色编排能力。它的控制资源与 pod 内适配职责有别于 llm-d 的 InferencePool/EPP 边界，也有别于 Dynamo 的分布式 runtime。接入前应明确模型/adapter 生命周期、副本写入权和引擎适配接口。见 <a class="wikilink" href="../sources/src-aibrix-architecture.html">src-aibrix-architecture</a>、<a class="wikilink" href="../sources/src-k8s-serving-stack-comparison.html">src-k8s-serving-stack-comparison</a>。</p>
 <h3 id="src-skypilot-architectureskypilot算力控制面而不是-serving-engine"><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a>：算力控制面而不是 serving engine</h3>
 <p><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a> 不优化 attention kernel，也不管理 KV cache。它解决的是：在 Kubernetes、Slurm、公有云、on-prem 之间怎么选择资源、启动集群、failover、运行 managed jobs / serve。</p>
 <p>它在 serving 地图里的位置更高：</p>
@@ -409,7 +484,7 @@ cluster / managed job / serve
 <h3 id="1-吞吐和延迟不是同一个优化目标">1. 吞吐和延迟不是同一个优化目标</h3>
 <p>Continuous batching 提高吞吐，但可能增加单请求排队延迟；speculative decoding 降低 decode latency，但引入 draft model 和验证开销；P/D 分离提高资源利用，但多一次 KV transfer。Serving 系统必须按 workload profile 调优，而不是追求单一指标。</p>
 <h3 id="2-kv-复用和负载均衡天然冲突">2. KV 复用和负载均衡天然冲突</h3>
-<p>把请求发给已有 prefix KV 的 worker 能省 prefill，但那个 worker 可能很忙。把请求发给空闲 worker 延迟可能更低，但要重新 prefill。<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 的 cost-based softmax 正是在处理这个冲突。</p>
+<p>把请求发给已有 prefix KV 的 worker 能省 prefill，但那个 worker 可能很忙。把请求发给空闲 worker 延迟可能更低，但要重新 prefill。<a class="wikilink" href="../entities/dynamo.html">dynamo</a>、<a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a> 和 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 的策略研究都需要在实测中比较命中收益与排队代价。</p>
 <h3 id="3-pd-分离引入状态转移问题">3. P/D 分离引入状态转移问题</h3>
 <p>Prefill 输出的 KV 必须被 decode 节点可见。这个过程涉及 RDMA/NIXL/Mooncake/Mori/Ascend 等 transfer backend，也涉及失败恢复：worker 挂掉后请求是否可迁移，guided decoding/n&gt;1 这种状态机是否可复制。</p>
 <h3 id="4-多级-kv-offload-是缓存系统不是简单-swap">4. 多级 KV offload 是缓存系统，不是简单 swap</h3>
@@ -421,7 +496,7 @@ cluster / managed job / serve
 <li>hash 身份如何去重。</li>
 <li>cache miss 是否比重新 prefill 更慢。</li>
 </ul>
-<p><a class="wikilink" href="../entities/dynamo.html">dynamo</a> 的 KVBM 把它做成 G1-G4 tier + LRU/TinyLFU + SequenceHash，这说明 offload 已经是缓存系统设计。</p>
+<p><a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> 的 KVBM 材料可作为缓存层级和身份管理的设计参考；具体层级与策略应按版本验证。跨系统讨论见 <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>。</p>
 <h3 id="5-gpu-资源调度和模型调度开始交叉">5. GPU 资源调度和模型调度开始交叉</h3>
 <p>GPU sharing、MIG/vGPU、DRA/CDI、KV cache offload、P/D 分离都会改变“一个 Pod 需要几张 GPU”的简单假设。Serving control plane 需要更懂 GPU 拓扑、NVLink、NUMA、显存压力、KV cache 热度。</p>
 <h3 id="6-可观测必须覆盖-tokenkv队列和-gpu">6. 可观测必须覆盖 token、KV、队列和 GPU</h3>
@@ -445,14 +520,9 @@ cluster / managed job / serve
 </thead>
 <tbody>
 <tr>
-<td>单机基线引擎</td>
-<td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
-<td>高吞吐 serving、PagedAttention、生态兼容</td>
-</tr>
-<tr>
-<td>高性能执行引擎</td>
-<td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
-<td>token-level KV、pipeline、spec decode、P/D backend</td>
+<td>推理引擎</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>、<a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+<td>local KV、batching、model execution、并行与 connector</td>
 </tr>
 <tr>
 <td>数据中心编排层</td>
@@ -460,9 +530,9 @@ cluster / managed job / serve
 <td>多节点 routing、KV offload、SLA autoscale、K8s operator</td>
 </tr>
 <tr>
-<td>K8s serving control plane</td>
+<td>K8s serving/control plane</td>
 <td><a class="wikilink" href="../entities/llm-d.html">llm-d</a>、<a class="wikilink" href="../entities/aibrix.html">aibrix</a>、<a class="wikilink" href="../entities/kserve.html">kserve</a></td>
-<td>Gateway API / InferencePool、Operator、Endpoint picking、autoscaling</td>
+<td>分别比较 endpoint picking、engine fleet lifecycle 与模型服务 API 的边界</td>
 </tr>
 <tr>
 <td>算力控制面</td>
@@ -487,9 +557,9 @@ cluster / managed job / serve
 </thead>
 <tbody>
 <tr>
-<td>需要最稳的开源 serving baseline</td>
-<td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
-<td>PagedAttention、模型兼容、OpenAI API</td>
+<td>建立可测量的 serving baseline</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+<td>先测目标模型、硬件、TTFT/ITL，再比较执行特性</td>
 </tr>
 <tr>
 <td>研究现代推理引擎内部优化</td>
@@ -502,9 +572,14 @@ cluster / managed job / serve
 <td>KV-aware routing、KVBM、Planner、K8s operator</td>
 </tr>
 <tr>
-<td>构建 Kubernetes-native inference control plane</td>
-<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a> / <a class="wikilink" href="../entities/aibrix.html">aibrix</a> / <a class="wikilink" href="../entities/kserve.html">kserve</a></td>
-<td>Gateway API、InferencePool、Operator、autoscaling、batch/benchmark 配套</td>
+<td>标准化 Gateway/endpoint picking</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>Proxy/EPP、InferencePool、KV 信号及当前扩缩集成</td>
+</tr>
+<tr>
+<td>管理 engine fleet 与 adapter 生命周期</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>Gateway plugins、controllers、AI Runtime、KV/角色编排</td>
 </tr>
 <tr>
 <td>跨云/跨集群管理 AI workload</td>
@@ -519,30 +594,29 @@ cluster / managed job / serve
 </tbody>
 </table></div>
 <h2 id="下一批候选">下一批候选</h2>
-<p>详见 <a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a>。当前 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> P0 外围能力已经补齐，下一步最值得做的是把这些能力连接到 Kubernetes 调度、队列和 metrics 生态：</p>
+<p>详见 <a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a>。已有的 Entity/Source 不再列为待补项目；下一步聚焦尚未验证的跨层问题：</p>
 <ul>
-<li>batch inference：<a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a> 已有，后续可拆 API server / processor / GC 细页。</li>
-<li>benchmark / simulator：<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 已有，后续可以细化 benchmark 报告模型；<a class="wikilink" href="../entities/inference-perf.html">inference-perf</a> 和 <a class="wikilink" href="../entities/llm-d-prism.html">llm-d-prism</a> 已补正式页。</li>
-<li>autoscaling / queueing：<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 已有，<a class="wikilink" href="../entities/kueue.html">kueue</a>、<a class="wikilink" href="../entities/karpenter.html">karpenter</a>、<a class="wikilink" href="../entities/metrics-server.html">metrics-server</a>、<a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 已补正式页。</li>
-<li>distributed workload API：<a class="wikilink" href="../entities/lws.html">lws</a>、<a class="wikilink" href="../entities/jobset.html">jobset</a> 已补正式页。</li>
+<li>用 <a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/inference-perf.html">inference-perf</a> 和 <a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 构造相同 workload，比较路由策略、KV 命中率与 TTFT/ITL，而非只比吞吐。</li>
+<li>核验 llm-d 当前 EPP/KEDA/HPA 路径与历史 WVA 的迁移边界，确认可用 release、配置差异和多 variant 场景。</li>
+<li>联合 <a class="wikilink" href="../entities/kueue.html">kueue</a>、<a class="wikilink" href="../entities/karpenter.html">karpenter</a>、<a class="wikilink" href="../entities/lws.html">lws</a>、<a class="wikilink" href="../entities/jobset.html">jobset</a> 验证容量不足、模型冷启动与 worker group readiness 的时间线。</li>
+<li>针对 D5 做 Gateway/EPP、P/D worker、KV 通道的故障注入，记录可重试阶段、取消传播和流式输出语义。</li>
 </ul>
 <h2 id="当前知识库缺口">当前知识库缺口</h2>
 <ul>
-<li>还缺少独立的 <a class="wikilink" href="../entities/vllm.html">vllm</a> 架构 source 页，当前主要来自 entity 和 SGLang 对照。</li>
-<li>还缺少 TensorRT-LLM、TGI、Ray Serve 的深入页，无法完整覆盖 serving 生态。</li>
-<li>还缺少 Kueue、Karpenter、LeaderWorkerSet、JobSet 这类 AI workload 调度 / 队列 / 分布式 API 页。</li>
-<li>还缺少 <code>llm-d-latency-predictor</code>、<code>llm-d-prism</code>、<code>llm-d-pd-utils</code> 和 <code>llm-d-inference-payload-processor</code> 这类 P1/P2 配套页。</li>
-<li>可以补一篇 “KV cache as schedulable resource” 概念页，把 KVBM、kvcached、P/D 分离和 GPU sharing 串起来。</li>
+<li>还缺少同模型、同硬件、同 SLO 的跨项目实测，当前地图说明职责，不能据此直接给出性能排名。</li>
+<li>KV event schema、身份/布局兼容性和失效传播尚缺跨 engine/connector 的契约对照；“可接入”不等于任意组合可共享 KV。</li>
+<li>P/D 故障后在飞请求、已输出 token 和采样状态能恢复到哪一步，尚缺按 backend 分类的证据。</li>
+<li>多级 KV 存储、GPU sharing 与拓扑调度如何共同影响路由/扩缩决策，仍需测量与控制权分析。</li>
 </ul>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/agent-runtime-sandbox-project-map.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Agent Runtime / Sandbox 项目地图</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/ai-agent-frameworks-map.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">AI Agent Frameworks 项目地图</strong></a></div><span class="page-navigation-progress">阅读顺序 282/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/gpu-programming-learning.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">GPU 编程学习</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/llm-serving-engine-selection-map.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">LLM Serving / 推理引擎选型地图</strong></a></div><span class="page-navigation-progress">阅读顺序 128/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-inference-serving-project-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference-serving-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference / </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>inference-perf</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>JobSet</title></circle><circle class="mini-node mini-node-analysis" cx="62.0" cy="82.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>Karpenter</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/inference-perf.html">inference-perf</a><span>实体 · wikilink</span></li><li><a href="../entities/jobset.html">JobSet</a><span>实体 · wikilink</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li><li><a href="../analysis/llm-serving-engine-selection-map.html">LLM Serving / 推理引擎选型地图</a><span>分析 · related</span></li><li><a href="../entities/skypilot.html">SkyPilot</a><span>实体 · related</span></li><li><a href="../sources/src-aibrix-architecture.html">AIBrix 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-gpustack-architecture.html">GPUStack 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-llm-d-architecture.html">llm-d 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-routellm-architecture.html">RouteLLM 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-semantic-router-architecture.html">vLLM Semantic Router 架构与设计思路分析</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#控制面到数据面的完整流程">控制面到数据面的完整流程</a></li><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#架构交叉矩阵">架构交叉矩阵</a></li><li class=""><a href="#核心设计轴">核心设计轴</a></li><li class="level-3"><a href="#1-kv-cache从内存优化到系统接口">1. KV cache：从内存优化到系统接口</a></li><li class="level-3"><a href="#2-单机引擎和集群编排是两层问题">2. 单机引擎和集群编排是两层问题</a></li><li class="level-3"><a href="#3-pd-分离改变了-gpu-池形态">3. P/D 分离改变了 GPU 池形态</a></li><li class="level-3"><a href="#4-路由不再只是负载均衡">4. 路由不再只是负载均衡</a></li><li class="level-3"><a href="#5-gpu-资源层正在变成-serving-架构的一部分">5. GPU 资源层正在变成 serving 架构的一部分</a></li><li class=""><a href="#项目工程剖面">项目工程剖面</a></li><li class="level-3"><a href="#vllm事实基线和-pagedattention">vllm：事实基线和 PagedAttention</a></li><li class="level-3"><a href="#sglang执行路径极致模块化">sglang：执行路径极致模块化</a></li><li class="level-3"><a href="#dynamo数据中心级-serving-编排">dynamo：数据中心级 serving 编排</a></li><li class="level-3"><a href="#src-skypilot-architectureskypilot算力控制面而不是-serving-engine">src-skypilot-architecture|SkyPilot：算力控制面而不是 serving engine</a></li><li class="level-3"><a href="#src-k8s-gpu-device-plugins-starsk8s-gpu-stack设备层正在上移">src-k8s-gpu-device-plugins-stars|K8s GPU stack：设备层正在上移</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-吞吐和延迟不是同一个优化目标">1. 吞吐和延迟不是同一个优化目标</a></li><li class="level-3"><a href="#2-kv-复用和负载均衡天然冲突">2. KV 复用和负载均衡天然冲突</a></li><li class="level-3"><a href="#3-pd-分离引入状态转移问题">3. P/D 分离引入状态转移问题</a></li><li class="level-3"><a href="#4-多级-kv-offload-是缓存系统不是简单-swap">4. 多级 KV offload 是缓存系统，不是简单 swap</a></li><li class="level-3"><a href="#5-gpu-资源调度和模型调度开始交叉">5. GPU 资源调度和模型调度开始交叉</a></li><li class="level-3"><a href="#6-可观测必须覆盖-tokenkv队列和-gpu">6. 可观测必须覆盖 token、KV、队列和 GPU</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#下一批候选">下一批候选</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-inference-serving-project-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Inference / </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Batch Inference</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>inference-perf</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>JobSet</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/batch-inference.html">Batch Inference</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../entities/inference-perf.html">inference-perf</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/jobset.html">JobSet</a><span>实体 · wikilink</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · wikilink</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · wikilink</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · wikilink</span></li><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li><li><a href="../entities/llm-d-workload-variant-autoscaler.html">llm-d Workload Variant Autoscaler</a><span>实体 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前上游核验2026-09-22">当前上游核验（2026-09-22）</a></li><li class=""><a href="#d1--模块边界图">D1 · 模块边界图</a></li><li class=""><a href="#d2--在线请求热路径">D2 · 在线请求热路径</a></li><li class=""><a href="#d3--扩缩与部署控制循环">D3 · 扩缩与部署控制循环</a></li><li class=""><a href="#d4--kv-状态生命周期">D4 · KV 状态生命周期</a></li><li class=""><a href="#d5--故障与降级边界">D5 · 故障与降级边界</a></li><li class=""><a href="#一句话分层">一句话分层</a></li><li class=""><a href="#横向对比">横向对比</a></li><li class=""><a href="#架构交叉矩阵">架构交叉矩阵</a></li><li class=""><a href="#核心设计轴">核心设计轴</a></li><li class="level-3"><a href="#1-kv-cache从内存优化到系统接口">1. KV cache：从内存优化到系统接口</a></li><li class="level-3"><a href="#2-引擎执行和集群编排是两层问题">2. 引擎执行和集群编排是两层问题</a></li><li class="level-3"><a href="#3-pd-分离改变了-gpu-池形态">3. P/D 分离改变了 GPU 池形态</a></li><li class="level-3"><a href="#4-路由不再只是负载均衡">4. 路由不再只是负载均衡</a></li><li class="level-3"><a href="#5-gpu-资源层正在变成-serving-架构的一部分">5. GPU 资源层正在变成 serving 架构的一部分</a></li><li class=""><a href="#项目工程剖面">项目工程剖面</a></li><li class="level-3"><a href="#vllm推理引擎基线和-pagedattention">vllm：推理引擎基线和 PagedAttention</a></li><li class="level-3"><a href="#sglang执行路径与-kv-复用">sglang：执行路径与 KV 复用</a></li><li class="level-3"><a href="#dynamo数据中心级-serving-编排">dynamo：数据中心级 serving 编排</a></li><li class="level-3"><a href="#llm-dgatewayepp-与-kubernetes-serving-组合">llm-d：Gateway/EPP 与 Kubernetes serving 组合</a></li><li class="level-3"><a href="#aibrixengine-fleet-的路由与生命周期管理">aibrix：engine fleet 的路由与生命周期管理</a></li><li class="level-3"><a href="#src-skypilot-architectureskypilot算力控制面而不是-serving-engine">src-skypilot-architecture|SkyPilot：算力控制面而不是 serving engine</a></li><li class="level-3"><a href="#src-k8s-gpu-device-plugins-starsk8s-gpu-stack设备层正在上移">src-k8s-gpu-device-plugins-stars|K8s GPU stack：设备层正在上移</a></li><li class=""><a href="#核心难点">核心难点</a></li><li class="level-3"><a href="#1-吞吐和延迟不是同一个优化目标">1. 吞吐和延迟不是同一个优化目标</a></li><li class="level-3"><a href="#2-kv-复用和负载均衡天然冲突">2. KV 复用和负载均衡天然冲突</a></li><li class="level-3"><a href="#3-pd-分离引入状态转移问题">3. P/D 分离引入状态转移问题</a></li><li class="level-3"><a href="#4-多级-kv-offload-是缓存系统不是简单-swap">4. 多级 KV offload 是缓存系统，不是简单 swap</a></li><li class="level-3"><a href="#5-gpu-资源调度和模型调度开始交叉">5. GPU 资源调度和模型调度开始交叉</a></li><li class="level-3"><a href="#6-可观测必须覆盖-tokenkv队列和-gpu">6. 可观测必须覆盖 token、KV、队列和 GPU</a></li><li class=""><a href="#设计分型">设计分型</a></li><li class=""><a href="#选型建议">选型建议</a></li><li class=""><a href="#下一批候选">下一批候选</a></li><li class=""><a href="#当前知识库缺口">当前知识库缺口</a></li></ul></aside></aside>
 </div>
 
 <script>
