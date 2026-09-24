@@ -69,15 +69,15 @@
 <p>这页把 <a class="wikilink" href="../sources/src-k8s-core-controllers-stars.html">src-k8s-core-controllers-stars</a> 从 359 个 star 项目整理成 Kubernetes controller/operator 学习与选型地图。核心结论：K8s 平台工程的主线不是“会写一个 reconcile”，而是理解 API machinery、client/cache/workqueue、CRD/webhook、controller-runtime/kubebuilder、调度/多集群/安全/可观测这些层如何组合。</p>
 <h2 id="d1--controller-工具链职责图">D1 · Controller 工具链职责图</h2>
 <pre><code class="language-text">BUILD-TIME（作者与生成链）
-&lt;a class=&quot;wikilink&quot; href=&quot;../entities/kubebuilder.html&quot;&gt;kubebuilder&lt;/a&gt; CLI ── scaffold ──&gt; Go API types / markers / project layout
+Kubebuilder CLI ── scaffold ──&gt; Go API types / markers / project layout
                                    controller / webhook / test 骨架
-Go API types / markers ── parse ──&gt; &lt;a class=&quot;wikilink&quot; href=&quot;../entities/controller-tools.html&quot;&gt;controller-tools&lt;/a&gt; / controller-gen
+Go API types / markers ── parse ──&gt; controller-tools / controller-gen
 controller-gen ── generate ──&gt; CRD / RBAC / webhook manifests
                ── generate ──&gt; deepcopy（object generator）/ applyconfiguration
 作者补齐业务逻辑，构建 controller 镜像并安装生成的 manifests
 
 RUNTIME（控制器执行链）
-controller 二进制使用 &lt;a class=&quot;wikilink&quot; href=&quot;../entities/controller-runtime.html&quot;&gt;controller-runtime&lt;/a&gt; 的组合层
+controller 二进制使用 controller-runtime 的组合层
   Manager：管理 Cache / Client / Controller-Reconciler / Webhook 生命周期
   Scheme：Go types 与 GVK 映射；供 Client 等组件使用
   client-go 基座：REST client / watch / informer / cache / workqueue
