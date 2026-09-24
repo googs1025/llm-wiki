@@ -1,12 +1,26 @@
 ---
 title: Kubernetes Workload and Gang Scheduling Design
 tags: [analysis, kubernetes, kep, sig-scheduling, gang-scheduling, workload-api, design-deep-dive]
-date: 2026-07-07
-sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4671-gang-scheduling/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5710-workload-aware-preemption/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6012-composite-podgroup-api/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6089-was-controller-apis/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5732-topology-aware-workload-scheduling/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-workload-automation]], [[kueue]], [[scheduler-plugins]], [[jobset]], [[lws]], [[karpenter]]
+date: 2026-09-25
+sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4671-gang-scheduling/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5710-workload-aware-preemption/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6012-composite-podgroup-api/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6089-was-controller-apis/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5732-topology-aware-workload-scheduling/README.md, src-kueue-architecture, src-jobset-architecture, src-lws-architecture, src-scheduler-plugins-architecture, src-karpenter-architecture]
+related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-workload-automation]]", "[[kueue]]", "[[scheduler-plugins]]", "[[jobset]]", "[[lws]]", "[[karpenter]]", "[[kubernetes-scheduler-core-design]]"]
 ---
 
 # Kubernetes Workload and Gang Scheduling Design
+
+## 当前上游核验（2026-09-25）
+
+本节记录执行时官方默认分支的当前快照，用于 M5-B 的跨项目职责比较；commit 不是 release 标识，API 在默认分支存在也不等于已在目标集群版本发布。[[src-kueue-architecture]]、[[src-jobset-architecture]]、[[src-lws-architecture]]、[[src-scheduler-plugins-architecture]] 与 [[src-karpenter-architecture]] 保留 2026-06-14 的 raw-backed Source 快照。下文既有 KEP 内容保留历史设计与演进语境；scheduler 底座的当前证据见 [[kubernetes-scheduler-core-design]]。
+
+| 项目 | 当前 commit | 当前 API / 职责 | M5-B 层 |
+|---|---|---|---|
+| [[kueue]] | [`2a766717037a`](https://github.com/kubernetes-sigs/kueue/commit/2a766717037ac8c8ca8ee03539e7504db2a56008) | 当前 `kueue.x-k8s.io/v1beta2` 包含 Workload、LocalQueue、ClusterQueue、ResourceFlavor、Cohort、AdmissionCheck、Topology；管理配额、flavor 与准入，不负责 Pod 最终绑定到 Node | Admission / quota |
+| [[jobset]] | [`03f9dccef945`](https://github.com/kubernetes-sigs/jobset/commit/03f9dccef945c12e6ea9a35c524b928b9599cd87) | `jobset.x-k8s.io/v1alpha2` JobSet 用 ReplicatedJobs 组合子 Job，提供依赖、coordinator、成功/失败与重启策略 | Workload / Job lifecycle |
+| [[lws]] | [`d4f1525f15a4`](https://github.com/kubernetes-sigs/lws/commit/d4f1525f15a491170de19bc6abc1c89fe185b16c) | `leaderworkerset.x-k8s.io/v1` 管理 leader/worker Pod 组；`disaggregatedset.x-k8s.io/v1` 组合多个子 LWS，管理分离推理角色、slice 与协调发布 | Workload / group and role lifecycle |
+| [[scheduler-plugins]] | [`6df8d8e4ae5f`](https://github.com/kubernetes-sigs/scheduler-plugins/commit/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd) | kube-scheduler 的 out-of-tree framework plugins；配套 `scheduling.x-k8s.io/v1alpha1` PodGroup / ElasticQuota 支撑相应插件，与 Kubernetes 原生 Workload/PodGroup KEP API 分开看 | Pod placement / scheduler extensions |
+| [[karpenter]] | [`06bc3b4b94dd`](https://github.com/kubernetes-sigs/karpenter/commit/06bc3b4b94dd9af0228db4b611f2ebcb2ba17b9c) | `karpenter.sh/v1` NodePool / NodeClaim 联合 provider-specific NodeClass 表达容量约束与节点生命周期；响应不可调度 Pod 的容量需求，不执行 Pod binding | Node capacity / lifecycle |
+
+官方依据：[Kueue Concepts](https://kueue.sigs.k8s.io/docs/concepts/) 与 [当前 v1beta2 API 源码](https://github.com/kubernetes-sigs/kueue/tree/2a766717037ac8c8ca8ee03539e7504db2a56008/apis/kueue/v1beta2)、[JobSet Concepts](https://jobset.sigs.k8s.io/docs/concepts/) 与 [v1alpha2 API](https://jobset.sigs.k8s.io/docs/reference/jobset.v1alpha2/)、[LWS Concepts](https://lws.sigs.k8s.io/docs/concepts/)、[Scheduler Plugins 文档](https://scheduler-plugins.sigs.k8s.io/docs/)、[Karpenter NodePools](https://karpenter.sh/docs/concepts/nodepools/) 与 [NodeClaims](https://karpenter.sh/docs/concepts/nodeclaims/)。安装时仍需核对所选 release 的 CRD、feature gates 和 Kubernetes 兼容矩阵。
 
 这页专门讲 `sig-scheduling` 里最重要的一条设计线：从单 Pod 调度，走向 Workload / PodGroup 作为调度单位。核心 KEP 是 `4671-gang-scheduling`，后续由 `5710-workload-aware-preemption`、`6012-composite-podgroup-api`、`6089-was-controller-apis` 和 `5732-topology-aware-workload-scheduling` 继续展开。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 

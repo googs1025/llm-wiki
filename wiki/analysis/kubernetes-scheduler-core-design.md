@@ -1,12 +1,23 @@
 ---
 title: Kubernetes Scheduler Core Design
 tags: [analysis, kubernetes, kep, sig-scheduling, scheduler, queue, placement, preemption, design-deep-dive]
-date: 2026-07-07
+date: 2026-09-25
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/624-scheduling-framework/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/785-scheduler-component-config-api/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/1451-multi-scheduling-profiles/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4247-queueinghint/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6132-prequeueing-hints/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5598-opportunistic-batching/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/895-pod-topology-spread/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4832-async-preemption/README.md]
-related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[scheduler-plugins]], [[descheduler]], [[kube-scheduler-simulator]]
+related: ["[[kubernetes]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[scheduler-plugins]]", "[[descheduler]]", "[[kube-scheduler-simulator]]", "[[k8s-core-controller-map]]", "[[kueue]]", "[[karpenter]]"]
 ---
 
 # Kubernetes Scheduler Core Design
+
+## 当前上游核验（2026-09-25）
+
+本节以执行时官方默认分支为当前证据，commit 不代表 release。Kubernetes KEP 页面与下文既有内容保留历史设计/演进证据；具体实现、feature stage 和默认行为须按目标 Kubernetes 版本核对，不能从提案状态或默认分支推定已经发布。[[src-scheduler-plugins-architecture]] 仍是 2026-06-14 的 raw-backed Source 快照。
+
+| 项目 | 当前 commit | 当前职责 / 证据边界 |
+|---|---|---|
+| [[kubernetes]] / kube-scheduler | [`ab9b0dcfd320`](https://github.com/kubernetes/kubernetes/commit/ab9b0dcfd32039601ad368ae891efa3ff67600e0) | Scheduling Framework 组织插件扩展点；scheduling cycle 选择 Node，binding cycle 将选择应用到集群。Pod placement/binding 属于 scheduler 职责 |
+| [[scheduler-plugins]] | [`6df8d8e4ae5f`](https://github.com/kubernetes-sigs/scheduler-plugins/commit/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd) | 通过 out-of-tree plugins 扩展 kube-scheduler；其 `scheduling.x-k8s.io/v1alpha1` PodGroup / ElasticQuota 与 Kubernetes 原生 API 演进分开核验，部署须匹配 Kubernetes 依赖版本 |
+
+官方入口：[Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)、[Scheduler Configuration](https://kubernetes.io/docs/reference/scheduling/config/)、[当前 kube-scheduler 源码](https://github.com/kubernetes/kubernetes/tree/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler)、[Scheduler Plugins 文档](https://scheduler-plugins.sigs.k8s.io/docs/) 与 [当前兼容矩阵](https://github.com/kubernetes-sigs/scheduler-plugins/blob/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd/README.md#compatibility-matrix)。跨项目主线见 [[kubernetes-workload-gang-scheduling-design]]：[[kueue]] 负责 admission，[[karpenter]] 负责节点容量反馈；通用 controller 工具链见 [[k8s-core-controller-map]]。
 
 这页合并讲 `sig-scheduling` 的 scheduler core feature：framework、component config、profiles、queue/requeue、topology placement、async preemption 和调度性能。Workload/Gang 和 DRA 已经有单独详解页，这页负责解释它们依赖的 scheduler 底座。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 
