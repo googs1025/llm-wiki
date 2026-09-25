@@ -1,14 +1,20 @@
 ---
 title: Kueue
 tags: [entity, kubernetes, scheduler, queueing]
-date: 2026-06-14
+date: 2026-09-25
 sources: [kueue-architecture-analysis.md]
-related: ["[[kueue]]", "[[kubernetes]]", "[[llm-inference]]", "[[batch-inference]]", "[[model-serving-operator]]"]
+related: ["[[kueue]]", "[[kubernetes]]", "[[llm-inference]]", "[[batch-inference]]", "[[model-serving-operator]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-scheduler-core-design]]", "[[jobset]]", "[[lws]]", "[[scheduler-plugins]]", "[[karpenter]]"]
 ---
 
 # Kueue
 
 Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。 详见 [[src-kueue-architecture]]。
+
+证据说明：2026-09-25 核验的官方默认分支快照为 [`2a766717037a`](https://github.com/kubernetes-sigs/kueue/commit/2a766717037ac8c8ca8ee03539e7504db2a56008)，该 commit 不代表 release。[[src-kueue-architecture]] 保留 2026-06-14 的 raw-backed Source 快照；当前跨项目职责见 [[kubernetes-workload-gang-scheduling-design]]，调度器流程见 [[kubernetes-scheduler-core-design]]。
+
+## 在 M5-B Workload / Scheduling 地图中的位置
+
+在上述快照中，Kueue 通过 Workload、队列、Cohort 和 ResourceFlavor 管理 admission、quota 与 flavor assignment，并按配置处理 Topology 和 AdmissionCheck。[[jobset]]、[[lws]] 通过各自集成进入准入路径；Kueue 不选择最终 Node，Pod placement/binding 由 kube-scheduler 及配置的 [[scheduler-plugins]] 完成，节点容量不足则由 [[karpenter]] 等容量控制器处理。
 
 ## 架构边界
 
