@@ -234,8 +234,8 @@
       ],
       "date": "2026-09-22",
       "description": "M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。",
-      "degree": 53,
-      "inbound": 12,
+      "degree": 54,
+      "inbound": 13,
       "outbound": 49
     },
     {
@@ -431,11 +431,11 @@
         "preemption",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。",
-      "degree": 13,
-      "inbound": 6,
-      "outbound": 11
+      "date": "2026-09-25",
+      "description": "M5-B scheduler 下钻：职责边界、scheduling/binding cycle、queue/requeue feedback 与失败路径，保留 framework/profiles/topology/preemption 的 KEP 演进。",
+      "degree": 18,
+      "inbound": 12,
+      "outbound": 14
     },
     {
       "id": "k8s-v1.37-scheduling-node-dra-progress",
@@ -474,11 +474,11 @@
         "workload-api",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。",
-      "degree": 13,
-      "inbound": 7,
-      "outbound": 9
+      "date": "2026-09-25",
+      "description": "M5-B L1 入口：D1–D5 串联 Workload → Admission → Placement → Capacity、生命周期与失败边界，并保留 Workload/PodGroup 的 KEP 演进。",
+      "degree": 18,
+      "inbound": 12,
+      "outbound": 15
     },
     {
       "id": "llm-inference-serving-project-map",
@@ -1970,11 +1970,11 @@
         "batch",
         "distributed-workload"
       ],
-      "date": "2026-06-14",
-      "description": "JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "批作业集合生命周期控制，用 ReplicatedJobs 管理子 Job、依赖、成功/失败策略、重启和共享卷保留。",
+      "degree": 14,
+      "inbound": 10,
+      "outbound": 9
     },
     {
       "id": "k8m",
@@ -2026,11 +2026,11 @@
         "autoscaling",
         "node"
       ],
-      "date": "2026-06-14",
-      "description": "Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。",
-      "degree": 15,
-      "inbound": 13,
-      "outbound": 4
+      "date": "2026-09-25",
+      "description": "节点容量生命周期控制，把未调度 Pod 需求与 NodePool/NodeClass 约束转成 NodeClaim，管理 provisioning、disruption 与 termination。",
+      "degree": 18,
+      "inbound": 16,
+      "outbound": 8
     },
     {
       "id": "kgateway",
@@ -2378,11 +2378,11 @@
         "scheduler",
         "queueing"
       ],
-      "date": "2026-06-14",
-      "description": "Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。",
-      "degree": 18,
-      "inbound": 15,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "Workload admission 与配额控制，管理队列、flavor、topology 和 checks；最终 Pod placement 由 scheduler 完成。",
+      "degree": 20,
+      "inbound": 17,
+      "outbound": 11
     },
     {
       "id": "kustomize",
@@ -2432,11 +2432,11 @@
         "distributed-workload",
         "llm-serving"
       ],
-      "date": "2026-06-14",
-      "description": "LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "LeaderWorkerSet 管理 leader/worker 服务组；DisaggregatedSet 通过角色和 slices 组合子 LWS，协调多角色服务生命周期。",
+      "degree": 14,
+      "inbound": 10,
+      "outbound": 9
     },
     {
       "id": "llm-d",
@@ -3280,11 +3280,11 @@
         "scheduler",
         "plugins"
       ],
-      "date": "2026-06-14",
-      "description": "scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。",
-      "degree": 11,
-      "inbound": 9,
-      "outbound": 3
+      "date": "2026-09-25",
+      "description": "kube-scheduler framework 的 out-of-tree placement 扩展，参与队列、过滤、评分与放行，不接管业务 workload 生命周期或节点创建。",
+      "degree": 15,
+      "inbound": 13,
+      "outbound": 9
     },
     {
       "id": "secrets-store-csi-driver",
@@ -4216,8 +4216,8 @@
       ],
       "date": "2026-06-14",
       "description": "JobSet 架构（P1，分布式 workload API：JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -4330,8 +4330,8 @@
       ],
       "date": "2026-06-14",
       "description": "Karpenter 架构（P0，节点弹性 / 成本：Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -4609,8 +4609,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -4663,8 +4663,8 @@
       ],
       "date": "2026-06-14",
       "description": "LeaderWorkerSet 架构（P1，分布式 workload API：LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -5430,8 +5430,8 @@
       ],
       "date": "2026-06-14",
       "description": "scheduler-plugins 架构（P0，调度 / 资源：scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。）",
-      "degree": 3,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 3,
       "outbound": 3
     },
     {
@@ -8692,12 +8692,32 @@
     },
     {
       "source": "jobset",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
       "target": "kueue",
       "kind": "related"
     },
     {
       "source": "jobset",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -9222,12 +9242,32 @@
     },
     {
       "source": "karpenter",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
       "target": "llm-inference",
       "kind": "related"
     },
     {
       "source": "karpenter",
       "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -10232,6 +10272,16 @@
     },
     {
       "source": "kubernetes-scheduler-core-design",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
       "target": "kube-scheduler-simulator",
       "kind": "related"
     },
@@ -10273,12 +10323,17 @@
     {
       "source": "kubernetes-scheduler-core-design",
       "target": "kueue",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "kubernetes-scheduler-core-design",
       "target": "scheduler-plugins",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
+      "target": "src-scheduler-plugins-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubernetes-workload-automation",
@@ -10397,6 +10452,11 @@
     },
     {
       "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
       "target": "kubernetes-workload-automation",
       "kind": "related"
     },
@@ -10414,6 +10474,31 @@
       "source": "kubernetes-workload-gang-scheduling-design",
       "target": "scheduler-plugins",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-jobset-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-karpenter-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-kueue-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-lws-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-scheduler-plugins-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubespray",
@@ -10467,7 +10552,27 @@
     },
     {
       "source": "kueue",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -10477,7 +10582,17 @@
     },
     {
       "source": "kueue",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
       "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -11837,7 +11952,22 @@
     },
     {
       "source": "lws",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -11848,6 +11978,11 @@
     {
       "source": "lws",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -13147,12 +13282,42 @@
     },
     {
       "source": "scheduler-plugins",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
       "target": "kubernetes",
       "kind": "related"
     },
     {
       "source": "scheduler-plugins",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "lws",
       "kind": "related"
     },
     {

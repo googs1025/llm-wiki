@@ -14,12 +14,12 @@ date: 2026-05-12
 - [[kubectl-ai]] — kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）
 - [[k8m]] — 轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）
 - [[kubewall]] — single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照
-- [[kueue]] — Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。
-- [[karpenter]] — Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。
+- [[kueue]] — Workload admission 与配额控制，管理队列、flavor、topology 和 checks；最终 Pod placement 由 scheduler 完成。
+- [[karpenter]] — 节点容量生命周期控制，把未调度 Pod 需求与 NodePool/NodeClass 约束转成 NodeClaim，管理 provisioning、disruption 与 termination。
 - [[metrics-server]] — Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k8s.io`，供 HPA/VPA/kubectl top 使用。
 - [[prometheus-adapter]] — Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。
-- [[lws]] — LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。
-- [[jobset]] — JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。
+- [[lws]] — LeaderWorkerSet 管理 leader/worker 服务组；DisaggregatedSet 通过角色和 slices 组合子 LWS，协调多角色服务生命周期。
+- [[jobset]] — 批作业集合生命周期控制，用 ReplicatedJobs 管理子 Job、依赖、成功/失败策略、重启和共享卷保留。
 - [[controller-runtime]] — Kubernetes controller 运行时框架，组合 Manager、cache、client、reconcile、webhook，并提供 envtest 测试支持。
 - [[kubebuilder]] — Kubernetes API/controller 作者工作流与脚手架，组织项目布局、生成流程和运行时组件。
 - [[controller-tools]] — marker/type 解析与生成工具，产出 CRD、RBAC、webhook manifests、deepcopy/object 与 applyconfiguration 等资产。
@@ -27,7 +27,7 @@ date: 2026-05-12
 - [[external-dns]] — ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。
 - [[secrets-store-csi-driver]] — Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。
 - [[kind]] — kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。
-- [[scheduler-plugins]] — scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。
+- [[scheduler-plugins]] — kube-scheduler framework 的 out-of-tree placement 扩展，参与队列、过滤、评分与放行，不接管业务 workload 生命周期或节点创建。
 - [[kubespray]] — Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。
 - [[cri-tools]] — CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。
 - [[ingress2gateway]] — ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。
@@ -320,8 +320,9 @@ date: 2026-05-12
 - [[kubernetes-keps-feature-coverage]] — Kubernetes scheduling / autoscaling / node 重要 feature 覆盖矩阵，按合并设计组追踪 P0/P1 KEP。
 - [[kubernetes-keps-implementation-matrix]] — Kubernetes 重要 KEP 的实现状态矩阵，逐项追踪 status、Alpha/Beta/GA、feature gates 和关键实现路径。
 - [[k8s-v1.37-scheduling-node-dra-progress]] — 2026-07-15 复核 upstream `kubernetes/enhancements` 后的 v1.37 调度、Node、DRA 和 autoscaling 进展。
-- [[kubernetes-scheduler-core-design]] — Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。
-- [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。
+- [[kubernetes-scheduler-core-design]] — M5-B scheduler 下钻：职责边界、scheduling/binding cycle、queue/requeue feedback 与失败路径，保留 framework/profiles/topology/preemption 的 KEP 演进。
+- [[kubernetes-workload-gang-scheduling-design]] — M5-B L1 入口：D1–D5 串联 Workload → Admission → Placement → Capacity、生命周期与失败边界，并保留 Workload/PodGroup 的 KEP 演进。
+- M5-B 阅读路径：[[kubernetes-workload-gang-scheduling-design]] → [[kubernetes-scheduler-core-design]] → [[jobset]] / [[lws]] → [[kueue]] → [[scheduler-plugins]] → [[karpenter]]。
 - [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。
 - [[kubernetes-hpa-autoscaling-design]] — HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。
 - [[kubernetes-in-place-pod-resize-design]] — Pod `/resize`、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。

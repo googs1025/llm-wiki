@@ -463,3 +463,9 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 - 更新 [[llm-serving-engine-selection-map]]，把“引擎选型”改成 engine、distributed runtime、Kubernetes routing/control plane 和 infrastructure 的分层组合决策。
 - 同步相关 Entity、Concept、[[Wiki 索引]] 与生成 HTML；保留 2026-09-13/14 Source 摘要的历史图，并为当前 llm-d WVA deprecated 状态补充双向 Conflict 注记。
 - 修正 Dynamo P/D 拓扑与 vLLM KV block size / P-D maturity 的绝对化历史表述。
+
+## [2026-09-25] query | M5-B Kubernetes Workload / Scheduling 地图
+
+- 基于 Kueue、JobSet、LWS/DisaggregatedSet、scheduler-plugins、Karpenter 与 Kubernetes scheduler 当前官方证据，重构 Workload → Admission → Placement → Capacity 主线。
+- 更新 [[kubernetes-workload-gang-scheduling-design]] 的 D1–D5，并重画 [[kubernetes-scheduler-core-design]] 的 scheduling/binding cycle 与 queue/requeue。
+- 同步五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。
