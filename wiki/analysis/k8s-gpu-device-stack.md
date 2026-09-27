@@ -3,7 +3,7 @@ title: Kubernetes GPU / Device Stack 项目地图
 tags: [kubernetes, gpu, device-plugin, dra, cdi, project-map]
 date: 2026-09-27
 sources: [src-k8s-gpu-device-plugins-stars, src-hami-architecture, src-gpu-operator-architecture, src-dra-driver-nvidia-gpu-architecture, src-k8s-device-plugin-architecture, src-node-feature-discovery-architecture]
-related: ["[[kubernetes]]", "[[llm-inference]]", "[[device-plugin]]", "[[kubernetes-dra]]", "[[cdi]]", "[[gpu-sharing]]", "[[hami]]", "[[gpu-operator]]", "[[dra-driver-nvidia-gpu]]", "[[k8s-device-plugin]]", "[[node-feature-discovery]]", "[[k8s-gpu-device-stack]]", "[[kubernetes-dra-design-deep-dive]]"]
+related: ["[[kubernetes]]", "[[llm-inference]]", "[[device-plugin]]", "[[kubernetes-dra]]", "[[cdi]]", "[[gpu-sharing]]", "[[hami]]", "[[gpu-operator]]", "[[dra-driver-nvidia-gpu]]", "[[k8s-device-plugin]]", "[[node-feature-discovery]]", "[[kubernetes-dra-design-deep-dive]]"]
 ---
 
 # Kubernetes GPU / Device Stack 项目地图
