@@ -1,12 +1,33 @@
 ---
 title: Kubernetes DRA Design Deep Dive
 tags: [analysis, kubernetes, kep, sig-node, sig-scheduling, dra, device, gpu, design-deep-dive]
-date: 2026-07-07
+date: 2026-09-27
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/4381-dra-structured-parameters/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/3063-dynamic-resource-allocation/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5007-device-attach-before-pod-scheduled/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5075-dra-consumable-capacity/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4815-dra-partitionable-devices/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4816-dra-prioritized-list/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5055-dra-device-taints-and-tolerations/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-dra]], [[k8s-gpu-device-stack]], [[device-plugin]], [[cdi]], [[node-feature-discovery]], [[dra-driver-nvidia-gpu]], [[karpenter]]
+related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-dra]]", "[[k8s-gpu-device-stack]]", "[[device-plugin]]", "[[cdi]]", "[[node-feature-discovery]]", "[[dra-driver-nvidia-gpu]]", "[[karpenter]]", "[[gpu-sharing]]", "[[gpu-operator]]", "[[k8s-device-plugin]]", "[[hami]]"]
 ---
 
 # Kubernetes DRA Design Deep Dive
+
+## 当前上游核验（2026-09-27）
+
+本节区分当前官方证据与下文 2026-07 的 KEP 设计/状态笔记；[[src-dra-driver-nvidia-gpu-architecture]] 是 2026-06 的 raw-backed Source 快照，保留其历史仓库/HEAD 和 ASCII 图。当前默认分支 commit 不代表 release，基础 DRA 稳定也不等于所有 Kubernetes 扩展或 NVIDIA driver 功能都已稳定。完整设备栈边界见 [[k8s-gpu-device-stack]]。
+
+| 项目 | 当前 commit | 当前证据边界 |
+|---|---|---|
+| [[kubernetes]] | [`6c1c7702cf20`](https://github.com/kubernetes/kubernetes/commit/6c1c7702cf2052245ef10e699d45f071af306f59) | Kubernetes DRA API、scheduler allocation 与 kubelet Prepare/Unprepare；各扩展阶段按官方文档及该 commit 的 feature 定义单独核验 |
+| [[dra-driver-nvidia-gpu]] | [`495bf4c59b94`](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/commit/495bf4c59b9423080aa1fe2163955f44a495012c) | NVIDIA GPU/ComputeDomain 驱动实现；通过 NVIDIA 仓库入口查询时返回此规范链接，不以 Kubernetes 的 feature stage 替代厂商支持矩阵 |
+
+| 能力 / feature gate | 本次核验的阶段与版本 | 本页相关边界 / 官方依据 |
+|---|---|---|
+| 基础 DRA / `DynamicResourceAllocation` | Stable，自 Kubernetes v1.35 | [DRA 概览](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/)；基础 Claim/设备分配稳定不覆盖下列所有扩展 |
+| Device binding conditions / `DRADeviceBindingConditions` | Beta，自 v1.36，默认启用 | 延迟 Pod binding 以等待外部设备准备；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1413)；仍需对应 driver/status 支持 |
+| Consumable capacity / `DRAConsumableCapacity` | Beta，自 v1.36，默认启用 | 多 Claim 消耗同一设备容量；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#consumable-capacity) |
+| Partitionable devices / `DRAPartitionableDevices` | Beta，自 v1.36，默认启用 | 通过共享计数器表达逻辑设备资源重叠；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#partitionable-devices) |
+| Prioritized list / `DRAPrioritizedList` | GA，自 v1.36；v1.37 锁定启用 | 按优先级尝试设备请求候选；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1468) |
+| Device taints / `DRADeviceTaints` | 当前源码 v1.37 条目标记 GA、默认启用；v1.38 条目锁定启用 | 设备 taint/toleration 的阶段不同于相关附加规则；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1429)，版本化源码条目不是未来 release 已发布的证明 |
+| Optional node operations / `DRAOptionalNodeOperations` | Alpha，自 v1.37，默认关闭 | driver 可声明跳过特定 node-local 操作，不能推广为所有 GPU 都无需 Prepare；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#optional-node-operations) |
+
+该表只列本页相关且已核验的能力，不是完整 feature 清单。API 对象语义见 [DRA API Objects](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-api/)。NVIDIA 侧须分别核对 [锚定 driver README](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/blob/495bf4c59b9423080aa1fe2163955f44a495012c/README.md) 和 [GPU Operator 26.7 管理路径](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/26.7/dra-intro-install.html)：独立仓库 GPU plugin 的支持说明与 Operator 管理版本的默认启用方式不能混用。下文 KEP 状态表属于历史演进记录，不覆盖本节的当前阶段核验。
 
 这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 `sig-node/4381-dra-structured-parameters`，它把早期 `3063-dynamic-resource-allocation` 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
 

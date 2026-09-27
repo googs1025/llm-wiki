@@ -1,12 +1,28 @@
 ---
 title: Kubernetes GPU / Device Stack 项目地图
 tags: [kubernetes, gpu, device-plugin, dra, cdi, project-map]
-date: 2026-06-13
-sources: [src-k8s-gpu-device-plugins-stars, src-hami-architecture, src-gpu-operator-architecture, src-dra-driver-nvidia-gpu-architecture, src-k8s-device-plugin-architecture]
-related: [[kubernetes]], [[llm-inference]], [[device-plugin]], [[kubernetes-dra]], [[cdi]], [[gpu-sharing]], [[hami]], [[gpu-operator]], [[dra-driver-nvidia-gpu]], [[k8s-device-plugin]]
+date: 2026-09-27
+sources: [src-k8s-gpu-device-plugins-stars, src-hami-architecture, src-gpu-operator-architecture, src-dra-driver-nvidia-gpu-architecture, src-k8s-device-plugin-architecture, src-node-feature-discovery-architecture]
+related: ["[[kubernetes]]", "[[llm-inference]]", "[[device-plugin]]", "[[kubernetes-dra]]", "[[cdi]]", "[[gpu-sharing]]", "[[hami]]", "[[gpu-operator]]", "[[dra-driver-nvidia-gpu]]", "[[k8s-device-plugin]]", "[[node-feature-discovery]]", "[[k8s-gpu-device-stack]]", "[[kubernetes-dra-design-deep-dive]]"]
 ---
 
 # Kubernetes GPU / Device Stack 项目地图
+
+## 当前上游核验（2026-09-27）
+
+以下 commit 是执行时官方默认分支快照，不代表 release 或整套 GPU 能力的成熟度。[[src-node-feature-discovery-architecture]]、[[src-gpu-operator-architecture]]、[[src-k8s-device-plugin-architecture]]、[[src-dra-driver-nvidia-gpu-architecture]] 与 [[src-hami-architecture]] 保留 2026-06 的 raw-backed Source 及原始 ASCII 图；相关 KEP 笔记保留 2026-07 的设计/演进语境。当前 DRA 基础能力与扩展阶段分别见 [[kubernetes-dra-design-deep-dive]]。
+
+| 项目 | 当前 commit | 当前职责 / allocation 边界 | M5-C 层 |
+|---|---|---|---|
+| [[node-feature-discovery]] | [`386fda4332ba`](https://github.com/kubernetes-sigs/node-feature-discovery/commit/386fda4332ba5f049c6f0b107f9a58cd46f5af04) | worker/master 发布节点能力与 labels，NodeFeature/NodeFeatureRule 表达发现和规则，topology-updater/GC 管拓扑数据及清理；不执行每次 Pod 设备分配 | Discovery / capability |
+| [[gpu-operator]] | [`60526e35efee`](https://github.com/NVIDIA/gpu-operator/commit/60526e35efeeedef584d8f40db0bac8864f98f26) | 管理 GPU 软件组件生命周期；官方 26.7 文档区分 Device Plugin 的 ClusterPolicy 路线与 DRA 的 GPUCluster 路线，后者不直接管理 GPU driver | Node software lifecycle |
+| [[k8s-device-plugin]] | [`86142cf1a93f`](https://github.com/NVIDIA/k8s-device-plugin/commit/86142cf1a93fb68a99c5927b9599e13392e27e15) | kubelet 注册、ListAndWatch/health、Allocate 与 extended resources；按配置返回 env/mount/CDI 设备交接信息 | Device Plugin allocation / injection handoff |
+| [[dra-driver-nvidia-gpu]] | [`495bf4c59b94`](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/commit/495bf4c59b9423080aa1fe2163955f44a495012c) | DRA GPU 与 ComputeDomain 插件/控制面，发布设备库存并执行节点 Prepare/Unprepare；GPU 配置能力和 ComputeDomain 支持范围需按安装版本分别判断 | DRA driver / node preparation |
+| [[hami]] | [`a2dd191b2e7f`](https://github.com/Project-HAMi/HAMi/commit/a2dd191b2e7fb1f289833e9b4fcef16289ec89b3) | scheduler/extender 计算设备共享与 reservation，annotation 交接给 device-plugin Allocate，HAMi-core 在容器侧实施相应隔离 | Sharing / allocation handoff / isolation |
+
+官方依据：[NFD 当前介绍](https://github.com/kubernetes-sigs/node-feature-discovery/blob/386fda4332ba5f049c6f0b107f9a58cd46f5af04/docs/get-started/introduction.md)、[GPU Operator 26.7 DRA 管理路径](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/26.7/dra-intro-install.html)、[NVIDIA Device Plugin README](https://github.com/NVIDIA/k8s-device-plugin/blob/86142cf1a93fb68a99c5927b9599e13392e27e15/README.md)、[NVIDIA DRA README](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/blob/495bf4c59b9423080aa1fe2163955f44a495012c/README.md) 与 [HAMi FAQ](https://project-hami.io/docs/faq)。通过 `NVIDIA/k8s-dra-driver-gpu` 查询当前 HEAD 时，GitHub 返回的规范 commit 链接仍位于 `kubernetes-sigs/dra-driver-nvidia-gpu`，这里采用实际返回的链接。
+
+共存与版本边界：GPU Operator 26.7 文档规定集群使用 GPUCluster 或 ClusterPolicy 之一，不支持两者并存或直接原地迁移；HAMi FAQ 要求避免同一节点上的插件争用同一 GPU resource。上述 NVIDIA DRA 仓库 README 仍区分受支持的 ComputeDomain 与未正式支持、默认关闭的独立 GPU plugin，不能用它推定 Operator 26.7 所管理 driver 的相同默认值。部署判断须绑定具体 release、Helm 配置和 feature gates，不能只看 [[device-plugin]]、[[kubernetes-dra]]、[[cdi]] 或 [[gpu-sharing]] 名称。
 
 这页把 [[src-k8s-gpu-device-plugins-stars]] 从 star list 整理成 Kubernetes GPU / 异构设备资源层地图。核心结论：LLM serving 的 GPU 底座已经不只是“把 `/dev/nvidia0` 挂进 Pod”，而是 driver/operator、container runtime、device discovery、DRA/CDI、sharing、scheduler、observability、diagnostics 和 fake device 测试环境的组合。
 
