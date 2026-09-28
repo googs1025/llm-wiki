@@ -255,11 +255,11 @@
         "gpu",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。",
-      "degree": 15,
-      "inbound": 9,
-      "outbound": 10
+      "date": "2026-09-27",
+      "description": "M5-C DRA 下钻：分项 feature stage、Claim allocation/binding、kubelet Prepare/CDI/release 与失败恢复，保留历史 KEP 演进。",
+      "degree": 20,
+      "inbound": 18,
+      "outbound": 15
     },
     {
       "id": "k8s-gpu-device-stack",
@@ -275,11 +275,11 @@
         "cdi",
         "project-map"
       ],
-      "date": "2026-06-13",
-      "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
-      "degree": 34,
-      "inbound": 13,
-      "outbound": 21
+      "date": "2026-09-27",
+      "description": "M5-C L1 入口：D1–D5 区分发现、节点软件、Device Plugin/DRA 分配、runtime 注入、共享隔离与失败边界。",
+      "degree": 35,
+      "inbound": 22,
+      "outbound": 27
     },
     {
       "id": "kubernetes-hpa-autoscaling-design",
@@ -791,11 +791,11 @@
         "device-plugin",
         "gpu"
       ],
-      "date": "2026-06-12",
-      "description": "Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec",
-      "degree": 13,
-      "inbound": 11,
-      "outbound": 6
+      "date": "2026-09-27",
+      "description": "Container Device Interface，以 spec 与设备 ID 交接 runtime 注入配置，不负责调度或 allocation。",
+      "degree": 14,
+      "inbound": 14,
+      "outbound": 9
     },
     {
       "id": "disaggregated-serving",
@@ -865,11 +865,11 @@
         "sharing",
         "scheduling"
       ],
-      "date": "2026-06-12",
-      "description": "GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式",
-      "degree": 16,
-      "inbound": 16,
-      "outbound": 6
+      "date": "2026-09-27",
+      "description": "区分共享调度/记账、分配、硬件分区与 runtime 隔离；MIG、time-slicing、MPS、HAMi-core 不提供等价保障。",
+      "degree": 17,
+      "inbound": 17,
+      "outbound": 10
     },
     {
       "id": "gpu-programming-learning",
@@ -923,11 +923,11 @@
         "gpu",
         "runtime"
       ],
-      "date": "2026-06-12",
-      "description": "Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制",
-      "degree": 9,
-      "inbound": 9,
-      "outbound": 5
+      "date": "2026-09-27",
+      "description": "kubelet 注册、设备/health 发布、extended resources 与 Allocate 的传统路径，需明确冲突资源的分配所有权。",
+      "degree": 10,
+      "inbound": 10,
+      "outbound": 10
     },
     {
       "id": "kubernetes-dra",
@@ -942,11 +942,11 @@
         "gpu",
         "device-management"
       ],
-      "date": "2026-07-15",
-      "description": "Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径",
-      "degree": 14,
-      "inbound": 14,
-      "outbound": 9
+      "date": "2026-09-27",
+      "description": "ResourceClaim/ResourceSlice 分配模型，基础 DRA 自 v1.35 stable；扩展阶段、节点 Prepare 与厂商支持分别核验。",
+      "degree": 15,
+      "inbound": 15,
+      "outbound": 12
     },
     {
       "id": "kubernetes-workload-automation",
@@ -1721,11 +1721,11 @@
         "dra",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）",
-      "degree": 14,
-      "inbound": 11,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "NVIDIA DRA 库存、Prepare/Unprepare、设备配置与 ComputeDomain；厂商功能支持范围独立于 Kubernetes DRA 的阶段。",
+      "degree": 15,
+      "inbound": 14,
+      "outbound": 11
     },
     {
       "id": "dynamo",
@@ -1861,11 +1861,11 @@
         "vgpu",
         "scheduler"
       ],
-      "date": "2026-06-12",
-      "description": "Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "共享调度 reservation、annotation 交接、device-plugin Allocate 与 HAMi-core 隔离；HAMi-DRA 改变分配路径，需单独核验资源所有权与隔离边界。",
+      "degree": 13,
+      "inbound": 12,
+      "outbound": 11
     },
     {
       "id": "headlamp",
@@ -2919,11 +2919,11 @@
         "node",
         "hardware"
       ],
-      "date": "2026-06-14",
-      "description": "Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。",
-      "degree": 11,
-      "inbound": 8,
-      "outbound": 4
+      "date": "2026-09-27",
+      "description": "节点能力发现与发布：worker/master、规则标签、topology-updater 与 GC；提供 placement/operator 信号，不执行设备分配。",
+      "degree": 18,
+      "inbound": 15,
+      "outbound": 13
     },
     {
       "id": "gpu-operator",
@@ -2938,11 +2938,11 @@
         "operator",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）",
-      "degree": 13,
-      "inbound": 11,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "NVIDIA 节点软件与 operands 生命周期管理；区分 ClusterPolicy 与 GPUCluster 路径，不决定单次 Pod 的 GPU 选择。",
+      "degree": 15,
+      "inbound": 13,
+      "outbound": 12
     },
     {
       "id": "k8s-device-plugin",
@@ -2957,11 +2957,11 @@
         "device-plugin",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）",
-      "degree": 11,
-      "inbound": 10,
-      "outbound": 7
+      "date": "2026-09-27",
+      "description": "NVIDIA extended-resource 插件：注册、ListAndWatch/health、Allocate，按配置通过 env/mount/CDI 交接设备。",
+      "degree": 13,
+      "inbound": 12,
+      "outbound": 11
     },
     {
       "id": "oceanbase",
@@ -3976,8 +3976,8 @@
       ],
       "date": "2026-06-12",
       "description": "DRA Driver for NVIDIA GPUs 架构（HEAD 749a743，Kubernetes DRA NVIDIA driver：ResourceClaim/ResourceSlice + NodePrepare + dynamic MIG/VFIO + ComputeDomain）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 3,
       "outbound": 4
     },
     {
@@ -4107,7 +4107,7 @@
       "date": "2026-06-12",
       "description": "HAMi 架构（HEAD 5dca58e，Kubernetes 异构 GPU sharing/vGPU：webhook + scheduler extender + device plugin + 多厂商 device abstraction）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5108,8 +5108,8 @@
       ],
       "date": "2026-06-14",
       "description": "Node Feature Discovery 架构（P1，节点能力发现：Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5148,7 +5148,7 @@
       "date": "2026-06-12",
       "description": "NVIDIA GPU Operator 架构（HEAD 0219120，GPU 软件栈 Kubernetes Operator：ClusterPolicy/NVIDIADriver + state renderer + operands lifecycle）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5166,7 +5166,7 @@
       "date": "2026-06-12",
       "description": "NVIDIA k8s-device-plugin 架构（HEAD 8688949，官方 GPU device plugin：NVML/CUDA discovery + kubelet gRPC + env/volume/CDI Allocate）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -6803,7 +6803,7 @@
     {
       "source": "cdi",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "cdi",
@@ -6817,12 +6817,27 @@
     },
     {
       "source": "cdi",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
       "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
       "source": "cdi",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
+      "target": "kubernetes-dra-design-deep-dive",
       "kind": "related"
     },
     {
@@ -7607,6 +7622,11 @@
     },
     {
       "source": "device-plugin",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "gpu-operator",
       "kind": "related"
     },
@@ -7617,12 +7637,32 @@
     },
     {
       "source": "device-plugin",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
       "source": "device-plugin",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -7683,7 +7723,7 @@
     {
       "source": "dra-driver-nvidia-gpu",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "dra-driver-nvidia-gpu",
@@ -7693,7 +7733,7 @@
     {
       "source": "dra-driver-nvidia-gpu",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "dra-driver-nvidia-gpu",
@@ -7702,7 +7742,22 @@
     },
     {
       "source": "dra-driver-nvidia-gpu",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8252,13 +8307,18 @@
     },
     {
       "source": "gpu-operator",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
       "target": "device-plugin",
       "kind": "related"
     },
     {
       "source": "gpu-operator",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "gpu-operator",
@@ -8268,11 +8328,16 @@
     {
       "source": "gpu-operator",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "gpu-operator",
       "target": "k8s-device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "k8s-gpu-device-stack",
       "kind": "related"
     },
     {
@@ -8283,6 +8348,16 @@
     {
       "source": "gpu-operator",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8342,13 +8417,18 @@
     },
     {
       "source": "gpu-sharing",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
       "target": "device-plugin",
       "kind": "related"
     },
     {
       "source": "gpu-sharing",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "gpu-sharing",
@@ -8367,7 +8447,22 @@
     },
     {
       "source": "gpu-sharing",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8443,12 +8538,12 @@
     {
       "source": "hami",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "hami",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "hami",
@@ -8462,7 +8557,22 @@
     },
     {
       "source": "hami",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -9017,6 +9127,11 @@
     },
     {
       "source": "k8s-device-plugin",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
       "target": "gpu-operator",
       "kind": "related"
     },
@@ -9028,11 +9143,26 @@
     {
       "source": "k8s-device-plugin",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
     },
     {
       "source": "k8s-device-plugin",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -9112,6 +9242,11 @@
     },
     {
       "source": "k8s-gpu-device-stack",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
       "target": "kueue",
       "kind": "wikilink"
     },
@@ -9133,7 +9268,7 @@
     {
       "source": "k8s-gpu-device-stack",
       "target": "node-feature-discovery",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-gpu-device-stack",
@@ -9142,7 +9277,32 @@
     },
     {
       "source": "k8s-gpu-device-stack",
+      "target": "src-dra-driver-nvidia-gpu-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-gpu-operator-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-hami-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-k8s-device-plugin-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
       "target": "src-k8s-gpu-device-plugins-stars",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-node-feature-discovery-architecture",
       "kind": "wikilink"
     },
     {
@@ -9843,7 +10003,7 @@
     {
       "source": "kubernetes-dra",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "kubernetes-dra",
@@ -9852,8 +10012,18 @@
     },
     {
       "source": "kubernetes-dra",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra",
       "target": "k8s-device-plugin",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
     },
     {
       "source": "kubernetes-dra",
@@ -9871,6 +10041,11 @@
       "kind": "related"
     },
     {
+      "source": "kubernetes-dra",
+      "target": "node-feature-discovery",
+      "kind": "related"
+    },
+    {
       "source": "kubernetes-dra-design-deep-dive",
       "target": "cdi",
       "kind": "related"
@@ -9883,6 +10058,26 @@
     {
       "source": "kubernetes-dra-design-deep-dive",
       "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "gpu-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
@@ -9919,6 +10114,11 @@
       "source": "kubernetes-dra-design-deep-dive",
       "target": "node-feature-discovery",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "src-dra-driver-nvidia-gpu-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubernetes-hpa-autoscaling-design",
@@ -12557,12 +12757,57 @@
     },
     {
       "source": "node-feature-discovery",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "gpu-operator",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
       "target": "gpu-sharing",
       "kind": "related"
     },
     {
       "source": "node-feature-discovery",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "k8s-device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "kubernetes-dra-design-deep-dive",
       "kind": "related"
     },
     {

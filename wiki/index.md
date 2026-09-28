@@ -38,7 +38,7 @@ date: 2026-05-12
 - [[sig-storage-lib-external-provisioner]] — sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。
 - [[descheduler]] — Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。
 - [[kwok]] — KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。
-- [[node-feature-discovery]] — Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。
+- [[node-feature-discovery]] — 节点能力发现与发布：worker/master、规则标签、topology-updater 与 GC；提供 placement/operator 信号，不执行设备分配。
 - [[kube-scheduler-simulator]] — kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。
 - [[headlamp]] — Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。
 - [[security-profiles-operator]] — Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。
@@ -125,10 +125,10 @@ date: 2026-05-12
 - [[kthena]] — Volcano 社区 Kubernetes-native AI serving platform，整合 ModelServing、ModelServer、ModelRoute、P/D、路由、扩缩与拓扑/gang scheduling。
 
 ### Kubernetes GPU / Device
-- [[hami]] — Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）
-- [[dra-driver-nvidia-gpu]] — NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）
-- [[gpu-operator]] — NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）
-- [[k8s-device-plugin]] — NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）
+- [[hami]] — 共享调度 reservation、annotation 交接、device-plugin Allocate 与 HAMi-core 隔离；HAMi-DRA 改变分配路径，需单独核验资源所有权与隔离边界。
+- [[dra-driver-nvidia-gpu]] — NVIDIA DRA 库存、Prepare/Unprepare、设备配置与 ComputeDomain；厂商功能支持范围独立于 Kubernetes DRA 的阶段。
+- [[gpu-operator]] — NVIDIA 节点软件与 operands 生命周期管理；区分 ClusterPolicy 与 GPUCluster 路径，不决定单次 Pod 的 GPU 选择。
+- [[k8s-device-plugin]] — NVIDIA extended-resource 插件：注册、ListAndWatch/health、Allocate，按配置通过 env/mount/CDI 交接设备。
 
 ### GPU Learning / CUDA-MUSA
 - [[musa-learning-notes]] — MUSA SDK / CUDA→MUSA GPU 编程学习日志（6 周路线 + 38 个 `.mu`/C++/Python 示例）
@@ -148,10 +148,10 @@ date: 2026-05-12
 - [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
 
 ### Kubernetes 资源 / 设备 / GPU
-- [[kubernetes-dra]] — Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径
-- [[cdi]] — Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec
-- [[device-plugin]] — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制
-- [[gpu-sharing]] — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式
+- [[kubernetes-dra]] — ResourceClaim/ResourceSlice 分配模型，基础 DRA 自 v1.35 stable；扩展阶段、节点 Prepare 与厂商支持分别核验。
+- [[cdi]] — Container Device Interface，以 spec 与设备 ID 交接 runtime 注入配置，不负责调度或 allocation。
+- [[device-plugin]] — kubelet 注册、设备/health 发布、extended resources 与 Allocate 的传统路径，需明确冲突资源的分配所有权。
+- [[gpu-sharing]] — 区分共享调度/记账、分配、硬件分区与 runtime 隔离；MIG、time-slicing、MPS、HAMi-core 不提供等价保障。
 - [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
@@ -323,7 +323,7 @@ date: 2026-05-12
 - [[kubernetes-scheduler-core-design]] — M5-B scheduler 下钻：职责边界、scheduling/binding cycle、queue/requeue feedback 与失败路径，保留 framework/profiles/topology/preemption 的 KEP 演进。
 - [[kubernetes-workload-gang-scheduling-design]] — M5-B L1 入口：D1–D5 串联 Workload → Admission → Placement → Capacity、生命周期与失败边界，并保留 Workload/PodGroup 的 KEP 演进。
 - M5-B 阅读路径：[[kubernetes-workload-gang-scheduling-design]] → [[kubernetes-scheduler-core-design]] → [[jobset]] / [[lws]] → [[kueue]] → [[scheduler-plugins]] → [[karpenter]]。
-- [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。
+- [[kubernetes-dra-design-deep-dive]] — M5-C DRA 下钻：分项 feature stage、Claim allocation/binding、kubelet Prepare/CDI/release 与失败恢复，保留历史 KEP 演进。
 - [[kubernetes-hpa-autoscaling-design]] — HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。
 - [[kubernetes-in-place-pod-resize-design]] — Pod `/resize`、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。
 - [[kubernetes-node-runtime-observability-security-design]] — kubelet/CRI、resource managers、sidecar lifecycle、user namespace/rootless kubelet、CRI stats、PSI 和 resource health 设计详解。
@@ -342,7 +342,8 @@ date: 2026-05-12
 - [[github-stars-ingest-candidates]] — GitHub Stars 下一批摄入候选清单（P0-P2：agent-substrate / AgentScope Runtime / mem0 / Codex / llm-d / AI Gateway / K8s GPU 等）
 - [[github-stars-backlog-implementation-map]] — GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
-- [[k8s-gpu-device-stack]] — Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）
+- [[k8s-gpu-device-stack]] — M5-C L1 入口：D1–D5 区分发现、节点软件、Device Plugin/DRA 分配、runtime 注入、共享隔离与失败边界。
+- M5-C 阅读路径：[[k8s-gpu-device-stack]] → [[kubernetes-dra-design-deep-dive]] → [[device-plugin]] / [[kubernetes-dra]] / [[cdi]] / [[gpu-sharing]] → [[node-feature-discovery]] / [[gpu-operator]] / [[k8s-device-plugin]] / [[dra-driver-nvidia-gpu]] / [[hami]]。
 - [[k8s-core-controller-map]] — M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。
 - M5-A 阅读路径：[[k8s-core-controller-map]] → [[controller-runtime]] → [[kubebuilder]] → [[controller-tools]]，串联运行时框架、作者工作流与生成工具。
 - [[llm-d-kubernetes-sigs-candidate-map]] — llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）

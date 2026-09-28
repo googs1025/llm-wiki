@@ -469,3 +469,9 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 - 基于 Kueue、JobSet、LWS/DisaggregatedSet、scheduler-plugins、Karpenter 与 Kubernetes scheduler 当前官方证据，重构 Workload → Admission → Placement → Capacity 主线。
 - 更新 [[kubernetes-workload-gang-scheduling-design]] 的 D1–D5，并重画 [[kubernetes-scheduler-core-design]] 的 scheduling/binding cycle 与 queue/requeue。
 - 同步五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。
+
+## [2026-09-27] query | M5-C Kubernetes Device / GPU 地图
+
+- 基于 NFD、NVIDIA GPU Operator、Device Plugin、DRA Driver、HAMi 与 Kubernetes DRA 当前官方证据，重构 discovery → node software → allocation → runtime injection → sharing/isolation 主线。
+- 更新 [[k8s-gpu-device-stack]] 的 D1–D5 与 [[kubernetes-dra-design-deep-dive]] 的 ResourceClaim/scheduler/kubelet/CDI 生命周期。
+- 同步四个 Concept 和五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。
