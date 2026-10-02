@@ -1,14 +1,114 @@
 ---
 title: Kubernetes DRA Design Deep Dive
 tags: [analysis, kubernetes, kep, sig-node, sig-scheduling, dra, device, gpu, design-deep-dive]
-date: 2026-07-07
+date: 2026-09-27
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/4381-dra-structured-parameters/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-node/3063-dynamic-resource-allocation/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5007-device-attach-before-pod-scheduled/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5075-dra-consumable-capacity/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4815-dra-partitionable-devices/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4816-dra-prioritized-list/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5055-dra-device-taints-and-tolerations/README.md]
-related: [[kubernetes]], [[kubernetes-keps-design-tracking]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-dra]], [[k8s-gpu-device-stack]], [[device-plugin]], [[cdi]], [[node-feature-discovery]], [[dra-driver-nvidia-gpu]], [[karpenter]]
+related: ["[[kubernetes]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-dra]]", "[[k8s-gpu-device-stack]]", "[[device-plugin]]", "[[cdi]]", "[[node-feature-discovery]]", "[[dra-driver-nvidia-gpu]]", "[[karpenter]]", "[[gpu-sharing]]", "[[gpu-operator]]", "[[k8s-device-plugin]]", "[[hami]]"]
 ---
 
 # Kubernetes DRA Design Deep Dive
 
-这页拉出 Kubernetes Dynamic Resource Allocation 的关键设计文档。核心是 `sig-node/4381-dra-structured-parameters`，它把早期 `3063-dynamic-resource-allocation` 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
+## 当前上游核验（2026-09-27）
+
+本节区分当前官方证据与下文 2026-07 的 KEP 设计/状态笔记；[[src-dra-driver-nvidia-gpu-architecture]] 是 2026-06 的 raw-backed Source 快照，保留其历史仓库/HEAD 和 ASCII 图。当前默认分支 commit 不代表 release，基础 DRA 稳定也不等于所有 Kubernetes 扩展或 NVIDIA driver 功能都已稳定。完整设备栈边界见 [[k8s-gpu-device-stack]]。
+
+| 项目 | 当前 commit | 当前证据边界 |
+|---|---|---|
+| [[kubernetes]] | [`6c1c7702cf20`](https://github.com/kubernetes/kubernetes/commit/6c1c7702cf2052245ef10e699d45f071af306f59) | Kubernetes DRA API、scheduler allocation 与 kubelet Prepare/Unprepare；各扩展阶段按官方文档及该 commit 的 feature 定义单独核验 |
+| [[dra-driver-nvidia-gpu]] | [`495bf4c59b94`](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/commit/495bf4c59b9423080aa1fe2163955f44a495012c) | NVIDIA GPU/ComputeDomain 驱动实现；通过 NVIDIA 仓库入口查询时返回此规范链接，不以 Kubernetes 的 feature stage 替代厂商支持矩阵 |
+
+| 能力 / feature gate | 本次核验的阶段与版本 | 本页相关边界 / 官方依据 |
+|---|---|---|
+| 基础 DRA / `DynamicResourceAllocation` | Stable，自 Kubernetes v1.35 | [DRA 概览](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/)；基础 Claim/设备分配稳定不覆盖下列所有扩展 |
+| Device binding conditions / `DRADeviceBindingConditions` | Beta，自 v1.36，默认启用 | 延迟 Pod binding 以等待外部设备准备；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1413)；仍需对应 driver/status 支持 |
+| Consumable capacity / `DRAConsumableCapacity` | Beta，自 v1.36，默认启用 | 多 Claim 消耗同一设备容量；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#consumable-capacity) |
+| Partitionable devices / `DRAPartitionableDevices` | Beta，自 v1.36，默认启用 | 通过共享计数器表达逻辑设备资源重叠；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#partitionable-devices) |
+| Prioritized list / `DRAPrioritizedList` | GA，自 v1.36；v1.37 锁定启用 | 按优先级尝试设备请求候选；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1468) |
+| Device taints / `DRADeviceTaints` | 当前源码 v1.37 条目标记 GA、默认启用；v1.38 条目锁定启用 | 设备 taint/toleration 的阶段不同于相关附加规则；[当前 feature 定义](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/features/kube_features.go#L1429)，版本化源码条目不是未来 release 已发布的证明 |
+| Optional node operations / `DRAOptionalNodeOperations` | Alpha，自 v1.37，默认关闭 | driver 可声明跳过特定 node-local 操作，不能推广为所有 GPU 都无需 Prepare；[DRA Features](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-features/#optional-node-operations) |
+
+该表只列本页相关且已核验的能力，不是完整 feature 清单。API 对象语义见 [DRA API Objects](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-api/)。NVIDIA 侧须分别核对 [锚定 driver README](https://github.com/kubernetes-sigs/dra-driver-nvidia-gpu/blob/495bf4c59b9423080aa1fe2163955f44a495012c/README.md) 和 [GPU Operator 26.7 管理路径](https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/26.7/dra-intro-install.html)：独立仓库 GPU plugin 的支持说明与 Operator 管理版本的默认启用方式不能混用。下文 KEP 状态表属于历史演进记录，不覆盖本节的当前阶段核验。
+
+## M5-C 中的职责边界
+
+[[k8s-gpu-device-stack]] 是设备栈入口，本页聚焦 [[kubernetes-dra]] 的 Claim、调度分配、节点准备与回收。Kubernetes 提供 DRA API 和 scheduler allocation；driver 发布 ResourceSlice 库存及设备约束，解释厂商配置并完成相应准备。DeviceClass 可由管理员或 driver 安装流程提供；[[node-feature-discovery]] 的节点标签不能替代它或 ResourceSlice。
+
+kubelet 驱动节点侧 Prepare/Unprepare，[[dra-driver-nvidia-gpu]] 等插件操作具体设备，[[cdi]] 把已准备设备交给兼容 runtime 注入。[[gpu-operator]] 管理受管组件部署和升级，[[karpenter]] 管理节点容量；两者都不是单次 DRA Claim 的通用分配器。是否支持特定扩展仍以页首 feature-stage 表和目标 driver/release 为准，这里不重复或提升其阶段。
+
+## DRA Allocation / Binding Lifecycle
+
+```text
+Admin / driver installation ── create selectors + config ──> DeviceClass
+DRA driver - - publish inventory / attributes / capacities - -> ResourceSlice
+User / workload controller ── create directly ──> ResourceClaim
+User ── create ResourceClaimTemplate + referencing Pod ──> API
+Pod/template - - watch / reconcile - -> resourceclaim controller
+resourceclaim controller ── create owned Claim / record Pod claim reference ──> API
+
+Pod + Claim + DeviceClass + ResourceSlice - - watch / scheduling input - -> scheduler
+PreFilter / Filter ── evaluate feasible Node + devices ──> select compatible Node
+Reserve ── retain candidate allocation in memory ──> PreBind
+PreBind ── API write ──> Claim.status.allocation + reservedFor
+  ├── no binding conditions ──> continue binding
+  └── binding conditions enabled + present ──> wait in PreBind
+Claim allocation - - observed by external driver controller - -> device preparation
+driver controller ── write device conditions ──> Claim.status.devices
+device conditions - - observed ready / failed / timeout - -> PreBind result
+PreBind success ──> Bind Pod to compatible Node
+PreBind failure ──> Unreserve / cleanup this attempt - - retry feedback - -> queue
+```
+
+图例：实线 `── label ──>` 表示有序调用、API 写入或节点动作，虚线 `- - label - ->` 表示发布、watch、反馈与重试。图按引用 Claim 的普通 Pod 路径展开：已经分配的 Claim 会被校验和复用，不能把每一轮都理解成覆盖 allocation；模板需要由 resourceclaim controller 实例化，不是 scheduler 直接把模板当作已存在的 Claim。API 写入者也分开：scheduler 负责本次分配与消费者 reservation，外部 driver/controller 按协议更新设备 conditions，resourceclaim controller 管理派生 Claim 与消费者生命周期。
+
+锚定版本的 [DynamicResources 插件](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/scheduler/framework/plugins/dynamicresources/dynamicresources.go) 在 Reserve 记录候选，在 PreBind 的 `bindClaim` 写回 allocation/reservation，然后按启用的扩展与设备声明等待 binding conditions。没有该条件时直接继续 binding；出现 failure condition 或超时则本次绑定失败。后续 Filter/PostFilter 可按 Claim 的消费者限制决定是否清除失败 allocation，不能把 Unreserve 等同于无条件清空所有共享 Claim。
+
+binding conditions 允许外部准备发生在 Pod binding 前；它不是节点侧 `NodePrepareResources` 的另一种名字。后者通常在 Pod 已绑定、kubelet 准备容器时发生。Claim 分配成功、外部条件就绪、Pod 绑定成功、节点准备成功和容器运行是不同检查点。对象语义与模板控制器分别见 [DRA API Objects](https://kubernetes.io/docs/concepts/resource-management/dynamic-resource-allocation/dra-api/) 和 [resourceclaim controller](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/controller/resourceclaim/controller.go)。
+
+## kubelet Prepare / CDI / Release
+
+```text
+Bound Pod + allocated/reserved Claim - - observed state - -> kubelet DRA manager
+kubelet ── track Pod/Claim reference + checkpoint ──> node-local state
+kubelet ── NodePrepareResources ──> vendor DRA plugin
+plugin ── validate allocation / configure device / recover own state ──> device + checkpoint
+plugin ── prepare CDI spec + return CDI device IDs ──> kubelet
+kubelet ── checkpoint prepared result / CRI device configuration ──> runtime
+runtime ── resolve CDI spec / inject devices / start container ──> running workload
+
+Pod termination - - node reconciliation - -> kubelet drops this Pod reference
+  ├── other local Pods still use Claim ──> retain shared prepared state
+  └── no local users ──> NodeUnprepareResources ──> plugin cleanup
+      ── successful result ──> kubelet updates cache / checkpoint
+Pod completion / deletion - - API watch - -> resourceclaim controller
+controller ── remove completed consumer reservation ──> Claim status
+last consumer released ── eligible deallocation / finalizer cleanup ──> reusable Claim
+owned Claim deletion ── owner / GC lifecycle ──> Claim removed when cleanup permits
+```
+
+两条终止分支分别处理节点状态和 API 状态，不是跨组件事务，也不保证总按图中文字顺序完成。当前 [kubelet DRA manager](https://github.com/kubernetes/kubernetes/blob/6c1c7702cf2052245ef10e699d45f071af306f59/pkg/kubelet/cm/dra/manager.go) 在 RPC 前后记录 Claim/Pod 与准备结果；其他本地 Pod 仍引用同一 Claim 时延迟 Unprepare。kubelet checkpoint 与 vendor plugin 自己的 checkpoint/config 是不同责任：重启恢复需同时对照 API、节点记录及真实硬件，不能把删除任一记录当作已完成设备释放。
+
+当前 resourceclaim controller 在最后消费者从“仍使用”转为“不再使用”时，可清除相应 allocation 和不再需要的 finalizer，使保留的 Claim 以后重新分配。模板派生 Claim 随 owner 生命周期回收；用户直接创建的持久 Claim 对象可以保留，但保留对象不意味着永久保留同一设备。多消费者场景不能因其中一个 Pod 退出就清空全部 reservation 或拆掉共享准备状态。
+
+图中 Prepare/Unprepare 是常规 node-local 路径。页首 `DRAOptionalNodeOperations` 仍为独立 Alpha 扩展：只有启用该能力且 allocation 携带合法 skip 声明时，kubelet 才跳过指定节点操作；这不是所有 GPU 默认行为。CDI 负责容器注入，不保证硬件准备、健康或隔离策略本身正确。正式 RPC 名称为复数 `NodePrepareResources` / `NodeUnprepareResources`，下方历史笔记的单数简写不应作为接口名使用。
+
+## DRA 失败与恢复路径
+
+| 失败点 / 可见影响 | 自动恢复 / API 与节点边界 | Operator 与人工处理边界 |
+|---|---|---|
+| ResourceSlice 陈旧或 pool 不完整：设备不可选或节点准备发现不符 | driver 重新发布完整库存，scheduler 根据相关更新重试；节点 plugin 仍须校验设备现状 | Operator 可恢复受管 driver，但错误设备 identity/generation、权限或硬件丢失需修复 |
+| Allocation / reservation 并发冲突：PreBind status 写入失败 | API 并发检查拒绝冲突写入，scheduler 重读重算并清理本次保留；不覆盖其他消费者 | 持续争用、错误 UID/字段所有权或自定义控制器乱写 status 需修正 |
+| Binding conditions 超时或失败：有 allocation 但 Pod 未绑定 | PreBind 失败触发 Unreserve/重试；后续 deallocation 受 Claim reservation 条件限制，不保证立即换设备 | 修复外部准备 controller、设备条件/RBAC 协议或不可恢复资源故障；延长超时不能制造 Ready |
+| Driver / kubelet 重启及 checkpoint 不一致：准备状态难以恢复 | kubelet 重连插件并依据引用/准备记录重试；vendor plugin 按自己的幂等恢复规则核对硬件 | Operator 重建进程不等于硬件回滚；损坏/丢失 checkpoint、升级不兼容需受控恢复 |
+| Prepare 或 Unprepare 失败：容器无法启动或节点清理未完成 | kubelet 对可重试错误再次调用，插件需容忍重复 RPC 和部分完成；共享 Claim 按本地引用计数处理 | 检查配置、权限、设备占用和插件错误；永久错误需人工处置，不能仅删除 finalizer |
+| CDI spec / runtime 不匹配：Claim 与 Prepare 成功但容器启动失败 | 修复配置后启动路径可重试；CDI 注入不负责重新选择设备 | 核对 CDI IDs、spec 路径、runtime 支持与 driver/toolkit 版本；Operator 只修复其管理范围 |
+| MIG / VFIO / ComputeDomain 部分变更：API、checkpoint 与硬件/IMEX 不一致 | driver/controller 按具体模式重放或清理；API 重试没有通用硬件补偿保证 | 确认其他消费者后处理 MIG 实例、驱动绑定、域成员或排空节点；不能假设一次重启全部恢复 |
+| 节点失联或非优雅关机：NodeUnprepare 可能未执行 | 控制面继续观察消费者和节点状态；节点返回后由 kubelet/plugin 重新协调，外部设备可能需独立清理 | 对无法返回的节点须核实设备/网络连接已隔离及外部状态已释放，再处理遗留 Claim；API 删除不证明旧节点已停止使用 |
+
+排障应分别核对 Claim allocation/reservedFor/device conditions、Pod binding、kubelet checkpoint、vendor plugin 状态及 runtime 配置。上表是当前职责归纳；下方保留的 KEP 风险条目不能直接当成所有版本/driver 的通用恢复保证。
+
+## KEP 设计与演进（历史笔记）
+
+以下保留 Kubernetes Dynamic Resource Allocation 的历史设计脉络。核心是 `sig-node/4381-dra-structured-parameters`，它把早期 `3063-dynamic-resource-allocation` 的 opaque driver 协商路线反转为主线：设备参数必须结构化地暴露给 scheduler 和 autoscaler，Kubernetes 才能可靠做调度和容量推理。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]；当前阶段以页首核验表为准。
 
 ## 一句话定位
 
@@ -28,28 +128,7 @@ Device Plugin API 适合“节点本地、离散、可计数”的资源，例�
 
 ## 4381 的核心模型
 
-```text
-DRA driver
-  |
-  +-- publishes ResourceSlice
-        devices + attributes + capacities
-
-User / controller
-  |
-  +-- creates ResourceClaim / ResourceClaimTemplate
-        device requests + selectors + config
-
-kube-scheduler
-  |
-  +-- evaluates ResourceClaim against ResourceSlices
-  +-- writes allocation result into ResourceClaim status
-
-kubelet
-  |
-  +-- calls DRA kubelet plugin
-  +-- NodePrepareResource / NodeUnprepareResource
-  +-- passes CDI devices to runtime
-```
+历史模型按四个角色拆分：DRA driver 发布带 devices/attributes/capacities 的 ResourceSlice；用户/controller 创建带 requests/selectors/config 的 ResourceClaim 或模板；kube-scheduler 对照库存评估请求并写 allocation status；kubelet 调用 DRA plugin Prepare/Unprepare，再将 CDI 设备交给 runtime。当前完整顺序与模板实例化、条件等待的细分见上方两张图。
 
 `ResourceSlice` 是 driver 发布的资源库存。每个 device 有名字、属性和 capacity。属性可以被 CEL selector 匹配，capacity 用 quantity 表达。
 
@@ -90,21 +169,7 @@ DRA scheduler plugin 不是只在 Filter 阶段做一次检查。它覆盖多个
 
 DRA 的状态核心在 `ResourceClaim.status`：
 
-```text
-unallocated
-  |
-  +-- scheduler chooses node/device
-  v
-allocated
-  |
-  +-- reservedFor includes consumer
-  v
-in use by Pod / other consumer
-  |
-  +-- consumer removed or completed
-  v
-deallocated / reusable
-```
+历史状态模型依次描述：unallocated；scheduler 选择 node/device 后 allocated；`reservedFor` 纳入消费者后被 Pod 或其他 consumer 使用；消费者退出后进入 deallocated/reusable。它概括的是控制面生命周期，不应把其中一条状态转换当成所有节点准备状态已经同步释放，具体回收边界见上方 kubelet Prepare / CDI / Release。
 
 几个设计点很关键：
 

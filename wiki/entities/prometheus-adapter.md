@@ -1,7 +1,7 @@
 ---
 title: prometheus-adapter
 tags: [entity, kubernetes, observability, autoscaling]
-date: 2026-06-14
+date: 2026-09-22
 sources: [prometheus-adapter-architecture-analysis.md]
 related: ["[[prometheus-adapter]]", "[[kubernetes]]", "[[llm-inference]]", "[[model-serving-operator]]", "[[llm-d-workload-variant-autoscaler]]"]
 ---
@@ -20,7 +20,7 @@ metrics-server 给 CPU/memory resource metrics；prometheus-adapter 给自定义
 |---|---|
 | 需要 `custom/external metrics` 能力 | 适合，prometheus-adapter 正是这一层的代表项目。 |
 | 需要和 Kubernetes API / controller / runtime 集成 | 适合，它的主要价值来自 Kubernetes-native 工作流。 |
-| 需要替代相邻层全部职责 | 不适合，应和 [[llm-inference]], [[model-serving-operator]], [[llm-d-workload-variant-autoscaler]] 组合。 |
+| 需要替代相邻层全部职责 | 不适合；prometheus-adapter 只提供 custom/external metrics plumbing。当前 llm-d 新部署使用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；[[llm-d-workload-variant-autoscaler]] 是 deprecated 的历史设计，仅保留供迁移/研究参考。 |
 
 ## 核心组件
 

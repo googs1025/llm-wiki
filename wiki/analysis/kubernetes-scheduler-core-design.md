@@ -1,14 +1,106 @@
 ---
 title: Kubernetes Scheduler Core Design
 tags: [analysis, kubernetes, kep, sig-scheduling, scheduler, queue, placement, preemption, design-deep-dive]
-date: 2026-07-07
+date: 2026-09-25
 sources: [src-kubernetes-keps-design-tracking.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/624-scheduling-framework/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/785-scheduler-component-config-api/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/1451-multi-scheduling-profiles/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4247-queueinghint/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6132-prequeueing-hints/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5598-opportunistic-batching/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/895-pod-topology-spread/README.md, /Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4832-async-preemption/README.md]
-related: [[kubernetes]], [[kubernetes-keps-feature-coverage]], [[kubernetes-keps-implementation-matrix]], [[kubernetes-keps-design-tracking]], [[kubernetes-workload-gang-scheduling-design]], [[kubernetes-dra-design-deep-dive]], [[scheduler-plugins]], [[descheduler]], [[kube-scheduler-simulator]]
+related: ["[[kubernetes]]", "[[kubernetes-keps-feature-coverage]]", "[[kubernetes-keps-implementation-matrix]]", "[[kubernetes-keps-design-tracking]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-dra-design-deep-dive]]", "[[scheduler-plugins]]", "[[descheduler]]", "[[kube-scheduler-simulator]]", "[[k8s-core-controller-map]]", "[[kueue]]", "[[karpenter]]"]
 ---
 
 # Kubernetes Scheduler Core Design
 
-这页合并讲 `sig-scheduling` 的 scheduler core feature：framework、component config、profiles、queue/requeue、topology placement、async preemption 和调度性能。Workload/Gang 和 DRA 已经有单独详解页，这页负责解释它们依赖的 scheduler 底座。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 [[kubernetes-keps-implementation-matrix]]。
+## 当前上游核验（2026-09-25）
+
+本节以执行时官方默认分支为当前证据，commit 不代表 release。Kubernetes KEP 页面与下文既有内容保留历史设计/演进证据；具体实现、feature stage 和默认行为须按目标 Kubernetes 版本核对，不能从提案状态或默认分支推定已经发布。[[src-scheduler-plugins-architecture]] 仍是 2026-06-14 的 raw-backed Source 快照。
+
+| 项目 | 当前 commit | 当前职责 / 证据边界 |
+|---|---|---|
+| [[kubernetes]] / kube-scheduler | [`ab9b0dcfd320`](https://github.com/kubernetes/kubernetes/commit/ab9b0dcfd32039601ad368ae891efa3ff67600e0) | Scheduling Framework 组织插件扩展点；scheduling cycle 选择 Node，binding cycle 将选择应用到集群。Pod placement/binding 属于 scheduler 职责 |
+| [[scheduler-plugins]] | [`6df8d8e4ae5f`](https://github.com/kubernetes-sigs/scheduler-plugins/commit/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd) | 通过 out-of-tree plugins 扩展 kube-scheduler；其 `scheduling.x-k8s.io/v1alpha1` PodGroup / ElasticQuota 与 Kubernetes 原生 API 演进分开核验，部署须匹配 Kubernetes 依赖版本 |
+
+官方入口：[Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/)、[Scheduler Configuration](https://kubernetes.io/docs/reference/scheduling/config/)、[当前 kube-scheduler 源码](https://github.com/kubernetes/kubernetes/tree/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler)、[Scheduler Plugins 文档](https://scheduler-plugins.sigs.k8s.io/docs/) 与 [当前兼容矩阵](https://github.com/kubernetes-sigs/scheduler-plugins/blob/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd/README.md#compatibility-matrix)。跨项目主线见 [[kubernetes-workload-gang-scheduling-design]]：[[kueue]] 负责 admission，[[karpenter]] 负责节点容量反馈；通用 controller 工具链见 [[k8s-core-controller-map]]。
+
+## M5-B 中的职责边界
+
+[[kubernetes-workload-gang-scheduling-design]] 是跨项目入口，本页下钻 Pod 的 placement/binding 与失败重试。[[kueue]] 在所管理工作负载进入实际 Pod 调度前完成配额准入，再由 integration unsuspend 工作负载或移除 Pod scheduling gates；Pod 对象可能在准入前已存在。kube-scheduler 对可调度 Pod 选择 Node 并完成 binding，[[scheduler-plugins]] 以 out-of-tree 插件扩展同一 framework，不能据此推定它接管 JobSet/LWS 等业务对象生命周期。
+
+[[karpenter]] 从未调度 Pod 的状态和约束计算容量需求，经 NodePool/NodeClass、NodeClaim 与节点生命周期补充容量；它不执行 Pod binding。新 Node 的状态变化再成为 scheduler 重试的输入，扩容成功也不保证 Pod 的所有放置约束可满足。
+
+## Scheduling / Binding Cycle
+
+```text
+QUEUE ENTRY
+  Pod event - - enqueue eligibility - -> PreEnqueue
+  PreEnqueue ── success ──> activeQ (ordered by QueueSort) ── pop ──> profile
+  PreEnqueue - - gated / reject - -> unschedulableQ
+
+SCHEDULING CYCLE (serial, single-Pod path)
+  profile ──> snapshot / PreFilter ──> Filter
+  Filter ── no feasible Node ──> PostFilter / optional preemption
+  PostFilter - - nomination / failure feedback: retry later - -> queue
+  Filter ── feasible Nodes ──> PreScore / Score / NormalizeScore
+    ── select Node ──> assume in scheduler cache ──> Reserve ──> Permit
+  Permit ── approve OR wait ──> dispatch binding cycle
+  Reserve / Permit failure ──> Unreserve / forget assumed Pod
+    - - failure / retry - -> queue
+
+BINDING CYCLE (may run concurrently for different Pods)
+  WaitOnPermit (if waiting) ── approved ──> PreBind ──> Bind ──> PostBind
+  WaitOnPermit reject/timeout OR PreBind/Bind failure
+    ──> Unreserve / forget assumed Pod - - failure / retry - -> queue
+```
+
+实线 `── label ──>` 表示调用或有序步骤，虚线 `- - label - ->` 表示事件、排队和后续重试；图中失败回队列后仍需经过下一节的唤醒与退避判断。PreEnqueue 在 activeQ 之前执行，QueueSort 决定队列顺序，并非 Pod 被 pop 后才依次执行这两步。当前图聚焦单 Pod 路径；原生 PodGroup 调度另见 L1 页的 KEP 边界。
+
+这里按锚定 commit 的 [`schedule_one.go`](https://github.com/kubernetes/kubernetes/blob/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler/schedule_one.go) 区分周期：`schedulingCycle` 调用 `prepareForBindingCycle`，其中完成 assume/reserve 和首次 Permit 调用；之后异步启动 `bindingCycle`，在 `WaitOnPermit` 等待需要放行的 Pod，再执行 PreBind/Bind/PostBind。这与 [Scheduling Framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/) 对 Permit 位于 scheduling cycle 末尾的说明一致。图省略了版本/feature gate 相关的辅助检查，不把 Reserve/Permit 整体移到 binding cycle。
+
+`nominatedNodeName` 表达候选或预期，不等于已绑定；抢占选出的候选通常要在后续调度周期重验。当前轮选择 Node 后的 assume 也是 scheduler 的内存记账，不是 API binding 已成功。Reserve/Permit 与后续阶段失败时必须释放相应保留状态；Bind 成功后才运行 PostBind。
+
+## Queue / Requeue Feedback
+
+```text
+Kueue admission - - admitted feedback - -> workload / Pod integration
+integration ── unsuspend OR remove scheduling gates ──> eligible Pod
+Pod - - watch / enqueue - -> PreEnqueue ── success ──> activeQ (QueueSort)
+PreEnqueue - - gated / reject - -> unschedulableQ
+activeQ ── pop ──> scheduling / binding attempt
+attempt - - unschedulable / error feedback - -> failure handler
+failure handler - - wait for relevant change - -> unschedulableQ
+failure handler - - retry after backoff - -> backoffQ
+
+Node / Pod / plugin-relevant cluster events
+  - - QueueingHints: eligible to retry - -> unschedulableQ re-evaluation
+unschedulableQ - - retry eligible + backoff pending - -> backoffQ
+unschedulableQ - - retry eligible + backoff satisfied / bypass allowed - -> activeQ
+backoffQ - - backoff complete / queue activation - -> activeQ
+unschedulableQ - - periodic fallback re-evaluation - -> activeQ or backoffQ
+
+Pod Unschedulable - - observed state / event - -> Karpenter capacity controller
+Karpenter ── NodePool + NodeClass / NodeClaim lifecycle ──> Node
+Node - - capacity / readiness event - -> cluster events / QueueingHints above
+```
+
+`unschedulableQ` 在这里是概念名；该 commit 的实现使用 `unschedulableEntities`，可保存 Pod 或 PodGroup。activeQ 保存可尝试项，backoffQ 保存等待退避的项；失败回队列的位置还取决于失败插件、在途事件和当前退避状态，不是所有错误都固定先进入同一个队列。QueueingHint 根据插件关心的变化决定是否值得再试，未命中时继续等待；相关事件不是“无条件唤醒全部 pending Pods”。回到 activeQ 仍须满足入队门槛，周期性兜底也不会自动解除 scheduling gates。实现依据见 [当前 scheduling queue](https://github.com/kubernetes/kubernetes/blob/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler/backend/queue/scheduling_queue.go)。
+
+Kueue 的等待准入和 scheduler 的不可放置是不同状态。被 gate 挡住的 Pod 不能直接当作已经执行 Filter 后的 Unschedulable；Karpenter 也必须结合 Pod 和节点约束评估可供应容量。对允许调度后仍缺少节点的 Pod，新 Node 通过 watch/队列机制触发重算，不会绕过 Filter、Permit 或 Bind。
+
+## Scheduling 失败路径
+
+| 失败点 / 直接影响 | 自动恢复与控制器协同 | 人工排查 / 修复边界 |
+|---|---|---|
+| Filter 无 feasible Node：当前轮无法选 Node | 按配置尝试 PostFilter；后续相关事件与退避允许重新评估 | 检查失败插件、资源请求、taint、affinity、拓扑等硬条件；增加不匹配的节点不会解决问题 |
+| PostFilter / preemption 无可行结果：可能无候选或 victim 释放后仍不足 | 抢占策略允许时选择候选，等待资源变化后重试；nomination 不保证后续绑定 | 检查优先级、抢占策略、不可由抢占消除的约束；不要将 PDB 理解为 scheduler preemption 的绝对保护 |
+| Reserve 失败或后续阶段失败：保留状态需清理 | 运行 Unreserve、撤销 assumed Pod；Unreserve 应幂等且不能失败 | 自定义插件泄漏资源、不可逆副作用或不完整回滚需修正代码/清理外部状态，不能仅靠 requeue |
+| Permit wait / reject / timeout：绑定暂停或被拒绝 | 等待相关插件批准；拒绝/超时触发清理和重新排队 | 检查组成员、超时、外部条件与插件配置；增加超时不会修复永久缺失的成员 |
+| PreBind 失败：绑定前准备未完成 | 中止 binding cycle、清理保留状态并重试；依赖控制器恢复后再尝试 | 检查外部依赖、权限和插件错误；确认重复执行及补偿能处理部分完成的准备操作 |
+| Bind 失败：API 层绑定未确认 | scheduler 走失败处理，依据后续 API/watch 状态判断 Pod 是否仍需调度 | 区分权限/冲突/网络超时；超时不证明服务端未写入，避免插件盲目重复不可逆操作 |
+| 插件数据陈旧：快照或外部缓存与实际状态不一致 | 正常 watch 更新与下一轮 snapshot 可修正暂时陈旧；插件需注册正确的重试事件 | 长期不同步、错误失效策略或漏注册事件需修复；调度队列不能替代外部缓存一致性设计 |
+| 插件目标冲突：Filter 交集为空或 Score 权重违背预期 | 只在输入变化后重算；没有自动“放松策略”的通用机制 | 校验 profile、插件开关/顺序/权重与业务目标，用 [[kube-scheduler-simulator]] 对照具体决策 |
+
+out-of-tree 插件与 in-tree 插件都通过 framework 参与相应阶段；部署 scheduler-plugins 并不建立另一套 JobSet/LWS 所有权模型。故障定位应同时看 Pod events/status、失败 extension point 和相关控制器状态，避免把所有 Pending 都归为容量不足。
+
+## KEP 设计背景
+
+下面保留 scheduler core 的 framework、component config、profiles、queue/requeue、topology placement、async preemption 和性能演进笔记。历史状态表不作为本次对 release/feature stage 的重新核验；逐个 KEP 的追踪入口见 [[kubernetes-keps-implementation-matrix]]。
 
 ## 一句话定位
 
@@ -16,21 +108,7 @@ Scheduler core KEP 的共同目标是把 kube-scheduler 从一个内置策略集
 
 ## Scheduler Framework
 
-`624-scheduling-framework` 是最关键的基础 KEP。它把一次 Pod 调度拆成多个 extension point：
-
-```text
-QueueSort
-  -> PreFilter
-  -> Filter
-  -> PostFilter
-  -> PreScore
-  -> Score
-  -> Reserve
-  -> Permit
-  -> PreBind
-  -> Bind
-  -> PostBind
-```
+`624-scheduling-framework` 是最关键的基础 KEP。它把一次 Pod 调度拆成多个 extension point，当前调用顺序与分支见上方 Scheduling / Binding Cycle。PostFilter 属于无可行节点时的恢复分支，不能画成每次 Filter 后必经的一步。
 
 设计价值：
 
@@ -92,23 +170,7 @@ Preemption 从最早的 priority/preemption 发展到更异步、更可解释：
 
 ## Data Flow
 
-```text
-cluster event
-  |
-  +-- queueing hint decides affected pods
-  |
-activeQ / backoffQ / unschedulable
-  |
-  +-- scheduling profile selects plugin set
-  |
-framework cycle
-  |
-  +-- filter / score / reserve / permit / prebind
-  |
-bind or fail
-  |
-  +-- events / status / requeue hints
-```
+完整事件、队列、profile、framework 与失败反馈路径已合并到上方两张图。
 
 理解 scheduler feature 时，应该先问它改的是哪一层：
 

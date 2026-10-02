@@ -3,7 +3,7 @@ title: llm-d Workload Variant Autoscaler 架构与设计思路分析
 tags: [architecture, llm-serving, autoscaling, kubernetes]
 date: 2026-06-13
 sources: [llm-d-workload-variant-autoscaler-architecture-analysis.md]
-related: [[llm-d-workload-variant-autoscaler]], [[llm-d]], [[model-serving-operator]], [[llm-inference]], [[gateway-api-inference-extension]]
+related: ["[[llm-d-workload-variant-autoscaler]]", "[[llm-d]]", "[[model-serving-operator]]", "[[llm-inference]]", "[[gateway-api-inference-extension]]"]
 ---
 
 # llm-d Workload Variant Autoscaler 架构与设计思路分析
@@ -13,6 +13,9 @@ related: [[llm-d-workload-variant-autoscaler]], [[llm-d]], [[model-serving-opera
 ## 一句话定位
 
 [[llm-d-workload-variant-autoscaler]] 是面向分布式 [[llm-inference]] 的 Kubernetes 全局 autoscaler，核心对象是同一模型/InferencePool 下的多个 serving variant。它通过 Prometheus、[[gateway-api-inference-extension]]、KEDA/HPA、GPU inventory 和 scale target 状态，把“不同硬件/角色/成本的变体应该各扩多少副本”转成外部指标和 status。
+
+> [!warning] Conflict
+> 截至 2026-09-22，llm-d 当前 [dev 架构文档](https://llm-d.ai/docs/dev/architecture#autoscaling)已将 Workload Variant Autoscaler 标为 deprecated，并描述 EPP metrics → KEDA Prometheus scaler → HPA 的扩缩路径。本页保留其所记录版本的历史设计与实现；当前采用前需重新核验。参见 [[llm-inference-serving-project-map]]。
 
 ## 核心架构图
 

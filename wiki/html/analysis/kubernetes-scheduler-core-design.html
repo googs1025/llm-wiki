@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-07-07</span>
+  <span class="meta">2026-09-25</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,27 +23,143 @@
 
   <header class="page-header">
     <h1>Kubernetes Scheduler Core Design</h1>
-    <p class="page-meta">2026-07-07 · 来源：src-kubernetes-keps-design-tracking.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/624-scheduling-framework/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/785-scheduler-component-config-api/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/1451-multi-scheduling-profiles/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4247-queueinghint/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6132-prequeueing-hints/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5598-opportunistic-batching/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/895-pod-topology-spread/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4832-async-preemption/README.md</p>
+    <p class="page-meta">2026-09-25 · 来源：src-kubernetes-keps-design-tracking.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/624-scheduling-framework/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/785-scheduler-component-config-api/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/1451-multi-scheduling-profiles/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4247-queueinghint/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/6132-prequeueing-hints/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/5598-opportunistic-batching/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/895-pod-topology-spread/README.md、/Users/zhenyu.jiang/enhancements/keps/sig-scheduling/4832-async-preemption/README.md</p>
     <div class="tags"><span class="tag">analysis</span><span class="tag">kubernetes</span><span class="tag">kep</span><span class="tag">sig-scheduling</span><span class="tag">scheduler</span><span class="tag">queue</span><span class="tag">placement</span><span class="tag">preemption</span><span class="tag">design-deep-dive</span></div>
   </header>
 
-  <p>这页合并讲 <code>sig-scheduling</code> 的 scheduler core feature：framework、component config、profiles、queue/requeue、topology placement、async preemption 和调度性能。Workload/Gang 和 DRA 已经有单独详解页，这页负责解释它们依赖的 scheduler 底座。逐个 KEP 的 Alpha/Beta/GA、是否实现和 feature gate 见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
+  <h2 id="当前上游核验2026-09-25">当前上游核验（2026-09-25）</h2>
+<p>本节以执行时官方默认分支为当前证据，commit 不代表 release。Kubernetes KEP 页面与下文既有内容保留历史设计/演进证据；具体实现、feature stage 和默认行为须按目标 Kubernetes 版本核对，不能从提案状态或默认分支推定已经发布。<a class="wikilink" href="../sources/src-scheduler-plugins-architecture.html">src-scheduler-plugins-architecture</a> 仍是 2026-06-14 的 raw-backed Source 快照。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>当前 commit</th>
+<th>当前职责 / 证据边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a> / kube-scheduler</td>
+<td><a href="https://github.com/kubernetes/kubernetes/commit/ab9b0dcfd32039601ad368ae891efa3ff67600e0"><code>ab9b0dcfd320</code></a></td>
+<td>Scheduling Framework 组织插件扩展点；scheduling cycle 选择 Node，binding cycle 将选择应用到集群。Pod placement/binding 属于 scheduler 职责</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></td>
+<td><a href="https://github.com/kubernetes-sigs/scheduler-plugins/commit/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd"><code>6df8d8e4ae5f</code></a></td>
+<td>通过 out-of-tree plugins 扩展 kube-scheduler；其 <code>scheduling.x-k8s.io/v1alpha1</code> PodGroup / ElasticQuota 与 Kubernetes 原生 API 演进分开核验，部署须匹配 Kubernetes 依赖版本</td>
+</tr>
+</tbody>
+</table></div>
+<p>官方入口：<a href="https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/">Scheduling Framework</a>、<a href="https://kubernetes.io/docs/reference/scheduling/config/">Scheduler Configuration</a>、<a href="https://github.com/kubernetes/kubernetes/tree/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler">当前 kube-scheduler 源码</a>、<a href="https://scheduler-plugins.sigs.k8s.io/docs/">Scheduler Plugins 文档</a> 与 <a href="https://github.com/kubernetes-sigs/scheduler-plugins/blob/6df8d8e4ae5f53d8c20e57e703d7f0a6340baddd/README.md#compatibility-matrix">当前兼容矩阵</a>。跨项目主线见 <a class="wikilink" href="../analysis/kubernetes-workload-gang-scheduling-design.html">kubernetes-workload-gang-scheduling-design</a>：<a class="wikilink" href="../entities/kueue.html">kueue</a> 负责 admission，<a class="wikilink" href="../entities/karpenter.html">karpenter</a> 负责节点容量反馈；通用 controller 工具链见 <a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a>。</p>
+<h2 id="m5-b-中的职责边界">M5-B 中的职责边界</h2>
+<p><a class="wikilink" href="../analysis/kubernetes-workload-gang-scheduling-design.html">kubernetes-workload-gang-scheduling-design</a> 是跨项目入口，本页下钻 Pod 的 placement/binding 与失败重试。<a class="wikilink" href="../entities/kueue.html">kueue</a> 在所管理工作负载进入实际 Pod 调度前完成配额准入，再由 integration unsuspend 工作负载或移除 Pod scheduling gates；Pod 对象可能在准入前已存在。kube-scheduler 对可调度 Pod 选择 Node 并完成 binding，<a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a> 以 out-of-tree 插件扩展同一 framework，不能据此推定它接管 JobSet/LWS 等业务对象生命周期。</p>
+<p><a class="wikilink" href="../entities/karpenter.html">karpenter</a> 从未调度 Pod 的状态和约束计算容量需求，经 NodePool/NodeClass、NodeClaim 与节点生命周期补充容量；它不执行 Pod binding。新 Node 的状态变化再成为 scheduler 重试的输入，扩容成功也不保证 Pod 的所有放置约束可满足。</p>
+<h2 id="scheduling--binding-cycle">Scheduling / Binding Cycle</h2>
+<pre><code class="language-text">QUEUE ENTRY
+  Pod event - - enqueue eligibility - -&gt; PreEnqueue
+  PreEnqueue ── success ──&gt; activeQ (ordered by QueueSort) ── pop ──&gt; profile
+  PreEnqueue - - gated / reject - -&gt; unschedulableQ
+
+SCHEDULING CYCLE (serial, single-Pod path)
+  profile ──&gt; snapshot / PreFilter ──&gt; Filter
+  Filter ── no feasible Node ──&gt; PostFilter / optional preemption
+  PostFilter - - nomination / failure feedback: retry later - -&gt; queue
+  Filter ── feasible Nodes ──&gt; PreScore / Score / NormalizeScore
+    ── select Node ──&gt; assume in scheduler cache ──&gt; Reserve ──&gt; Permit
+  Permit ── approve OR wait ──&gt; dispatch binding cycle
+  Reserve / Permit failure ──&gt; Unreserve / forget assumed Pod
+    - - failure / retry - -&gt; queue
+
+BINDING CYCLE (may run concurrently for different Pods)
+  WaitOnPermit (if waiting) ── approved ──&gt; PreBind ──&gt; Bind ──&gt; PostBind
+  WaitOnPermit reject/timeout OR PreBind/Bind failure
+    ──&gt; Unreserve / forget assumed Pod - - failure / retry - -&gt; queue
+</code></pre>
+<p>实线 <code>── label ──&gt;</code> 表示调用或有序步骤，虚线 <code>- - label - -&gt;</code> 表示事件、排队和后续重试；图中失败回队列后仍需经过下一节的唤醒与退避判断。PreEnqueue 在 activeQ 之前执行，QueueSort 决定队列顺序，并非 Pod 被 pop 后才依次执行这两步。当前图聚焦单 Pod 路径；原生 PodGroup 调度另见 L1 页的 KEP 边界。</p>
+<p>这里按锚定 commit 的 <a href="https://github.com/kubernetes/kubernetes/blob/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler/schedule_one.go"><code>schedule_one.go</code></a> 区分周期：<code>schedulingCycle</code> 调用 <code>prepareForBindingCycle</code>，其中完成 assume/reserve 和首次 Permit 调用；之后异步启动 <code>bindingCycle</code>，在 <code>WaitOnPermit</code> 等待需要放行的 Pod，再执行 PreBind/Bind/PostBind。这与 <a href="https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/">Scheduling Framework</a> 对 Permit 位于 scheduling cycle 末尾的说明一致。图省略了版本/feature gate 相关的辅助检查，不把 Reserve/Permit 整体移到 binding cycle。</p>
+<p><code>nominatedNodeName</code> 表达候选或预期，不等于已绑定；抢占选出的候选通常要在后续调度周期重验。当前轮选择 Node 后的 assume 也是 scheduler 的内存记账，不是 API binding 已成功。Reserve/Permit 与后续阶段失败时必须释放相应保留状态；Bind 成功后才运行 PostBind。</p>
+<h2 id="queue--requeue-feedback">Queue / Requeue Feedback</h2>
+<pre><code class="language-text">Kueue admission - - admitted feedback - -&gt; workload / Pod integration
+integration ── unsuspend OR remove scheduling gates ──&gt; eligible Pod
+Pod - - watch / enqueue - -&gt; PreEnqueue ── success ──&gt; activeQ (QueueSort)
+PreEnqueue - - gated / reject - -&gt; unschedulableQ
+activeQ ── pop ──&gt; scheduling / binding attempt
+attempt - - unschedulable / error feedback - -&gt; failure handler
+failure handler - - wait for relevant change - -&gt; unschedulableQ
+failure handler - - retry after backoff - -&gt; backoffQ
+
+Node / Pod / plugin-relevant cluster events
+  - - QueueingHints: eligible to retry - -&gt; unschedulableQ re-evaluation
+unschedulableQ - - retry eligible + backoff pending - -&gt; backoffQ
+unschedulableQ - - retry eligible + backoff satisfied / bypass allowed - -&gt; activeQ
+backoffQ - - backoff complete / queue activation - -&gt; activeQ
+unschedulableQ - - periodic fallback re-evaluation - -&gt; activeQ or backoffQ
+
+Pod Unschedulable - - observed state / event - -&gt; Karpenter capacity controller
+Karpenter ── NodePool + NodeClass / NodeClaim lifecycle ──&gt; Node
+Node - - capacity / readiness event - -&gt; cluster events / QueueingHints above
+</code></pre>
+<p><code>unschedulableQ</code> 在这里是概念名；该 commit 的实现使用 <code>unschedulableEntities</code>，可保存 Pod 或 PodGroup。activeQ 保存可尝试项，backoffQ 保存等待退避的项；失败回队列的位置还取决于失败插件、在途事件和当前退避状态，不是所有错误都固定先进入同一个队列。QueueingHint 根据插件关心的变化决定是否值得再试，未命中时继续等待；相关事件不是“无条件唤醒全部 pending Pods”。回到 activeQ 仍须满足入队门槛，周期性兜底也不会自动解除 scheduling gates。实现依据见 <a href="https://github.com/kubernetes/kubernetes/blob/ab9b0dcfd32039601ad368ae891efa3ff67600e0/pkg/scheduler/backend/queue/scheduling_queue.go">当前 scheduling queue</a>。</p>
+<p>Kueue 的等待准入和 scheduler 的不可放置是不同状态。被 gate 挡住的 Pod 不能直接当作已经执行 Filter 后的 Unschedulable；Karpenter 也必须结合 Pod 和节点约束评估可供应容量。对允许调度后仍缺少节点的 Pod，新 Node 通过 watch/队列机制触发重算，不会绕过 Filter、Permit 或 Bind。</p>
+<h2 id="scheduling-失败路径">Scheduling 失败路径</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>失败点 / 直接影响</th>
+<th>自动恢复与控制器协同</th>
+<th>人工排查 / 修复边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Filter 无 feasible Node：当前轮无法选 Node</td>
+<td>按配置尝试 PostFilter；后续相关事件与退避允许重新评估</td>
+<td>检查失败插件、资源请求、taint、affinity、拓扑等硬条件；增加不匹配的节点不会解决问题</td>
+</tr>
+<tr>
+<td>PostFilter / preemption 无可行结果：可能无候选或 victim 释放后仍不足</td>
+<td>抢占策略允许时选择候选，等待资源变化后重试；nomination 不保证后续绑定</td>
+<td>检查优先级、抢占策略、不可由抢占消除的约束；不要将 PDB 理解为 scheduler preemption 的绝对保护</td>
+</tr>
+<tr>
+<td>Reserve 失败或后续阶段失败：保留状态需清理</td>
+<td>运行 Unreserve、撤销 assumed Pod；Unreserve 应幂等且不能失败</td>
+<td>自定义插件泄漏资源、不可逆副作用或不完整回滚需修正代码/清理外部状态，不能仅靠 requeue</td>
+</tr>
+<tr>
+<td>Permit wait / reject / timeout：绑定暂停或被拒绝</td>
+<td>等待相关插件批准；拒绝/超时触发清理和重新排队</td>
+<td>检查组成员、超时、外部条件与插件配置；增加超时不会修复永久缺失的成员</td>
+</tr>
+<tr>
+<td>PreBind 失败：绑定前准备未完成</td>
+<td>中止 binding cycle、清理保留状态并重试；依赖控制器恢复后再尝试</td>
+<td>检查外部依赖、权限和插件错误；确认重复执行及补偿能处理部分完成的准备操作</td>
+</tr>
+<tr>
+<td>Bind 失败：API 层绑定未确认</td>
+<td>scheduler 走失败处理，依据后续 API/watch 状态判断 Pod 是否仍需调度</td>
+<td>区分权限/冲突/网络超时；超时不证明服务端未写入，避免插件盲目重复不可逆操作</td>
+</tr>
+<tr>
+<td>插件数据陈旧：快照或外部缓存与实际状态不一致</td>
+<td>正常 watch 更新与下一轮 snapshot 可修正暂时陈旧；插件需注册正确的重试事件</td>
+<td>长期不同步、错误失效策略或漏注册事件需修复；调度队列不能替代外部缓存一致性设计</td>
+</tr>
+<tr>
+<td>插件目标冲突：Filter 交集为空或 Score 权重违背预期</td>
+<td>只在输入变化后重算；没有自动“放松策略”的通用机制</td>
+<td>校验 profile、插件开关/顺序/权重与业务目标，用 <a class="wikilink" href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a> 对照具体决策</td>
+</tr>
+</tbody>
+</table></div>
+<p>out-of-tree 插件与 in-tree 插件都通过 framework 参与相应阶段；部署 scheduler-plugins 并不建立另一套 JobSet/LWS 所有权模型。故障定位应同时看 Pod events/status、失败 extension point 和相关控制器状态，避免把所有 Pending 都归为容量不足。</p>
+<h2 id="kep-设计背景">KEP 设计背景</h2>
+<p>下面保留 scheduler core 的 framework、component config、profiles、queue/requeue、topology placement、async preemption 和性能演进笔记。历史状态表不作为本次对 release/feature stage 的重新核验；逐个 KEP 的追踪入口见 <a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a>。</p>
 <h2 id="一句话定位">一句话定位</h2>
 <p>Scheduler core KEP 的共同目标是把 kube-scheduler 从一个内置策略集合，演进为可配置、可扩展、可解释、可高吞吐的调度框架。</p>
 <h2 id="scheduler-framework">Scheduler Framework</h2>
-<p><code>624-scheduling-framework</code> 是最关键的基础 KEP。它把一次 Pod 调度拆成多个 extension point：</p>
-<pre><code class="language-text">QueueSort
-  -&gt; PreFilter
-  -&gt; Filter
-  -&gt; PostFilter
-  -&gt; PreScore
-  -&gt; Score
-  -&gt; Reserve
-  -&gt; Permit
-  -&gt; PreBind
-  -&gt; Bind
-  -&gt; PostBind
-</code></pre>
+<p><code>624-scheduling-framework</code> 是最关键的基础 KEP。它把一次 Pod 调度拆成多个 extension point，当前调用顺序与分支见上方 Scheduling / Binding Cycle。PostFilter 属于无可行节点时的恢复分支，不能画成每次 Filter 后必经的一步。</p>
 <p>设计价值：</p>
 <ul>
 <li>新策略不再必须 fork scheduler 或靠 HTTP extender 绕路。</li>
@@ -124,22 +240,7 @@
 </ul>
 <p>这组 feature 是 Workload-aware preemption 和 resize-induced preemption 的基础。后两者不是重新发明抢占，而是把现有抢占模型扩展到 PodGroup 或已绑定 Pod resize 场景。</p>
 <h2 id="data-flow">Data Flow</h2>
-<pre><code class="language-text">cluster event
-  |
-  +-- queueing hint decides affected pods
-  |
-activeQ / backoffQ / unschedulable
-  |
-  +-- scheduling profile selects plugin set
-  |
-framework cycle
-  |
-  +-- filter / score / reserve / permit / prebind
-  |
-bind or fail
-  |
-  +-- events / status / requeue hints
-</code></pre>
+<p>完整事件、队列、profile、framework 与失败反馈路径已合并到上方两张图。</p>
 <p>理解 scheduler feature 时，应该先问它改的是哪一层：</p>
 <ul>
 <li>改 API 表达：ComponentConfig、profile、Pod topology spread。</li>
@@ -273,14 +374,14 @@ bind or fail
 <li>scheduler perf 中 extension point latency 是否被 DRA / CEL / batch scheduling 拉高。</li>
 </ul>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/k8s-v1.37-scheduling-node-dra-progress.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes v1.37 Scheduling / Node / DRA Progress</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/kubernetes-workload-gang-scheduling-design.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes Workload and Gang Scheduling Design</strong></a></div><span class="page-navigation-progress">阅读顺序 274/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-feature-coverage.html">kubernetes-keps-feature-coverage</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-workload-gang-scheduling-design.html">kubernetes-workload-gang-scheduling-design</a></li><li><a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a></li><li><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></li><li><a class="wikilink" href="../entities/descheduler.html">descheduler</a></li><li><a class="wikilink" href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/k8s-v1.37-scheduling-node-dra-progress.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes v1.37 Scheduling / Node / DRA Progress</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/kubernetes-workload-gang-scheduling-design.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes Workload and Gang Scheduling Design</strong></a></div><span class="page-navigation-progress">阅读顺序 279/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-feature-coverage.html">kubernetes-keps-feature-coverage</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-implementation-matrix.html">kubernetes-keps-implementation-matrix</a></li><li><a class="wikilink" href="../analysis/kubernetes-keps-design-tracking.html">kubernetes-keps-design-tracking</a></li><li><a class="wikilink" href="../analysis/kubernetes-workload-gang-scheduling-design.html">kubernetes-workload-gang-scheduling-design</a></li><li><a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a></li><li><a class="wikilink" href="../entities/scheduler-plugins.html">scheduler-plugins</a></li><li><a class="wikilink" href="../entities/descheduler.html">descheduler</a></li><li><a class="wikilink" href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a></li><li><a class="wikilink" href="../analysis/k8s-core-controller-map.html">k8s-core-controller-map</a></li><li><a class="wikilink" href="../entities/kueue.html">kueue</a></li><li><a class="wikilink" href="../entities/karpenter.html">karpenter</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/kubernetes-scheduler-core-design.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-scheduler-core-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Sched</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>Descheduler</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>kube-scheduler-simulator</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>Kubernetes DRA Design Deep Dive</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes In-Place Pod Resize Design</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="123.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle><circle class="mini-node mini-node-analysis" cx="62.0" cy="82.0" r="7"><title>Kubernetes KEP Feature Coverage</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEP Implementation Matrix</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/descheduler.html">Descheduler</a><span>实体 · related</span></li><li><a href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-dra-design-deep-dive.html">Kubernetes DRA Design Deep Dive</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-in-place-pod-resize-design.html">Kubernetes In-Place Pod Resize Design</a><span>分析 · wikilink</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · wikilink</span></li><li><a href="../sources/src-kubernetes-keps-design-tracking.html">Kubernetes KEP Design Tracking</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#scheduler-framework">Scheduler Framework</a></li><li class=""><a href="#componentconfig-和-profiles">ComponentConfig 和 Profiles</a></li><li class=""><a href="#queue--requeue-设计">Queue / Requeue 设计</a></li><li class=""><a href="#placement--topology">Placement / Topology</a></li><li class=""><a href="#preemption-基础线">Preemption 基础线</a></li><li class=""><a href="#data-flow">Data Flow</a></li><li class=""><a href="#重要边界">重要边界</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#和其他详解页的关系">和其他详解页的关系</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=kubernetes-scheduler-core-design">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Sched</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>Descheduler</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="41.0" r="7"><title>Kubernetes Core / Controller 项目地图</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Karpenter</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>kube-scheduler-simulator</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>Kubernetes</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="123.0" r="7"><title>Kubernetes DRA Design Deep Dive</title></circle><circle class="mini-node mini-node-analysis" cx="62.0" cy="82.0" r="7"><title>Kubernetes In-Place Pod Resize Design</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes KEPs Design Tracking</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/descheduler.html">Descheduler</a><span>实体 · related</span></li><li><a href="../analysis/k8s-core-controller-map.html">Kubernetes Core / Controller 项目地图</a><span>分析 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kube-scheduler-simulator.html">kube-scheduler-simulator</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-dra-design-deep-dive.html">Kubernetes DRA Design Deep Dive</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-in-place-pod-resize-design.html">Kubernetes In-Place Pod Resize Design</a><span>分析 · wikilink</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/jobset.html">JobSet</a><span>实体 · related</span></li><li><a href="../entities/karpenter.html">Karpenter</a><span>实体 · related</span></li><li><a href="../entities/kubernetes.html">Kubernetes</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-feature-coverage.html">Kubernetes KEP Feature Coverage</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-keps-implementation-matrix.html">Kubernetes KEP Implementation Matrix</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-node-runtime-observability-security-design.html">Kubernetes Node Runtime Observability Security Design</a><span>分析 · wikilink</span></li><li><a href="../analysis/kubernetes-workload-gang-scheduling-design.html">Kubernetes Workload and Gang Scheduling Design</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前上游核验2026-09-25">当前上游核验（2026-09-25）</a></li><li class=""><a href="#m5-b-中的职责边界">M5-B 中的职责边界</a></li><li class=""><a href="#scheduling--binding-cycle">Scheduling / Binding Cycle</a></li><li class=""><a href="#queue--requeue-feedback">Queue / Requeue Feedback</a></li><li class=""><a href="#scheduling-失败路径">Scheduling 失败路径</a></li><li class=""><a href="#kep-设计背景">KEP 设计背景</a></li><li class=""><a href="#一句话定位">一句话定位</a></li><li class=""><a href="#scheduler-framework">Scheduler Framework</a></li><li class=""><a href="#componentconfig-和-profiles">ComponentConfig 和 Profiles</a></li><li class=""><a href="#queue--requeue-设计">Queue / Requeue 设计</a></li><li class=""><a href="#placement--topology">Placement / Topology</a></li><li class=""><a href="#preemption-基础线">Preemption 基础线</a></li><li class=""><a href="#data-flow">Data Flow</a></li><li class=""><a href="#重要边界">重要边界</a></li><li class=""><a href="#关键-kep-实现状态">关键 KEP 实现状态</a></li><li class=""><a href="#和其他详解页的关系">和其他详解页的关系</a></li><li class=""><a href="#追踪重点">追踪重点</a></li></ul></aside></aside>
 </div>
 
 <script>

@@ -1,14 +1,20 @@
 ---
 title: controller-tools
 tags: [entity, kubernetes, crd, codegen]
-date: 2026-06-14
+date: 2026-09-22
 sources: [controller-tools-architecture-analysis.md]
-related: ["[[controller-tools]]", "[[kubernetes]]", "[[model-serving-operator]]", "[[declarative-agent-management]]"]
+related: ["[[controller-tools]]", "[[kubernetes]]", "[[model-serving-operator]]", "[[declarative-agent-management]]", "[[k8s-core-controller-map]]", "[[controller-runtime]]", "[[kubebuilder]]"]
 ---
 
 # controller-tools
 
 controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。 详见 [[src-controller-tools-architecture]]。
+
+证据说明：本次官方默认分支快照为 [`030a93937cbb`](https://github.com/kubernetes-sigs/controller-tools/commit/030a93937cbbd72cc02cc2fe943f1df6e4b1f115)，该 commit 不代表 release。[[src-controller-tools-architecture]] 保留 2026-06-14 的 raw-backed Source 快照；当前跨项目证据与职责图见 [[k8s-core-controller-map]]。
+
+## 在 M5-A Controller 地图中的位置
+
+controller-tools 的 controller-gen 解析 Go markers/types，生成 CRD、RBAC、webhook manifests、deepcopy（object generator）与 applyconfiguration 等资产。[[kubebuilder]] 把它接入作者工作流；[[controller-runtime]] 负责运行时控制器框架，controller-tools 不运行 controller。完整生成链与运行时边界见 [[k8s-core-controller-map]]。
 
 ## 架构边界
 

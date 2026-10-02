@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-12</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,7 +23,7 @@
 
   <header class="page-header">
     <h1>Model Serving Operator</h1>
-    <p class="page-meta">2026-06-12 · 来源：dynamo-architecture-analysis.md、kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、openkruise-projects-current-state.md</p>
+    <p class="page-meta">2026-09-22 · 来源：dynamo-architecture-analysis.md、kserve-architecture-analysis.md、ome-architecture-analysis.md、kubeai-architecture-analysis.md、gpustack-architecture-analysis.md、llm-d-workload-variant-autoscaler-architecture-analysis.md、llm-d-batch-gateway-architecture-analysis.md、openkruise-projects-current-state.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">model-serving</span><span class="tag">kubernetes</span><span class="tag">operator</span><span class="tag">llm-serving</span></div>
   </header>
 
@@ -55,7 +55,7 @@
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>针对同一模型多个 serving variant 的全局 autoscaling 决策层</td>
+<td>Deprecated 的历史 variant autoscaling 设计，仅供迁移/设计参考</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></td>
@@ -78,7 +78,7 @@
 <h2 id="和-engine-的区别">和 engine 的区别</h2>
 <p><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> 是推理 engine；model serving operator 管的是 engine 在集群里的部署、扩缩、路由、模型生命周期和 API 暴露。</p>
 <h2 id="和-llm-d-外围组件的关系">和 llm-d 外围组件的关系</h2>
-<p><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a> 说明 model serving operator 周围还有一圈工程能力：</p>
+<p><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a>、<a class="wikilink" href="../entities/llm-d-benchmark.html">llm-d-benchmark</a>、<a class="wikilink" href="../entities/llm-d-inference-sim.html">llm-d-inference-sim</a>，以及 deprecated/历史的 <a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a>，说明 model serving operator 周围还有一圈工程能力：</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -94,9 +94,9 @@
 <td>不创建模型服务，复用已有 endpoint 执行异步 JSONL job。</td>
 </tr>
 <tr>
-<td>Variant autoscaling</td>
+<td>Variant autoscaling（历史）</td>
 <td><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></td>
-<td>不替代 HPA/KEDA，而是为多个 variant 计算 desired allocation。</td>
+<td>Deprecated 设计曾为多个 variant 计算 desired allocation；现仅供迁移/设计参考。</td>
 </tr>
 <tr>
 <td>Benchmark lifecycle</td>
@@ -110,11 +110,11 @@
 </tr>
 </tbody>
 </table></div>
-<p>选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark、simulator、variant autoscaling 分别补异步任务、评测、测试替身和资源经济。</p>
+<p>选型时不要把这些都归类成“serving operator”。operator 管声明式生命周期；batch、benchmark 和 simulator 分别补异步任务、评测和测试替身。对新部署，llm-d 当前路径是 <a href="https://llm-d.ai/docs/dev/architecture/advanced/autoscaling">EPP metrics → KEDA Prometheus scaler → HPA</a>；<a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a> 的 Entity Conflict 注记及历史设计仅用于迁移/设计参考。</p>
 <h2 id="和-kubernetes-调度指标外围的关系">和 Kubernetes 调度/指标外围的关系</h2>
 <p>模型服务 operator 只管理模型服务生命周期还不够。<a class="wikilink" href="../entities/dynamo.html">dynamo</a> 展示了另一条边界：DGDR/Profiler/AIConfigurator 负责部署前配置搜索，DGD/DCD/Operator 负责资源物化，Planner 负责运行时 P/D 容量控制，而 Router 留在请求热路径。<a class="wikilink" href="../entities/kueue.html">kueue</a> / <a class="wikilink" href="../entities/jobset.html">jobset</a> / <a class="wikilink" href="../entities/lws.html">lws</a> 决定 batch 和分布式 workload 怎么表达与入队；<a class="wikilink" href="../entities/karpenter.html">karpenter</a> 决定节点容量怎样按 pending pods 扩出；<a class="wikilink" href="../entities/metrics-server.html">metrics-server</a> / <a class="wikilink" href="../entities/prometheus-adapter.html">prometheus-adapter</a> 决定 autoscaling 能看到哪些指标。<a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a> 提供更上位的整体视角。</p>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/kubernetes-workload-automation.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes Workload Automation</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/kubernetes-dra.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes Dynamic Resource Allocation</strong></a></div><span class="page-navigation-progress">阅读顺序 122/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/kubernetes-workload-automation.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes Workload Automation</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/kubernetes-dra.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Kubernetes Dynamic Resource Allocation</strong></a></div><span class="page-navigation-progress">阅读顺序 123/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kserve.html">kserve</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/llm-d.html">llm-d</a></li><li><a class="wikilink" href="../entities/llm-d-router.html">llm-d-router</a></li><li><a class="wikilink" href="../entities/llm-d-kv-cache.html">llm-d-kv-cache</a></li><li><a class="wikilink" href="../entities/llm-d-workload-variant-autoscaler.html">llm-d-workload-variant-autoscaler</a></li><li><a class="wikilink" href="../entities/llm-d-batch-gateway.html">llm-d-batch-gateway</a></li><li><a class="wikilink" href="../concepts/batch-inference.html">batch-inference</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/model-serving-operator.md">查看 Markdown 源</a>

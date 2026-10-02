@@ -5,6 +5,14 @@ date: 2026-04-22
 
 # 操作日志
 
+## [2026-10-02] ingest | KVCacheD 与 SGLang、vLLM 三项目知识体系
+
+基于本地 KVCacheD `884108704f44`、SGLang `44ef8fecfe69`、vLLM `dc36fcce902a` 做三仓源码分析。新增 KVCacheD raw/source/entity、Elastic KV Cache 概念和三项目关系知识地图，更新 vLLM、SGLang、LLM Inference、GPU Sharing 与索引。核心关系：vLLM/SGLang 保留 scheduler、prefix metadata、block/token index 与 attention kernel；KVCacheD 在 allocator/tensor seam 下接 GPU VMM，以稳定 VA + 按需 physical page backing 实现同卡多实例弹性，并用 TP/PP transactional unmap 与 async release barrier 维持跨 rank 生命周期一致性。
+
+补充 [[kvcached-source-code-deep-dive]]：按真实文件、类和函数展开 `.pth/import hook → engine patch → KVCacheManager → PageAllocator/FTensor → CUDA/HIP VMM`，并分别给出 SGLang/vLLM 初始化、allocation、prefix cache、async release、TP/PP two-phase unmap、controller 请求时序和调试检查点。
+
+补充 [[kvcached-integration-implementation-guide]]：把源码知识落到可复现实验，覆盖环境与版本清单、自动注入验证、单实例page增长/回收、同引擎与vLLM/SGLang跨引擎共置、prefix cache bound、动态limit、TP/PP、transaction故障注入、输出正确性、性能对照和engine升级回归。
+
 ## [2026-07-15] query | Kubernetes v1.37 Scheduling / Node / DRA 进展
 
 根据用户要求，把 2026-07-15 对 `kubernetes/enhancements` upstream `master` 的调度、Node、DRA 和 autoscaling KEP 进展写入 wiki。新增 [[k8s-v1.37-scheduling-node-dra-progress]]，并更新 [[kubernetes]]、[[kubernetes-dra]]、[[src-kubernetes-keps-design-tracking]]、[[kubernetes-keps-feature-coverage]]、[[kubernetes-keps-implementation-matrix]] 和索引。核心结论：v1.37 主线集中在 workload-aware scheduling、DRA workload/capacity/NUMA/status 语义、Pod-level resource managers、Memory QoS、rootless kubelet 和 HPA/Cluster Autoscaler 约束联动。
@@ -449,3 +457,29 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 
 - 基于本地 `/Users/zhenyu.jiang/vllm` HEAD `dc36fcce90` 与 `/Users/zhenyu.jiang/sglang` HEAD `2fd835b9c1`，提取 Engine/Scheduler/Batch/KV/Attention/Speculative/P-D 关键调用路径。
 - 在两份架构源摘要中增加代码入口、状态对象、关键函数、生命周期流程和 vLLM/SGLang 实现对比。
+
+## [2026-09-24] query | M5-A Kubernetes Controller 工具链地图
+
+- 在 [[k8s-core-controller-map]] 记录当前官方默认分支证据：controller-runtime `6ab2188a1fb1`、Kubebuilder `5f31d1f3c075`、controller-tools `030a93937cbb`；区分 commit 快照与 release。
+- 区分 build-time 脚手架/marker 生成与 runtime 控制循环，补齐 D1 职责图、D3 Reconcile、D4 状态与一致性、D5 自动恢复与人工修复边界。
+- 更新 [[controller-runtime]]、[[kubebuilder]]、[[controller-tools]] 的证据说明、职责定位与双向关联；保留既有 raw、Source 和原始 ASCII 图不变。
+- 更新 Index 工具链描述和 M5-A 阅读路径，通过构建同步 HTML 页面与 graph 反向链接。
+
+## [2026-09-22] query | M4 Inference / Serving / Routing 模块地图更新
+
+- 基于 vLLM、SGLang、Dynamo、llm-d、AIBrix 当前官方仓库与文档，重构 [[llm-inference-serving-project-map]]，新增模块边界、在线请求、控制循环、KV 生命周期和故障边界图。
+- 更新 [[llm-serving-engine-selection-map]]，把“引擎选型”改成 engine、distributed runtime、Kubernetes routing/control plane 和 infrastructure 的分层组合决策。
+- 同步相关 Entity、Concept、[[Wiki 索引]] 与生成 HTML；保留 2026-09-13/14 Source 摘要的历史图，并为当前 llm-d WVA deprecated 状态补充双向 Conflict 注记。
+- 修正 Dynamo P/D 拓扑与 vLLM KV block size / P-D maturity 的绝对化历史表述。
+
+## [2026-09-25] query | M5-B Kubernetes Workload / Scheduling 地图
+
+- 基于 Kueue、JobSet、LWS/DisaggregatedSet、scheduler-plugins、Karpenter 与 Kubernetes scheduler 当前官方证据，重构 Workload → Admission → Placement → Capacity 主线。
+- 更新 [[kubernetes-workload-gang-scheduling-design]] 的 D1–D5，并重画 [[kubernetes-scheduler-core-design]] 的 scheduling/binding cycle 与 queue/requeue。
+- 同步五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。
+
+## [2026-09-27] query | M5-C Kubernetes Device / GPU 地图
+
+- 基于 NFD、NVIDIA GPU Operator、Device Plugin、DRA Driver、HAMi 与 Kubernetes DRA 当前官方证据，重构 discovery → node software → allocation → runtime injection → sharing/isolation 主线。
+- 更新 [[k8s-gpu-device-stack]] 的 D1–D5 与 [[kubernetes-dra-design-deep-dive]] 的 ResourceClaim/scheduler/kubelet/CDI 生命周期。
+- 同步四个 Concept 和五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。

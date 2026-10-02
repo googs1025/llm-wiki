@@ -1,20 +1,20 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-14
-sources: [vllm-architecture-analysis.md]
-related: [sglang, paged-attention, radix-attention, flash-attention]
+date: 2026-10-02
+sources: [vllm-architecture-analysis.md, kvcached-architecture-analysis.md]
+related: [sglang, kvcached, elastic-kv-cache, paged-attention, radix-attention, flash-attention]
 ---
 
 # vLLM
 
-> 最新代码级架构资料：[[src-vllm-architecture]]，基于本地 HEAD `dc36fcce90`。
+> 2026-09-14 本地代码分析快照：[[src-vllm-architecture]]，HEAD `dc36fcce90`。当前 upstream 证据维护在 [[llm-inference-serving-project-map]] 的“当前上游核验（2026-09-22）”小节。
 
 **UC Berkeley Sky Computing Lab 开源的 LLM 推理与 serving 引擎。** Apache 2.0，最早把 [[paged-attention]] 引入开源界（SOSP 2023 论文），是目前最广泛使用的 LLM serving 框架之一。
 
 ## 一句话定位
 
-LLM serving 的"事实标准基线"：用 [[paged-attention]] 把 KV 缓存按 16-token block 管理（类比 OS 虚存分页），把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 [[sglang]] / TensorRT-LLM / TGI 都把 vLLM 当对标。
+LLM serving 的"事实标准基线"：用 [[paged-attention]] 将 KV 缓存组织为固定大小的逻辑/物理 block（类比 OS 虚存分页），并通过 block table 建立映射；具体 block 大小取决于配置、attention backend 和版本。这把 GPU 显存从"按最大 seq_len 预分配"改成"按需 block 分配 + block table 映射"，让吞吐量数倍于 HuggingFace transformers。后来的 [[sglang]] / TensorRT-LLM / TGI 都把 vLLM 当对标。
 
 ## 最小架构图
 
@@ -33,10 +33,10 @@ API / Offline LLM → V1 Engine Core
 
 | 维度 | vLLM | [[sglang]] |
 |------|------|---------|
-| **KV 缓存粒度** | 16-token block（[[paged-attention]]） | token 级（[[radix-attention]]） |
-| **前缀共享** | 整 block 才能 share，碎片化严重 | 任意分叉点自动 share |
+| **KV 缓存粒度** | 固定大小的逻辑/物理 block + block table（大小依配置/backend/版本） | token 级（[[radix-attention]]） |
+| **前缀共享** | 按 block 边界共享；末尾未填满的 partial block 在完整前可能无法复用 | 任意分叉点自动 share |
 | **投机解码** | EAGLE / Medusa（少量） | 7 算法（EAGLE / NGRAM / MTP / DFLASH / Standalone / 多层 EAGLE / v2） |
-| **P/D 分离** | 实验性 | 生产级 + 5 transfer backend |
+| **P/D 分离** | 通过 KV connector 等 backend-specific 集成接入；成熟度/功能覆盖需按所选 release/backend 验证 | 通过 transfer backend 等 backend-specific 集成接入；成熟度/功能覆盖需按所选 release/backend 验证 |
 | **Attention 后端** | FlashAttn / xFormers / TorchSDPA | 10+ 后端 |
 | **结构化输出** | outlines | 4 backend |
 | **协议入口** | OpenAI | OpenAI / Anthropic / Ollama / gRPC / Engine |
@@ -51,10 +51,26 @@ API / Offline LLM → V1 Engine Core
 
 ## 与 SGLang 的差异点（基于 sglang 架构分析）
 
-- **vLLM block table 强制 token 对齐**：16 token block 内即使只用 7 个也占满一格；SGLang flat KV pool 不浪费
-- **vLLM PrefixCache 同 block 才共享**：system prompt 长度不是 16 倍数 → 末尾几个 token 无法被共享；SGLang radix 树天然支持任意 token 边界 split
+- **vLLM PagedAttention 使用 block table**：将固定大小的逻辑 KV block 映射到物理 KV block；具体 block 大小和未用容量行为随配置、attention backend 与版本而异
+- **vLLM PrefixCache 按 block 边界共享**：末尾未填满的 partial block 在完整前可能无法复用；SGLang radix 树支持在任意 token 边界 split
 - **vLLM 单进程主导**：scheduler + tokenizer + worker 多线程；SGLang 4 进程异步流水线
 - **vLLM 投机解码生态较窄**：EAGLE + Medusa；SGLang 7 算法
+
+## 在 M4 模块地图中的位置
+
+vLLM 位于 engine 层，负责请求调度、模型执行、attention backend 和本地 KV 管理；外部流量路由与自动扩缩由外围 serving 层承担。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
+
+## 与 KVCacheD 的集成关系
+
+[[kvcached]] 位于 vLLM 的 KV physical backing 下层，不替代 EngineCore、Scheduler、[[paged-attention]] 或 attention backend。它通过版本化 patch：
+
+- 用 ElasticBlockPool 接住 BlockPool 的 block/APC/ref-count 契约；
+- 在 GPUModelRunner 中建立 VMM-backed KV tensor 并继续调用原生 `bind_kv_cache`；
+- 在 EngineCore/coordinator 与 GPU worker 分进程时，经 TP/PP Unix socket同步map/unmap；
+- 把共享物理池的瞬时耗尽转成 `allocate_slots() -> None`，让原生 scheduler preempt/retry；
+- queued/async batch 下先做 worker barrier，再释放 physical page。
+
+因此 vLLM 管“request需要哪些逻辑block”，KVCacheD 管“这些block所在VMM page当前是否有真实VRAM backing”。完整对象映射见 [[kvcached-sglang-vllm-knowledge-system]]，源码证据见 [[src-kvcached-architecture]]。
 
 ## 相关页面
 
@@ -62,3 +78,4 @@ API / Offline LLM → V1 Engine Core
 - 主要对标：[[sglang]]
 - 概念对照：[[radix-attention]]
 - 依赖：[[flash-attention]]
+- 弹性 KV：[[kvcached]]、[[elastic-kv-cache]]

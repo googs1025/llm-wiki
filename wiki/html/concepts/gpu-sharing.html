@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-12</span>
+  <span class="meta">2026-10-02</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,11 +23,14 @@
 
   <header class="page-header">
     <h1>GPU Sharing</h1>
-    <p class="page-meta">2026-06-12 · 来源：hami-architecture-analysis.md、k8s-device-plugin-architecture-analysis.md</p>
+    <p class="page-meta">2026-10-02 · 来源：hami-architecture-analysis.md、k8s-device-plugin-architecture-analysis.md、kvcached-architecture-analysis.md</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">gpu</span><span class="tag">kubernetes</span><span class="tag">sharing</span><span class="tag">scheduling</span></div>
   </header>
 
   <p>GPU sharing 指多个 workload 共享同一物理 GPU 或 MIG/MPS/time-slicing/vGPU 资源的调度与隔离方法。目标是在吞吐、隔离、成本和利用率之间取平衡。</p>
+<h2 id="在-m5-c-device--gpu-地图中的位置">在 M5-C Device / GPU 地图中的位置</h2>
+<p>共享方案要分别回答四件事：scheduler 如何选择设备并记账，allocator 如何交接设备，硬件是否分区，runtime 如何限制实际使用。<a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a> 提供能力信号；<a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a>、<a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a> 与 <a class="wikilink" href="../entities/hami.html">hami</a> 采用的资源模型和隔离机制不同。<a class="wikilink" href="../concepts/cdi.html">cdi</a> 只承载注入配置，不把记账额度自动变成隔离保证。完整分层见 <a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a>，Claim 与节点准备的区别见 <a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a>。</p>
+<p>部署时须为同一物理设备和资源名明确分配所有权，尤其不能让 HAMi 与 NVIDIA 官方 plugin 在同一节点争用 <code>nvidia.com/gpu</code>。<a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a> 可以管理软件组件，但需关闭冲突的 allocation operand；HAMi-DRA 改变分配路径，不等于改变 HAMi-core 的软件隔离边界。</p>
 <h2 id="主要路线">主要路线</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -40,37 +43,50 @@
 <tbody>
 <tr>
 <td>MIG</td>
-<td><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a></td>
-<td>硬件切分，隔离强，但粒度受硬件 profile 限制</td>
+<td><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a>, <a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a></td>
+<td>硬件分区；plugin 可暴露预配置实例，分区配置由相应管理组件完成，粒度受硬件/profile 限制</td>
 </tr>
 <tr>
-<td>Time-slicing / MPS</td>
+<td>Time-slicing</td>
 <td><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a></td>
-<td>共享简单，但隔离和 QoS 取舍明显</td>
+<td>复用执行时间，不等于独立显存或硬件故障域隔离</td>
 </tr>
 <tr>
-<td>vGPU / memory/core sharing</td>
+<td>MPS</td>
+<td><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a></td>
+<td>通过 MPS 服务共享执行与配置资源限制；支持范围依版本，不等价于 MIG 硬件分区</td>
+</tr>
+<tr>
+<td>HAMi-core memory/core sharing</td>
 <td><a class="wikilink" href="../entities/hami.html">hami</a></td>
-<td>调度器参与，支持更细粒度资源表达</td>
+<td>调度/记账配合容器内调用拦截，隔离效果取决于注入与兼容调用路径</td>
 </tr>
 <tr>
-<td>DRA dynamic device config</td>
+<td>DRA device configuration</td>
 <td><a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a></td>
-<td>面向未来的声明式资源配置</td>
+<td>声明式 Claim 分配和设备配置；基础 API 稳定不意味着全部动态分区/共享扩展已稳定</td>
+</tr>
+<tr>
+<td>Application-aware elastic KV</td>
+<td><a class="wikilink" href="../entities/kvcached.html">kvcached</a></td>
+<td>只让接入的 vLLM/SGLang KV physical pages按需占用VRAM；不提供通用CUDA显存quota、执行隔离或K8s调度</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="kvcached-在-gpu-sharing-中的位置">KVCacheD 在 GPU sharing 中的位置</h2>
+<p><a class="wikilink" href="../entities/kvcached.html">kvcached</a> 属于应用内、语义感知的内存复用：它知道哪些分配是KV block/token，因此可以在不停止模型的情况下按request生命周期map/unmap physical pages。MIG/MPS/time-slicing/HAMi则从设备或runtime层管理更广泛的GPU workload。</p>
+<p>两者可以组合，但不能混为一谈：KVCacheD提高同卡多模型的KV利用率，外层方案仍需负责设备分配、记账、执行共享与租户隔离。详见 <a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a> 和 <a class="wikilink" href="../analysis/kvcached-sglang-vllm-knowledge-system.html">kvcached-sglang-vllm-knowledge-system</a>。</p>
 <h2 id="和-gpu-operator-的关系">和 GPU Operator 的关系</h2>
 <p><a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a> 管软件栈生命周期；GPU sharing 管 workload 如何共享设备。两者层级不同，但生产环境经常同时出现。</p>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/device-plugin.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes Device Plugin</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/gpu-programming-learning.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">GPU 编程学习</strong></a></div><span class="page-navigation-progress">阅读顺序 126/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/hami.html">hami</a></li><li><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a></li><li><a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a></li><li><a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a></li><li><a class="wikilink" href="../concepts/device-plugin.html">device-plugin</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/device-plugin.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes Device Plugin</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/gpu-programming-learning.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">GPU 编程学习</strong></a></div><span class="page-navigation-progress">阅读顺序 127/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/hami.html">hami</a></li><li><a class="wikilink" href="../entities/k8s-device-plugin.html">k8s-device-plugin</a></li><li><a class="wikilink" href="../entities/gpu-operator.html">gpu-operator</a></li><li><a class="wikilink" href="../concepts/kubernetes-dra.html">kubernetes-dra</a></li><li><a class="wikilink" href="../concepts/device-plugin.html">device-plugin</a></li><li><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></li><li><a class="wikilink" href="../analysis/kubernetes-dra-design-deep-dive.html">kubernetes-dra-design-deep-dive</a></li><li><a class="wikilink" href="../entities/node-feature-discovery.html">node-feature-discovery</a></li><li><a class="wikilink" href="../entities/dra-driver-nvidia-gpu.html">dra-driver-nvidia-gpu</a></li><li><a class="wikilink" href="../concepts/cdi.html">cdi</a></li><li><a class="wikilink" href="../entities/kvcached.html">kvcached</a></li><li><a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/gpu-sharing.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=gpu-sharing">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">GPU Sharing</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Kubernetes Device Plugin</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>NVIDIA GPU Operator</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>HAMi</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>NVIDIA k8s-device-plugin</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Kubernetes Dynamic Resource Allocation</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>Container Device Interface</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>GPUStack</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · wikilink</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · related</span></li><li><a href="../entities/hami.html">HAMi</a><span>实体 · related</span></li><li><a href="../entities/k8s-device-plugin.html">NVIDIA k8s-device-plugin</a><span>实体 · related</span></li><li><a href="../concepts/kubernetes-dra.html">Kubernetes Dynamic Resource Allocation</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../concepts/cdi.html">Container Device Interface</a><span>概念 · related</span></li><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · related</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../entities/hami.html">HAMi</a><span>实体 · related</span></li><li><a href="../entities/k8s-device-plugin.html">NVIDIA k8s-device-plugin</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#主要路线">主要路线</a></li><li class=""><a href="#和-gpu-operator-的关系">和 GPU Operator 的关系</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=gpu-sharing">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">GPU Sharing</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Container Device Interface</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Kubernetes Device Plugin</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>DRA Driver for NVIDIA GPUs</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Elastic KV Cache</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>NVIDIA GPU Operator</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="123.0" r="7"><title>HAMi</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>NVIDIA k8s-device-plugin</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/cdi.html">Container Device Interface</a><span>概念 · related</span></li><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · related</span></li><li><a href="../concepts/elastic-kv-cache.html">Elastic KV Cache</a><span>概念 · related</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · related</span></li><li><a href="../entities/hami.html">HAMi</a><span>实体 · related</span></li><li><a href="../entities/k8s-device-plugin.html">NVIDIA k8s-device-plugin</a><span>实体 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../concepts/cdi.html">Container Device Interface</a><span>概念 · related</span></li><li><a href="../concepts/device-plugin.html">Kubernetes Device Plugin</a><span>概念 · related</span></li><li><a href="../entities/dra-driver-nvidia-gpu.html">DRA Driver for NVIDIA GPUs</a><span>实体 · related</span></li><li><a href="../concepts/elastic-kv-cache.html">Elastic KV Cache</a><span>概念 · related</span></li><li><a href="../entities/gpu-operator.html">NVIDIA GPU Operator</a><span>实体 · related</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · related</span></li><li><a href="../entities/hami.html">HAMi</a><span>实体 · related</span></li><li><a href="../entities/k8s-device-plugin.html">NVIDIA k8s-device-plugin</a><span>实体 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#在-m5-c-device--gpu-地图中的位置">在 M5-C Device / GPU 地图中的位置</a></li><li class=""><a href="#主要路线">主要路线</a></li><li class=""><a href="#kvcached-在-gpu-sharing-中的位置">KVCacheD 在 GPU sharing 中的位置</a></li><li class=""><a href="#和-gpu-operator-的关系">和 GPU Operator 的关系</a></li></ul></aside></aside>
 </div>
 
 <script>

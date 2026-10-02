@@ -232,11 +232,11 @@
         "crd",
         "project-map"
       ],
-      "date": "2026-06-13",
-      "description": "Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）",
-      "degree": 50,
-      "inbound": 9,
-      "outbound": 46
+      "date": "2026-09-22",
+      "description": "M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。",
+      "degree": 54,
+      "inbound": 13,
+      "outbound": 49
     },
     {
       "id": "kubernetes-dra-design-deep-dive",
@@ -255,11 +255,11 @@
         "gpu",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。",
-      "degree": 15,
-      "inbound": 9,
-      "outbound": 10
+      "date": "2026-09-27",
+      "description": "M5-C DRA 下钻：分项 feature stage、Claim allocation/binding、kubelet Prepare/CDI/release 与失败恢复，保留历史 KEP 演进。",
+      "degree": 20,
+      "inbound": 18,
+      "outbound": 15
     },
     {
       "id": "k8s-gpu-device-stack",
@@ -275,11 +275,11 @@
         "cdi",
         "project-map"
       ],
-      "date": "2026-06-13",
-      "description": "Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）",
-      "degree": 33,
-      "inbound": 12,
-      "outbound": 21
+      "date": "2026-09-27",
+      "description": "M5-C L1 入口：D1–D5 区分发现、节点软件、Device Plugin/DRA 分配、runtime 注入、共享隔离与失败边界。",
+      "degree": 35,
+      "inbound": 22,
+      "outbound": 27
     },
     {
       "id": "kubernetes-hpa-autoscaling-design",
@@ -297,7 +297,7 @@
         "autoscaling",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
+      "date": "2026-09-22",
       "description": "HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。",
       "degree": 11,
       "inbound": 6,
@@ -431,11 +431,11 @@
         "preemption",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。",
-      "degree": 13,
-      "inbound": 6,
-      "outbound": 11
+      "date": "2026-09-25",
+      "description": "M5-B scheduler 下钻：职责边界、scheduling/binding cycle、queue/requeue feedback 与失败路径，保留 framework/profiles/topology/preemption 的 KEP 演进。",
+      "degree": 18,
+      "inbound": 12,
+      "outbound": 14
     },
     {
       "id": "k8s-v1.37-scheduling-node-dra-progress",
@@ -474,11 +474,71 @@
         "workload-api",
         "design-deep-dive"
       ],
-      "date": "2026-07-07",
-      "description": "Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。",
-      "degree": 13,
-      "inbound": 7,
+      "date": "2026-09-25",
+      "description": "M5-B L1 入口：D1–D5 串联 Workload → Admission → Placement → Capacity、生命周期与失败边界，并保留 Workload/PodGroup 的 KEP 演进。",
+      "degree": 18,
+      "inbound": 12,
+      "outbound": 15
+    },
+    {
+      "id": "kvcached-source-code-deep-dive",
+      "title": "KVCacheD × SGLang × vLLM 源码深潜",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-source-code-deep-dive.html",
+      "tags": [
+        "analysis",
+        "source-code",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "architecture"
+      ],
+      "date": "2026-10-02",
+      "description": "三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。",
+      "degree": 9,
+      "inbound": 4,
       "outbound": 9
+    },
+    {
+      "id": "kvcached-integration-implementation-guide",
+      "title": "KVCacheD × SGLang × vLLM 集成与实验手册",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-integration-implementation-guide.html",
+      "tags": [
+        "analysis",
+        "implementation",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "operations"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。",
+      "degree": 9,
+      "inbound": 3,
+      "outbound": 9
+    },
+    {
+      "id": "kvcached-sglang-vllm-knowledge-system",
+      "title": "KVCacheD、SGLang 与 vLLM 三项目知识体系",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-sglang-vllm-knowledge-system.html",
+      "tags": [
+        "analysis",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "architecture",
+        "source-code"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。",
+      "degree": 15,
+      "inbound": 7,
+      "outbound": 15
     },
     {
       "id": "llm-inference-serving-project-map",
@@ -493,11 +553,11 @@
         "project-map",
         "ai-infra"
       ],
-      "date": "2026-06-09",
-      "description": "LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）",
-      "degree": 38,
-      "inbound": 8,
-      "outbound": 31
+      "date": "2026-09-22",
+      "description": "LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。",
+      "degree": 43,
+      "inbound": 19,
+      "outbound": 39
     },
     {
       "id": "llm-serving-engine-selection-map",
@@ -512,11 +572,11 @@
         "selection",
         "ai-infra"
       ],
-      "date": "2026-06-11",
-      "description": "LLM Serving / 推理引擎选型地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack）",
-      "degree": 26,
-      "inbound": 17,
-      "outbound": 9
+      "date": "2026-09-22",
+      "description": "LLM Serving 分层选型地图：先选架构层，再选项目组合。",
+      "degree": 32,
+      "inbound": 24,
+      "outbound": 14
     },
     {
       "id": "llm-d-kubernetes-sigs-candidate-map",
@@ -531,7 +591,7 @@
         "backlog",
         "ai-infra"
       ],
-      "date": "2026-06-13",
+      "date": "2026-09-22",
       "description": "llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）",
       "degree": 64,
       "inbound": 3,
@@ -791,11 +851,11 @@
         "device-plugin",
         "gpu"
       ],
-      "date": "2026-06-12",
-      "description": "Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec",
-      "degree": 13,
-      "inbound": 11,
-      "outbound": 6
+      "date": "2026-09-27",
+      "description": "Container Device Interface，以 spec 与设备 ID 交接 runtime 注入配置，不负责调度或 allocation。",
+      "degree": 14,
+      "inbound": 14,
+      "outbound": 9
     },
     {
       "id": "disaggregated-serving",
@@ -810,11 +870,11 @@
         "llm-serving",
         "kv-cache"
       ],
-      "date": "2026-05-16",
-      "description": "Prefill/Decode 分离式服务（Dynamo 默认架构）",
+      "date": "2026-09-22",
+      "description": "Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）",
       "degree": 26,
       "inbound": 22,
-      "outbound": 8
+      "outbound": 9
     },
     {
       "id": "ebbinghaus-forgetting-curve",
@@ -833,6 +893,26 @@
       "degree": 7,
       "inbound": 4,
       "outbound": 4
+    },
+    {
+      "id": "elastic-kv-cache",
+      "title": "Elastic KV Cache",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/elastic-kv-cache.html",
+      "tags": [
+        "concept",
+        "ai-infra",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "memory-management"
+      ],
+      "date": "2026-10-02",
+      "description": "将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page",
+      "degree": 12,
+      "inbound": 9,
+      "outbound": 10
     },
     {
       "id": "gitops",
@@ -865,11 +945,11 @@
         "sharing",
         "scheduling"
       ],
-      "date": "2026-06-12",
-      "description": "GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式",
-      "degree": 16,
-      "inbound": 16,
-      "outbound": 6
+      "date": "2026-10-02",
+      "description": "区分共享调度/记账、分配、硬件分区与 runtime 隔离；MIG、time-slicing、MPS、HAMi-core 不提供等价保障。",
+      "degree": 22,
+      "inbound": 22,
+      "outbound": 13
     },
     {
       "id": "gpu-programming-learning",
@@ -904,11 +984,11 @@
         "ai-gateway",
         "gateway-api"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-22",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 33,
-      "inbound": 33,
-      "outbound": 16
+      "degree": 36,
+      "inbound": 36,
+      "outbound": 17
     },
     {
       "id": "device-plugin",
@@ -923,11 +1003,11 @@
         "gpu",
         "runtime"
       ],
-      "date": "2026-06-12",
-      "description": "Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制",
-      "degree": 9,
-      "inbound": 9,
-      "outbound": 5
+      "date": "2026-09-27",
+      "description": "kubelet 注册、设备/health 发布、extended resources 与 Allocate 的传统路径，需明确冲突资源的分配所有权。",
+      "degree": 10,
+      "inbound": 10,
+      "outbound": 10
     },
     {
       "id": "kubernetes-dra",
@@ -942,11 +1022,11 @@
         "gpu",
         "device-management"
       ],
-      "date": "2026-07-15",
-      "description": "Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径",
-      "degree": 14,
-      "inbound": 14,
-      "outbound": 9
+      "date": "2026-09-27",
+      "description": "ResourceClaim/ResourceSlice 分配模型，基础 DRA 自 v1.35 stable；扩展阶段、节点 Prepare 与厂商支持分别核验。",
+      "degree": 15,
+      "inbound": 15,
+      "outbound": 12
     },
     {
       "id": "kubernetes-workload-automation",
@@ -980,11 +1060,11 @@
         "llm-inference",
         "memory-hierarchy"
       ],
-      "date": "2026-05-16",
+      "date": "2026-09-22",
       "description": "KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）",
-      "degree": 28,
-      "inbound": 23,
-      "outbound": 12
+      "degree": 33,
+      "inbound": 28,
+      "outbound": 13
     },
     {
       "id": "llm-inference",
@@ -998,11 +1078,11 @@
         "llm-inference",
         "llm-serving"
       ],
-      "date": "2026-06-12",
+      "date": "2026-10-02",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 79,
-      "inbound": 66,
-      "outbound": 35
+      "degree": 84,
+      "inbound": 69,
+      "outbound": 39
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -1035,10 +1115,10 @@
         "operator",
         "llm-serving"
       ],
-      "date": "2026-06-12",
+      "date": "2026-09-22",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 58,
-      "inbound": 49,
+      "degree": 60,
+      "inbound": 51,
       "outbound": 28
     },
     {
@@ -1053,10 +1133,10 @@
         "kv-cache",
         "llm-inference"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-22",
       "description": "KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）",
-      "degree": 13,
-      "inbound": 13,
+      "degree": 18,
+      "inbound": 18,
       "outbound": 4
     },
     {
@@ -1072,10 +1152,10 @@
         "llm-inference",
         "prefix-sharing"
       ],
-      "date": "2026-09-13",
+      "date": "2026-09-22",
       "description": "KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）",
-      "degree": 14,
-      "inbound": 14,
+      "degree": 19,
+      "inbound": 19,
       "outbound": 4
     },
     {
@@ -1372,11 +1452,11 @@
         "ai-infra",
         "kv-cache"
       ],
-      "date": "2026-09-13",
-      "description": "vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）",
-      "degree": 14,
-      "inbound": 9,
-      "outbound": 9
+      "date": "2026-09-22",
+      "description": "K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）",
+      "degree": 15,
+      "inbound": 10,
+      "outbound": 11
     },
     {
       "id": "apiserver-network-proxy",
@@ -1610,11 +1690,11 @@
         "controller",
         "operator"
       ],
-      "date": "2026-06-14",
-      "description": "controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。",
-      "degree": 8,
-      "inbound": 5,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "Kubernetes controller 运行时框架，组合 Manager、cache、client、reconcile、webhook，并提供 envtest 测试支持。",
+      "degree": 10,
+      "inbound": 7,
+      "outbound": 7
     },
     {
       "id": "controller-tools",
@@ -1628,11 +1708,11 @@
         "crd",
         "codegen"
       ],
-      "date": "2026-06-14",
-      "description": "controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。",
-      "degree": 6,
-      "inbound": 3,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "marker/type 解析与生成工具，产出 CRD、RBAC、webhook manifests、deepcopy/object 与 applyconfiguration 等资产。",
+      "degree": 8,
+      "inbound": 5,
+      "outbound": 7
     },
     {
       "id": "controllermesh",
@@ -1721,11 +1801,11 @@
         "dra",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）",
-      "degree": 14,
-      "inbound": 11,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "NVIDIA DRA 库存、Prepare/Unprepare、设备配置与 ComputeDomain；厂商功能支持范围独立于 Kubernetes DRA 的阶段。",
+      "degree": 15,
+      "inbound": 14,
+      "outbound": 11
     },
     {
       "id": "dynamo",
@@ -1744,11 +1824,11 @@
         "autoscaling",
         "nvidia"
       ],
-      "date": "2026-09-13",
-      "description": "NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
+      "date": "2026-09-22",
+      "description": "NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
       "degree": 31,
       "inbound": 27,
-      "outbound": 13
+      "outbound": 15
     },
     {
       "id": "envoy-ai-gateway",
@@ -1861,11 +1941,11 @@
         "vgpu",
         "scheduler"
       ],
-      "date": "2026-06-12",
-      "description": "Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "共享调度 reservation、annotation 交接、device-plugin Allocate 与 HAMi-core 隔离；HAMi-DRA 改变分配路径，需单独核验资源所有权与隔离边界。",
+      "degree": 13,
+      "inbound": 12,
+      "outbound": 11
     },
     {
       "id": "headlamp",
@@ -1970,11 +2050,11 @@
         "batch",
         "distributed-workload"
       ],
-      "date": "2026-06-14",
-      "description": "JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "批作业集合生命周期控制，用 ReplicatedJobs 管理子 Job、依赖、成功/失败策略、重启和共享卷保留。",
+      "degree": 14,
+      "inbound": 10,
+      "outbound": 9
     },
     {
       "id": "k8m",
@@ -2026,11 +2106,11 @@
         "autoscaling",
         "node"
       ],
-      "date": "2026-06-14",
-      "description": "Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。",
-      "degree": 15,
-      "inbound": 13,
-      "outbound": 4
+      "date": "2026-09-25",
+      "description": "节点容量生命周期控制，把未调度 Pod 需求与 NodePool/NodeClass 约束转成 NodeClaim，管理 provisioning、disruption 与 termination。",
+      "degree": 18,
+      "inbound": 16,
+      "outbound": 8
     },
     {
       "id": "kgateway",
@@ -2270,11 +2350,11 @@
         "operator",
         "crd"
       ],
-      "date": "2026-06-14",
-      "description": "Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。",
-      "degree": 7,
-      "inbound": 4,
-      "outbound": 4
+      "date": "2026-09-22",
+      "description": "Kubernetes API/controller 作者工作流与脚手架，组织项目布局、生成流程和运行时组件。",
+      "degree": 9,
+      "inbound": 6,
+      "outbound": 7
     },
     {
       "id": "kubectl-ai",
@@ -2378,11 +2458,11 @@
         "scheduler",
         "queueing"
       ],
-      "date": "2026-06-14",
-      "description": "Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。",
-      "degree": 18,
-      "inbound": 15,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "Workload admission 与配额控制，管理队列、flavor、topology 和 checks；最终 Pod placement 由 scheduler 完成。",
+      "degree": 20,
+      "inbound": 17,
+      "outbound": 11
     },
     {
       "id": "kustomize",
@@ -2401,6 +2481,27 @@
       "degree": 4,
       "inbound": 2,
       "outbound": 3
+    },
+    {
+      "id": "kvcached",
+      "title": "KVCacheD",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kvcached.html",
+      "tags": [
+        "entity",
+        "ai-infra",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "gpu-sharing",
+        "oss"
+      ],
+      "date": "2026-10-02",
+      "description": "vLLM/SGLang 的 GPU VMM KV memory plugin：稳定虚拟 tensor + 按需 physical page backing，用于同卡多模型弹性显存共享",
+      "degree": 12,
+      "inbound": 9,
+      "outbound": 11
     },
     {
       "id": "kwok",
@@ -2432,11 +2533,11 @@
         "distributed-workload",
         "llm-serving"
       ],
-      "date": "2026-06-14",
-      "description": "LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。",
-      "degree": 11,
-      "inbound": 7,
-      "outbound": 5
+      "date": "2026-09-25",
+      "description": "LeaderWorkerSet 管理 leader/worker 服务组；DisaggregatedSet 通过角色和 slices 组合子 LWS，协调多角色服务生命周期。",
+      "degree": 14,
+      "inbound": 10,
+      "outbound": 9
     },
     {
       "id": "llm-d",
@@ -2452,11 +2553,11 @@
         "inference-routing",
         "distributed-inference"
       ],
-      "date": "2026-09-13",
-      "description": "CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 42,
-      "inbound": 38,
-      "outbound": 13
+      "date": "2026-09-22",
+      "description": "CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
+      "degree": 43,
+      "inbound": 39,
+      "outbound": 16
     },
     {
       "id": "llm-d-batch-gateway",
@@ -2602,8 +2703,8 @@
       ],
       "date": "2026-06-14",
       "description": "llm-d Prism 是分布式推理性能分析 dashboard，把 benchmark 和运行数据做交互式分析，用于理解 P/D、路由和资源配置的效果。",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -2638,11 +2739,11 @@
         "kubernetes",
         "llm-d"
       ],
-      "date": "2026-09-13",
-      "description": "llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）",
+      "date": "2026-09-22",
+      "description": "Deprecated / 历史实现（截至 2026-09-22）；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。",
       "degree": 15,
-      "inbound": 11,
-      "outbound": 8
+      "inbound": 12,
+      "outbound": 9
     },
     {
       "id": "llm-wiki",
@@ -2768,10 +2869,10 @@
         "observability",
         "autoscaling"
       ],
-      "date": "2026-06-14",
+      "date": "2026-09-22",
       "description": "Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 metrics.k8s.io，供 HPA/VPA/kubectl top 使用。",
-      "degree": 15,
-      "inbound": 12,
+      "degree": 14,
+      "inbound": 11,
       "outbound": 5
     },
     {
@@ -2919,11 +3020,11 @@
         "node",
         "hardware"
       ],
-      "date": "2026-06-14",
-      "description": "Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。",
-      "degree": 11,
-      "inbound": 8,
-      "outbound": 4
+      "date": "2026-09-27",
+      "description": "节点能力发现与发布：worker/master、规则标签、topology-updater 与 GC；提供 placement/operator 信号，不执行设备分配。",
+      "degree": 18,
+      "inbound": 15,
+      "outbound": 13
     },
     {
       "id": "gpu-operator",
@@ -2938,11 +3039,11 @@
         "operator",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）",
-      "degree": 13,
-      "inbound": 11,
-      "outbound": 8
+      "date": "2026-09-27",
+      "description": "NVIDIA 节点软件与 operands 生命周期管理；区分 ClusterPolicy 与 GPUCluster 路径，不决定单次 Pod 的 GPU 选择。",
+      "degree": 15,
+      "inbound": 13,
+      "outbound": 12
     },
     {
       "id": "k8s-device-plugin",
@@ -2957,11 +3058,11 @@
         "device-plugin",
         "nvidia"
       ],
-      "date": "2026-06-12",
-      "description": "NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）",
-      "degree": 11,
-      "inbound": 10,
-      "outbound": 7
+      "date": "2026-09-27",
+      "description": "NVIDIA extended-resource 插件：注册、ListAndWatch/health、Allocate，按配置通过 env/mount/CDI 交接设备。",
+      "degree": 13,
+      "inbound": 12,
+      "outbound": 11
     },
     {
       "id": "oceanbase",
@@ -3204,10 +3305,10 @@
         "observability",
         "autoscaling"
       ],
-      "date": "2026-06-14",
+      "date": "2026-09-22",
       "description": "Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。",
-      "degree": 13,
-      "inbound": 10,
+      "degree": 12,
+      "inbound": 9,
       "outbound": 5
     },
     {
@@ -3280,11 +3381,11 @@
         "scheduler",
         "plugins"
       ],
-      "date": "2026-06-14",
-      "description": "scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。",
-      "degree": 11,
-      "inbound": 9,
-      "outbound": 3
+      "date": "2026-09-25",
+      "description": "kube-scheduler framework 的 out-of-tree placement 扩展，参与队列、过滤、评分与放行，不接管业务 workload 生命周期或节点创建。",
+      "degree": 15,
+      "inbound": 13,
+      "outbound": 9
     },
     {
       "id": "secrets-store-csi-driver",
@@ -3336,11 +3437,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-14",
-      "description": "LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 26,
-      "inbound": 26,
-      "outbound": 4
+      "date": "2026-10-02",
+      "description": "engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）",
+      "degree": 32,
+      "inbound": 32,
+      "outbound": 10
     },
     {
       "id": "sig-storage-lib-external-provisioner",
@@ -3450,11 +3551,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-14",
-      "description": "UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 39,
-      "inbound": 39,
-      "outbound": 4
+      "date": "2026-10-02",
+      "description": "engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）",
+      "degree": 45,
+      "inbound": 45,
+      "outbound": 10
     },
     {
       "id": "semantic-router",
@@ -3704,7 +3805,7 @@
       "date": "2026-06-12",
       "description": "AIBrix 架构（HEAD ac2c161，vLLM 生态 K8s GenAI inference infrastructure：gateway/routing、PodAutoscaler、ModelAdapter、KV cache/event sync、LoRA、distributed inference、GPU failure detection）",
       "degree": 11,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 10
     },
     {
@@ -3885,8 +3986,8 @@
       ],
       "date": "2026-06-14",
       "description": "controller-runtime 架构（P0，Operator SDK：controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -3903,8 +4004,8 @@
       ],
       "date": "2026-06-14",
       "description": "controller-tools 架构（P0，API 生成工具：controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -3976,8 +4077,8 @@
       ],
       "date": "2026-06-12",
       "description": "DRA Driver for NVIDIA GPUs 架构（HEAD 749a743，Kubernetes DRA NVIDIA driver：ResourceClaim/ResourceSlice + NodePrepare + dynamic MIG/VFIO + ComputeDomain）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 3,
       "outbound": 4
     },
     {
@@ -4107,7 +4208,7 @@
       "date": "2026-06-12",
       "description": "HAMi 架构（HEAD 5dca58e，Kubernetes 异构 GPU sharing/vGPU：webhook + scheduler extender + device plugin + 多厂商 device abstraction）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -4216,8 +4317,8 @@
       ],
       "date": "2026-06-14",
       "description": "JobSet 架构（P1，分布式 workload API：JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -4330,8 +4431,8 @@
       ],
       "date": "2026-06-14",
       "description": "Karpenter 架构（P0，节点弹性 / 成本：Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -4477,8 +4578,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kubebuilder 架构（P0，CRD / controller 脚手架：Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -4537,8 +4638,8 @@
       ],
       "date": "2026-09-13",
       "description": "Kubernetes serving stack 对比（llm-d、AIBrix、KServe、KubeAI、OME、GPUStack、RBG、Kthena）",
-      "degree": 12,
-      "inbound": 7,
+      "degree": 13,
+      "inbound": 8,
       "outbound": 12
     },
     {
@@ -4609,8 +4710,8 @@
       ],
       "date": "2026-06-14",
       "description": "Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -4630,6 +4731,25 @@
       "degree": 3,
       "inbound": 1,
       "outbound": 3
+    },
+    {
+      "id": "src-kvcached-architecture",
+      "title": "KVCacheD 与 SGLang、vLLM 架构关系及源码实现",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kvcached-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "gpu-sharing"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD HEAD 884108704f44 与 SGLang 44ef8fecfe69、vLLM dc36fcce902a 的源码级关系、GPU VMM、allocator/pool patch、TP/PP 一致性与集成边界。",
+      "degree": 12,
+      "inbound": 7,
+      "outbound": 10
     },
     {
       "id": "src-kwok-architecture",
@@ -4663,8 +4783,8 @@
       ],
       "date": "2026-06-14",
       "description": "LeaderWorkerSet 架构（P1，分布式 workload API：LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。）",
-      "degree": 5,
-      "inbound": 1,
+      "degree": 6,
+      "inbound": 2,
       "outbound": 5
     },
     {
@@ -4829,8 +4949,8 @@
       ],
       "date": "2026-06-12",
       "description": "llm-d Router 架构（HEAD a0173a7，LLM-aware inference entry point：Envoy/ext-proc + Endpoint Picker(EPP) + filters/scorers/scrapers + InferenceObjective/ModelRewrite + P/D sidecar）",
-      "degree": 10,
-      "inbound": 1,
+      "degree": 11,
+      "inbound": 2,
       "outbound": 10
     },
     {
@@ -4846,10 +4966,10 @@
         "kubernetes"
       ],
       "date": "2026-06-13",
-      "description": "llm-d WVA 架构（HEAD 526ce85，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）",
-      "degree": 5,
-      "inbound": 1,
-      "outbound": 5
+      "description": "历史架构快照（HEAD 526ce85，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。",
+      "degree": 6,
+      "inbound": 2,
+      "outbound": 6
     },
     {
       "id": "src-llm-d-architecture",
@@ -4867,7 +4987,7 @@
       "date": "2026-06-12",
       "description": "llm-d 架构（HEAD 2734681，CNCF Sandbox 分布式 LLM inference serving stack：Router/EPP + InferencePool + model server + KV cache management + P/D disaggregation + autoscaling/batch guides）",
       "degree": 11,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 10
     },
     {
@@ -5108,8 +5228,8 @@
       ],
       "date": "2026-06-14",
       "description": "Node Feature Discovery 架构（P1，节点能力发现：Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。）",
-      "degree": 4,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5129,8 +5249,8 @@
       ],
       "date": "2026-09-13",
       "description": "NVIDIA Dynamo 文档重构架构（Frontend/Gateway + KV-aware Router + P/D + Runtime 三平面 + DGDR/Planner SLA 闭环）",
-      "degree": 10,
-      "inbound": 3,
+      "degree": 11,
+      "inbound": 4,
       "outbound": 10
     },
     {
@@ -5148,7 +5268,7 @@
       "date": "2026-06-12",
       "description": "NVIDIA GPU Operator 架构（HEAD 0219120，GPU 软件栈 Kubernetes Operator：ClusterPolicy/NVIDIADriver + state renderer + operands lifecycle）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5166,7 +5286,7 @@
       "date": "2026-06-12",
       "description": "NVIDIA k8s-device-plugin 架构（HEAD 8688949，官方 GPU device plugin：NVML/CUDA discovery + kubelet gRPC + env/volume/CDI Allocate）",
       "degree": 5,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 4
     },
     {
@@ -5430,8 +5550,8 @@
       ],
       "date": "2026-06-14",
       "description": "scheduler-plugins 架构（P0，调度 / 资源：scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。）",
-      "degree": 3,
-      "inbound": 1,
+      "degree": 5,
+      "inbound": 3,
       "outbound": 3
     },
     {
@@ -5485,8 +5605,8 @@
       ],
       "date": "2026-09-14",
       "description": "SGLang 本地 HEAD 2fd835b9c1 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。",
-      "degree": 5,
-      "inbound": 4,
+      "degree": 7,
+      "inbound": 6,
       "outbound": 5
     },
     {
@@ -5596,8 +5716,8 @@
       ],
       "date": "2026-09-14",
       "description": "vLLM 本地 HEAD dc36fcce90 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。",
-      "degree": 5,
-      "inbound": 2,
+      "degree": 7,
+      "inbound": 4,
       "outbound": 5
     },
     {
@@ -6662,6 +6782,16 @@
     },
     {
       "source": "aibrix",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "aibrix",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "aibrix",
       "target": "model-serving-operator",
       "kind": "related"
     },
@@ -6793,7 +6923,7 @@
     {
       "source": "cdi",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "cdi",
@@ -6807,12 +6937,27 @@
     },
     {
       "source": "cdi",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
       "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
       "source": "cdi",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "cdi",
+      "target": "kubernetes-dra-design-deep-dive",
       "kind": "related"
     },
     {
@@ -7392,7 +7537,22 @@
     },
     {
       "source": "controller-runtime",
+      "target": "controller-tools",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "controller-runtime",
+      "target": "kubebuilder",
       "kind": "related"
     },
     {
@@ -7412,7 +7572,22 @@
     },
     {
       "source": "controller-tools",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "controller-tools",
+      "target": "kubebuilder",
       "kind": "related"
     },
     {
@@ -7567,6 +7742,11 @@
     },
     {
       "source": "device-plugin",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "gpu-operator",
       "kind": "related"
     },
@@ -7577,12 +7757,32 @@
     },
     {
       "source": "device-plugin",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
       "source": "device-plugin",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "device-plugin",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -7599,6 +7799,11 @@
       "source": "disaggregated-serving",
       "target": "llm-inference",
       "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
     },
     {
       "source": "disaggregated-serving",
@@ -7638,7 +7843,7 @@
     {
       "source": "dra-driver-nvidia-gpu",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "dra-driver-nvidia-gpu",
@@ -7648,7 +7853,7 @@
     {
       "source": "dra-driver-nvidia-gpu",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "dra-driver-nvidia-gpu",
@@ -7657,7 +7862,22 @@
     },
     {
       "source": "dra-driver-nvidia-gpu",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "dra-driver-nvidia-gpu",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -7707,6 +7927,16 @@
     },
     {
       "source": "dynamo",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "dynamo",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "dynamo",
       "target": "model-serving-operator",
       "kind": "related"
     },
@@ -7748,6 +7978,56 @@
     {
       "source": "ebbinghaus-forgetting-curve",
       "target": "powermem",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "vllm",
       "kind": "related"
     },
     {
@@ -8197,13 +8477,18 @@
     },
     {
       "source": "gpu-operator",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
       "target": "device-plugin",
       "kind": "related"
     },
     {
       "source": "gpu-operator",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "gpu-operator",
@@ -8213,11 +8498,16 @@
     {
       "source": "gpu-operator",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "gpu-operator",
       "target": "k8s-device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "k8s-gpu-device-stack",
       "kind": "related"
     },
     {
@@ -8228,6 +8518,16 @@
     {
       "source": "gpu-operator",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-operator",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8287,13 +8587,23 @@
     },
     {
       "source": "gpu-sharing",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
       "target": "device-plugin",
       "kind": "related"
     },
     {
       "source": "gpu-sharing",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "elastic-kv-cache",
+      "kind": "related"
     },
     {
       "source": "gpu-sharing",
@@ -8312,7 +8622,32 @@
     },
     {
       "source": "gpu-sharing",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8388,12 +8723,12 @@
     {
       "source": "hami",
       "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "hami",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "hami",
@@ -8407,7 +8742,22 @@
     },
     {
       "source": "hami",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "hami",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -8592,6 +8942,11 @@
     },
     {
       "source": "inference-routing",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "inference-routing",
       "target": "routellm",
       "kind": "related"
     },
@@ -8632,12 +8987,32 @@
     },
     {
       "source": "jobset",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
       "target": "kueue",
       "kind": "related"
     },
     {
       "source": "jobset",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "jobset",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -8718,12 +9093,12 @@
     {
       "source": "k8s-core-controller-map",
       "target": "controller-runtime",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
       "target": "controller-tools",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
@@ -8818,7 +9193,7 @@
     {
       "source": "k8s-core-controller-map",
       "target": "kubebuilder",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-core-controller-map",
@@ -8907,7 +9282,22 @@
     },
     {
       "source": "k8s-core-controller-map",
+      "target": "src-controller-runtime-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "src-controller-tools-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
       "target": "src-k8s-core-controllers-stars",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-core-controller-map",
+      "target": "src-kubebuilder-architecture",
       "kind": "wikilink"
     },
     {
@@ -8918,6 +9308,11 @@
     {
       "source": "k8s-device-plugin",
       "target": "device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "dra-driver-nvidia-gpu",
       "kind": "related"
     },
     {
@@ -8933,11 +9328,26 @@
     {
       "source": "k8s-device-plugin",
       "target": "hami",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
     },
     {
       "source": "k8s-device-plugin",
       "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-device-plugin",
+      "target": "node-feature-discovery",
       "kind": "related"
     },
     {
@@ -9017,6 +9427,11 @@
     },
     {
       "source": "k8s-gpu-device-stack",
+      "target": "kubernetes-dra-design-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
       "target": "kueue",
       "kind": "wikilink"
     },
@@ -9038,7 +9453,7 @@
     {
       "source": "k8s-gpu-device-stack",
       "target": "node-feature-discovery",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "k8s-gpu-device-stack",
@@ -9047,7 +9462,32 @@
     },
     {
       "source": "k8s-gpu-device-stack",
+      "target": "src-dra-driver-nvidia-gpu-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-gpu-operator-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-hami-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-k8s-device-plugin-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
       "target": "src-k8s-gpu-device-plugins-stars",
+      "kind": "wikilink"
+    },
+    {
+      "source": "k8s-gpu-device-stack",
+      "target": "src-node-feature-discovery-architecture",
       "kind": "wikilink"
     },
     {
@@ -9147,12 +9587,32 @@
     },
     {
       "source": "karpenter",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
       "target": "llm-inference",
       "kind": "related"
     },
     {
       "source": "karpenter",
       "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "karpenter",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -9537,7 +9997,22 @@
     },
     {
       "source": "kubebuilder",
+      "target": "controller-runtime",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "controller-tools",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
       "target": "declarative-agent-management",
+      "kind": "related"
+    },
+    {
+      "source": "kubebuilder",
+      "target": "k8s-core-controller-map",
       "kind": "related"
     },
     {
@@ -9713,7 +10188,7 @@
     {
       "source": "kubernetes-dra",
       "target": "gpu-operator",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "kubernetes-dra",
@@ -9722,8 +10197,18 @@
     },
     {
       "source": "kubernetes-dra",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra",
       "target": "k8s-device-plugin",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
     },
     {
       "source": "kubernetes-dra",
@@ -9741,6 +10226,11 @@
       "kind": "related"
     },
     {
+      "source": "kubernetes-dra",
+      "target": "node-feature-discovery",
+      "kind": "related"
+    },
+    {
       "source": "kubernetes-dra-design-deep-dive",
       "target": "cdi",
       "kind": "related"
@@ -9753,6 +10243,26 @@
     {
       "source": "kubernetes-dra-design-deep-dive",
       "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "gpu-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "k8s-device-plugin",
       "kind": "related"
     },
     {
@@ -9789,6 +10299,11 @@
       "source": "kubernetes-dra-design-deep-dive",
       "target": "node-feature-discovery",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-dra-design-deep-dive",
+      "target": "src-dra-driver-nvidia-gpu-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubernetes-hpa-autoscaling-design",
@@ -10142,6 +10657,16 @@
     },
     {
       "source": "kubernetes-scheduler-core-design",
+      "target": "k8s-core-controller-map",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
       "target": "kube-scheduler-simulator",
       "kind": "related"
     },
@@ -10183,12 +10708,17 @@
     {
       "source": "kubernetes-scheduler-core-design",
       "target": "kueue",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "kubernetes-scheduler-core-design",
       "target": "scheduler-plugins",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-scheduler-core-design",
+      "target": "src-scheduler-plugins-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubernetes-workload-automation",
@@ -10307,6 +10837,11 @@
     },
     {
       "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
       "target": "kubernetes-workload-automation",
       "kind": "related"
     },
@@ -10324,6 +10859,31 @@
       "source": "kubernetes-workload-gang-scheduling-design",
       "target": "scheduler-plugins",
       "kind": "related"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-jobset-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-karpenter-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-kueue-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-lws-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kubernetes-workload-gang-scheduling-design",
+      "target": "src-scheduler-plugins-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "kubespray",
@@ -10377,7 +10937,27 @@
     },
     {
       "source": "kueue",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -10387,7 +10967,17 @@
     },
     {
       "source": "kueue",
+      "target": "lws",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
       "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "kueue",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -10442,6 +11032,11 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kv-cache-offload",
       "target": "paged-attention",
       "kind": "related"
     },
@@ -10467,6 +11062,226 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "gpu-sharing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kv-cache-offload",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "inference-routing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-sglang-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-vllm-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
       "target": "vllm",
       "kind": "related"
     },
@@ -10522,8 +11337,23 @@
     },
     {
       "source": "llm-d",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
       "target": "llm-inference",
       "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
     },
     {
       "source": "llm-d",
@@ -11192,6 +12022,11 @@
     },
     {
       "source": "llm-d-workload-variant-autoscaler",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-workload-variant-autoscaler",
       "target": "model-serving-operator",
       "kind": "related"
     },
@@ -11233,6 +12068,11 @@
     {
       "source": "llm-inference",
       "target": "dynamo",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "elastic-kv-cache",
       "kind": "related"
     },
     {
@@ -11287,6 +12127,11 @@
     },
     {
       "source": "llm-inference",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
       "target": "llm-d",
       "kind": "related"
     },
@@ -11319,6 +12164,16 @@
       "source": "llm-inference",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
     },
     {
       "source": "llm-inference",
@@ -11383,7 +12238,7 @@
     {
       "source": "llm-inference-serving-project-map",
       "target": "aibrix",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -11404,6 +12259,11 @@
       "source": "llm-inference-serving-project-map",
       "target": "inference-perf",
       "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "inference-routing",
+      "kind": "related"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -11472,11 +12332,6 @@
     },
     {
       "source": "llm-inference-serving-project-map",
-      "target": "llm-d-prism",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference-serving-project-map",
       "target": "llm-d-router",
       "kind": "related"
     },
@@ -11492,23 +12347,23 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "lws",
       "kind": "wikilink"
     },
     {
       "source": "llm-inference-serving-project-map",
-      "target": "metrics-server",
-      "kind": "wikilink"
+      "target": "model-serving-operator",
+      "kind": "related"
     },
     {
       "source": "llm-inference-serving-project-map",
       "target": "paged-attention",
       "kind": "related"
-    },
-    {
-      "source": "llm-inference-serving-project-map",
-      "target": "prometheus-adapter",
-      "kind": "wikilink"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -11522,7 +12377,42 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "src-aibrix-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-dynamo-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "src-k8s-gpu-device-plugins-stars",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-k8s-serving-stack-comparison",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-llm-d-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-llm-d-router-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-llm-d-workload-variant-autoscaler-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "src-sglang-architecture",
       "kind": "wikilink"
     },
     {
@@ -11532,7 +12422,17 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "src-vllm-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "aibrix",
       "kind": "related"
     },
     {
@@ -11547,12 +12447,32 @@
     },
     {
       "source": "llm-serving-engine-selection-map",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "k8s-gpu-device-stack",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
       "target": "kv-cache-offload",
       "kind": "related"
     },
     {
       "source": "llm-serving-engine-selection-map",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
       "target": "llm-inference-serving-project-map",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "model-serving-operator",
       "kind": "related"
     },
     {
@@ -11647,7 +12567,22 @@
     },
     {
       "source": "lws",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "kubernetes-workload-gang-scheduling-design",
       "kind": "related"
     },
     {
@@ -11658,6 +12593,11 @@
     {
       "source": "lws",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "lws",
+      "target": "scheduler-plugins",
       "kind": "related"
     },
     {
@@ -12232,12 +13172,57 @@
     },
     {
       "source": "node-feature-discovery",
+      "target": "cdi",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "dra-driver-nvidia-gpu",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "gpu-operator",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
       "target": "gpu-sharing",
       "kind": "related"
     },
     {
       "source": "node-feature-discovery",
+      "target": "hami",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "k8s-device-plugin",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "k8s-gpu-device-stack",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
       "target": "kubernetes",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "kubernetes-dra",
+      "kind": "related"
+    },
+    {
+      "source": "node-feature-discovery",
+      "target": "kubernetes-dra-design-deep-dive",
       "kind": "related"
     },
     {
@@ -12957,12 +13942,42 @@
     },
     {
       "source": "scheduler-plugins",
+      "target": "jobset",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "karpenter",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
       "target": "kubernetes",
       "kind": "related"
     },
     {
       "source": "scheduler-plugins",
+      "target": "kubernetes-scheduler-core-design",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "kubernetes-workload-gang-scheduling-design",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "kueue",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "scheduler-plugins",
+      "target": "lws",
       "kind": "related"
     },
     {
@@ -13047,6 +14062,31 @@
     },
     {
       "source": "sglang",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang",
       "target": "paged-attention",
       "kind": "related"
     },
@@ -13054,6 +14094,11 @@
       "source": "sglang",
       "target": "radix-attention",
       "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "sglang",
@@ -15101,6 +16146,56 @@
       "kind": "related"
     },
     {
+      "source": "src-kvcached-architecture",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kv-cache-offload",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "src-kwok-architecture",
       "target": "kubernetes",
       "kind": "related"
@@ -15494,6 +16589,11 @@
       "source": "src-llm-d-workload-variant-autoscaler-architecture",
       "target": "llm-inference",
       "kind": "related"
+    },
+    {
+      "source": "src-llm-d-workload-variant-autoscaler-architecture",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
     },
     {
       "source": "src-llm-d-workload-variant-autoscaler-architecture",
@@ -16822,6 +17922,31 @@
     },
     {
       "source": "vllm",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
+      "target": "llm-inference-serving-project-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
       "target": "paged-attention",
       "kind": "related"
     },
@@ -16837,6 +17962,11 @@
     },
     {
       "source": "vllm",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
       "target": "src-vllm-architecture",
       "kind": "wikilink"
     }
@@ -16845,22 +17975,22 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 120
+      "count": 121
     },
     {
       "id": "concepts",
       "label": "概念",
-      "count": 35
+      "count": 36
     },
     {
       "id": "sources",
       "label": "源文件",
-      "count": 115
+      "count": 116
     },
     {
       "id": "analysis",
       "label": "分析",
-      "count": 29
+      "count": 32
     }
   ]
 }

@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-11</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,168 +23,275 @@
 
   <header class="page-header">
     <h1>LLM Serving / 推理引擎选型地图</h1>
-    <p class="page-meta">2026-06-11 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars</p>
+    <p class="page-meta">2026-09-22 · 来源：src-dynamo-architecture、src-sglang-architecture、src-skypilot-architecture、src-k8s-gpu-device-plugins-stars、src-vllm-architecture、src-aibrix-architecture、src-k8s-serving-stack-comparison</p>
     <div class="tags"><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">kv-cache</span><span class="tag">selection</span><span class="tag">ai-infra</span></div>
   </header>
 
-  <p>已有 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 把层次铺开。这页面向选型：单机推理引擎、集群 serving 编排、多云算力控制和 K8s GPU 底座不要混为一谈。</p>
-<h2 id="github-当前核验">GitHub 当前核验</h2>
-<p>截至 2026-06-11 通过 GitHub API 重新核验：</p>
+  <p>已有 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a> 把 D1-D5 的边界和证据铺开。这页面向选型：先判断问题属于哪一层，再选择可组合的项目；不要把 engine、distributed runtime、K8s routing/control plane 和 GPU 基础设施当成同类替代品。</p>
+<h2 id="当前上游核验2026-09-22">当前上游核验（2026-09-22）</h2>
+<p>截至 2026-09-22，通过 GitHub API 与官方文档核验以下 HEAD；详细架构证据见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>。</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
 <th>项目</th>
-<th>仓库</th>
-<th>最近 push</th>
-<th>stars</th>
-<th>主语言</th>
-<th>当前定位</th>
+<th>核验版本</th>
+<th>当前职责</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
-<td>https://github.com/vllm-project/vllm</td>
-<td>2026-06-11</td>
-<td>82k</td>
-<td>Python</td>
-<td>high-throughput, memory-efficient inference engine</td>
+<td>HEAD <a href="https://github.com/vllm-project/vllm/commit/d50723df04f7"><code>d50723df04f7</code></a></td>
+<td>engine scheduler、model execution、local KV</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
-<td>https://github.com/sgl-project/sglang</td>
-<td>2026-06-11</td>
-<td>28k</td>
-<td>Python</td>
-<td>high-performance serving framework</td>
+<td>HEAD <a href="https://github.com/sgl-project/sglang/commit/04c0913434c4"><code>04c0913434c4</code></a></td>
+<td>engine/runtime、RadixCache、distributed/P-D integration</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
-<td>https://github.com/ai-dynamo/dynamo</td>
-<td>2026-06-11</td>
-<td>7.2k</td>
-<td>Rust</td>
-<td>datacenter scale distributed inference serving</td>
+<td>HEAD <a href="https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd"><code>f36d2fab37fd</code></a></td>
+<td>distributed request/control/state runtime、routing、KV transfer、planner</td>
 </tr>
 <tr>
-<td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
-<td>https://github.com/skypilot-org/skypilot</td>
-<td>2026-06-11</td>
-<td>10k</td>
-<td>Python</td>
-<td>any-cloud AI workload control plane</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>HEAD <a href="https://github.com/llm-d/llm-d/commit/1e9a86a3a9da"><code>1e9a86a3a9da</code></a></td>
+<td>Proxy/EPP、InferencePool、Model Server 与 routing signals</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>HEAD <a href="https://github.com/vllm-project/aibrix/commit/96056b47f158"><code>96056b47f158</code></a></td>
+<td>K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration</td>
 </tr>
 </tbody>
 </table></div>
 <h2 id="选型结论">选型结论</h2>
+<p>没有一个项目能在所有层胜出。先选 engine，再按确实存在的集群、路由、运维和基础设施需求叠加能力；每加一层都要用收益覆盖其控制面和故障域成本。</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>场景</th>
-<th>首选</th>
-<th>原因</th>
+<th>选择</th>
+<th>best fit</th>
+<th>avoid-if</th>
+<th>adoption cost</th>
+<th>下一步核验</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>快速搭 OpenAI-compatible 模型服务</td>
 <td><a class="wikilink" href="../entities/vllm.html">vllm</a></td>
-<td>生态最大、模型覆盖广、PagedAttention 基线成熟</td>
+<td>需要成熟的 OpenAI-compatible 基线、广泛模型覆盖和 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></td>
+<td>目标模型/硬件在 <a class="wikilink" href="../entities/sglang.html">sglang</a> 上有已验证的显著优势</td>
+<td>低到中；先处理镜像、模型、监控和容量</td>
+<td>用真实模型、量化、并发和输出长度压测吞吐、P99、显存与稳定性</td>
 </tr>
 <tr>
-<td>追求极致执行路径和前缀复用</td>
 <td><a class="wikilink" href="../entities/sglang.html">sglang</a></td>
-<td>RadixAttention、speculative decoding、P/D transfer backend 多</td>
+<td>前缀复用、结构化生成、speculative decoding 或其执行路径更匹配 workload</td>
+<td>团队更看重保守生态基线，或关键模型/硬件适配尚未验证</td>
+<td>低到中；高级特性和 distributed/P-D backend 会增加调优面</td>
+<td>对同一流量回放，核验 <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 命中、尾延迟、正确性和故障恢复</td>
 </tr>
 <tr>
-<td>多节点 P/D 分离、KV-aware routing、SLA 扩缩</td>
 <td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
-<td>把 vLLM/SGLang/TRT-LLM 组织成集群 serving 系统</td>
+<td>多节点 runtime、P/D、KV transfer、KV-aware routing 需要统一协调</td>
+<td>单机或普通副本服务已满足目标，暂不需要跨节点状态协同</td>
+<td>高；引入 router、worker pools、KV/control state 与额外可观测性</td>
+<td>做端到端 P/D/KV transfer 基准，并演练 worker、网络和 KV tier 故障</td>
 </tr>
 <tr>
-<td>跨云/K8s/Slurm 选资源和启动 workload</td>
-<td><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></td>
-<td>算力控制面，不替代推理引擎</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+<td>K8s 上需要 Gateway API、EPP endpoint picking 和 InferencePool</td>
+<td>不使用 K8s/Gateway API，或普通 Service/LB 已足够</td>
+<td>中到高；新增 CRD、Gateway/EPP、升级兼容与运维责任</td>
+<td>核验目标 Gateway/InferencePool 版本、路由信号、扩缩交互和故障回退</td>
 </tr>
 <tr>
-<td>GPU 共享、DRA/CDI、设备观测</td>
-<td>K8s GPU stack</td>
-<td>serving 底座，不处理模型执行</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+<td>需要 autoscaling、LoRA/adapter、model lifecycle 及更广的 K8s inference operations</td>
+<td>现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益</td>
+<td>中到高；应按组件渐进采用，不必部署全部能力</td>
+<td>逐项验证所选 controller/CRD 的边界、升级路径、状态恢复和与现有平台的重叠</td>
 </tr>
 </tbody>
 </table></div>
+<h2 id="先选层再选项目">先选层，再选项目</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>当前问题</th>
+<th>应选择的层</th>
+<th>代表项目</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scheduler、kernel、local KV、单实例吞吐</td>
+<td>推理引擎</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a>, <a class="wikilink" href="../entities/sglang.html">sglang</a></td>
+</tr>
+<tr>
+<td>multi-node runtime、P/D、KV transfer</td>
+<td>distributed serving runtime</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+</tr>
+<tr>
+<td>Gateway API、endpoint picking、InferencePool</td>
+<td>K8s routing/serving stack</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
+</tr>
+<tr>
+<td>autoscaling、LoRA/model lifecycle、K8s inference operations</td>
+<td>K8s inference control plane</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a></td>
+</tr>
+<tr>
+<td>GPU allocation、sharing、health、capacity</td>
+<td>infrastructure</td>
+<td><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>不同层的项目不是直接替代关系；生产系统通常组合一个 engine、一个 routing/control layer 和一个 infrastructure layer。distributed runtime 只在多节点协调收益明确时加入，routing 与 control plane 也可以按需求择一或组合，而不是默认全栈采用。</p>
 <h2 id="架构区别">架构区别</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>维度</th>
-<th><a class="wikilink" href="../entities/vllm.html">vllm</a></th>
-<th><a class="wikilink" href="../entities/sglang.html">sglang</a></th>
-<th><a class="wikilink" href="../entities/dynamo.html">dynamo</a></th>
-<th><a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a></th>
+<th>层</th>
+<th>负责什么</th>
+<th>不负责什么</th>
+<th>典型组合边界</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>抽象层</td>
-<td>单机/单服务推理引擎</td>
-<td>单机/多实例推理引擎</td>
-<td>多节点 serving 编排</td>
-<td>多云算力控制</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a> engine</td>
+<td>scheduler、kernel、model execution、local KV</td>
+<td>完整 K8s routing/control plane 和 GPU 集群底座</td>
+<td>向上暴露服务端点和运行指标</td>
 </tr>
 <tr>
-<td>KV 策略</td>
-<td>block table / <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></td>
-<td>token-level radix cache / <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></td>
-<td>SequenceHash + 多级 KV tier</td>
-<td>不直接管理 KV</td>
+<td><a class="wikilink" href="../entities/dynamo.html">dynamo</a> distributed runtime</td>
+<td>多节点 request/control/state、P/D pools、KV transfer/routing</td>
+<td>替代底层 engine 或通用 K8s 平台</td>
+<td>组织 engine workers；可与 K8s 层集成</td>
 </tr>
 <tr>
-<td>调度</td>
-<td>continuous batching</td>
-<td>scheduler pipeline / mixins</td>
-<td>KV-aware router + P/D pools</td>
-<td>Optimizer 选云/区/实例</td>
+<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a> routing/serving stack</td>
+<td>Gateway API、EPP、InferencePool、Model Server 与 routing signals</td>
+<td>engine kernel、通用 model lifecycle 平台</td>
+<td>在 K8s 请求入口选择合适的 engine endpoint</td>
 </tr>
 <tr>
-<td>扩缩</td>
-<td>外部平台为主</td>
-<td>外部平台为主</td>
-<td>Planner + operator</td>
-<td>managed jobs / serve</td>
+<td><a class="wikilink" href="../entities/aibrix.html">aibrix</a> inference control plane</td>
+<td>autoscaling、adapter/model lifecycle、routing 与多角色编排</td>
+<td>替代 engine kernel 或 GPU device layer</td>
+<td>按需选择 controller，与 engine、Gateway 和基础设施衔接</td>
 </tr>
 <tr>
-<td>强项</td>
-<td>稳定基线和生态</td>
-<td>性能路径和特性实验</td>
-<td>集群级协调和 SLA</td>
-<td>资源经济和 failover</td>
+<td><a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a> infrastructure</td>
+<td>GPU allocation、sharing、health、capacity 和队列</td>
+<td>模型执行、KV-aware request routing</td>
+<td>为所有上层提供设备与容量约束</td>
 </tr>
 </tbody>
 </table></div>
+<p>详细的 D1-D5 组件图、控制流和证据集中在 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>；本页只保留影响选型的层间边界。</p>
 <h2 id="决策轴">决策轴</h2>
 <ul>
-<li><strong>单实例吞吐</strong>：优先比较 <a class="wikilink" href="../entities/vllm.html">vllm</a> 和 <a class="wikilink" href="../entities/sglang.html">sglang</a>。</li>
-<li><strong>多节点系统</strong>：优先看 <a class="wikilink" href="../entities/dynamo.html">dynamo</a>，不要期待单引擎自己解决 KV transfer、P/D pool 和 SLA planner。</li>
-<li><strong>成本/容量调度</strong>：看 <a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a>，它决定 workload 跑在哪里。</li>
-<li><strong>K8s 生产化</strong>：再看 DRA/CDI/GPU Operator/DCGM/Kueue/Volcano，底层设备模型会反过来影响 serving 架构。</li>
+<li><strong>执行适配</strong>：先用真实模型、硬件、量化方式、scheduler/KV 行为和运维约束比较 <a class="wikilink" href="../entities/vllm.html">vllm</a> 与 <a class="wikilink" href="../entities/sglang.html">sglang</a>，不要只看通用 benchmark。</li>
+<li><strong>跨节点协调</strong>：只有在 P/D、KV transfer 或多节点 runtime 是明确瓶颈时评估 <a class="wikilink" href="../entities/dynamo.html">dynamo</a>；同时比较 engine-native integration 的能力和复杂度。</li>
+<li><strong>K8s 请求路由</strong>：需要 Gateway API、EPP、InferencePool 时评估 <a class="wikilink" href="../entities/llm-d.html">llm-d</a>，普通 Service/Gateway 足够时不增加该层。</li>
+<li><strong>K8s 推理运维</strong>：需要 autoscaling、adapter/model lifecycle 和更广控制面时评估 <a class="wikilink" href="../entities/aibrix.html">aibrix</a>，按组件采用并检查职责重叠。</li>
+<li><strong>设备与容量</strong>：用 <a class="wikilink" href="../analysis/k8s-gpu-device-stack.html">k8s-gpu-device-stack</a> 处理 GPU allocation、sharing、health 和 capacity；它会约束上层部署，但不替代引擎或路由。</li>
+<li><strong>跨云资源位置</strong>：需要跨云/K8s/Slurm 选择资源和启动 workload 时再看 <a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a>；它是资源控制面，不是 inference engine。</li>
 </ul>
+<h2 id="决策流程图">决策流程图</h2>
+<p>以下分支不是互斥答案：先确认或选择 engine，后续命中的层可以继续组合；任何一步收益不明确，都停在当前最小充分栈。</p>
+<pre><code class="language-text">engine 起点
+├─ 尚未选择 → 按模型、硬件、scheduler/KV 行为和运维适配选择 vLLM / SGLang
+└─ 已有 engine → 保留并核验它是否满足当前 workload
+          │
+          └─ 两条路径汇合 → 独立评估以下能力（可组合、无先后依赖）
+             ├─ 需要 multi-node runtime 或 P/D、KV transfer 协调？
+             │  ├─ 是 → 评估 Dynamo 与 engine-native integrations
+             │  └─ 否 → 不增加 distributed runtime
+             ├─ K8s 上需要 Gateway / EPP / InferencePool routing？
+             │  ├─ 是 → 评估 llm-d
+             │  └─ 否 → 使用普通 Service / Gateway
+             └─ 需要 autoscaling、adapters、model lifecycle 和更广 K8s operations？
+                ├─ 是 → 评估 AIBrix 的所需组件
+                └─ 否 → 不增加 inference control plane
+
+所有分支结束 → 保留满足需求的最小组合；不因“平台完整”而默认叠加全部项目
+</code></pre>
+<h2 id="组合方案">组合方案</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>组成</th>
+<th>best fit</th>
+<th>avoid-if</th>
+<th>adoption cost</th>
+<th>下一步核验</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>最小 engine service</td>
+<td><a class="wikilink" href="../entities/vllm.html">vllm</a> 或 <a class="wikilink" href="../entities/sglang.html">sglang</a> + 普通 Service/Gateway</td>
+<td>单集群、普通副本路由，重点是尽快提供稳定推理 API</td>
+<td>已确认需要 KV-aware endpoint picking、P/D 或复杂 lifecycle</td>
+<td>低；主要是 engine、镜像、模型存储、指标和入口配置</td>
+<td>回放真实流量，核验容量、P99、滚动升级和实例故障回退</td>
+</tr>
+<tr>
+<td>K8s 智能路由</td>
+<td>engine + <a class="wikilink" href="../entities/llm-d.html">llm-d</a> Router/InferencePool</td>
+<td>K8s/Gateway API 环境需要根据 KV、负载或模型信号选择 endpoint</td>
+<td>普通 Service/LB 已达标，或不能承担 CRD/Gateway/EPP 运维</td>
+<td>中到高；增加 routing control/data path 与版本兼容面</td>
+<td>核验路由增益、信号陈旧行为、扩缩期间 endpoint 一致性和 fallback</td>
+</tr>
+<tr>
+<td>distributed runtime</td>
+<td>engine + <a class="wikilink" href="../entities/dynamo.html">dynamo</a></td>
+<td>多节点 P/D、KV transfer 或跨 worker 状态协调能带来可测收益</td>
+<td>单机/普通副本已满足 SLO，网络或 KV transfer 成本抵消收益</td>
+<td>高；增加 runtime 服务、worker pools、状态/KV tier 和故障域</td>
+<td>比较共置与分离部署，测端到端 TTFT/TPOT/P99，并做网络、worker、KV 故障演练</td>
+</tr>
+<tr>
+<td>inference operations platform</td>
+<td>engine + 选定的 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 组件</td>
+<td>需要 autoscaling、LoRA/adapters、model lifecycle 或多角色 K8s 运维</td>
+<td>现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益</td>
+<td>中到高；按所选 controller/CRD 计，不要求全量采用</td>
+<td>建立组件级 PoC，核验 reconciliation、升级/回滚、状态恢复及与现有 autoscaler/Gateway 的所有权</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="避坑条件">避坑条件</h2>
 <ul>
 <li>不要把 <a class="wikilink" href="../entities/dynamo.html">dynamo</a> 当成“另一个 vLLM”；它是 serving 编排层。</li>
+<li>不要把 <a class="wikilink" href="../entities/llm-d.html">llm-d</a> 当成 engine 或完整 inference operations 平台；它当前的选型核心是 Gateway/EPP/InferencePool routing/serving stack。</li>
+<li>不要把 <a class="wikilink" href="../entities/aibrix.html">aibrix</a> 当成必须整套部署的发行版；只采用能覆盖明确 operations 缺口且所有权清晰的组件。</li>
 <li>不要把 <a class="wikilink" href="../sources/src-skypilot-architecture.html">SkyPilot</a> 当成 inference engine；它是资源控制面。</li>
 <li>P/D 分离只有在 prompt/decode 负载、KV transfer、路由和扩缩都配套时才有收益。</li>
 <li>KV cache 已经是一等资源，路由、迁移、offload 都要显式建模。</li>
+<li>不要把不同层的项目塞进单选题，也不要为了“完整架构”默认部署所有层；从最小充分栈开始，用实测瓶颈决定下一层。</li>
 </ul>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/agent-runtime-sandbox-selection-map.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Agent Runtime / Sandbox 细分选型地图</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/mcp-gateway-tooling-map.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">MCP Server / Tool Gateway 对比地图</strong></a></div><span class="page-navigation-progress">阅读顺序 287/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/llm-inference-serving-project-map.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">LLM Inference / Serving 项目地图</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/llm-inference.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">LLM Inference</strong></a></div><span class="page-navigation-progress">阅读顺序 130/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/dynamo.html">dynamo</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../entities/aibrix.html">aibrix</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/llm-serving-engine-selection-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-serving-engine-selection-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Serving / 推理</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>LLM Inference / Serving 项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="79.0" cy="41.0" r="7"><title>SkyPilot 架构与设计思路分析</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-skypilot-architecture.html">SkyPilot 架构与设计思路分析</a><span>源文件 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · related</span></li><li><a href="../analysis/github-stars-backlog-implementation-map.html">GitHub Stars P0-P2 实现地图</a><span>分析 · related</span></li><li><a href="../analysis/github-stars-ingest-candidates.html">GitHub Stars 下一批摄入候选清单</a><span>分析 · related</span></li><li><a href="../sources/src-ai-gateway-architecture.html">Envoy AI Gateway 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-ai-infra-learning-cn-stars.html">AI Infra Learning 中文 Star 项目清单整理</a><span>源文件 · related</span></li><li><a href="../sources/src-aibrix-architecture.html">AIBrix 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-gateway-api-inference-extension-architecture.html">Gateway API Inference Extension 架构与设计思路分析</a><span>源文件 · related</span></li><li><a href="../sources/src-github-stars-backlog-current-state.html">GitHub Stars P0-P2 当前状态核验</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#github-当前核验">GitHub 当前核验</a></li><li class=""><a href="#选型结论">选型结论</a></li><li class=""><a href="#架构区别">架构区别</a></li><li class=""><a href="#决策轴">决策轴</a></li><li class=""><a href="#避坑条件">避坑条件</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=llm-serving-engine-selection-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">LLM Serving / 推理</text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Dynamo</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>Kubernetes GPU / Device Stack 项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>llm-d</title></circle><circle class="mini-node mini-node-analysis" cx="79.0" cy="41.0" r="7"><title>LLM Inference / Serving 项目地图</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · related</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../analysis/k8s-gpu-device-stack.html">Kubernetes GPU / Device Stack 项目地图</a><span>分析 · wikilink</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · wikilink</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../entities/dynamo.html">Dynamo</a><span>实体 · wikilink</span></li><li><a href="../analysis/github-stars-backlog-implementation-map.html">GitHub Stars P0-P2 实现地图</a><span>分析 · related</span></li><li><a href="../analysis/github-stars-ingest-candidates.html">GitHub Stars 下一批摄入候选清单</a><span>分析 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · wikilink</span></li><li><a href="../analysis/llm-inference-serving-project-map.html">LLM Inference / Serving 项目地图</a><span>分析 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前上游核验2026-09-22">当前上游核验（2026-09-22）</a></li><li class=""><a href="#选型结论">选型结论</a></li><li class=""><a href="#先选层再选项目">先选层，再选项目</a></li><li class=""><a href="#架构区别">架构区别</a></li><li class=""><a href="#决策轴">决策轴</a></li><li class=""><a href="#决策流程图">决策流程图</a></li><li class=""><a href="#组合方案">组合方案</a></li><li class=""><a href="#避坑条件">避坑条件</a></li></ul></aside></aside>
 </div>
 
 <script>

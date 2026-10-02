@@ -1,16 +1,18 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-14
-sources: [sglang-architecture-analysis.md]
-related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
+date: 2026-10-02
+sources: [sglang-architecture-analysis.md, kvcached-architecture-analysis.md]
+related: [vllm, kvcached, elastic-kv-cache, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
 ---
 
 # SGLang
 
-> 最新代码级架构资料：[[src-sglang-architecture]]，基于本地 HEAD `2fd835b9c1`。
+> 2026-09-14 本地代码分析快照：[[src-sglang-architecture]]，HEAD `2fd835b9c1`。当前 upstream 证据维护在 [[llm-inference-serving-project-map]] 的“当前上游核验（2026-09-22）”小节。
 
-**LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)，活跃主线（HEAD `50f4058` 时分析）。
+**LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)。
+
+> 下述能力数量、默认值与性能数字反映上述 2026-09-14 本地快照；当前 release/backend 需重新核验。
 
 ## 一句话定位
 
@@ -32,7 +34,7 @@ DetokenizerManager → streaming response
 
 | 维度 | 能力 |
 |------|------|
-| **KV 缓存** | [[radix-attention]] —— token 级 radix 树；4 RadixCache 变体（vanilla / hi / mamba / swa / cpp）|
+| **KV 缓存** | [[radix-attention]] —— token 级 radix 树；5 RadixCache 变体（vanilla / hi / mamba / swa / cpp）|
 | **批量化** | 连续批 + chunked prefill + EXTEND/DECODE/MIXED 三态调度 + CUDA Graph 替换 decode 路径 |
 | **多进程流水线** | HTTP / TokenizerManager（主） / Scheduler（GPU subprocess） / DetokenizerManager（subprocess），ZMQ pyobj 三段管道 |
 | **投机解码** | 7 算法：EAGLE-2 / EAGLE-v2 / 多层 EAGLE / FrozenKV-MTP / NGRAM / DFLASH / Standalone，走 `BaseSpecWorker` + `spec_registry` |
@@ -57,7 +59,7 @@ DetokenizerManager → streaming response
 
 ## 设计哲学（与 [[vllm]] 等同类对照）
 
-- **Token 级 KV 复用 vs [[vllm]] block 级**：vLLM 16-token block 对长 system prompt / few-shot / agent template 浪费严重；SGLang 用 token-level radix 树 + flat KV pool 让任意 token 边界都能 split & share，论文 throughput 1.6-6.4× over vLLM
+- **Token 级 KV 复用 vs [[vllm]] block 级**：vLLM 使用固定大小 block，具体大小取决于配置、backend 和版本，前缀复用按 block 边界对齐；SGLang 用 token-level radix 树 + flat KV pool 支持任意 token 边界 split & share。历史 RadixAttention 论文仅在其 LLaMA-7B tree-of-thought / few-shot 工作负载上报告 1.6–6.4× over vLLM，不代表当前通用吞吐结论
 - **4 进程异步流水线**：Tokenize / Forward / Detokenize 拆到不同 OS 进程，ZMQ 串联；任何一环堵塞都不卡其他环，GPU 维持高占用
 - **Mixin 拼装 Scheduler**：4000+ 行的 `scheduler.py` 通过 10+ Mixin 把 disagg/PP/DPAttn/Dllm/Profiler/UpdateWeights 等横切关注点解耦，open-closed 友好；新加 disagg 后端不改主类
 - **可插拔哲学贯穿整栈**：attention backend / spec algorithm / KV transfer / grammar / quantization / model 全可注册可替换；服务启动时按 `server_args` 选择
@@ -67,7 +69,7 @@ DetokenizerManager → streaming response
 
 | 指标 | 实际表现 |
 |------|---------|
-| **prefix 缓存收益** | RadixAttention 论文：LLaMA-7B tree-of-thought / few-shot throughput **1.6-6.4×** over vLLM |
+| **prefix 缓存收益** | 历史 RadixAttention 论文在 LLaMA-7B tree-of-thought / few-shot 特定工作负载上报告 throughput **1.6–6.4×** over vLLM，非当前通用结论 |
 | **decode latency** | CUDA graph replay → 单步 ≈ kernel-only |
 | **投机解码加速** | EAGLE-2 默认 topk=5 step=5：典型 **1.5-2.5×** decode 加速 |
 | **P/D 分离收益** | 长 prefill / 长 decode 场景吞吐 **1.3-2×** over collocated |
@@ -79,6 +81,16 @@ DetokenizerManager → streaming response
 - **组织起源**：LMSYS / UC Berkeley Sky Computing Lab 团队（FastChat / Chatbot Arena / vLLM 都来自相近社区）
 - **生态**：在 DeepSeek 官方推荐推理引擎之一；DeepSeek-V3 的 MTP / MLA 实现是 SGLang 主导贡献
 
+## 在 M4 模块地图中的位置
+
+SGLang 位于 engine/runtime 层，负责 Scheduler、RadixCache 和模型执行，通过 P/D 与分布式集成接口连接外围 serving 层。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
+
+## 与 KVCacheD 的集成关系
+
+[[kvcached]] 保留 SGLang Scheduler、ScheduleBatch、[[radix-attention]] 和 attention backend，只替换底层 token/page allocator 与 MHA/MLA/Mamba/hybrid KV pool 的 buffer allocation。RadixCache node 仍持有 token-slot indices；只有 cache evict 或请求释放使 page 内全部slot空闲后，KVCacheD 才能归还physical VRAM。
+
+当前集成让每个 SGLang TP worker 本地拥有自己的 KVCacheD pool，避免把一个rank的pool operation重复广播给peer；这一点与vLLM的EngineCore→worker fan-out模型不同。完整对照见 [[kvcached-sglang-vllm-knowledge-system]]，源码证据见 [[src-kvcached-architecture]]。
+
 ## 相关页面
 
 - 架构详解：[[src-sglang-architecture]]
@@ -86,3 +98,4 @@ DetokenizerManager → streaming response
 - 同类系统：[[vllm]]（最直接对标）
 - 依赖：[[flash-attention]]（FlashInfer / FA3 / FlashMLA）、[[mooncake]]（KV transfer）
 - 相关概念：[[paged-attention]]（vLLM 的对照系统）
+- 弹性 KV：[[kvcached]]、[[elastic-kv-cache]]

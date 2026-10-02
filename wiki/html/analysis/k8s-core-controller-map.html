@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · analysis</span>
   <span class="spacer"></span>
-  <span class="meta">2026-06-13</span>
+  <span class="meta">2026-09-22</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,26 +23,193 @@
 
   <header class="page-header">
     <h1>Kubernetes Core / Controller 项目地图</h1>
-    <p class="page-meta">2026-06-13 · 来源：src-k8s-core-controllers-stars</p>
+    <p class="page-meta">2026-09-22 · 来源：src-k8s-core-controllers-stars、src-controller-runtime-architecture、src-kubebuilder-architecture、src-controller-tools-architecture</p>
     <div class="tags"><span class="tag">kubernetes</span><span class="tag">controller</span><span class="tag">operator</span><span class="tag">crd</span><span class="tag">project-map</span></div>
   </header>
 
-  <p>这页把 <a class="wikilink" href="../sources/src-k8s-core-controllers-stars.html">src-k8s-core-controllers-stars</a> 从 359 个 star 项目整理成 Kubernetes controller/operator 学习与选型地图。核心结论：K8s 平台工程的主线不是“会写一个 reconcile”，而是理解 API machinery、client/cache/workqueue、CRD/webhook、controller-runtime/kubebuilder、调度/多集群/安全/可观测这些层如何组合。</p>
-<pre><code>User / platform workflows
-  Argo CD · KEDA · &lt;a class=&quot;wikilink&quot; href=&quot;../entities/kueue.html&quot;&gt;kueue&lt;/a&gt; · &lt;a class=&quot;wikilink&quot; href=&quot;../entities/openkruise-kruise.html&quot;&gt;openkruise-kruise&lt;/a&gt; · Karmada · KubeVela · AI Ops tools
-        ↓
-Controller / Operator framework
-  client-go · &lt;a class=&quot;wikilink&quot; href=&quot;../entities/controller-runtime.html&quot;&gt;controller-runtime&lt;/a&gt; · &lt;a class=&quot;wikilink&quot; href=&quot;../entities/kubebuilder.html&quot;&gt;kubebuilder&lt;/a&gt; · operator-sdk · kube-rs
-        ↓
-Kubernetes API machinery
-  apiserver · CRD · webhook · informer · cache · workqueue · finalizer
-        ↓
-Control plane extensions
-  &lt;a class=&quot;wikilink&quot; href=&quot;../entities/scheduler-plugins.html&quot;&gt;scheduler-plugins&lt;/a&gt; · autoscaler · gateway-api · admission · aggregated API
-        ↓
-Cluster substrate
-  CNI · CSI · CRI · etcd · observability · policy · diagnostics
+  <h2 id="当前上游核验2026-09-22">当前上游核验（2026-09-22）</h2>
+<p>本节是对官方仓库默认分支的当前观察；<a class="wikilink" href="../sources/src-controller-runtime-architecture.html">src-controller-runtime-architecture</a>、<a class="wikilink" href="../sources/src-kubebuilder-architecture.html">src-kubebuilder-architecture</a> 与 <a class="wikilink" href="../sources/src-controller-tools-architecture.html">src-controller-tools-architecture</a> 则是 2026-06-14 摄入的 raw-backed Source 快照，保留当时的代码结构与设计语境。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>当前证据</th>
+<th>稳定职责边界</th>
+<th>M5-A 位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a></td>
+<td><a href="https://github.com/kubernetes-sigs/controller-runtime/commit/6ab2188a1fb14a8c4837b418bc0a20049682cde4"><code>6ab2188a1fb1</code></a></td>
+<td>组合 Manager、Cache、Client、Controller/Reconciler、Scheme、Webhook 与 envtest；不负责项目脚手架</td>
+<td>controller runtime composition</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a></td>
+<td><a href="https://github.com/kubernetes-sigs/kubebuilder/commit/5f31d1f3c075507fb99c432babeb1469a07f0cb6"><code>5f31d1f3c075</code></a></td>
+<td>面向作者的 Kubernetes API/CRD/controller/webhook 脚手架、插件与开发工作流，建立在 controller-runtime 和 controller-tools 之上</td>
+<td>author workflow / scaffolding</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../entities/controller-tools.html">controller-tools</a></td>
+<td><a href="https://github.com/kubernetes-sigs/controller-tools/commit/030a93937cbbd72cc02cc2fe943f1df6e4b1f115"><code>030a93937cbb</code></a></td>
+<td>用 marker 驱动 <code>controller-gen</code> 生成 CRD、RBAC、webhook、deepcopy/object 与 apply-configuration 等资产</td>
+<td>marker / type generation</td>
+</tr>
+<tr>
+<td>client-go</td>
+<td>Kubernetes staged 基座（本次不单独锚定 HEAD）</td>
+<td>提供 clientset、discovery/dynamic client、transport 与 controller 所需 cache/informer/workqueue 机制；必须按 Kubernetes minor 版本选择匹配的 <code>client-go</code> / <code>k8s.io/*</code> 依赖</td>
+<td>client foundation</td>
+</tr>
+</tbody>
+</table></div>
+<p>上表的三个 commit 是本次执行时默认分支锚点，不代表 release；生产项目应按 controller-runtime / controller-tools / Kubebuilder 与 <code>client-go</code> / Kubernetes 的兼容矩阵锁定版本。官方入口：<a href="https://github.com/kubernetes-sigs/controller-runtime">controller-runtime repo</a>、<a href="https://github.com/kubernetes-sigs/kubebuilder">Kubebuilder repo</a>、<a href="https://book.kubebuilder.io/">Kubebuilder Book</a>、<a href="https://github.com/kubernetes-sigs/controller-tools">controller-tools repo</a>、<a href="https://github.com/kubernetes/client-go#readme">client-go docs</a>。</p>
+<p>这页把 <a class="wikilink" href="../sources/src-k8s-core-controllers-stars.html">src-k8s-core-controllers-stars</a> 从 359 个 star 项目整理成 Kubernetes controller/operator 学习与选型地图。核心结论：K8s 平台工程的主线不是“会写一个 reconcile”，而是理解 API machinery、client/cache/workqueue、CRD/webhook、controller-runtime/kubebuilder、调度/多集群/安全/可观测这些层如何组合。</p>
+<h2 id="d1--controller-工具链职责图">D1 · Controller 工具链职责图</h2>
+<pre><code class="language-text">BUILD-TIME（作者与生成链）
+Kubebuilder CLI ── scaffold ──&gt; Go API types / markers / project layout
+                                   controller / webhook / test 骨架
+Go API types / markers ── parse ──&gt; controller-tools / controller-gen
+controller-gen ── generate ──&gt; CRD / RBAC / webhook manifests
+               ── generate ──&gt; deepcopy（object generator）/ applyconfiguration
+作者补齐业务逻辑，构建 controller 镜像并安装生成的 manifests
+
+RUNTIME（控制器执行链）
+controller 二进制使用 controller-runtime 的组合层
+  Manager：管理 Cache / Client / Controller-Reconciler / Webhook 生命周期
+  Scheme：Go types 与 GVK 映射；供 Client 等组件使用
+  client-go 基座：REST client / watch / informer / cache / workqueue
+  Client ── write / uncached read ──&gt; Kubernetes API server
+  Kubernetes API server ── admission request ──&gt; Webhook（同步响应）
+
+测试支持（不属于生产 reconcile 路径）：controller-runtime / envtest
 </code></pre>
+<p>图例：实线 <code>── label ──&gt;</code> 表示顺序生成或同步调用/API 写入；虚线 <code>- - label - -&gt;</code> 专指下图的异步 watch、入队和重试反馈，标签说明触发原因。缩进表示组件组合，不表示一次调用。<a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a> 组织作者工作流，<a class="wikilink" href="../entities/controller-tools.html">controller-tools</a> 解析 marker/type 并生成资产，<a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a> 组合 client-go 的基础机制；这些项目分层组合，不能相互替代。Webhook 处理同步 admission 请求；envtest 为测试启动 API server 等控制面进程，不是生产集群的控制器。</p>
+<h2 id="d3--reconcile-控制循环">D3 · Reconcile 控制循环</h2>
+<pre><code class="language-text">Manager 管理 Cache 与 Controller，Controller 消费自己的 workqueue
+Kubernetes API server - - watch / observed-state feedback - -&gt; Cache / informer
+Cache / informer - - event handler: enqueue root object key - -&gt; workqueue
+workqueue ── worker 取 key 并调用 ──&gt; Reconciler
+Reconciler
+  ├── Client.Get/List（默认缓存读）──&gt; Cache：期望状态 + 已观测状态
+  ├── Client.Create/Update/Patch/Delete ──&gt; API server
+  │                                        metadata/finalizer / owned resources
+  ├── Client.Status().Update/Patch ──&gt; API server
+  │                                    status / conditions / observedGeneration
+  └── return Result / error ──&gt; Controller
+
+Controller - - 可重试 error: rate-limited retry - -&gt; workqueue
+Controller - - RequeueAfter: delayed requeue - -&gt; workqueue
+API 写入后的变化 - - 经上述 watch/cache/enqueue 路径 - -&gt; 后续 reconcile
+</code></pre>
+<p>Reconcile 是 level-based、幂等、异步收敛的控制循环，不是一次 event 对应一次必须完成的 request handler。事件可能合并；handler 把本对象或关联对象的变化映射为待处理 key，Reconciler 重新读取期望状态与可观测状态并计算差异。API 调用返回成功只确认该次写入成功，不代表 cache 已更新或依赖资源已经就绪；后续 watch 或显式 requeue 推进收敛。返回空 Result 且无 error 时，不主动安排重试。参见 <a href="https://github.com/kubernetes-sigs/controller-runtime/blob/6ab2188a1fb14a8c4837b418bc0a20049682cde4/FAQ.md">controller-runtime FAQ</a> 与 <a class="wikilink" href="../sources/src-controller-runtime-architecture.html">src-controller-runtime-architecture</a>。</p>
+<h2 id="d4--状态与一致性">D4 · 状态与一致性</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>状态/机制</th>
+<th>Owner / operation</th>
+<th>陈旧或失败风险</th>
+<th>恢复/收敛方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cached read / direct write</td>
+<td>Manager 默认 Client 对已缓存类型读 cache，写请求直达 API server；可配置直读</td>
+<td>写成功后立即读 cache 仍可能是旧值；重复创建或错误判断缺失</td>
+<td>确定性命名、幂等操作与后续 watch/requeue 再评估；必要时 APIReader 直读，但仍需处理读写间的并发</td>
+</tr>
+<tr>
+<td><code>resourceVersion</code> conflict</td>
+<td>API server 对 Update 或带版本前提的 Patch 做乐观并发检查</td>
+<td>旧版本写入被拒绝；无版本前提的 Patch 不自动提供同等保护</td>
+<td>重读、重算再提交；按更新策略显式选择版本前提，避免盲目覆盖竞争字段</td>
+</tr>
+<tr>
+<td><code>spec</code> / <code>status</code> / conditions / <code>observedGeneration</code></td>
+<td>用户或上游 controller 写 <code>spec</code>；本 controller 按 API 约定写 status/condition</td>
+<td>status 对应旧 generation，或把“已观察”误解成“已成功”</td>
+<td><code>observedGeneration</code> 记录实际处理的 generation；condition 表达处理结果，仅在内容变化时写入；<code>lastTransitionTime</code> 随 condition 状态转换更新</td>
+</tr>
+<tr>
+<td><code>ownerReference</code> / GC</td>
+<td>controller 设置 owner UID/作用域；garbage collector 按引用与删除策略处理依赖资源</td>
+<td>错 UID、跨作用域引用或错误接管导致泄漏/误删；ownerReference 本身不配置 watch</td>
+<td>校验 owner 与 controller 归属，显式设置 owned-resource watch；缺失资源且仍被期望时重建，错误归属需修正代码/对象</td>
+</tr>
+<tr>
+<td>Finalizer / <code>deletionTimestamp</code></td>
+<td>controller 在删除前完成外部清理，成功后移除 finalizer</td>
+<td>外部系统不可用、权限变化或旧 controller 消失导致删除卡住</td>
+<td>可重试的清理 + backoff；无法恢复时由人工核实外部状态后审慎移除 finalizer</td>
+</tr>
+<tr>
+<td>Requeue / rate limit / idempotency</td>
+<td>Controller 根据 Result/error 安排队列；业务代码负责副作用幂等</td>
+<td>高频事件、自触发 status write 或非幂等副作用形成 hot loop；队列不提供 exactly-once</td>
+<td>差异写入、幂等键和可恢复清理；错误重试使用 backoff，定时检查用 <code>RequeueAfter</code>，不假设它等同错误退避</td>
+</tr>
+</tbody>
+</table></div>
+<p>API 一致性与删除机制分别参见 <a href="https://kubernetes.io/docs/reference/using-api/api-concepts/">Kubernetes API Concepts</a> 和 <a href="https://book.kubebuilder.io/reference/using-finalizers.html">Kubebuilder Finalizers</a>。</p>
+<h2 id="d5--失败边界">D5 · 失败边界</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>起因</th>
+<th>直接影响 / 因果链</th>
+<th>自动恢复边界</th>
+<th>需要人工修复的情况</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stale cache</td>
+<td>旧观测值 → 旧决策或写冲突</td>
+<td>watch 恢复与缓存追上后可收敛；显式定时 requeue 可补充检查，不能替代失效的 watch</td>
+<td>cache 长期不同步、watch/RBAC 错误或业务逻辑把旧值当不变量</td>
+</tr>
+<tr>
+<td>Write conflict</td>
+<td>并发变更 → API server 拒绝旧 <code>resourceVersion</code> 写入</td>
+<td>重读、重算、requeue；幂等 reconcile 通常可自恢复</td>
+<td>持续字段所有权争用或错误的 patch 策略</td>
+</tr>
+<tr>
+<td>Hot reconcile</td>
+<td>自触发写入/永久错误 → queue、API server 与日志压力</td>
+<td>backoff 限制错误重试；普通 watch 入队不会统一受错误退避保护，不能靠重试机制消除热循环</td>
+<td>修正非幂等逻辑、无差异 status patch 或永久错误分类；谨慎配置 predicate，避免过滤必要事件</td>
+</tr>
+<tr>
+<td>Webhook / certificate unavailable</td>
+<td>admission 调用失败 → <code>failurePolicy: Fail</code> 时写入失败，<code>Ignore</code> 时可能跳过失败调用继续</td>
+<td>已配置的 Pod 重启/证书轮换恢复服务后，调用方重试才可继续；框架不自动修复证书配置</td>
+<td>错误 CA bundle、Service/DNS、证书轮换配置或 webhook 逻辑；显式拒绝请求不因 <code>Ignore</code> 而放行</td>
+</tr>
+<tr>
+<td>Leader switch</td>
+<td>启用 leader election 时旧 leader 失租 → 可用副本获得租约并接管</td>
+<td>依赖正确的选主配置与健康副本；缓存同步和初始/后续事件重建待处理工作，队列并非持久化交接</td>
+<td>非幂等外部副作用已部分执行，或新 leader 因配置/权限无法启动；选主不保证外部操作 exactly-once</td>
+</tr>
+<tr>
+<td>Stuck finalizer</td>
+<td><code>deletionTimestamp</code> 已设 → 清理失败 → 对象长期 Terminating</td>
+<td>外部依赖恢复且清理幂等时可重试收敛</td>
+<td>controller 已移除、外部资源不可查或永久失败；需核实后再人工处理 finalizer</td>
+</tr>
+<tr>
+<td>Wrong ownership / status</td>
+<td>错 ownerReference → 泄漏/误 GC；错 status/condition → 上游误判</td>
+<td>只有当 reconcile 逻辑能识别并重建/更正时才可自恢复</td>
+<td>修正 controller 逻辑和现有对象，评估误删/外部副作用后重新 reconcile</td>
+</tr>
+</tbody>
+</table></div>
 <h2 id="学习路径">学习路径</h2>
 <div class="table-wrap"><table>
 <thead>
@@ -64,9 +231,9 @@ Cluster substrate
 <td>informer、lister、workqueue、rate limit、reconcile 幂等</td>
 </tr>
 <tr>
-<td>Operator 框架</td>
-<td>controller-runtime, kubebuilder</td>
-<td>manager、cache、client、scheme、webhook、envtest、CRD 生成</td>
+<td>Operator 工具链</td>
+<td>controller-runtime, kubebuilder, controller-tools</td>
+<td>区分脚手架、marker/type 生成与运行时；掌握 manager、cache、client、scheme、webhook、envtest</td>
 </tr>
 <tr>
 <td>生产控制器</td>
@@ -92,6 +259,8 @@ Cluster substrate
 <p>controller-runtime 把 client-go 常用模式抽成 Manager、Controller、Reconciler、Cache、Client、Scheme、Webhook、Predicate 和 envtest。大多数现代 Operator 项目不直接手写底层 informer，而是通过 controller-runtime 组织 reconcile。</p>
 <h3 id="kubebuilder">kubebuilder</h3>
 <p>kubebuilder 是 CRD/controller 项目脚手架和代码生成路径：API type、marker、CRD YAML、webhook、RBAC、manager main、测试环境都从这里组织。它解决“项目怎样标准化”，不是替代 controller-runtime。</p>
+<h3 id="controller-tools">controller-tools</h3>
+<p>controller-tools 提供 marker 解析与 <code>controller-gen</code> 生成器，把 Go API types/markers 转换成 CRD、RBAC、webhook、deepcopy/object 和 apply-configuration 等资产。它既不负责项目脚手架，也不运行 reconcile loop。</p>
 <h2 id="和当前-ai-infra-页面的关系">和当前 AI Infra 页面的关系</h2>
 <p>当前 wiki 中很多项目本质上都是 controller/operator：</p>
 <ul>
@@ -155,19 +324,19 @@ Cluster substrate
 <h2 id="选型提示">选型提示</h2>
 <ul>
 <li>想理解控制器底层：读 client-go 和 sample-controller。</li>
-<li>想写生产 Operator：用 kubebuilder + controller-runtime。</li>
+<li>想写生产 Operator：用 kubebuilder 组织项目、controller-tools 生成资产、controller-runtime 实现控制循环；已有工程可直接组合后两者，无需重建脚手架。</li>
 <li>想理解平台控制面：对比 KEDA、Kueue、autoscaler、gateway-api、prometheus-operator。</li>
 <li>想理解 AI Infra on K8s：把 model serving operator、GPU operator、agent sandbox operator 放到同一个 reconcile 模型下看。</li>
 </ul>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/k8s-gpu-device-stack.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes GPU / Device Stack 项目地图</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">llm-d / Kubernetes SIGs 候选项目地图</strong></a></div><span class="page-navigation-progress">阅读顺序 296/298</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../concepts/gitops.html">gitops</a></li><li><a class="wikilink" href="../concepts/ai-ops.html">ai-ops</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../analysis/k8s-gpu-device-stack.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Kubernetes GPU / Device Stack 项目地图</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">llm-d / Kubernetes SIGs 候选项目地图</strong></a></div><span class="page-navigation-progress">阅读顺序 302/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kubernetes.html">kubernetes</a></li><li><a class="wikilink" href="../entities/gateway-api.html">gateway-api</a></li><li><a class="wikilink" href="../concepts/gitops.html">gitops</a></li><li><a class="wikilink" href="../concepts/ai-ops.html">ai-ops</a></li><li><a class="wikilink" href="../concepts/declarative-agent-management.html">declarative-agent-management</a></li><li><a class="wikilink" href="../entities/agent-sandbox.html">agent-sandbox</a></li><li><a class="wikilink" href="../entities/agentcube.html">agentcube</a></li><li><a class="wikilink" href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d-kubernetes-sigs-candidate-map</a></li><li><a class="wikilink" href="../concepts/kubernetes-workload-automation.html">kubernetes-workload-automation</a></li><li><a class="wikilink" href="../entities/openkruise-kruise.html">openkruise-kruise</a></li><li><a class="wikilink" href="../concepts/cloud-native-security.html">cloud-native-security</a></li><li><a class="wikilink" href="../entities/controller-runtime.html">controller-runtime</a></li><li><a class="wikilink" href="../entities/kubebuilder.html">kubebuilder</a></li><li><a class="wikilink" href="../entities/controller-tools.html">controller-tools</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · analysis · <a href="../../analysis/k8s-core-controller-map.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=k8s-core-controller-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Core </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>AI 运维 (AIOps)</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Cluster API</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>controller-runtime</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../concepts/ai-ops.html">AI 运维 (AIOps)</a><span>概念 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../entities/cluster-api.html">Cluster API</a><span>实体 · wikilink</span></li><li><a href="../entities/controller-runtime.html">controller-runtime</a><span>实体 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/controllermesh.html">ControllerMesh</a><span>实体 · related</span></li><li><a href="../entities/kruise-game.html">Kruise Game</a><span>实体 · related</span></li><li><a href="../entities/kruise-tools.html">Kruise Tools</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../concepts/kubernetes-workload-automation.html">Kubernetes Workload Automation</a><span>概念 · related</span></li><li><a href="../analysis/llm-d-kubernetes-sigs-candidate-map.html">llm-d / Kubernetes SIGs 候选项目地图</a><span>分析 · related</span></li><li><a href="../entities/openkruise-kruise.html">OpenKruise Kruise</a><span>实体 · related</span></li><li><a href="../analysis/openkruise-project-candidate-map.html">OpenKruise 项目候选地图</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#学习路径">学习路径</a></li><li class=""><a href="#核心工具链边界">核心工具链边界</a></li><li class="level-3"><a href="#client-go">client-go</a></li><li class="level-3"><a href="#controller-runtime">controller-runtime</a></li><li class="level-3"><a href="#kubebuilder">kubebuilder</a></li><li class=""><a href="#和当前-ai-infra-页面的关系">和当前 AI Infra 页面的关系</a></li><li class=""><a href="#kubernetes-sigs-维度拆分">Kubernetes SIGs 维度拆分</a></li><li class=""><a href="#openkruise-补充视角">OpenKruise 补充视角</a></li><li class=""><a href="#选型提示">选型提示</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=k8s-core-controller-map">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Kubernetes Core </text><circle class="mini-node mini-node-entities" cx="120.0" cy="24.0" r="7"><title>agent-sandbox</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>AgentCube</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>agentgateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>AI 运维 (AIOps)</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>AIBrix</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>云原生安全</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>Cluster API</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>controller-runtime</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../entities/agent-sandbox.html">agent-sandbox</a><span>实体 · related</span></li><li><a href="../entities/agentcube.html">AgentCube</a><span>实体 · related</span></li><li><a href="../entities/agentgateway.html">agentgateway</a><span>实体 · wikilink</span></li><li><a href="../concepts/ai-ops.html">AI 运维 (AIOps)</a><span>概念 · related</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · wikilink</span></li><li><a href="../concepts/cloud-native-security.html">云原生安全</a><span>概念 · related</span></li><li><a href="../entities/cluster-api.html">Cluster API</a><span>实体 · wikilink</span></li><li><a href="../entities/controller-runtime.html">controller-runtime</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../entities/controller-runtime.html">controller-runtime</a><span>实体 · related</span></li><li><a href="../entities/controller-tools.html">controller-tools</a><span>实体 · related</span></li><li><a href="../entities/controllermesh.html">ControllerMesh</a><span>实体 · related</span></li><li><a href="../entities/kruise-game.html">Kruise Game</a><span>实体 · related</span></li><li><a href="../entities/kruise-tools.html">Kruise Tools</a><span>实体 · related</span></li><li><a href="../entities/kubebuilder.html">Kubebuilder</a><span>实体 · related</span></li><li><a href="../analysis/kubernetes-keps-design-tracking.html">Kubernetes KEPs Design Tracking</a><span>分析 · related</span></li><li><a href="../analysis/kubernetes-scheduler-core-design.html">Kubernetes Scheduler Core Design</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前上游核验2026-09-22">当前上游核验（2026-09-22）</a></li><li class=""><a href="#d1--controller-工具链职责图">D1 · Controller 工具链职责图</a></li><li class=""><a href="#d3--reconcile-控制循环">D3 · Reconcile 控制循环</a></li><li class=""><a href="#d4--状态与一致性">D4 · 状态与一致性</a></li><li class=""><a href="#d5--失败边界">D5 · 失败边界</a></li><li class=""><a href="#学习路径">学习路径</a></li><li class=""><a href="#核心工具链边界">核心工具链边界</a></li><li class="level-3"><a href="#client-go">client-go</a></li><li class="level-3"><a href="#controller-runtime">controller-runtime</a></li><li class="level-3"><a href="#kubebuilder">kubebuilder</a></li><li class="level-3"><a href="#controller-tools">controller-tools</a></li><li class=""><a href="#和当前-ai-infra-页面的关系">和当前 AI Infra 页面的关系</a></li><li class=""><a href="#kubernetes-sigs-维度拆分">Kubernetes SIGs 维度拆分</a></li><li class=""><a href="#openkruise-补充视角">OpenKruise 补充视角</a></li><li class=""><a href="#选型提示">选型提示</a></li></ul></aside></aside>
 </div>
 
 <script>

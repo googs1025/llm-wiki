@@ -1,14 +1,20 @@
 ---
 title: Karpenter
 tags: [entity, kubernetes, autoscaling, node]
-date: 2026-06-14
+date: 2026-09-25
 sources: [karpenter-architecture-analysis.md]
-related: ["[[karpenter]]", "[[kubernetes]]", "[[llm-inference]]", "[[model-serving-operator]]"]
+related: ["[[karpenter]]", "[[kubernetes]]", "[[llm-inference]]", "[[model-serving-operator]]", "[[kubernetes-workload-gang-scheduling-design]]", "[[kubernetes-scheduler-core-design]]", "[[kueue]]", "[[scheduler-plugins]]"]
 ---
 
 # Karpenter
 
 Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。 详见 [[src-karpenter-architecture]]。
+
+证据说明：2026-09-25 核验的官方默认分支快照为 [`06bc3b4b94dd`](https://github.com/kubernetes-sigs/karpenter/commit/06bc3b4b94dd9af0228db4b611f2ebcb2ba17b9c)，该 commit 不代表 release。[[src-karpenter-architecture]] 保留 2026-06-14 的 raw-backed Source 快照；当前跨项目职责见 [[kubernetes-workload-gang-scheduling-design]]，调度器流程见 [[kubernetes-scheduler-core-design]]。
+
+## 在 M5-B Workload / Scheduling 地图中的位置
+
+在上述快照中，Karpenter 将不可调度 Pod 的需求与 `karpenter.sh/v1` NodePool、provider-specific NodeClass 约束组合为 NodeClaim，推进节点启动、注册、初始化及后续 disruption/termination。它提供容量，不决定 [[kueue]] 的 quota admission；最终 Pod placement/binding 仍由 kube-scheduler 及配置的 [[scheduler-plugins]] 完成。节点回收的 drift、consolidation、expiration 具有不同约束，不能统一理解为自动无损替换。
 
 ## 架构边界
 

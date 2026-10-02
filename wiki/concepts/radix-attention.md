@@ -1,14 +1,14 @@
 ---
 title: RadixAttention
 tags: [concept, ai-infra, kv-cache, llm-inference, prefix-sharing]
-date: 2026-09-13
+date: 2026-09-22
 sources: [sglang-architecture-analysis.md]
 related: [sglang, paged-attention, vllm]
 ---
 
 # RadixAttention
 
-[[sglang]] 论文（Zheng et al., NeurIPS 2024）提出的 **token 级 KV 缓存复用机制**。用 **radix 树** + **两级 KV pool** 实现"任意 token 边界都能 split & share"，相比 [[vllm]] 的 [[paged-attention]]（16 token block 粒度），在 system prompt / few-shot / tree-of-thought / agent template 等长共享前缀的场景下吞吐量 **1.6-6.4×**。
+[[sglang]] 论文（Zheng et al., NeurIPS 2024）提出的 **token 级 KV 缓存复用机制**。它用 **radix 树** + **两级 KV pool** 实现"任意 token 边界都能 split & share"；[[vllm]] 的 [[paged-attention]] 则使用配置内固定大小、按 block 边界复用的逻辑/物理 block，具体大小取决于配置、attention backend 和版本。历史论文仅在其 LLaMA-7B tree-of-thought / few-shot 等工作负载上报告 **1.6–6.4×** over vLLM，不是当前通用吞吐结论。
 
 ## 核心数据结构
 
@@ -65,7 +65,7 @@ return (device_indices, last_node)
 
 ### Eviction
 
-4 策略：LRU / LFU / FIFO / SLRU / Priority。  
+5 策略：LRU / LFU / FIFO / SLRU / Priority。
 evict 时 pop `evictable_leaves` 堆顶 → free 该节点 `value` 指向的 KV 槽位 → 递归向上 unlock。`lock_ref > 0` 的节点跳过（保护 in-flight 请求）。
 
 ## 前缀命中与分叉流程
@@ -88,20 +88,20 @@ evict 时 pop `evictable_leaves` 堆顶 → free 该节点 `value` 指向的 KV 
 
 | 维度 | RadixAttention | PagedAttention |
 |------|----------------|----------------|
-| **复用粒度** | token 级（树节点变长） | 16-token block |
+| **复用粒度** | token 级（树节点变长） | 配置内固定大小的 block（大小依配置/backend/版本） |
 | **索引结构** | Radix 树 + 两级 pool | Block table（数组） |
-| **任意分叉点 split** | ✅ 树节点动态 split | ❌ block 不能拆 |
-| **碎片** | 区间连续，几乎无 | block 内未用 token 浪费 |
-| **共享 system prompt** | 1 token 不是 16 倍数也能共享尾巴 | 末尾几个 token 无法 share |
+| **任意分叉点 split** | ✅ 树节点动态 split | 默认 full-block APC 按 block 边界对齐；可选更细的可配置 match unit |
+| **碎片** | 区间连续 | partial block 可有未用槽，程度依 block size 与负载而定 |
+| **共享 system prompt** | Radix 树支持任意 token 边界的前缀分叉 | 默认 full-block APC 路径需等待完整 block；当前 vLLM 可通过 `cache_partial_block` / 可配置 `prefix_match_unit` 使用更细的 partial entry，受配置/backend/版本与 match-unit 约束 |
 | **实现复杂度** | 较高（树平衡 + lock_ref + evict） | 较低（block table 哈希） |
-| **典型场景收益** | tree-of-thought / few-shot / agent 1.6-6.4× | 通用 serving 显著（vs HF transformers） |
+| **历史论文工作负载** | LLaMA-7B tree-of-thought / few-shot 等工作负载报告 1.6–6.4× over vLLM，非当前通用结论 | 论文当时的对照实现 |
 
 ## 工程要点
 
 - **radix 树是 lock-free 的**：单 Scheduler 进程独占，不需要锁
 - **device_indices 是 device-resident 张量**：直接喂 attention kernel，省去 CPU↔GPU 拷贝
 - **bigram 模式**：给 EAGLE 投机解码用 —— key 是 (token_i, token_i+1) 对而非单 token，匹配 draft tree 结构
-- **4 变体并存**：`radix_cache.py`（vanilla）/ `hiradix_cache.py`（分层）/ `mamba_radix_cache.py`（Mamba）/ `swa_radix_cache.py`（Sliding Window Attention）/ `radix_cache_cpp.py`（C++ 加速版），按 attention 类型在启动时绑死
+- **5 变体并存（2026-09-14 分析快照）**：`radix_cache.py`（vanilla）/ `hiradix_cache.py`（分层）/ `mamba_radix_cache.py`（Mamba）/ `swa_radix_cache.py`（Sliding Window Attention）/ `radix_cache_cpp.py`（C++ 加速版），按 attention 类型在启动时绑定；当前 release 需重新核验该 inventory
 
 ## 出处
 

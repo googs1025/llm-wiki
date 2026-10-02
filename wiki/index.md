@@ -1,6 +1,6 @@
 ---
 title: Wiki 索引
-date: 2026-05-12
+date: 2026-10-02
 ---
 
 # 知识库索引
@@ -14,20 +14,20 @@ date: 2026-05-12
 - [[kubectl-ai]] — kubectl 入口的 Kubernetes AI assistant（CLI + built-in tools + MCP server mode）
 - [[k8m]] — 轻量 K8s AI dashboard（Go backend + UI + plugins/MCP）
 - [[kubewall]] — single-binary Kubernetes dashboard，AI integration 的 dashboard 形态对照
-- [[kueue]] — Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。
-- [[karpenter]] — Kubernetes node autoscaler，用 NodePool/NodeClaim/CloudProvider 把 pending pods 转换成最合适的节点容量，并做 consolidation 降本。
+- [[kueue]] — Workload admission 与配额控制，管理队列、flavor、topology 和 checks；最终 Pod placement 由 scheduler 完成。
+- [[karpenter]] — 节点容量生命周期控制，把未调度 Pod 需求与 NodePool/NodeClass 约束转成 NodeClaim，管理 provisioning、disruption 与 termination。
 - [[metrics-server]] — Kubernetes 资源指标管道，把 kubelet summary/metrics 暴露成 `metrics.k8s.io`，供 HPA/VPA/kubectl top 使用。
 - [[prometheus-adapter]] — Prometheus 到 Kubernetes custom/external metrics API 的适配层，让 HPA 能基于 QPS、队列长度、业务指标或推理指标扩缩。
-- [[lws]] — LeaderWorkerSet 用一组 leader/worker Pods 表达一个复制单元，适合 LLM inference、分布式 serving 和需要稳定 group 语义的 workload。
-- [[jobset]] — JobSet 是 K8s native API for distributed ML training and HPC workloads，用多个 replicated jobs 表达一个整体作业。
-- [[controller-runtime]] — controller-runtime 是现代 Kubernetes controller 的通用库，封装 Manager、cache、client、reconcile、webhook、envtest 等生产控制器骨架。
-- [[kubebuilder]] — Kubebuilder 是构建 Kubernetes APIs using CRDs 的 SDK，把 API type、marker、controller-runtime manager、webhook、RBAC 和 manifests 生成流程标准化。
-- [[controller-tools]] — controller-tools 提供 controller-gen，用 Go marker 生成 CRD、RBAC、webhook、deepcopy 等 Kubernetes API 工程资产。
+- [[lws]] — LeaderWorkerSet 管理 leader/worker 服务组；DisaggregatedSet 通过角色和 slices 组合子 LWS，协调多角色服务生命周期。
+- [[jobset]] — 批作业集合生命周期控制，用 ReplicatedJobs 管理子 Job、依赖、成功/失败策略、重启和共享卷保留。
+- [[controller-runtime]] — Kubernetes controller 运行时框架，组合 Manager、cache、client、reconcile、webhook，并提供 envtest 测试支持。
+- [[kubebuilder]] — Kubernetes API/controller 作者工作流与脚手架，组织项目布局、生成流程和运行时组件。
+- [[controller-tools]] — marker/type 解析与生成工具，产出 CRD、RBAC、webhook manifests、deepcopy/object 与 applyconfiguration 等资产。
 - [[cluster-api]] — Cluster API 用声明式 API 管理 Kubernetes 集群生命周期，把 Cluster/Machine/MachineDeployment 和 provider infra/bootstrap/control-plane 拆成可组合控制器。
 - [[external-dns]] — ExternalDNS 从 Service、Ingress、Gateway 等 Kubernetes 对象动态维护外部 DNS records，是声明式网络控制器代表。
 - [[secrets-store-csi-driver]] — Secrets Store CSI Driver 通过 CSI volume 把外部 secret store 注入 Pod，并支持 provider、rotation 和可选 Kubernetes Secret 同步。
 - [[kind]] — kind 是 Kubernetes IN Docker，用 Docker/Podman 容器模拟节点并用 kubeadm 拉起本地测试集群。
-- [[scheduler-plugins]] — scheduler-plugins 是基于 kube-scheduler framework 的 out-of-tree 插件集合，用于研究和生产化调度扩展。
+- [[scheduler-plugins]] — kube-scheduler framework 的 out-of-tree placement 扩展，参与队列、过滤、评分与放行，不接管业务 workload 生命周期或节点创建。
 - [[kubespray]] — Kubespray 用 Ansible inventory/roles 部署生产可用 Kubernetes 集群，覆盖 kubeadm、network plugin、etcd、HA 和云/裸金属差异。
 - [[cri-tools]] — CRI Tools 提供 crictl 和 critest，用于操作与验证 kubelet Container Runtime Interface。
 - [[ingress2gateway]] — ingress2gateway 把 Kubernetes Ingress resources 转换成 Gateway API resources，帮助从 annotation-heavy Ingress 迁移到 Gateway/HTTPRoute。
@@ -38,7 +38,7 @@ date: 2026-05-12
 - [[sig-storage-lib-external-provisioner]] — sig-storage-lib-external-provisioner 是 Kubernetes dynamic volume provisioner 的库，抽象 PVC watch、PV 创建、reclaim 和 controller lifecycle。
 - [[descheduler]] — Descheduler 根据策略驱逐已经运行的 Pods，让 kube-scheduler 有机会重新放置，修复节点漂移、拓扑不均、约束变化等问题。
 - [[kwok]] — KWOK 是 Kubernetes WithOut Kubelet，用 fake nodes/pods 模拟大规模集群，适合调度、控制器和 scalability 测试。
-- [[node-feature-discovery]] — Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。
+- [[node-feature-discovery]] — 节点能力发现与发布：worker/master、规则标签、topology-updater 与 GC；提供 placement/operator 信号，不执行设备分配。
 - [[kube-scheduler-simulator]] — kube-scheduler-simulator 提供 Kubernetes scheduler 行为模拟和可视化，用于理解 filter/score、调度失败原因和策略效果。
 - [[headlamp]] — Headlamp 是可扩展 Kubernetes web UI，面向 dashboard、debugging、monitoring 和插件扩展。
 - [[security-profiles-operator]] — Security Profiles Operator 管理 seccomp/AppArmor/SELinux profiles，并可通过 recording 把运行时行为转成可部署 profile。
@@ -92,16 +92,17 @@ date: 2026-05-12
 - [[mcp-lifecycle-operator]] — MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。
 
 ### LLM Serving / AI Gateway
-- [[dynamo]] — NVIDIA 开源的数据中心级 LLM 推理编排层（Rust + Python + Go，分离式 P/D + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
-- [[vllm]] — UC Berkeley 出品的高吞吐 LLM 推理引擎（PagedAttention 创始者，Dynamo backend 之一）
-- [[sglang]] — LMSYS 出品的高性能 LLM 推理引擎（RadixAttention 创始者，Dynamo backend 之一）
-- [[aibrix]] — vLLM 生态 K8s GenAI inference infrastructure（gateway/routing/autoscaling/LoRA/KV events）
-- [[llm-d]] — CNCF Sandbox 分布式 LLM inference serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
+- [[dynamo]] — NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
+- [[vllm]] — engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）
+- [[sglang]] — engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）
+- [[kvcached]] — vLLM/SGLang 的 GPU VMM KV memory plugin：稳定虚拟 tensor + 按需 physical page backing，用于同卡多模型弹性显存共享
+- [[aibrix]] — K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）
+- [[llm-d]] — CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
 - [[llm-d-router]] — llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。
 - [[llm-d-kv-cache]] — llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。
 - [[llm-d-batch-gateway]] — llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）
 - [[llm-d-benchmark]] — llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）
-- [[llm-d-workload-variant-autoscaler]] — llm-d 多 serving variant 全局 autoscaler（VariantAutoscaling CRD + Prometheus + HPA/KEDA metrics）
+- [[llm-d-workload-variant-autoscaler]] — **Deprecated / 历史实现（截至 2026-09-22）**；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。
 - [[llm-d-inference-sim]] — 无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）
 - [[llm-d-planner]] — llm-d-incubation 部署规划器（业务意图 + SLO + GPU capacity + quality/cost/latency 推荐 + Kubernetes YAML）
 - [[inference-perf]] — GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。
@@ -125,10 +126,10 @@ date: 2026-05-12
 - [[kthena]] — Volcano 社区 Kubernetes-native AI serving platform，整合 ModelServing、ModelServer、ModelRoute、P/D、路由、扩缩与拓扑/gang scheduling。
 
 ### Kubernetes GPU / Device
-- [[hami]] — Kubernetes 异构 GPU sharing/vGPU 项目（webhook + scheduler extender + device plugin + 多厂商抽象）
-- [[dra-driver-nvidia-gpu]] — NVIDIA Kubernetes DRA driver（ResourceClaim/ResourceSlice + dynamic MIG/VFIO）
-- [[gpu-operator]] — NVIDIA GPU 软件栈 Kubernetes Operator（ClusterPolicy/NVIDIADriver + operands lifecycle）
-- [[k8s-device-plugin]] — NVIDIA 官方 GPU device plugin（NVML/CUDA discovery + kubelet gRPC + CDI Allocate）
+- [[hami]] — 共享调度 reservation、annotation 交接、device-plugin Allocate 与 HAMi-core 隔离；HAMi-DRA 改变分配路径，需单独核验资源所有权与隔离边界。
+- [[dra-driver-nvidia-gpu]] — NVIDIA DRA 库存、Prepare/Unprepare、设备配置与 ComputeDomain；厂商功能支持范围独立于 Kubernetes DRA 的阶段。
+- [[gpu-operator]] — NVIDIA 节点软件与 operands 生命周期管理；区分 ClusterPolicy 与 GPUCluster 路径，不决定单次 Pod 的 GPU 选择。
+- [[k8s-device-plugin]] — NVIDIA extended-resource 插件：注册、ListAndWatch/health、Allocate，按配置通过 env/mount/CDI 交接设备。
 
 ### GPU Learning / CUDA-MUSA
 - [[musa-learning-notes]] — MUSA SDK / CUDA→MUSA GPU 编程学习日志（6 周路线 + 38 个 `.mu`/C++/Python 示例）
@@ -148,18 +149,20 @@ date: 2026-05-12
 - [[model-serving-operator]] — Kubernetes 上声明式管理模型服务的 operator 模式
 
 ### Kubernetes 资源 / 设备 / GPU
-- [[kubernetes-dra]] — Kubernetes Dynamic Resource Allocation，新一代设备资源声明/调度路径
-- [[cdi]] — Container Device Interface，把设备注入从 runtime-specific flags 转成声明式 spec
-- [[device-plugin]] — Kubernetes 设备插件模型，GPU/NIC/FPGA 等专用资源向 kubelet 注册的基础机制
-- [[gpu-sharing]] — GPU sharing/vGPU/MIG/time-slicing 等多租户复用模式
+- [[kubernetes-dra]] — ResourceClaim/ResourceSlice 分配模型，基础 DRA 自 v1.35 stable；扩展阶段、节点 Prepare 与厂商支持分别核验。
+- [[cdi]] — Container Device Interface，以 spec 与设备 ID 交接 runtime 注入配置，不负责调度或 allocation。
+- [[device-plugin]] — kubelet 注册、设备/health 发布、extended resources 与 Allocate 的传统路径，需明确冲突资源的分配所有权。
+- [[gpu-sharing]] — 区分共享调度/记账、分配、硬件分区与 runtime 隔离；MIG、time-slicing、MPS、HAMi-core 不提供等价保障。
 - [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
+- **M4 模块地图**：[[llm-inference-serving-project-map]] → [[llm-serving-engine-selection-map]]；engine → routing → distributed runtime / K8s control plane → KV/GPU infrastructure。
 - [[vllm]] / [[sglang]] 最新架构与推理优化：V1、RadixCache、KV、连续批、融合 kernel 与 TP/PP/EP/DP 对照
 - [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
 - [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
 - [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
-- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 默认架构）
+- [[elastic-kv-cache]] — 将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page
+- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）
 - [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
 
 ### LLM Serving 流量 / 网关 / 批处理
@@ -196,6 +199,7 @@ date: 2026-05-12
 
 ## 源文件摘要 (Sources)
 
+- [[src-kvcached-architecture]] — KVCacheD HEAD `884108704f44` 与 SGLang `44ef8fecfe69`、vLLM `dc36fcce902a` 的源码级关系、GPU VMM、allocator/pool patch、TP/PP 一致性与集成边界。
 - [[src-vllm-architecture]] — vLLM 本地 HEAD `dc36fcce90` 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。
 - [[src-sglang-architecture]] — SGLang 本地 HEAD `2fd835b9c1` 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。
 
@@ -242,7 +246,7 @@ date: 2026-05-12
 - [[src-llm-d-kv-cache-architecture]] — llm-d KV Cache 架构（HEAD `26e2b6f`，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）
 - [[src-llm-d-batch-gateway-architecture]] — llm-d Batch Gateway 架构（HEAD `66fae7e`，OpenAI Batch API / 离线推理：API server + PostgreSQL/Redis/Object Store + processor/GC + 下游 llm-d Router）
 - [[src-llm-d-benchmark-architecture]] — llm-d Benchmark 架构（HEAD `bd8dc5e`，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）
-- [[src-llm-d-workload-variant-autoscaler-architecture]] — llm-d WVA 架构（HEAD `526ce85`，VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动）
+- [[src-llm-d-workload-variant-autoscaler-architecture]] — 历史架构快照（HEAD `526ce85`，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。
 - [[src-llm-d-inference-sim-architecture]] — llm-d Inference Sim 架构（HEAD `6fb66f3`，无 GPU vLLM 行为模拟：OpenAI/vLLM API、KV cache events、latency/failure/metrics）
 - [[src-llm-d-core-projects-architecture]] — llm-d 核心项目群 2026-09 再调研（llm-d / Router / KV / WVA / Batch / Benchmark / Simulator / Planner 的作用、架构图、业务问题、方法与集成）
 - [[src-kueue-architecture]] — Kueue 架构（P0，调度 / 队列：Kubernetes-native Job Queueing，用 ClusterQueue/LocalQueue/Workload/ResourceFlavor 把 batch、AI/HPC 和多租户资源配额做成 admission control。）
@@ -319,20 +323,24 @@ date: 2026-05-12
 - [[kubernetes-keps-feature-coverage]] — Kubernetes scheduling / autoscaling / node 重要 feature 覆盖矩阵，按合并设计组追踪 P0/P1 KEP。
 - [[kubernetes-keps-implementation-matrix]] — Kubernetes 重要 KEP 的实现状态矩阵，逐项追踪 status、Alpha/Beta/GA、feature gates 和关键实现路径。
 - [[k8s-v1.37-scheduling-node-dra-progress]] — 2026-07-15 复核 upstream `kubernetes/enhancements` 后的 v1.37 调度、Node、DRA 和 autoscaling 进展。
-- [[kubernetes-scheduler-core-design]] — Scheduler framework、profiles、queue/requeue、topology placement、async preemption 和调度性能底座设计详解。
-- [[kubernetes-workload-gang-scheduling-design]] — Workload / PodGroup、gang scheduling、workload-aware preemption 和 topology-aware workload scheduling 设计详解。
-- [[kubernetes-dra-design-deep-dive]] — DRA structured parameters、ResourceSlice/ResourceClaim、scheduler/kubelet plugin 和设备资源可推理性设计详解。
+- [[kubernetes-scheduler-core-design]] — M5-B scheduler 下钻：职责边界、scheduling/binding cycle、queue/requeue feedback 与失败路径，保留 framework/profiles/topology/preemption 的 KEP 演进。
+- [[kubernetes-workload-gang-scheduling-design]] — M5-B L1 入口：D1–D5 串联 Workload → Admission → Placement → Capacity、生命周期与失败边界，并保留 Workload/PodGroup 的 KEP 演进。
+- M5-B 阅读路径：[[kubernetes-workload-gang-scheduling-design]] → [[kubernetes-scheduler-core-design]] → [[jobset]] / [[lws]] → [[kueue]] → [[scheduler-plugins]] → [[karpenter]]。
+- [[kubernetes-dra-design-deep-dive]] — M5-C DRA 下钻：分项 feature stage、Claim allocation/binding、kubelet Prepare/CDI/release 与失败恢复，保留历史 KEP 演进。
 - [[kubernetes-hpa-autoscaling-design]] — HPA tolerance、container resource metrics、pod selection、scale from zero 和 external metric fallback 设计详解。
 - [[kubernetes-in-place-pod-resize-design]] — Pod `/resize`、资源状态机、Pod-level resources、static CPU manager 和 resize preemption 设计详解。
 - [[kubernetes-node-runtime-observability-security-design]] — kubelet/CRI、resource managers、sidecar lifecycle、user namespace/rootless kubelet、CRI stats、PSI 和 resource health 设计详解。
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
-- [[llm-inference-serving-project-map]] — LLM Inference / Serving 项目地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack 横向拆解）
+- [[llm-inference-serving-project-map]] — LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。
+- [[kvcached-sglang-vllm-knowledge-system]] — KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。
+- [[kvcached-source-code-deep-dive]] — 三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。
+- [[kvcached-integration-implementation-guide]] — KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。
 - [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
 - [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
 - [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）
 - [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
-- [[llm-serving-engine-selection-map]] — LLM Serving / 推理引擎选型地图（vLLM / SGLang / Dynamo / SkyPilot / K8s GPU stack）
+- [[llm-serving-engine-selection-map]] — LLM Serving 分层选型地图：先选架构层，再选项目组合。
 - [[mcp-gateway-tooling-map]] — MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）
 - [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）
 - [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）
@@ -340,8 +348,10 @@ date: 2026-05-12
 - [[github-stars-ingest-candidates]] — GitHub Stars 下一批摄入候选清单（P0-P2：agent-substrate / AgentScope Runtime / mem0 / Codex / llm-d / AI Gateway / K8s GPU 等）
 - [[github-stars-backlog-implementation-map]] — GitHub Stars P0-P2 实现地图（把 backlog 项目落到 runtime/memory/coding agent/serving/gateway/AI Ops/code graph/GPU 正式选型结构）
 - [[ai-infra-learning-cn-map]] — AI Infra 中文学习项目地图（中文 AI Infra / LLM / CUDA / Agent 学习路线）
-- [[k8s-gpu-device-stack]] — Kubernetes GPU / Device Stack 项目地图（device plugin / GPU Operator / DRA / CDI / sharing / observability）
-- [[k8s-core-controller-map]] — Kubernetes Core / Controller 项目地图（client-go / controller-runtime / kubebuilder / CRD / webhook / reconcile）
+- [[k8s-gpu-device-stack]] — M5-C L1 入口：D1–D5 区分发现、节点软件、Device Plugin/DRA 分配、runtime 注入、共享隔离与失败边界。
+- M5-C 阅读路径：[[k8s-gpu-device-stack]] → [[kubernetes-dra-design-deep-dive]] → [[device-plugin]] / [[kubernetes-dra]] / [[cdi]] / [[gpu-sharing]] → [[node-feature-discovery]] / [[gpu-operator]] / [[k8s-device-plugin]] / [[dra-driver-nvidia-gpu]] / [[hami]]。
+- [[k8s-core-controller-map]] — M5-A Kubernetes Controller 工具链入口：D1 职责图、D3 Reconcile 控制循环、D4 状态与一致性、D5 失败边界。
+- M5-A 阅读路径：[[k8s-core-controller-map]] → [[controller-runtime]] → [[kubebuilder]] → [[controller-tools]]，串联运行时框架、作者工作流与生成工具。
 - [[llm-d-kubernetes-sigs-candidate-map]] — llm-d / Kubernetes SIGs 候选项目地图（按网络、存储、调度、可观测、计算、API/operator、AI Infra 交叉维度拆分 P0-P2）
 - [[openkruise-project-candidate-map]] — OpenKruise 项目候选地图（kruise / rollouts / kruise-game / agents / observability / controller isolation）
 

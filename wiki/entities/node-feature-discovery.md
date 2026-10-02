@@ -1,14 +1,20 @@
 ---
 title: Node Feature Discovery
 tags: [entity, kubernetes, node, hardware]
-date: 2026-06-14
+date: 2026-09-27
 sources: [node-feature-discovery-architecture-analysis.md]
-related: ["[[node-feature-discovery]]", "[[kubernetes]]", "[[llm-inference]]", "[[gpu-sharing]]"]
+related: ["[[kubernetes]]", "[[llm-inference]]", "[[gpu-sharing]]", "[[device-plugin]]", "[[kubernetes-dra]]", "[[cdi]]", "[[k8s-gpu-device-stack]]", "[[kubernetes-dra-design-deep-dive]]", "[[gpu-operator]]", "[[k8s-device-plugin]]", "[[dra-driver-nvidia-gpu]]", "[[hami]]"]
 ---
 
 # Node Feature Discovery
 
 Node Feature Discovery 发现 CPU、内核、PCI、NUMA、GPU/加速器等硬件/系统能力，并写成 node labels/features 供调度使用。 详见 [[src-node-feature-discovery-architecture]]。
+
+证据说明：2026-09-27 官方默认分支快照为 [`386fda4332ba`](https://github.com/kubernetes-sigs/node-feature-discovery/commit/386fda4332ba5f049c6f0b107f9a58cd46f5af04)，commit 不代表 release。[[src-node-feature-discovery-architecture]] 保留 2026-06-14 的 raw-backed Source；当前分层见 [[k8s-gpu-device-stack]]，DRA 分配与节点准备见 [[kubernetes-dra-design-deep-dive]]。
+
+## 在 M5-C Device / GPU 地图中的位置
+
+NFD worker 检测节点特征，master 发布 labels/规则结果，topology-updater 维护 NodeResourceTopology，GC 清理过期对象。它为 [[gpu-operator]] 及 placement 提供能力信号，不分配每个 Pod 的设备；[[k8s-device-plugin]] / [[dra-driver-nvidia-gpu]] 管各自分配路径，[[hami]] 的共享记账也不能只依赖能力标签。
 
 ## 架构边界
 
