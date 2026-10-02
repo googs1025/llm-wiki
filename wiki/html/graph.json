@@ -481,6 +481,66 @@
       "outbound": 15
     },
     {
+      "id": "kvcached-source-code-deep-dive",
+      "title": "KVCacheD × SGLang × vLLM 源码深潜",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-source-code-deep-dive.html",
+      "tags": [
+        "analysis",
+        "source-code",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "architecture"
+      ],
+      "date": "2026-10-02",
+      "description": "三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。",
+      "degree": 9,
+      "inbound": 4,
+      "outbound": 9
+    },
+    {
+      "id": "kvcached-integration-implementation-guide",
+      "title": "KVCacheD × SGLang × vLLM 集成与实验手册",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-integration-implementation-guide.html",
+      "tags": [
+        "analysis",
+        "implementation",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "operations"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。",
+      "degree": 9,
+      "inbound": 3,
+      "outbound": 9
+    },
+    {
+      "id": "kvcached-sglang-vllm-knowledge-system",
+      "title": "KVCacheD、SGLang 与 vLLM 三项目知识体系",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/kvcached-sglang-vllm-knowledge-system.html",
+      "tags": [
+        "analysis",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "architecture",
+        "source-code"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。",
+      "degree": 15,
+      "inbound": 7,
+      "outbound": 15
+    },
+    {
       "id": "llm-inference-serving-project-map",
       "title": "LLM Inference / Serving 项目地图",
       "category": "analysis",
@@ -835,6 +895,26 @@
       "outbound": 4
     },
     {
+      "id": "elastic-kv-cache",
+      "title": "Elastic KV Cache",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/elastic-kv-cache.html",
+      "tags": [
+        "concept",
+        "ai-infra",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "memory-management"
+      ],
+      "date": "2026-10-02",
+      "description": "将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page",
+      "degree": 12,
+      "inbound": 9,
+      "outbound": 10
+    },
+    {
       "id": "gitops",
       "title": "GitOps",
       "category": "concepts",
@@ -865,11 +945,11 @@
         "sharing",
         "scheduling"
       ],
-      "date": "2026-09-27",
+      "date": "2026-10-02",
       "description": "区分共享调度/记账、分配、硬件分区与 runtime 隔离；MIG、time-slicing、MPS、HAMi-core 不提供等价保障。",
-      "degree": 17,
-      "inbound": 17,
-      "outbound": 10
+      "degree": 22,
+      "inbound": 22,
+      "outbound": 13
     },
     {
       "id": "gpu-programming-learning",
@@ -906,8 +986,8 @@
       ],
       "date": "2026-09-22",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 35,
-      "inbound": 35,
+      "degree": 36,
+      "inbound": 36,
       "outbound": 17
     },
     {
@@ -982,8 +1062,8 @@
       ],
       "date": "2026-09-22",
       "description": "KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）",
-      "degree": 28,
-      "inbound": 23,
+      "degree": 33,
+      "inbound": 28,
       "outbound": 13
     },
     {
@@ -998,11 +1078,11 @@
         "llm-inference",
         "llm-serving"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-02",
       "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 80,
-      "inbound": 66,
-      "outbound": 37
+      "degree": 84,
+      "inbound": 69,
+      "outbound": 39
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -1055,8 +1135,8 @@
       ],
       "date": "2026-09-22",
       "description": "KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）",
-      "degree": 13,
-      "inbound": 13,
+      "degree": 18,
+      "inbound": 18,
       "outbound": 4
     },
     {
@@ -1074,8 +1154,8 @@
       ],
       "date": "2026-09-22",
       "description": "KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）",
-      "degree": 14,
-      "inbound": 14,
+      "degree": 19,
+      "inbound": 19,
       "outbound": 4
     },
     {
@@ -2403,6 +2483,27 @@
       "outbound": 3
     },
     {
+      "id": "kvcached",
+      "title": "KVCacheD",
+      "category": "entities",
+      "category_label": "实体",
+      "href": "entities/kvcached.html",
+      "tags": [
+        "entity",
+        "ai-infra",
+        "llm-inference",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "gpu-sharing",
+        "oss"
+      ],
+      "date": "2026-10-02",
+      "description": "vLLM/SGLang 的 GPU VMM KV memory plugin：稳定虚拟 tensor + 按需 physical page backing，用于同卡多模型弹性显存共享",
+      "degree": 12,
+      "inbound": 9,
+      "outbound": 11
+    },
+    {
       "id": "kwok",
       "title": "KWOK",
       "category": "entities",
@@ -3336,11 +3437,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-02",
       "description": "engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 26,
-      "inbound": 26,
-      "outbound": 6
+      "degree": 32,
+      "inbound": 32,
+      "outbound": 10
     },
     {
       "id": "sig-storage-lib-external-provisioner",
@@ -3450,11 +3551,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-02",
       "description": "engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 39,
-      "inbound": 39,
-      "outbound": 6
+      "degree": 45,
+      "inbound": 45,
+      "outbound": 10
     },
     {
       "id": "semantic-router",
@@ -4632,6 +4733,25 @@
       "outbound": 3
     },
     {
+      "id": "src-kvcached-architecture",
+      "title": "KVCacheD 与 SGLang、vLLM 架构关系及源码实现",
+      "category": "sources",
+      "category_label": "源文件",
+      "href": "sources/src-kvcached-architecture.html",
+      "tags": [
+        "architecture",
+        "llm-serving",
+        "kv-cache",
+        "gpu-virtual-memory",
+        "gpu-sharing"
+      ],
+      "date": "2026-10-02",
+      "description": "KVCacheD HEAD 884108704f44 与 SGLang 44ef8fecfe69、vLLM dc36fcce902a 的源码级关系、GPU VMM、allocator/pool patch、TP/PP 一致性与集成边界。",
+      "degree": 12,
+      "inbound": 7,
+      "outbound": 10
+    },
+    {
       "id": "src-kwok-architecture",
       "title": "KWOK 架构与设计思路分析",
       "category": "sources",
@@ -5485,8 +5605,8 @@
       ],
       "date": "2026-09-14",
       "description": "SGLang 本地 HEAD 2fd835b9c1 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。",
-      "degree": 6,
-      "inbound": 5,
+      "degree": 7,
+      "inbound": 6,
       "outbound": 5
     },
     {
@@ -5596,8 +5716,8 @@
       ],
       "date": "2026-09-14",
       "description": "vLLM 本地 HEAD dc36fcce90 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。",
-      "degree": 6,
-      "inbound": 3,
+      "degree": 7,
+      "inbound": 4,
       "outbound": 5
     },
     {
@@ -7861,6 +7981,56 @@
       "kind": "related"
     },
     {
+      "source": "elastic-kv-cache",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "envoy-ai-gateway",
       "target": "ai-gateway",
       "kind": "related"
@@ -8432,6 +8602,11 @@
     },
     {
       "source": "gpu-sharing",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
       "target": "gpu-operator",
       "kind": "related"
     },
@@ -8459,6 +8634,16 @@
       "source": "gpu-sharing",
       "target": "kubernetes-dra-design-deep-dive",
       "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-sharing",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
     },
     {
       "source": "gpu-sharing",
@@ -10881,6 +11066,226 @@
       "kind": "related"
     },
     {
+      "source": "kvcached",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "gpu-sharing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kv-cache-offload",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-integration-implementation-guide",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "inference-routing",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-sglang-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "src-vllm-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-sglang-vllm-knowledge-system",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached-integration-implementation-guide",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kvcached-source-code-deep-dive",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "kwok",
       "target": "kubernetes",
       "kind": "related"
@@ -11667,6 +12072,11 @@
     },
     {
       "source": "llm-inference",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
       "target": "gateway-api-inference-extension",
       "kind": "wikilink"
     },
@@ -11713,6 +12123,11 @@
     {
       "source": "llm-inference",
       "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "kvcached",
       "kind": "related"
     },
     {
@@ -13647,6 +14062,21 @@
     },
     {
       "source": "sglang",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang",
       "target": "llm-inference-serving-project-map",
       "kind": "wikilink"
     },
@@ -13664,6 +14094,11 @@
       "source": "sglang",
       "target": "radix-attention",
       "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "sglang",
@@ -15711,6 +16146,56 @@
       "kind": "related"
     },
     {
+      "source": "src-kvcached-architecture",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "gpu-sharing",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kv-cache-offload",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "kvcached-source-code-deep-dive",
+      "kind": "wikilink"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "src-kvcached-architecture",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "src-kwok-architecture",
       "target": "kubernetes",
       "kind": "related"
@@ -17437,6 +17922,21 @@
     },
     {
       "source": "vllm",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "kvcached",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "kvcached-sglang-vllm-knowledge-system",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
       "target": "llm-inference-serving-project-map",
       "kind": "wikilink"
     },
@@ -17462,6 +17962,11 @@
     },
     {
       "source": "vllm",
+      "target": "src-kvcached-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
       "target": "src-vllm-architecture",
       "kind": "wikilink"
     }
@@ -17470,22 +17975,22 @@
     {
       "id": "entities",
       "label": "实体",
-      "count": 120
+      "count": 121
     },
     {
       "id": "concepts",
       "label": "概念",
-      "count": 35
+      "count": 36
     },
     {
       "id": "sources",
       "label": "源文件",
-      "count": 115
+      "count": 116
     },
     {
       "id": "analysis",
       "label": "分析",
-      "count": 29
+      "count": 32
     }
   ]
 }

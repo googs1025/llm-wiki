@@ -1,6 +1,6 @@
 ---
 title: Wiki 索引
-date: 2026-05-12
+date: 2026-10-02
 ---
 
 # 知识库索引
@@ -95,6 +95,7 @@ date: 2026-05-12
 - [[dynamo]] — NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
 - [[vllm]] — engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）
 - [[sglang]] — engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）
+- [[kvcached]] — vLLM/SGLang 的 GPU VMM KV memory plugin：稳定虚拟 tensor + 按需 physical page backing，用于同卡多模型弹性显存共享
 - [[aibrix]] — K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）
 - [[llm-d]] — CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
 - [[llm-d-router]] — llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。
@@ -160,6 +161,7 @@ date: 2026-05-12
 - [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
 - [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
 - [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
+- [[elastic-kv-cache]] — 将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page
 - [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）
 - [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
 
@@ -197,6 +199,7 @@ date: 2026-05-12
 
 ## 源文件摘要 (Sources)
 
+- [[src-kvcached-architecture]] — KVCacheD HEAD `884108704f44` 与 SGLang `44ef8fecfe69`、vLLM `dc36fcce902a` 的源码级关系、GPU VMM、allocator/pool patch、TP/PP 一致性与集成边界。
 - [[src-vllm-architecture]] — vLLM 本地 HEAD `dc36fcce90` 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。
 - [[src-sglang-architecture]] — SGLang 本地 HEAD `2fd835b9c1` 的 Scheduler/ScheduleBatch/UnifiedRadixCache/ModelRunner 代码路径与推理优化。
 
@@ -330,6 +333,9 @@ date: 2026-05-12
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。
+- [[kvcached-sglang-vllm-knowledge-system]] — KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。
+- [[kvcached-source-code-deep-dive]] — 三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。
+- [[kvcached-integration-implementation-guide]] — KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。
 - [[ai-agent-frameworks-map]] — AI Agent Frameworks 项目地图（coding agent / framework / MCP / skills / memory / runtime 分层）
 - [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
 - [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）

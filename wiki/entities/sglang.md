@@ -1,9 +1,9 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-22
-sources: [sglang-architecture-analysis.md]
-related: [vllm, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
+date: 2026-10-02
+sources: [sglang-architecture-analysis.md, kvcached-architecture-analysis.md]
+related: [vllm, kvcached, elastic-kv-cache, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
 ---
 
 # SGLang
@@ -85,6 +85,12 @@ DetokenizerManager → streaming response
 
 SGLang 位于 engine/runtime 层，负责 Scheduler、RadixCache 和模型执行，通过 P/D 与分布式集成接口连接外围 serving 层。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
 
+## 与 KVCacheD 的集成关系
+
+[[kvcached]] 保留 SGLang Scheduler、ScheduleBatch、[[radix-attention]] 和 attention backend，只替换底层 token/page allocator 与 MHA/MLA/Mamba/hybrid KV pool 的 buffer allocation。RadixCache node 仍持有 token-slot indices；只有 cache evict 或请求释放使 page 内全部slot空闲后，KVCacheD 才能归还physical VRAM。
+
+当前集成让每个 SGLang TP worker 本地拥有自己的 KVCacheD pool，避免把一个rank的pool operation重复广播给peer；这一点与vLLM的EngineCore→worker fan-out模型不同。完整对照见 [[kvcached-sglang-vllm-knowledge-system]]，源码证据见 [[src-kvcached-architecture]]。
+
 ## 相关页面
 
 - 架构详解：[[src-sglang-architecture]]
@@ -92,3 +98,4 @@ SGLang 位于 engine/runtime 层，负责 Scheduler、RadixCache 和模型执行
 - 同类系统：[[vllm]]（最直接对标）
 - 依赖：[[flash-attention]]（FlashInfer / FA3 / FlashMLA）、[[mooncake]]（KV transfer）
 - 相关概念：[[paged-attention]]（vLLM 的对照系统）
+- 弹性 KV：[[kvcached]]、[[elastic-kv-cache]]
