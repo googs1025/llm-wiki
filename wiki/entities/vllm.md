@@ -1,9 +1,9 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-09-22
-sources: [vllm-architecture-analysis.md]
-related: [sglang, paged-attention, radix-attention, flash-attention]
+date: 2026-10-02
+sources: [vllm-architecture-analysis.md, kvcached-architecture-analysis.md]
+related: [sglang, kvcached, elastic-kv-cache, paged-attention, radix-attention, flash-attention]
 ---
 
 # vLLM
@@ -60,9 +60,22 @@ API / Offline LLM → V1 Engine Core
 
 vLLM 位于 engine 层，负责请求调度、模型执行、attention backend 和本地 KV 管理；外部流量路由与自动扩缩由外围 serving 层承担。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
 
+## 与 KVCacheD 的集成关系
+
+[[kvcached]] 位于 vLLM 的 KV physical backing 下层，不替代 EngineCore、Scheduler、[[paged-attention]] 或 attention backend。它通过版本化 patch：
+
+- 用 ElasticBlockPool 接住 BlockPool 的 block/APC/ref-count 契约；
+- 在 GPUModelRunner 中建立 VMM-backed KV tensor 并继续调用原生 `bind_kv_cache`；
+- 在 EngineCore/coordinator 与 GPU worker 分进程时，经 TP/PP Unix socket同步map/unmap；
+- 把共享物理池的瞬时耗尽转成 `allocate_slots() -> None`，让原生 scheduler preempt/retry；
+- queued/async batch 下先做 worker barrier，再释放 physical page。
+
+因此 vLLM 管“request需要哪些逻辑block”，KVCacheD 管“这些block所在VMM page当前是否有真实VRAM backing”。完整对象映射见 [[kvcached-sglang-vllm-knowledge-system]]，源码证据见 [[src-kvcached-architecture]]。
+
 ## 相关页面
 
 - 核心算法：[[paged-attention]]
 - 主要对标：[[sglang]]
 - 概念对照：[[radix-attention]]
 - 依赖：[[flash-attention]]
+- 弹性 KV：[[kvcached]]、[[elastic-kv-cache]]

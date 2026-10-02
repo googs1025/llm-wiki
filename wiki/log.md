@@ -5,6 +5,14 @@ date: 2026-04-22
 
 # 操作日志
 
+## [2026-10-02] ingest | KVCacheD 与 SGLang、vLLM 三项目知识体系
+
+基于本地 KVCacheD `884108704f44`、SGLang `44ef8fecfe69`、vLLM `dc36fcce902a` 做三仓源码分析。新增 KVCacheD raw/source/entity、Elastic KV Cache 概念和三项目关系知识地图，更新 vLLM、SGLang、LLM Inference、GPU Sharing 与索引。核心关系：vLLM/SGLang 保留 scheduler、prefix metadata、block/token index 与 attention kernel；KVCacheD 在 allocator/tensor seam 下接 GPU VMM，以稳定 VA + 按需 physical page backing 实现同卡多实例弹性，并用 TP/PP transactional unmap 与 async release barrier 维持跨 rank 生命周期一致性。
+
+补充 [[kvcached-source-code-deep-dive]]：按真实文件、类和函数展开 `.pth/import hook → engine patch → KVCacheManager → PageAllocator/FTensor → CUDA/HIP VMM`，并分别给出 SGLang/vLLM 初始化、allocation、prefix cache、async release、TP/PP two-phase unmap、controller 请求时序和调试检查点。
+
+补充 [[kvcached-integration-implementation-guide]]：把源码知识落到可复现实验，覆盖环境与版本清单、自动注入验证、单实例page增长/回收、同引擎与vLLM/SGLang跨引擎共置、prefix cache bound、动态limit、TP/PP、transaction故障注入、输出正确性、性能对照和engine升级回归。
+
 ## [2026-07-15] query | Kubernetes v1.37 Scheduling / Node / DRA 进展
 
 根据用户要求，把 2026-07-15 对 `kubernetes/enhancements` upstream `master` 的调度、Node、DRA 和 autoscaling KEP 进展写入 wiki。新增 [[k8s-v1.37-scheduling-node-dra-progress]]，并更新 [[kubernetes]]、[[kubernetes-dra]]、[[src-kubernetes-keps-design-tracking]]、[[kubernetes-keps-feature-coverage]]、[[kubernetes-keps-implementation-matrix]] 和索引。核心结论：v1.37 主线集中在 workload-aware scheduling、DRA workload/capacity/NUMA/status 语义、Pod-level resource managers、Memory QoS、rootless kubelet 和 HPA/Cluster Autoscaler 约束联动。

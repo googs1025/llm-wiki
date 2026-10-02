@@ -1,9 +1,9 @@
 ---
 title: GPU Sharing
 tags: [concept, gpu, kubernetes, sharing, scheduling]
-date: 2026-09-27
-sources: [hami-architecture-analysis.md, k8s-device-plugin-architecture-analysis.md]
-related: ["[[hami]]", "[[k8s-device-plugin]]", "[[gpu-operator]]", "[[kubernetes-dra]]", "[[device-plugin]]", "[[k8s-gpu-device-stack]]", "[[kubernetes-dra-design-deep-dive]]", "[[node-feature-discovery]]", "[[dra-driver-nvidia-gpu]]", "[[cdi]]"]
+date: 2026-10-02
+sources: [hami-architecture-analysis.md, k8s-device-plugin-architecture-analysis.md, kvcached-architecture-analysis.md]
+related: ["[[hami]]", "[[k8s-device-plugin]]", "[[gpu-operator]]", "[[kubernetes-dra]]", "[[device-plugin]]", "[[k8s-gpu-device-stack]]", "[[kubernetes-dra-design-deep-dive]]", "[[node-feature-discovery]]", "[[dra-driver-nvidia-gpu]]", "[[cdi]]", "[[kvcached]]", "[[elastic-kv-cache]]"]
 ---
 
 # GPU Sharing
@@ -25,6 +25,13 @@ GPU sharing 指多个 workload 共享同一物理 GPU 或 MIG/MPS/time-slicing/v
 | MPS | [[k8s-device-plugin]] | 通过 MPS 服务共享执行与配置资源限制；支持范围依版本，不等价于 MIG 硬件分区 |
 | HAMi-core memory/core sharing | [[hami]] | 调度/记账配合容器内调用拦截，隔离效果取决于注入与兼容调用路径 |
 | DRA device configuration | [[dra-driver-nvidia-gpu]] | 声明式 Claim 分配和设备配置；基础 API 稳定不意味着全部动态分区/共享扩展已稳定 |
+| Application-aware elastic KV | [[kvcached]] | 只让接入的 vLLM/SGLang KV physical pages按需占用VRAM；不提供通用CUDA显存quota、执行隔离或K8s调度 |
+
+## KVCacheD 在 GPU sharing 中的位置
+
+[[kvcached]] 属于应用内、语义感知的内存复用：它知道哪些分配是KV block/token，因此可以在不停止模型的情况下按request生命周期map/unmap physical pages。MIG/MPS/time-slicing/HAMi则从设备或runtime层管理更广泛的GPU workload。
+
+两者可以组合，但不能混为一谈：KVCacheD提高同卡多模型的KV利用率，外层方案仍需负责设备分配、记账、执行共享与租户隔离。详见 [[elastic-kv-cache]] 和 [[kvcached-sglang-vllm-knowledge-system]]。
 
 ## 和 GPU Operator 的关系
 

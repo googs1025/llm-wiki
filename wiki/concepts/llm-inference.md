@@ -1,9 +1,9 @@
 ---
 title: LLM Inference
 tags: [concept, ai-infra, llm-inference, llm-serving]
-date: 2026-09-22
-sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: ['[[vllm]]', '[[sglang]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]']
+date: 2026-10-02
+sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, kvcached-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
+related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]']
 ---
 
 # LLM Inference
@@ -21,6 +21,7 @@ LLM 推理（inference / serving）指把训练好的大语言模型部署成在
 | 层级 | 代表项目 | 关注点 |
 |------|----------|--------|
 | 推理引擎 | [[vllm]], [[sglang]] | KV cache 管理、batching、scheduler、kernel、模型加载 |
+| Engine 内存插件 | [[kvcached]], [[elastic-kv-cache]] | 保留引擎逻辑KV语义，以GPU VMM让physical KV pages按需占用/释放，实现同卡多实例弹性 |
 | 数据中心编排 | [[dynamo]] | P/D 分离、KV transfer/offload、router、planner、operator；把 engine 变成可扩缩、可迁移的集群服务 |
 | K8s serving stack | [[llm-d]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]] | 从标准模型 API、runtime/operator、LLM 路由、P/D workload 到 GPU/MaaS 的不同控制面 |
 | 路由 / 网关 | [[llm-d-router]], [[semantic-router]], [[routellm]], [[gateway-api-inference-extension]], [[ai-gateway]] | 模型选择、endpoint picking、成本/质量/语义/KV-aware routing |
