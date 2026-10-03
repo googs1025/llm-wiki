@@ -404,7 +404,15 @@ def inject_heading_ids(body: str) -> str:
 
 # ── HTML shell ───────────────────────────────────────────────────
 MERMAID_RUNTIME = """<script>
+  let mermaidRenderInFlight = false;
+  let mermaidRenderPending = false;
+
   async function renderMermaidDiagrams() {
+    if (mermaidRenderInFlight) {
+      mermaidRenderPending = true;
+      return;
+    }
+
     const figures = Array.from(document.querySelectorAll(".mermaid-figure"));
     if (!figures.length || !window.mermaid) return;
 
@@ -412,6 +420,7 @@ MERMAID_RUNTIME = """<script>
       ? "default"
       : "dark";
     const nodes = [];
+    const renderableFigures = [];
     figures.forEach((figure) => {
       const source = figure.querySelector(".mermaid-source");
       const target = figure.querySelector(".mermaid");
@@ -424,17 +433,20 @@ MERMAID_RUNTIME = """<script>
       target.hidden = false;
       target.setAttribute("aria-hidden", "false");
       nodes.push(target);
+      renderableFigures.push(figure);
     });
     if (!nodes.length) return;
 
+    mermaidRenderInFlight = true;
     try {
       window.mermaid.initialize({ startOnLoad: false, theme, securityLevel: "strict" });
       await window.mermaid.run({ nodes });
-      figures.forEach((figure) => figure.classList.add("is-rendered"));
+      renderableFigures.forEach((figure) => figure.classList.add("is-rendered"));
     } catch (error) {
-      figures.forEach((figure) => {
+      renderableFigures.forEach((figure) => {
         const target = figure.querySelector(".mermaid");
         if (!target) return;
+        figure.classList.remove("is-rendered");
         target.hidden = true;
         target.setAttribute("aria-hidden", "true");
         const message = document.createElement("p");
@@ -443,6 +455,12 @@ MERMAID_RUNTIME = """<script>
         figure.appendChild(message);
       });
       console.error("Mermaid diagram rendering failed", error);
+    } finally {
+      mermaidRenderInFlight = false;
+      if (mermaidRenderPending) {
+        mermaidRenderPending = false;
+        renderMermaidDiagrams();
+      }
     }
   }
 
