@@ -1,169 +1,222 @@
 ---
 title: LLM Inference
 tags: [concept, ai-infra, llm-inference, llm-serving]
-date: 2026-10-02
+date: 2026-10-03
 sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, kvcached-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]']
+related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]', '[[continuous-batching]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]']
 ---
 
 # LLM Inference
 
-LLM 推理（inference / serving）指把训练好的大语言模型部署成在线服务，对外提供 token 生成 API。核心挑战：高吞吐、低延迟、长 context、多并发、成本。
+## 本页回答什么
 
-## M4 阅读入口
+本页面向 AI Infra / Serving 工程师：沿一个生成请求，定位 API 合同、路由准入、引擎执行、KV 状态、跨 GPU 协作和运维的责任归属，再决定需要哪些项目组合。LLM inference 是模型执行，serving 还包括把执行能力交付为可接入、可度量、可恢复的在线服务或异步作业。
 
-- 先看 [[llm-inference-serving-project-map]]：理解 engine、routing、distributed runtime、Kubernetes control plane 和 GPU infrastructure 的职责边界。
-- 再看 [[llm-serving-engine-selection-map]]：先选择缺失的架构层，再选择项目或组合。
-- 需要下钻时进入 [[vllm]]、[[sglang]]、[[dynamo]]、[[llm-d]]、[[aibrix]] 及对应 Source 页面。
+先读下面的 workload 与 SLO，再沿七步路径下钻。项目全景由 [[llm-inference-serving-project-map]] 维护，组合与取舍由 [[llm-serving-engine-selection-map]] 维护；本页负责把它们接回一条请求生命周期。
 
-## 系统分层
+## 先定义 Workload
 
-| 层级 | 代表项目 | 关注点 |
-|------|----------|--------|
-| 推理引擎 | [[vllm]], [[sglang]] | KV cache 管理、batching、scheduler、kernel、模型加载 |
-| Engine 内存插件 | [[kvcached]], [[elastic-kv-cache]] | 保留引擎逻辑KV语义，以GPU VMM让physical KV pages按需占用/释放，实现同卡多实例弹性 |
-| 数据中心编排 | [[dynamo]] | P/D 分离、KV transfer/offload、router、planner、operator；把 engine 变成可扩缩、可迁移的集群服务 |
-| K8s serving stack | [[llm-d]], [[aibrix]], [[kserve]], [[kubeai]], [[ome]], [[gpustack]], [[rbg]], [[kthena]] | 从标准模型 API、runtime/operator、LLM 路由、P/D workload 到 GPU/MaaS 的不同控制面 |
-| 路由 / 网关 | [[llm-d-router]], [[semantic-router]], [[routellm]], [[gateway-api-inference-extension]], [[ai-gateway]] | 模型选择、endpoint picking、成本/质量/语义/KV-aware routing |
-| KV locality / cache signal | [[llm-d-kv-cache]], [[dynamo]], [[kv-cache-offload]] | KV block index、cache-hit scoring、KV transfer/offload tiers |
-| 离线 / 实验 / 历史扩缩外围 | [[llm-d-batch-gateway]], [[llm-d-benchmark]], [[llm-d-inference-sim]], [[llm-d-workload-variant-autoscaler]]（deprecated / 历史设计） | batch job、benchmark、无 GPU simulator，以及仅供迁移/设计参考的 variant autoscaling 历史方案 |
-| 硬件资源层 | [[hami]], [[gpu-operator]], [[k8s-device-plugin]], [[dra-driver-nvidia-gpu]] | GPU discovery、device plugin、DRA/CDI、sharing/vGPU/MIG |
+| 工作负载 | 首先固定的条件 | 沿请求路径观察什么 |
+|---|---|---|
+| 在线交互 | 输入/输出长度分布、到达率、并发、streaming、租户优先级 | 排队与首 token、持续输出间隔、取消、尾延迟 |
+| Batch / 异步 | 数据集规模、完成时限、重试与输出持久化合同 | job 状态、可恢复进度、有效产出与成本，见 [[batch-inference]] |
+| 重复前缀 / Agent 多轮 | 共享 prompt、会话长度、工具轮次、模型/adapter revision、隔离边界 | 前缀命中、路由 locality、KV 驻留时间；单轮快不等于整个任务快 |
+| 长上下文 / 多模态 | 长度尾部、图片/音频等输入形态、processor 成本、实际模型 token 展开 | 预处理、prefill、KV 容量与带宽；文本 token 数不能代表全部输入成本 |
 
-## K8s serving stack 扩展比较
+这些类别可以重叠：Agent 请求可能同时是在线、长上下文和多模态。记录模型与硬件、量化、并行配置和缓存冷热条件，才能解释同一请求为何在不同部署上表现不同。
 
-这八个项目不是同一层的替代品，建议先按抽象层分类：
+## 先定义 SLO
 
-| 类别 | 项目 | 核心对象/入口 | 主要解决的问题 |
-|---|---|---|---|
-| 分布式 LLM serving | [[llm-d]] | Gateway/EPP、InferencePool、model server | K8s 标准入口下的 endpoint picking、KV/P/D 和分布式推理 |
-| GenAI 基础组件 | [[aibrix]] | Gateway、CRD、Unified AI Runtime、KV/LoRA 组件 | vLLM fleet 的路由、adapter、KV、autoscaling、故障检测和异构成本优化 |
-| 通用模型平台 | [[kserve]] | InferenceService、LLMInferenceService、InferenceGraph | 用统一 API/operator 承载 predictive + generative AI，并支持 canary、缓存、KV offload 与 scale-to-zero |
-| 轻量 AI operator | [[kubeai]] | Model CRD、model proxy、loader、autoscaler | 快速把 LLM/VLM/embedding/speech 模型变成 OpenAI-compatible API |
-| Runtime/operator 抽象 | [[ome]] | model agent、runtime selector、accelerator config | 把模型生命周期、推理 runtime 和加速器配置解耦 |
-| GPU/MaaS 平台 | [[gpustack]] | server、worker、scheduler、gateway、model service | 跨本地/K8s/云管理 GPU，并提供多模型 API、计量、认证和运维 |
-| Workload 原语 | [[rbg]] | RoleBasedGroup、Role、RoleInstance、CoordinatedPolicy | 表达 gateway/router/prefill/decode 多角色有状态服务，保证拓扑和跨角色原子操作 |
-| 一体化 LLM serving | [[kthena]] | ModelBooster、ModelServing、ModelServer、ModelRoute | 在 K8s/Volcano 内整合路由、P/D、限流、canary、扩缩、拓扑和 gang scheduling |
+把用户可接受的响应变成可检验合同：交互服务约束首 token、输出间隔和端到端尾延迟，同时规定成功率、deadline、取消与过载拒绝；异步服务更关注完成时限、结果完整性和可恢复性。吞吐优化必须说明满足这些约束的有效产出以及失败分母。
 
-### 选型不要只问“哪个最好”
+TTFT、ITL、TPOT、goodput 的口径与实验矩阵见 [[llm-serving-performance]]；首 token 前后重试、backpressure 和清理责任见 [[llm-serving-reliability]]。本页不预设跨模型、硬件和负载通用的数字目标或默认参数。
 
-- 要 **Gateway API + InferencePool 标准化**：优先研究 [[llm-d]] / [[kserve]]。
-- 要 **vLLM 生态的 LoRA、KV、企业组件**：研究 [[aibrix]]。
-- 要 **最短路径把模型暴露成 OpenAI API**：研究 [[kubeai]]。
-- 要 **模型 runtime/accelerator 生命周期抽象**：研究 [[ome]]。
-- 要 **GPU 集群、多云、MaaS、token/API 计量**：研究 [[gpustack]]。
-- 要 **多角色、有状态、P/D workload 的原子升级/扩缩**：研究 [[rbg]]。
-- 要 **K8s 原生完整 LLM serving，并深度结合 Volcano 拓扑/gang**：研究 [[kthena]]。
+## 端到端阅读路径
 
-完整的 README/文档驱动对比、能力矩阵和选型流程见 [[src-k8s-serving-stack-comparison]]。
+1. API / SLO → routing / admission / queue：先声明请求与流式合同，再用 [[inference-routing]] 理解模型选择、候选端点与有界准入，区分入口排队和 engine waiting queue。
+2. Engine schedule / batch / execute：读 [[continuous-batching]]，再沿 [[vllm]] / [[sglang]] 的 scheduler、ModelRunner 和 attention backend 看一轮执行。
+3. KV 生命周期：通过 [[paged-attention]]、[[radix-attention]] 理解分配与复用，再读 [[kv-cache-offload]] / [[elastic-kv-cache]]，区分引用、逻辑块与物理内存。
+4. 分布式执行 / P-D / 并行：读 [[disaggregated-serving]]，区分阶段交接与 DP/TP/PP/EP，检查传输、拓扑和故障成本。
+5. 控制 / 扩缩 / GPU：读 [[model-serving-operator]] 与 [[k8s-gpu-device-stack]]，追踪声明式部署如何变成已加载模型的 ready 容量。
+6. 观测 / 可靠性：用 [[llm-serving-performance]] 与 [[llm-serving-reliability]] 把请求耗时、队列、KV、readiness 和故障关联起来，再做压测与故障演练。
+7. 项目组合 / 选型：回到 [[llm-inference-serving-project-map]] 和 [[llm-serving-engine-selection-map]]，依据上述瓶颈选择层与组合，并验证引擎、connector、控制面版本及部署成本。
 
-## 总体架构与请求流程
+## A1 · 端到端 Serving 分层架构
 
-```text
-Client / Application
-        │ OpenAI / Anthropic / gRPC
-        ▼
-Gateway / Semantic Router
-        │ auth · quota · model · KV locality
-        ▼
-InferencePool / Endpoint Picker
-        │ queue · health · topology
-        ▼
-┌────────────────────── Serving Runtime ──────────────────────┐
-│  Prefill Worker          KV Transfer          Decode Worker  │
-│  tokenizer → scheduler ───────────────► scheduler → stream │
-│       │                         │                          │
-│       └──── attention / kernel / TP-PP-EP-DP ───────────────┘
-└───────────────────────────┬─────────────────────────────────┘
-                            ▼
-                    GPU / CPU / NVMe KV tiers
-                            │
-                            ▼
-                 Metrics → Autoscaling → Recovery
+```mermaid
+flowchart LR
+  subgraph Request["请求与执行职责"]
+    direction TB
+    C["Client / Application"]
+    G["Gateway / Traffic<br/>API / auth / policy / stream"]
+    R["Routing / Serving Platform<br/>admission / queue / endpoint selection / discovery"]
+    E["Inference Engine<br/>scheduler / batching / model runner / local KV"]
+    H["Compute / State<br/>GPU / HBM / CPU / SSD / remote"]
+    C --> G
+    G --> R
+    R --> E
+    E --> H
+  end
+  subgraph Control["旁路控制面"]
+    direction TB
+    D["CRD / deployment"]
+    P["Planner / autoscaler / operator"]
+    D -. desired state .-> P
+  end
+  P -. policy and endpoint lifecycle .-> R
+  P -. deploy and scale .-> E
+  P -. provision and placement .-> H
+  E -. metrics and readiness .-> P
+  E -. KV locality signals .-> R
 ```
 
-```text
-请求进入 → 认证/限流 → KV-aware endpoint
-       → Prefill → Decode → Sampling → Streaming
-       ├─ 完成：释放 KV → 返回结果
-       └─ 故障：重试 / 迁移 / 重新计算
+解读：实线概括请求处理及执行所依赖的资源，虚线表示控制或异步信号。图是责任地图，方框可以合并、拆分或省略，不能据此数网络跳数。控制面根据期望状态与观测调整容量，不在每次同步生成的热路径上。
+
+假设：以提供在线生成 API 的平台为背景；CPU、SSD 和 remote 只是可能的状态层级，是否使用取决于部署。路由职责可以在 gateway 内实现，也可以委托外部 selector。
+
+不要从图中推断每个系统必须部署所有方框、全部 KV 层级都开启，或每个请求/token 都要等待 operator、planner、autoscaler。GPU 设备交付见 [[k8s-gpu-device-stack]]，生命周期边界见 [[model-serving-operator]]。
+
+## A2 · Engine V1 进程与执行边界
+
+```mermaid
+flowchart LR
+  A["API Server<br/>input validation / tokenization<br/>output processing / stream"]
+  subgraph Core["Engine Core 责任边界"]
+    S["Scheduler<br/>waiting / running / token budget"]
+    K["KVCacheManager<br/>block allocation / reuse / references"]
+    S --> K
+    K --> S
+  end
+  subgraph Worker["GPU Worker 责任边界"]
+    M["ModelRunner<br/>batch tensors / model forward"]
+    B["Attention kernels<br/>read and write local KV"]
+    M --> B
+  end
+  A -->|processed request| S
+  S -->|scheduled work and block metadata| M
+  M -->|execution outputs| S
+  S -->|request outputs| A
+  D["Optional DP coordination"] -. replica coordination .-> S
 ```
 
-## 核心技术主题
+解读：API 处理输入与输出，scheduler 决定本轮工作并管理 KV 预算，worker/runner 执行模型和 kernels。实线是逻辑交互，包含请求提交、执行与结果回传；真实实现可以异步、流水或重叠执行。
 
-## 代码阅读入口
+假设：用 [[vllm]] V1 的 EngineCore、Scheduler、KVCacheManager 与 GPUModelRunner 命名提供具体代码锚点，证据见 [[src-vllm-architecture]]。[[sglang]] 对应的 Scheduler、ScheduleBatch、UnifiedRadixCache、ModelRunner 及 tokenizer/detokenizer 边界见 [[src-sglang-architecture]]；它们并非同名类或相同进程拓扑。
 
-如果要从实现而不是概念开始，建议沿两条主链阅读：
+不要从图中推断 vLLM 与 SGLang 的类、线程、IPC 和进程数量一致，或一次前向严格只产生一个 token。这里抽取共享责任模型；逐函数调用、并行与 speculative 路径应按 Source 页记录的版本查阅。
 
-```text
-vLLM:
-EngineCore.step
-  → Scheduler.schedule
-  → KVCacheManager.allocate_slots
-  → GPUModelRunner.execute_model
-  → Attention selector/backend
-  → update_from_output
+## S1 · 聚合式在线请求时序
 
-SGLang:
-run_event_loop
-  → get_next_batch_to_run
-  → ScheduleBatch
-  → UnifiedRadixCache.match_prefix + allocation
-  → ModelRunner / ForwardMode backend
-  → process_batch_result
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant G as Gateway / Frontend
+  participant R as Router / EPP logical decision
+  participant E as Engine Scheduler
+  participant M as ModelRunner
+  participant O as Signals / Observability
+  C->>G: request with model and deadline
+  G->>R: admission and endpoint selection
+  R-->>G: selected ready endpoint or reject
+  Note over G,E: Accepted path forwards directly to engine API
+  G->>E: processed request via engine frontend
+  E->>E: enqueue and validate local KV reuse
+  loop Scheduled iterations until completion
+    E->>M: prefill chunk or decode work with KV metadata
+    M-->>E: execution outputs and state updates
+    opt Visible output available
+      E-->>G: output through engine frontend
+      G-->>C: stream chunk
+    end
+  end
+  E->>E: finish request and release safe references
+  Note over R,O: Independent asynchronous signals may occur during the request
+  E--)O: KV events and metrics and readiness
+  O--)R: cached locality and health observations
 ```
 
-详细的文件路径、函数职责、状态对象和两者差异见 [[src-vllm-architecture]] 与 [[src-sglang-architecture]]。
+解读：先作逻辑选端点决策，再由代理把请求转发给选中的 engine；scheduler 多轮选择工作，执行结果经过 frontend 输出为流。KV events、metrics 和 readiness 独立更新观测或路由视图，不是每个生成 token 的阻塞依赖。
 
-### Prefill vs Decode
+假设：展示请求成功完成、prefill 与 decode 聚合在同一 engine 服务单元的路径；engine frontend 的输入处理与输出处理折叠在往返箭头中。router 可以内嵌，也可以通过外部 EPP 提供选择结果；拒绝和失败路径见 [[llm-serving-reliability]]。
 
-Prefill 负责把 prompt/context 一次性编码成 KV cache，算力密集、吞吐敏感；Decode 每步生成一个 token，延迟敏感、状态持续时间长。[[disaggregated-serving]] 把两者拆到不同 GPU 池中分别扩缩，是 [[dynamo]]、[[llm-d]] 等系统的主线。
+不要从图中推断请求正文和 token 流必须经过 EPP 进程、每轮都有可见输出、stream chunk 等于一个 token，或异步信号只在请求结束后发布。是否调用 selector、采集频率与健康观察滞后由具体实现决定。
 
-### Batching
+## F2 · KV Block 生命周期
 
-Continuous batching / inflight batching 让不同请求在 token step 之间动态进出 batch，避免传统 fixed batch 的尾部浪费。它是 [[vllm]] / [[sglang]] 这类 engine 的吞吐基础。
+```mermaid
+flowchart TD
+  T["Prompt tokens and cache identity"]
+  V["Engine validates compatible reusable prefix"]
+  A["Allocate blocks for missing tokens"]
+  C["Compute KV and seal reusable blocks"]
+  L["Local reuse with live references"]
+  I["Publish locality event<br/>index or location hint only"]
+  O["Optional offload or transfer<br/>actual KV data movement"]
+  R["Release request or transfer references<br/>after safe completion or cancellation"]
+  Z["Unreferenced cached blocks"]
+  X["Evict or invalidate<br/>pressure / expiry policy / model change"]
+  T --> V
+  V -->|missing suffix| A
+  V -->|valid hit| L
+  A --> C
+  C --> L
+  C -. optional metadata publication .-> I
+  C --> O
+  L --> R
+  O -->|completion or safe cancellation confirmed| R
+  R -->|no remaining live users| Z
+  Z -->|compatible future request| V
+  Z --> X
+  X -. optional invalidation event .-> I
+```
 
-### KV cache
+解读：复用命中可以跳过已缓存前缀的计算，未命中部分才分配并写入 KV。可复用块可以留在本地、公布位置，或通过 connector 搬运真实数据；这些分支可以并存。请求结束释放引用，缓存仍可保留，直到符合驱逐条件。
 
-长上下文和多轮对话让 KV cache 成为一等资源。[[paged-attention]] 用分页思想降低碎片，[[radix-attention]] 用 radix tree 加速 prefix 复用，[[kv-cache-offload]] 把 KV 在 GPU/CPU/SSD/远端之间迁移。到了 [[dynamo]] / [[llm-d]]，KV cache 还会反过来影响路由和调度：[[llm-d-kv-cache]] 把 KV events 变成 locality index，[[llm-d-router]] 再把 cache-hit score 和负载、profile 等信号一起纳入 endpoint picking。
+假设：采用块/页式 KV 与可选前缀缓存；seal 表示实现认定该块可安全复用，不要求有同名 API。partial block、过期策略与模型切换的处理依引擎而定；仍被 GPU 或传输使用的状态必须先安全终止访问，再回收。没有启用前缀缓存时，未引用空间可以直接回收。
 
-### Chunked Prefill
+不要从图中推断 locality index 含有 KV tensor、发布事件保证缓存一直存在、完成请求必然立刻清空物理页，或远端命中可绕过 engine 校验。模型/revision、adapter、token 前缀与隔离身份的兼容性由 engine/connector 合同校验；[[llm-d-kv-cache]] 的索引是线索，[[kv-cache-offload]] 才讨论数据迁移，[[elastic-kv-cache]] 讨论物理页占用。
 
-Chunked prefill 把长 prompt 的 prefill 切块，与 decode 请求交错执行，减少长 prompt 阻塞短请求。它常和 prefix cache、P/D 分离、batch scheduler 一起出现。
+## 按责任下钻
 
-### Speculative Decoding
+### 执行：谁获得下一轮 GPU 时间
 
-Speculative decoding 用小模型或 draft head 先猜 token，再由大模型验证，目标是降低每个生成 token 的大模型前向次数。工程代价是调度、显存、accept rate 和模型兼容性变复杂。
+[[continuous-batching]] 解释 iteration 的 token/sequence/KV 预算、chunked prefill、抢占与公平性。Prefill 为输入建立 KV，decode 继续推进生成；算力或带宽是否成为瓶颈取决于 batch、上下文和硬件，不能仅凭阶段名称判断。
 
-### LoRA / Adapter Serving
+[[paged-attention]] 关注 KV 分页寻址与碎片，[[radix-attention]] 关注前缀组织与复用。Speculative decoding、量化、LoRA 混排与多模态 processor 会改变执行和内存需求；沿 [[vllm]] / [[sglang]] 及 Source 页查目标模型、kernel 和版本支持，再用同一 workload 验证收益。
 
-LoRA serving 让一个 base model 同时服务多个轻量 adapter，关键问题是 adapter 加载、batch 内 adapter 混排、cache 隔离和多租户权限。[[aibrix]] 等 K8s serving 项目会把它放到模型生命周期和 gateway 层一起处理。
+### 状态：谁拥有 KV，何时可以释放
 
-### Multi-modal Serving
+[[kv-cache-offload]] 研究 HBM、CPU、SSD 或远端之间的数据搬运与恢复代价；[[elastic-kv-cache]] 与 [[kvcached]] 研究在保留引擎逻辑 KV 语义的同时调整 GPU 物理页占用。块可定位、身份匹配、真实数据可访问、安全保留引用是不同条件，路由命中率不能代替这些正确性检查。
 
-VLM / speech / embedding / rerank 等任务把输入预处理、processor、tokenizer、模型 runtime 和输出格式变得更复杂。[[kubeai]] 这类 operator 会把 LLM/VLM/embedding/speech 纳入同一 Model CRD。
+### 分布式：并行计算、请求分配与阶段交接
 
-### Quantization
+引擎内部 TP 切分张量计算，PP 切分模型层并形成流水，EP 分布 MoE experts，DP 复制执行容量；不同引擎的 DP/EP 组合还可能有协调通信。它们描述模型执行组织，需要核对通信域、权重/KV 布局和拓扑。
 
-FP8 / INT4 / AWQ / GPTQ 等量化路线降低显存和带宽压力，但会影响 kernel 支持、精度、吞吐和 serving 兼容性。选型时要看 engine 是否原生支持目标量化格式，以及 GPU 架构是否匹配。
+实例级路由是在可用服务端点之间分配请求；[[disaggregated-serving]] 则将 prefill 和 decode 放在不同执行资源上，新增 KV 交接及失败边界。一个 P 或 D 池内部仍可用 TP/PP/DP/EP。控制面部署或扩缩这些单元，属于另一个时间尺度；三者不能互相替代。[[dynamo]] 与 [[llm-d]] 的具体组合入口见项目地图。
 
-### Batch Inference
+### 平台：谁接纳流量，谁改变容量
 
-[[batch-inference]] 把大量请求作为异步 job 执行，关注文件、队列、状态、重试、取消、输出归档和成本，而不是单个请求的 streaming latency。[[llm-d-batch-gateway]] 说明 batch 层可以复用下游 [[llm-d]] Router/model endpoint，但必须额外引入 PostgreSQL、Redis/Valkey 和 object store 来承接长时状态。
+[[inference-routing]] 区分模型选择、endpoint picking 与 KV locality 信号；[[model-serving-operator]] 区分声明式期望、模型装载、ready 副本与扩缩。扩容要经过资源供给和模型初始化，因此当前请求仍需要有限队列、deadline 和过载策略。
 
-### Benchmark / Simulator
+Kubernetes serving stack 的紧凑比较按责任选入口，具体能力与版本以 [[src-k8s-serving-stack-comparison]] 和实体页的证据为准：
 
-推理系统选型不能只看架构图，还要能复现实验。[[llm-d-benchmark]] 把 stack standup、scenario 渲染、harness 运行和结果收集做成 workspace；[[llm-d-inference-sim]] 则用无 GPU 的 vLLM 行为模拟器验证 router、autoscaling、KV event 和 benchmark 流程。二者解决的是“如何测”和“如何低成本复现控制面行为”。
+| 要补齐的职责 | 项目入口 | 采用前首先核对 |
+|---|---|---|
+| Gateway / endpoint picking 与分布式 serving | [[llm-d]]、[[aibrix]] | gateway 协议、engine/connector、KV 信号与故障合同 |
+| 模型 API 与 runtime 生命周期 | [[kserve]]、[[kubeai]]、[[ome]] | CRD 与已有部署兼容性、模型装载、升级及 scale-to-zero 条件 |
+| 多角色 workload 与拓扑编排 | [[rbg]]、[[kthena]] | P/D 角色语义、协调升级、调度器与 GPU 拓扑依赖 |
+| GPU / 多模型服务平台 | [[gpustack]] | 资源纳管范围、认证计量、现有 K8s 平台整合成本 |
 
-### Variant Autoscaling
+[[llm-d-workload-variant-autoscaler]] 保留为 deprecated 的历史设计与迁移材料；此处不把旧方案当作新部署默认值。现行扩缩接线应沿实体页的日期与证据重新确认。
 
-普通 HPA/KEDA 面向单 workload 或通用 event source；LLM serving 进入 P/D 分离、多 GPU 型号、多成本池之后，如何按同一模型的多个 serving variant 做全局 allocation 是一个重要历史问题。[[llm-d-workload-variant-autoscaler]] 曾将 InferencePool、Prometheus、GPU inventory、capacity model 和 HPA/KEDA 串起来，但现在只作为 deprecated 的历史设计快照保留。当前 llm-d dev 指南为新部署采用 [EPP metrics → KEDA Prometheus scaler → HPA](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)；WVA 的冲突状态与迁移/设计历史见 [[llm-d-workload-variant-autoscaler]]。
+### 运维：如何证明容量与恢复合同
 
-## 选型入口
+[[llm-serving-performance]] 给出可比负载与容量测量，[[llm-serving-reliability]] 给出取消、重试、陈旧 KV 信号和故障演练。[[inference-perf]] / [[llm-d-benchmark]] 提供负载与实验组织入口；[[llm-d-inference-sim]] 支持低成本验证路由与控制流程，但仿真结果不能替代真实 GPU/kernel 的性能测量。
 
-- 只优化单机吞吐：优先看 [[vllm]] / [[sglang]]。
-- 需要 P/D 分离、KV transfer、数据中心级编排：看 [[dynamo]] / [[llm-d]]。
-- 需要 Kubernetes model serving API：看 [[kserve]] / [[kubeai]] / [[ome]]。
-- 需要多租户平台和 GPU 集群管理：看 [[aibrix]] / [[gpustack]]。
-- 需要路由模型或 endpoint：看 [[inference-routing]]、[[llm-d-router]]、[[semantic-router]]、[[gateway-api-inference-extension]]。
-- 需要离线批处理、评测或仿真：看 [[llm-d-batch-gateway]] / [[llm-d-benchmark]] / [[llm-d-inference-sim]]。
-- 需要当前 llm-d autoscaling：采用 EPP metrics → KEDA Prometheus scaler → HPA 路径，并结合 [[model-serving-operator]] 的生命周期边界；[[llm-d-workload-variant-autoscaler]] 仅作为迁移/设计参考。
+[[batch-inference]] / [[llm-d-batch-gateway]] 补充异步作业、重试、状态与结果持久化。下游 engine 可以继续使用连续批处理；在线/异步是交付合同，continuous batching 是执行调度机制。
+
+## 稳定概念与版本化实现
+
+本页的稳定部分是责任划分、请求生命周期、状态所有权与观测方法。vLLM V1 命名、SGLang 对象、connector、CRD 和 autoscaling 接线是版本化实现证据，按 [[src-vllm-architecture]]、[[src-sglang-architecture]] 及各实体/Source 页标注的快照解读。本次重组不代表重新验证了上游最新版本，也不声明通用默认开关、进程数或性能排序。
+
+带着 workload、SLO、瓶颈和运维约束进入 [[llm-serving-engine-selection-map]]：单引擎已满足目标时无需增加分布式交接；要采用 P/D、远端 KV 或新控制面，应先测量收益能否覆盖网络、状态一致性、故障恢复和迁移成本。
