@@ -36,7 +36,7 @@ sequenceDiagram
       G-->>C: retry only if policy and budget allow
     else failure after streaming starts
       E--xG: stream interrupted
-      G-->>C: terminate stream; do not assume transparent replay
+      G-->>C: terminate stream, do not assume transparent replay
     end
   end
   Note over R,E: stale locality should reduce hit quality, not bypass engine KV validation
@@ -50,7 +50,7 @@ sequenceDiagram
 
 ## Timeout and Cancellation
 
-deadline 应随请求从 Gateway 传到 Router/EPP 和 worker；任一跳耗尽预算时，应取消下游尚未需要的工作并回收排队、KV 和执行槽位。取消是尽力传播还是强保证、客户端断连后是否继续计算、以及已提交给 GPU 的 iteration 何时停止，都必须由实现合同说明。日志应区分入站 deadline、排队超时、执行超时和客户端取消，避免把容量不足误诊为网络失败。
+deadline 应随请求从 Gateway 传到 Router/EPP 和 worker；任一跳耗尽预算时，应发起对下游尚未需要工作的取消。发出 cancellation request 不证明异步 GPU iteration 或传输访问已经停止：资源所有者只能在完成/取消确认后，或按实现定义的安全回收规则，释放 KV、排队项和预留执行槽位。取消是尽力传播还是强保证、客户端断连后是否继续计算、以及已提交给 GPU 的 iteration 何时停止，都必须由实现合同说明。日志应区分入站 deadline、排队超时、执行超时、客户端取消、清理完成确认和未完成传输状态，避免把容量不足误诊为网络失败。
 
 ## Worker and Router Failure
 
@@ -60,7 +60,7 @@ readiness 与服务发现是异步控制路径，因而存在从 worker 健康�
 
 ## Stale KV / Routing State
 
-Router/EPP 的 prefix、会话粘性或 KV locality 索引可能过期；它应至多降低命中率、增加一次选择或重算成本，而不应绕过 engine 对模型 revision、token 前缀、块所有权和生命周期的校验。这里必须区分正确性与优化质量：选错 locality 是性能损失；把不匹配或已释放的 KV 当作可用数据才是正确性故障。相关路由职责见 [[inference-routing]]，engine KV 行为可参考 [[vllm]]、[[sglang]] 与 [[src-vllm-architecture]]。
+Router/EPP 的 prefix、会话粘性或 KV locality 索引通常是可重建的 cache/locality hint；worker 持有的会话、模型 revision、token 前缀、块所有权和生命周期才是权威状态。陈旧 hint 必须不能导致无效 KV reuse，也不能绕过 engine 校验。恢复可重新选择端点或重算；若完整上下文、deadline 或预算不可用，则应显式失败。这里必须区分正确性与优化质量：可校验的 locality 未命中会损失效率；把不匹配或已释放的 KV 当作可用数据才是正确性故障。相关路由职责见 [[inference-routing]]，engine KV 行为可参考 [[vllm]]、[[sglang]] 与 [[src-vllm-architecture]]。
 
 ## Failure Injection Matrix
 
@@ -70,7 +70,7 @@ Router/EPP 的 prefix、会话粘性或 KV locality 索引可能过期；它应�
 | EPP/router unavailable | 选端点超时、路由错误、EPP 健康检查失败 | 按合同 fail-open、fail-close 或 reject；记录选择策略 | 未完成的选择、局部 queue 视图 | router availability、route-decision log、discovery revision |
 | worker not ready | readiness 为 false、连接拒绝、模型未就绪 | 从候选集剔除；无合格端点时拒绝或排队至预算结束 | 尚未开始的请求、预留槽位 | readiness transition、endpoint discovery lag、queue depth |
 | prefill failure | 首 token 前 engine error、prefill 失败码 | 在幂等/预算/策略允许时重试或重新 prefill；否则返回失败 | 部分 KV、prefill 计算 | TTFT、prefill error、KV allocation/release log |
-| KV transfer timeout | P/D 交接超时、connector timeout | 取消交接并按合同重算 prefill 或失败；释放两端预留资源 | 传输中的 KV、decode reservation | transfer latency、timeout、connector trace、cleanup log |
+| KV transfer timeout | P/D 交接超时、connector timeout | 发起取消并按合同重算 prefill 或失败；仅在完成/取消确认或实现定义的安全回收后释放两端 KV 与预留资源 | 传输中的 KV、decode reservation、未完成传输访问 | transfer latency、timeout、connector trace、cleanup completion、outstanding transfer state |
 | decode failure before first token | worker error 且无已发送 token | 仅在策略与 deadline 允许时换 worker 重试；保留尝试关联 | 未发送的生成状态、部分 decode/KV | first-token flag、attempt count、engine error、deadline budget |
 | decode failure after first token | stream reset、客户端收到部分 token | 终止流并报告部分完成；不假定透明重放 | 已发送 token 后的生成状态、流连接 | stream started flag、last token sequence、disconnect/error trace |
 | stale KV index | locality 命中后 engine 拒绝 KV、命中率下降 | 让 engine 校验失败后回退到安全路径或重算，不使用不匹配 KV | 过期索引条目、一次 locality 优势 | KV validation reject、cache hit/miss、index revision/age |
