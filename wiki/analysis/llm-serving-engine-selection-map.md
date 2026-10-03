@@ -1,110 +1,102 @@
 ---
 title: LLM Serving / 推理引擎选型地图
 tags: [llm-inference, llm-serving, kv-cache, selection, ai-infra]
-date: 2026-09-22
+date: 2026-10-03
 sources: [src-dynamo-architecture, src-sglang-architecture, src-skypilot-architecture, src-k8s-gpu-device-plugins-stars, src-vllm-architecture, src-aibrix-architecture, src-k8s-serving-stack-comparison]
-related: ["[[llm-inference-serving-project-map]]", "[[vllm]]", "[[sglang]]", "[[dynamo]]", "[[paged-attention]]", "[[radix-attention]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[aibrix]]", "[[inference-routing]]", "[[model-serving-operator]]"]
+related: ["[[llm-inference-serving-project-map]]", "[[llm-inference]]", "[[vllm]]", "[[sglang]]", "[[dynamo]]", "[[llm-d]]", "[[paged-attention]]", "[[radix-attention]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[aibrix]]", "[[inference-routing]]", "[[model-serving-operator]]", "[[continuous-batching]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[batch-inference]]"]
 ---
 
 # LLM Serving / 推理引擎选型地图
 
-已有 [[llm-inference-serving-project-map]] 把 D1-D5 的边界和证据铺开。这页面向选型：先判断问题属于哪一层，再选择可组合的项目；不要把 engine、distributed runtime、K8s routing/control plane 和 GPU 基础设施当成同类替代品。
+选型从 workload 和 SLO 开始：先确定在线/批处理、输入输出分布、缓存重复与失败预算，再确认模型/硬件适配、engine、部署形态、routing/control plane 和运维约束。不存在统一最优栈；每层都应以真实负载的收益和运行成本决定是否加入。职责与控制面时序见 [[llm-inference-serving-project-map]]。
 
-## 当前上游核验（2026-09-22）
+## 当前上游核验（2026-10-03）
 
-截至 2026-09-22，通过 GitHub API 与官方文档核验以下 HEAD；详细架构证据见 [[llm-inference-serving-project-map]]。
+以下 release 经官方 GitHub API 核验，日期为 UTC 发布日；文档观察以 2026-10-03 为准。旧 Source 保留原分析时点，不能用旧组件图或 latest 文档替代目标 release 的兼容矩阵。
 
-| 项目 | 核验版本 | 当前职责 |
-|------|----------|----------|
-| [[vllm]] | HEAD [`d50723df04f7`](https://github.com/vllm-project/vllm/commit/d50723df04f7) | engine scheduler、model execution、local KV |
-| [[sglang]] | HEAD [`04c0913434c4`](https://github.com/sgl-project/sglang/commit/04c0913434c4) | engine/runtime、RadixCache、distributed/P-D integration |
-| [[dynamo]] | HEAD [`f36d2fab37fd`](https://github.com/ai-dynamo/dynamo/commit/f36d2fab37fd) | distributed request/control/state runtime、routing、KV transfer、planner |
-| [[llm-d]] | HEAD [`1e9a86a3a9da`](https://github.com/llm-d/llm-d/commit/1e9a86a3a9da) | Proxy/EPP、InferencePool、Model Server 与 routing signals |
-| [[aibrix]] | HEAD [`96056b47f158`](https://github.com/vllm-project/aibrix/commit/96056b47f158) | K8s routing、autoscaling、adapter/model lifecycle、KV/multi-role orchestration |
+| 项目 | 观察到的版本 | 本次选型证据与限制 |
+|------|----------------|----------------------|
+| [[vllm]] | [v0.30.0](https://github.com/vllm-project/vllm/releases/tag/v0.30.0)，2026-09-22 | [V1 latest 架构](https://docs.vllm.ai/en/latest/design/arch_overview/#v1-process-architecture)，checked 2026-10-03：API Server / Engine Core / GPU Workers 分进程，CPU 与 GPU 都需容量验证 |
+| [[sglang]] | [v0.5.21](https://github.com/sgl-project/sglang/releases/tag/v0.5.21)，2026-10-02 | [Scheduler](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/managers/scheduler.py)、[ModelRunner](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/model_executor/model_runner.py)、[RadixCache](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py)；[P/D 集成](https://github.com/sgl-project/sglang/blob/v0.5.21/docs/docs/advanced_features/pd_disaggregation.mdx)受版本/backend 约束 |
+| [[dynamo]] | [v1.5.0](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)，2026-09-21 | [dev 架构](https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture)，checked 2026-10-03：模块化 request/event/discovery 与控制连接；该 release 的 vLLM/SGLang pins 与独立最新版不同 |
+| [[llm-d]] | [v0.10.0](https://github.com/llm-d/llm-d/releases/tag/v0.10.0)，2026-09-29；[架构文档](https://llm-d.ai/docs/architecture)仍显示 v0.9 latest | [dev 扩缩路径](https://llm-d.ai/docs/dev/architecture#autoscaling)，checked 2026-10-03：EPP metrics → KEDA/HPA，WVA deprecated；release 记录 WVA 指南废弃与组件迁移 |
+| [[aibrix]] | [v0.7.0](https://github.com/vllm-project/aibrix/releases/tag/v0.7.0)，2026-06-18 | 多引擎、P/D、Batch、HA Gateway 均进入比较范围；Console、Batch API、Resource Manager/Cloud GPU 保留 preview 提示 |
 
-## 选型结论
+> [!warning] Conflict
+> WVA 旧设计见 [[llm-d-workload-variant-autoscaler]]。2026-10-03 的 [llm-d dev 文档](https://llm-d.ai/docs/dev/architecture#autoscaling)明确 WVA deprecated，[v0.10.0 release](https://github.com/llm-d/llm-d/releases/tag/v0.10.0)确认指南废弃，但 v0.9 架构页仍并列 WVA 与 HPA/KEDA。新部署应核验目标 release 的 EPP/KEDA/HPA 配置，旧 Source 不作为当前默认方案。
 
-没有一个项目能在所有层胜出。先选 engine，再按确实存在的集群、路由、运维和基础设施需求叠加能力；每加一层都要用收益覆盖其控制面和故障域成本。
+## F4 · Workload / SLO-first 选型决策树
 
-| 选择 | best fit | avoid-if | adoption cost | 下一步核验 |
-|------|----------|----------|---------------|------------|
-| [[vllm]] | 需要成熟的 OpenAI-compatible 基线、广泛模型覆盖和 [[paged-attention]] | 目标模型/硬件在 [[sglang]] 上有已验证的显著优势 | 低到中；先处理镜像、模型、监控和容量 | 用真实模型、量化、并发和输出长度压测吞吐、P99、显存与稳定性 |
-| [[sglang]] | 前缀复用、结构化生成、speculative decoding 或其执行路径更匹配 workload | 团队更看重保守生态基线，或关键模型/硬件适配尚未验证 | 低到中；高级特性和 distributed/P-D backend 会增加调优面 | 对同一流量回放，核验 [[radix-attention]] 命中、尾延迟、正确性和故障恢复 |
-| [[dynamo]] | 多节点 runtime、P/D、KV transfer、KV-aware routing 需要统一协调 | 单机或普通副本服务已满足目标，暂不需要跨节点状态协同 | 高；引入 router、worker pools、KV/control state 与额外可观测性 | 做端到端 P/D/KV transfer 基准，并演练 worker、网络和 KV tier 故障 |
-| [[llm-d]] | K8s 上需要 Gateway API、EPP endpoint picking 和 InferencePool | 不使用 K8s/Gateway API，或普通 Service/LB 已足够 | 中到高；新增 CRD、Gateway/EPP、升级兼容与运维责任 | 核验目标 Gateway/InferencePool 版本、路由信号、扩缩交互和故障回退 |
-| [[aibrix]] | 需要 autoscaling、LoRA/adapter、model lifecycle 及更广的 K8s inference operations | 现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益 | 中到高；应按组件渐进采用，不必部署全部能力 | 逐项验证所选 controller/CRD 的边界、升级路径、状态恢复和与现有平台的重叠 |
-
-## 先选层，再选项目
-
-| 当前问题 | 应选择的层 | 代表项目 |
-|----------|------------|----------|
-| scheduler、kernel、local KV、单实例吞吐 | 推理引擎 | [[vllm]], [[sglang]] |
-| multi-node runtime、P/D、KV transfer | distributed serving runtime | [[dynamo]] |
-| Gateway API、endpoint picking、InferencePool | K8s routing/serving stack | [[llm-d]] |
-| autoscaling、LoRA/model lifecycle、K8s inference operations | K8s inference control plane | [[aibrix]] |
-| GPU allocation、sharing、health、capacity | infrastructure | [[k8s-gpu-device-stack]] |
-
-不同层的项目不是直接替代关系；生产系统通常组合一个 engine、一个 routing/control layer 和一个 infrastructure layer。distributed runtime 只在多节点协调收益明确时加入，routing 与 control plane 也可以按需求择一或组合，而不是默认全栈采用。
-
-## 架构区别
-
-| 层 | 负责什么 | 不负责什么 | 典型组合边界 |
-|----|----------|------------|--------------|
-| [[vllm]] / [[sglang]] engine | scheduler、kernel、model execution、local KV | 完整 K8s routing/control plane 和 GPU 集群底座 | 向上暴露服务端点和运行指标 |
-| [[dynamo]] distributed runtime | 多节点 request/control/state、P/D pools、KV transfer/routing | 替代底层 engine 或通用 K8s 平台 | 组织 engine workers；可与 K8s 层集成 |
-| [[llm-d]] routing/serving stack | Gateway API、EPP、InferencePool、Model Server 与 routing signals | engine kernel、通用 model lifecycle 平台 | 在 K8s 请求入口选择合适的 engine endpoint |
-| [[aibrix]] inference control plane | autoscaling、adapter/model lifecycle、routing 与多角色编排 | 替代 engine kernel 或 GPU device layer | 按需选择 controller，与 engine、Gateway 和基础设施衔接 |
-| [[k8s-gpu-device-stack]] infrastructure | GPU allocation、sharing、health、capacity 和队列 | 模型执行、KV-aware request routing | 为所有上层提供设备与容量约束 |
-
-详细的 D1-D5 组件图、控制流和证据集中在 [[llm-inference-serving-project-map]]；本页只保留影响选型的层间边界。
-
-## 决策轴
-
-- **执行适配**：先用真实模型、硬件、量化方式、scheduler/KV 行为和运维约束比较 [[vllm]] 与 [[sglang]]，不要只看通用 benchmark。
-- **跨节点协调**：只有在 P/D、KV transfer 或多节点 runtime 是明确瓶颈时评估 [[dynamo]]；同时比较 engine-native integration 的能力和复杂度。
-- **K8s 请求路由**：需要 Gateway API、EPP、InferencePool 时评估 [[llm-d]]，普通 Service/Gateway 足够时不增加该层。
-- **K8s 推理运维**：需要 autoscaling、adapter/model lifecycle 和更广控制面时评估 [[aibrix]]，按组件采用并检查职责重叠。
-- **设备与容量**：用 [[k8s-gpu-device-stack]] 处理 GPU allocation、sharing、health 和 capacity；它会约束上层部署，但不替代引擎或路由。
-- **跨云资源位置**：需要跨云/K8s/Slurm 选择资源和启动 workload 时再看 [[src-skypilot-architecture|SkyPilot]]；它是资源控制面，不是 inference engine。
-
-## 决策流程图
-
-以下分支不是互斥答案：先确认或选择 engine，后续命中的层可以继续组合；任何一步收益不明确，都停在当前最小充分栈。
-
-```text
-engine 起点
-├─ 尚未选择 → 按模型、硬件、scheduler/KV 行为和运维适配选择 vLLM / SGLang
-└─ 已有 engine → 保留并核验它是否满足当前 workload
-          │
-          └─ 两条路径汇合 → 独立评估以下能力（可组合、无先后依赖）
-             ├─ 需要 multi-node runtime 或 P/D、KV transfer 协调？
-             │  ├─ 是 → 评估 Dynamo 与 engine-native integrations
-             │  └─ 否 → 不增加 distributed runtime
-             ├─ K8s 上需要 Gateway / EPP / InferencePool routing？
-             │  ├─ 是 → 评估 llm-d
-             │  └─ 否 → 使用普通 Service / Gateway
-             └─ 需要 autoscaling、adapters、model lifecycle 和更广 K8s operations？
-                ├─ 是 → 评估 AIBrix 的所需组件
-                └─ 否 → 不增加 inference control plane
-
-所有分支结束 → 保留满足需求的最小组合；不因“平台完整”而默认叠加全部项目
+```mermaid
+flowchart TD
+    Work["记录 workload：模型、请求分布、租户与突发"] --> Mode{"在线还是批处理？"}
+    Mode -->|"在线 / streaming"| Online["TTFT / ITL / P99 / 成功率预算"]
+    Mode -->|"批处理 / 离线"| Batch["完成期限 / 成本 / 吞吐与重试预算"]
+    Online --> Profile["上下文与输出长度分布 / prefix 重复 / 多模态"]
+    Batch --> Profile
+    Profile --> Target["确定 goodput 与容量目标，保留对应延迟约束"]
+    Target --> HW{"模型 / 量化 / 硬件与拓扑是否支持？"}
+    HW -->|"未确认"| Support["先验证模型正确性、显存、互联和候选 backend"]
+    Support --> Engine
+    HW -->|"已确认"| Engine["同 workload 验证 vLLM / SGLang / 其他 engine"]
+    Engine --> Shape{"共置 engine 副本能满足目标？"}
+    Shape -->|"是"| Agg["Aggregated baseline / 必要的模型并行"]
+    Shape -->|"否且瓶颈有证据"| Dist["比较 P/D 或 distributed runtime 与 engine-native 集成"]
+    Agg --> K8s{"需要 Kubernetes 路由或控制能力？"}
+    Dist --> K8s
+    K8s -->|"普通服务足够"| Plain["普通 Service / Gateway 或已有入口"]
+    K8s -->|"需要 inference-aware picking"| Route["评估 llm-d / 已有路由组件"]
+    K8s -->|"需要 fleet lifecycle 或扩缩"| Control["评估 AIBrix / Dynamo 控制模块 / 已有 controllers"]
+    Plain --> Validate["验证 GPU 容量、运维所有权、成本、故障与 benchmark"]
+    Route --> Validate
+    Control --> Validate
+    Validate --> Decision{"满足 SLO / 成本 / 可靠性门槛？"}
+    Decision -->|"是"| Adopt["采用最小充分组合并保留回滚路径"]
+    Decision -->|"否"| Profile
 ```
+
+图注：箭头表示收集证据的评估顺序，不是运行时调用。假设模型质量与 API 语义已列入门槛；在线与 batch 混合时应分别测量并验证隔离。TTFT/ITL 主要约束交互请求，batch 还看完成期限与单位成本，见 [[batch-inference]]、[[llm-serving-performance]]。
+
+不要从图中推断分支互斥、某项目必选，或 P/D 一定修复吞吐/延迟问题。llm-d、AIBrix、Dynamo 有职责重叠，可在接口明确时组合；每个副本目标必须只有一个写入者。P/D 收益需覆盖 KV transfer、网络拓扑与故障成本，见 [[disaggregated-serving]]；本页不指定统一最优 engine 或 stack。
+
+## 决策输入与通过条件
+
+| 顺序 | 必须记录的输入 | 通过条件与下一步 |
+|------|----------------|------------------|
+| Workload | 在线/离线、到达率与突发、模型/量化、上下文与输出分布、prefix 重复、多模态、LoRA | 可回放代表性请求，不能只用平均长度或单条 demo |
+| SLO | TTFT/ITL 分位数、成功率、deadline、goodput、成本上限 | 固定统计窗口、负载和超时/拒绝计数口径，见 [[llm-serving-performance]] |
+| Hardware / topology | GPU/显存、CPU、NUMA/NVLink/RDMA、模型存储与配额 | 模型正确运行，通信与冷启动可测，见 [[k8s-gpu-device-stack]] |
+| Engine | 模型/量化、scheduler/KV、并行、API、输出正确性 | 同环境比较 [[vllm]]、[[sglang]] 与适用的其他 engine；[[continuous-batching]] 按负载调优 |
+| Distributed shape | 单副本瓶颈、模型并行、共置副本、P/D 与 KV transfer | 实测显示收益才增加分离/runtime，见 [[llm-inference]]、[[disaggregated-serving]] |
+| Routing / control plane | locality/load 信号、发现、扩缩、adapter lifecycle、批任务 | 明确状态 owner，验证 readiness 与路由传播，见 [[inference-routing]] |
+| Operations | 发布/回滚、监控、值班、配额、状态依赖、隔离、故障预算 | 演练冷启动、过载、worker/网络失败与 draining，见 [[llm-serving-reliability]] |
+
+## 选项目时比较同一层
+
+| 候选 | Best fit | Avoid-if | 采用 / 迁移成本 | 下一步核验 |
+|------|----------|----------|------------------|------------|
+| [[vllm]] | 目标模型/硬件可用，需要执行与 API 基线 | 必需模型、量化或 backend 特性未支持 | 低到中；镜像、权重、API、并行与监控；换 engine 需重验输出和缓存行为 | TTFT/ITL/goodput、CPU 配额、显存、稳定性与 [[paged-attention]] |
+| [[sglang]] | prefix reuse 或执行特性在目标流量上有收益 | 关键模型/硬件或高级特性组合未验证 | 低到中；重新调参和输出回归，P/D backend 增加复杂度 | [[radix-attention]] 命中收益、chunking/speculation 共存、尾延迟和取消 |
+| [[dynamo]] | 多节点 worker 协作、P/D 或 KV routing 值得集中协调 | 共置副本达标，或网络/运维成本超过收益 | 高；worker 集成、runtime、状态/传输、Planner/Operator 与观测 | 固定 backend pins，比较 aggregated/P/D，测试 transfer、failure 与 readiness |
+| [[llm-d]] | K8s 上需要 Gateway API、EPP、InferencePool 与智能路由 | 普通 Service/LB 足够，或缺 K8s/Gateway 运维条件 | 中到高；CRD/chart/Proxy/EPP 兼容及旧插件、WVA/KV-cache 迁移 | release 组件矩阵、信号时效、KEDA/HPA 所有权、fallback 与实际收益 |
+| [[aibrix]] | 路由、扩缩、model/adapter lifecycle 或多引擎 fleet 缺口明确 | 所需能力已有 owner，或 preview API 不能接受 | 中到高；按组件引入 controller/CRD/runtime，确认状态迁移与回滚 | engine 支持版本、HA 状态同步、controller 恢复、Batch/Console 成熟度 |
+
+不同层不能组成 engine 单选题。引擎先通过模型与 SLO 验收，外围层再处理其边界之外的问题；GPU 基础设施是所有组合的运行条件。跨云/K8s/Slurm 资源位置需求可另评估 [[src-skypilot-architecture|SkyPilot]]，当前范围见[官方 README](https://github.com/skypilot-org/skypilot)。
 
 ## 组合方案
 
-| 模式 | 组成 | best fit | avoid-if | adoption cost | 下一步核验 |
+| 模式 | 组成 | Best fit | Avoid-if | Adoption cost | 下一步核验 |
 |------|------|----------|----------|---------------|------------|
-| 最小 engine service | [[vllm]] 或 [[sglang]] + 普通 Service/Gateway | 单集群、普通副本路由，重点是尽快提供稳定推理 API | 已确认需要 KV-aware endpoint picking、P/D 或复杂 lifecycle | 低；主要是 engine、镜像、模型存储、指标和入口配置 | 回放真实流量，核验容量、P99、滚动升级和实例故障回退 |
-| K8s 智能路由 | engine + [[llm-d]] Router/InferencePool | K8s/Gateway API 环境需要根据 KV、负载或模型信号选择 endpoint | 普通 Service/LB 已达标，或不能承担 CRD/Gateway/EPP 运维 | 中到高；增加 routing control/data path 与版本兼容面 | 核验路由增益、信号陈旧行为、扩缩期间 endpoint 一致性和 fallback |
-| distributed runtime | engine + [[dynamo]] | 多节点 P/D、KV transfer 或跨 worker 状态协调能带来可测收益 | 单机/普通副本已满足 SLO，网络或 KV transfer 成本抵消收益 | 高；增加 runtime 服务、worker pools、状态/KV tier 和故障域 | 比较共置与分离部署，测端到端 TTFT/TPOT/P99，并做网络、worker、KV 故障演练 |
-| inference operations platform | engine + 选定的 [[aibrix]] 组件 | 需要 autoscaling、LoRA/adapters、model lifecycle 或多角色 K8s 运维 | 现有组件已覆盖所需能力，或针对该需求的集成/运维成本超过收益 | 中到高；按所选 controller/CRD 计，不要求全量采用 | 建立组件级 PoC，核验 reconciliation、升级/回滚、状态恢复及与现有 autoscaler/Gateway 的所有权 |
+| 最小 engine service | [[vllm]] 或 [[sglang]] + 普通 Service/Gateway | 单集群普通副本已达标 | 已测出 KV-aware routing、P/D 或 lifecycle 缺口 | 低；engine、镜像、模型、监控与入口 | 冷/热缓存回放、P99/goodput、升级和实例故障 |
+| K8s 智能路由 | engine + [[llm-d]] Proxy/EPP/InferencePool | KV/负载/模型信号改善选点 | 收益不足以覆盖额外组件与信号维护 | 中到高；入口、CRD、EPP 与扩缩集成 | 对照普通 LB，测陈旧信号、扩缩传播及 EPP 故障 |
+| Distributed runtime | engine + [[dynamo]] 的所需模块 | P/D 或 worker 协作对 SLO 有实测收益 | 带宽/backend 约束不满足，或普通副本足够 | 高；worker pools、transport、可选状态与控制模块 | 按 pins 验证 KV transfer、取消、角色扩缩与网络故障 |
+| Inference operations platform | engine + 选定 [[aibrix]] 组件 | fleet、autoscaling 或多引擎运维缺口明确 | 与已有 Gateway/autoscaler/operator 重复管理状态 | 中到高；组件级 CRD、runtime 与状态恢复 | reconciliation、升级/回滚、HA 与 replica ownership |
+| 异步 batch 服务 | engine + [[llm-d-batch-gateway]] 或 AIBrix Batch 等任务层 | 需要任务提交/查询/取消、文件 I/O 与 deadline 管理 | 只需本地离线执行，或 API 成熟度不符要求 | 中到高；持久队列、任务状态、结果、幂等与调度 | [[batch-inference]] 生命周期、重试、完成时限及在线流量隔离 |
 
-## 避坑条件
+组合是候选设计，不代表任意版本交叉兼容。[Dynamo v1.5.0](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)的引擎依赖与本页独立 release 不同，[AIBrix v0.7.0](https://github.com/vllm-project/aibrix/releases/tag/v0.7.0)的 Batch API 仍有 preview 提示。混合平台前，逐项确认 request ownership、KV 契约、扩缩写入权、状态后端和升级顺序。
 
-- 不要把 [[dynamo]] 当成“另一个 vLLM”；它是 serving 编排层。
-- 不要把 [[llm-d]] 当成 engine 或完整 inference operations 平台；它当前的选型核心是 Gateway/EPP/InferencePool routing/serving stack。
-- 不要把 [[aibrix]] 当成必须整套部署的发行版；只采用能覆盖明确 operations 缺口且所有权清晰的组件。
-- 不要把 [[src-skypilot-architecture|SkyPilot]] 当成 inference engine；它是资源控制面。
-- P/D 分离只有在 prompt/decode 负载、KV transfer、路由和扩缩都配套时才有收益。
-- KV cache 已经是一等资源，路由、迁移、offload 都要显式建模。
-- 不要把不同层的项目塞进单选题，也不要为了“完整架构”默认部署所有层；从最小充分栈开始，用实测瓶颈决定下一层。
+## 采用前的最小证据包
+
+保留模型与 engine/container 版本、硬件/拓扑、输入输出长度分布、到达过程、缓存冷热状态、并行/batch 参数以及 benchmark 原始结果。同一目标下同时报告 goodput、TTFT/ITL 分位数、拒绝/错误率、GPU 成本与扩容滞后；切换 engine 或外围组件时只改变被比较变量。
+
+上线门槛包括 API/输出回归、冷启动、超时与取消、worker/Gateway/网络故障、缩容排空、升级回滚和多租户隔离。可复用 [[llm-d-benchmark]]、[[inference-perf]] 与 [[llm-d-inference-sim]]；模拟器只能验证覆盖的控制面行为，不能证明 GPU 性能。指标方法见 [[llm-serving-performance]]，故障验收见 [[llm-serving-reliability]]。
