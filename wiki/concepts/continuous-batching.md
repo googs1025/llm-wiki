@@ -8,9 +8,9 @@ related: [llm-inference, batch-inference, paged-attention, radix-attention, kv-c
 
 # Continuous Batching
 
-连续批处理（continuous batching / in-flight batching）是在每轮模型执行之间重新选择工作，而不是让一组固定请求从开始运行到全部结束。它是在线 [[llm-inference]] 服务的调度方法：短请求完成后立即让新请求加入，长请求继续 decode，从而尽量避免 GPU 因等待同批其他请求而闲置。
+连续批处理（continuous batching / in-flight batching）是引擎内部的 iteration-level 调度机制：它在每轮模型执行之间重新选择工作，而不是让一组固定请求从开始运行到全部结束。它可服务在线 [[llm-inference]]，让短请求完成后立即让新请求加入、长请求继续 decode，从而尽量避免 GPU 因等待同批其他请求而闲置。本页聚焦在线负载下的延迟与公平性影响。
 
-它不同于 [[batch-inference]]：后者通常把有限数据集切成作业批次，完成时间和单请求流式体验不是首要目标；连续批处理面向持续到达、长度未知且常需 streaming 的在线请求。
+连续批处理与静态 batching 的区别在于 iteration 内是否持续重选工作；这与作业是在线还是离线属于不同概念轴。[[batch-inference]] 是离线/异步作业执行模式，通常把有限数据集切成作业批次；其中某个下游 serving engine 仍可使用连续批处理。因而不能把两者表述为天然优劣关系，而应按交互延迟、公平性、完成时限和资源利用目标选择。
 
 ## 问题模型
 
@@ -35,7 +35,7 @@ flowchart TD
   D -- yes --> F[Release request state and KV refs]
 ```
 
-该图表示一次 iteration 的控制闭环：waiting 请求竞争进入机会，running 请求竞争下一段 decode；模型执行后才能确认新 token、完成状态和可释放的 KV。不要从图中推断所有引擎都使用同一数据结构、严格 FIFO，或每轮一定同时包含 prefill 与 decode。
+该图表示一次 iteration 的控制闭环：waiting 请求竞争进入机会，running 请求竞争下一段 decode；模型执行后才能确认新 token、完成状态和可释放的 KV。defer/preempt 回到预算的反向边可发生在后续 iteration；一个请求缺少预算不必阻塞其他可运行工作，也不表示本轮会立即重新检查它。不要从图中推断所有引擎都使用同一数据结构、严格 FIFO，或每轮一定同时包含 prefill 与 decode。
 
 ## Prefill 与 Decode 如何共享预算
 

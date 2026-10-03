@@ -19,10 +19,11 @@ LLM serving 的性能不是单个吞吐数字，而是给定工作负载、硬�
 ## Latency Metrics
 
 - **TTFT（time to first token）**：请求发出到收到第一个可见 token 的时间；通常包含排队、tokenize、prefill、调度和网络路径中已发生的部分。
-- **ITL / TPOT（inter-token latency / time per output token）**：相邻输出 token 的时间间隔。TPOT 有时指单请求 decode 间隔，有时是全请求总时长除输出 token 数；报告必须标注定义、是否排除首 token、按 token 还是按请求聚合，并给出 p50/p95/p99。
+- **ITL（inter-token latency）**：相邻已交付 token 事件或 stream chunk 的观测间隔。报告必须声明采样单位：一个 chunk 可能包含多个 token，因此按 chunk 采样的 ITL 不是逐 token 间隔；实际生成 token 数也不同于 stream chunk 数。
+- **TPOT（time per output token）**：常见的每请求口径为 `(E2E - TTFT) / (N_output - 1)`，其中 `N_output <= 1` 的请求必须显式排除或单列处理。每请求 TPOT 的 percentile 不等于所有 ITL 间隔样本上的 percentile，前者以请求为样本，后者以已交付事件为样本。工具采用其他公式也可以使用，但必须声明定义、首 token 处理方式和聚合方法。
 - **端到端延迟**：客户端开始发送到请求完成的总时间。它覆盖 TTFT 后的所有流式 token，并受输出长度、客户端读取和网络影响。
 
-平均值无法表明 SLO 是否可守住。面向交互服务应同时看 TTFT、ITL/TPOT 与端到端延迟的 percentile，并将错误、超时和取消请求单列；否则尾部排队会被均值掩盖。
+对于非流式客户端，客户端侧只能观察到 E2E；TTFT/ITL 需要服务端埋点，并应与客户端 streaming metrics 分开报告。平均值无法表明 SLO 是否可守住。面向交互服务应同时看 TTFT、ITL/TPOT 与端到端延迟的 percentile，并将错误、超时和取消请求单列；否则尾部排队会被均值掩盖。
 
 ## Throughput and Goodput
 
@@ -45,7 +46,7 @@ LLM serving 的性能不是单个吞吐数字，而是给定工作负载、硬�
 | 输入/输出长度 | 短/短、长/短、短/长、长/长，使用真实分布复验 | TTFT、ITL/TPOT、端到端 p50/p95/p99 | 分开 prefill 与 decode 压力 |
 | 到达模式 | 低负载、接近饱和、超过 SLO 边界；open/closed loop 分列 | arrival rate、并发、队列、错误率、goodput | 找到稳定容量而非峰值 |
 | 缓存条件 | 冷缓存、固定前缀命中、真实混合命中率 | token 吞吐、KV 使用率、命中率 | 防止把复用收益误当基础算力 |
-| Serving 形态 | streaming/non-streaming；同置与 P/D 分离 | 首 token、完成延迟、网络/传输指标 | 暴露流式与传输代价 |
+| Serving 形态 | streaming/non-streaming；同置与 P/D 分离 | 流式客户端指标；非流式的客户端 E2E 与服务端 TTFT/ITL 分列；网络/传输指标 | 避免把只能由服务端观测的首 token/间隔混入客户端 E2E |
 | 系统配置 | 硬件、量化、TP/PP/DP/EP、engine/version、policy | 完整 config 与 percentile | 让结果可复现、可归因 |
 
 ## Reading Results Safely
