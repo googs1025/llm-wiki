@@ -278,7 +278,7 @@
       "date": "2026-09-27",
       "description": "M5-C L1 入口：D1–D5 区分发现、节点软件、Device Plugin/DRA 分配、runtime 注入、共享隔离与失败边界。",
       "degree": 35,
-      "inbound": 22,
+      "inbound": 23,
       "outbound": 27
     },
     {
@@ -553,11 +553,11 @@
         "project-map",
         "ai-infra"
       ],
-      "date": "2026-09-22",
-      "description": "LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。",
-      "degree": 43,
-      "inbound": 19,
-      "outbound": 39
+      "date": "2026-10-03",
+      "description": "LLM Serving 项目边界地图：用五个锚点项目对照 engine、routing、runtime、Kubernetes control plane 与 KV infrastructure，补齐 A4 控制面和 S3 就绪传播。",
+      "degree": 46,
+      "inbound": 20,
+      "outbound": 42
     },
     {
       "id": "llm-serving-engine-selection-map",
@@ -572,11 +572,11 @@
         "selection",
         "ai-infra"
       ],
-      "date": "2026-09-22",
-      "description": "LLM Serving 分层选型地图：先选架构层，再选项目组合。",
-      "degree": 32,
-      "inbound": 24,
-      "outbound": 14
+      "date": "2026-10-03",
+      "description": "从 workload / SLO 与实测瓶颈选择架构层和项目组合，明确避免条件、采用成本和验证项。",
+      "degree": 41,
+      "inbound": 26,
+      "outbound": 24
     },
     {
       "id": "llm-d-kubernetes-sigs-candidate-map",
@@ -741,8 +741,8 @@
       ],
       "date": "2026-09-13",
       "description": "面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面",
-      "degree": 19,
-      "inbound": 14,
+      "degree": 18,
+      "inbound": 13,
       "outbound": 11
     },
     {
@@ -793,11 +793,11 @@
         "batch-inference",
         "ai-infra"
       ],
-      "date": "2026-06-13",
+      "date": "2026-10-03",
       "description": "大量 LLM 请求异步执行的 job/file/queue/output 控制面模式",
-      "degree": 16,
-      "inbound": 13,
-      "outbound": 7
+      "degree": 21,
+      "inbound": 16,
+      "outbound": 11
     },
     {
       "id": "code-graph",
@@ -858,6 +858,25 @@
       "outbound": 9
     },
     {
+      "id": "continuous-batching",
+      "title": "Continuous Batching",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/continuous-batching.html",
+      "tags": [
+        "concept",
+        "llm-inference",
+        "llm-serving",
+        "scheduling",
+        "kv-cache"
+      ],
+      "date": "2026-10-03",
+      "description": "逐 iteration 选择请求与 token 工作量，解释 token/KV 预算、chunked prefill、抢占和公平性",
+      "degree": 11,
+      "inbound": 10,
+      "outbound": 8
+    },
+    {
       "id": "disaggregated-serving",
       "title": "Disaggregated Serving",
       "category": "concepts",
@@ -870,11 +889,11 @@
         "llm-serving",
         "kv-cache"
       ],
-      "date": "2026-09-22",
-      "description": "Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）",
-      "degree": 26,
-      "inbound": 22,
-      "outbound": 9
+      "date": "2026-10-03",
+      "description": "P/D 角色池、KV handoff 合同与拓扑成本，区分阶段分离和 TP/PP/EP/DP",
+      "degree": 31,
+      "inbound": 29,
+      "outbound": 12
     },
     {
       "id": "ebbinghaus-forgetting-curve",
@@ -908,11 +927,11 @@
         "gpu-virtual-memory",
         "memory-management"
       ],
-      "date": "2026-10-02",
+      "date": "2026-10-03",
       "description": "将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page",
-      "degree": 12,
-      "inbound": 9,
-      "outbound": 10
+      "degree": 15,
+      "inbound": 12,
+      "outbound": 13
     },
     {
       "id": "gitops",
@@ -984,11 +1003,11 @@
         "ai-gateway",
         "gateway-api"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-03",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 36,
-      "inbound": 36,
-      "outbound": 17
+      "degree": 43,
+      "inbound": 43,
+      "outbound": 21
     },
     {
       "id": "device-plugin",
@@ -1060,11 +1079,11 @@
         "llm-inference",
         "memory-hierarchy"
       ],
-      "date": "2026-09-22",
-      "description": "KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）",
-      "degree": 33,
-      "inbound": 28,
-      "outbound": 13
+      "date": "2026-10-03",
+      "description": "KV 数据的分层驻留、迁移与恢复；Dynamo KVBM 为历史实现，当前 offload 需按 engine/connector 版本核验",
+      "degree": 36,
+      "inbound": 31,
+      "outbound": 17
     },
     {
       "id": "llm-inference",
@@ -1078,11 +1097,49 @@
         "llm-inference",
         "llm-serving"
       ],
-      "date": "2026-10-02",
-      "description": "LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念",
-      "degree": 84,
-      "inbound": 69,
-      "outbound": 39
+      "date": "2026-10-03",
+      "description": "以 workload / SLO 为起点，串联请求、调度、KV、分布式执行、控制面和故障合同的专题入口",
+      "degree": 81,
+      "inbound": 75,
+      "outbound": 36
+    },
+    {
+      "id": "llm-serving-performance",
+      "title": "LLM Serving Performance",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/llm-serving-performance.html",
+      "tags": [
+        "concept",
+        "llm-inference",
+        "llm-serving",
+        "performance",
+        "benchmarking"
+      ],
+      "date": "2026-10-03",
+      "description": "TTFT、ITL、TPOT、goodput 与成本口径，用负载分布、队列、缓存冷热和失败分母解释压测结果",
+      "degree": 16,
+      "inbound": 14,
+      "outbound": 8
+    },
+    {
+      "id": "llm-serving-reliability",
+      "title": "LLM Serving Reliability",
+      "category": "concepts",
+      "category_label": "概念",
+      "href": "concepts/llm-serving-reliability.html",
+      "tags": [
+        "concept",
+        "llm-inference",
+        "llm-serving",
+        "reliability",
+        "fault-tolerance"
+      ],
+      "date": "2026-10-03",
+      "description": "deadline、过载、重试、取消、清理、readiness 与 drain，区分首 token 前后的恢复边界",
+      "degree": 17,
+      "inbound": 13,
+      "outbound": 9
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -1115,11 +1172,11 @@
         "operator",
         "llm-serving"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-03",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 60,
-      "inbound": 51,
-      "outbound": 28
+      "degree": 61,
+      "inbound": 52,
+      "outbound": 31
     },
     {
       "id": "paged-attention",
@@ -1133,11 +1190,11 @@
         "kv-cache",
         "llm-inference"
       ],
-      "date": "2026-09-22",
-      "description": "KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）",
-      "degree": 18,
-      "inbound": 18,
-      "outbound": 4
+      "date": "2026-10-03",
+      "description": "engine 本地 KV 的逻辑块、物理块、block table 与引用生命周期",
+      "degree": 20,
+      "inbound": 19,
+      "outbound": 10
     },
     {
       "id": "radix-attention",
@@ -1152,11 +1209,11 @@
         "llm-inference",
         "prefix-sharing"
       ],
-      "date": "2026-09-22",
-      "description": "KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）",
-      "degree": 19,
-      "inbound": 19,
-      "outbound": 4
+      "date": "2026-10-03",
+      "description": "基于前缀树的 KV 复用与引用管理；外部 locality index 是路由提示，复用有效性由 engine 检查",
+      "degree": 22,
+      "inbound": 20,
+      "outbound": 10
     },
     {
       "id": "repo-wiki-generation",
@@ -1452,11 +1509,11 @@
         "ai-infra",
         "kv-cache"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-03",
       "description": "K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）",
-      "degree": 15,
+      "degree": 19,
       "inbound": 10,
-      "outbound": 11
+      "outbound": 15
     },
     {
       "id": "apiserver-network-proxy",
@@ -1803,8 +1860,8 @@
       ],
       "date": "2026-09-27",
       "description": "NVIDIA DRA 库存、Prepare/Unprepare、设备配置与 ComputeDomain；厂商功能支持范围独立于 Kubernetes DRA 的阶段。",
-      "degree": 15,
-      "inbound": 14,
+      "degree": 14,
+      "inbound": 13,
       "outbound": 11
     },
     {
@@ -1824,11 +1881,11 @@
         "autoscaling",
         "nvidia"
       ],
-      "date": "2026-09-22",
-      "description": "NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）",
-      "degree": 31,
-      "inbound": 27,
-      "outbound": 15
+      "date": "2026-10-03",
+      "description": "NVIDIA distributed serving runtime：KV-aware routing、可选 P/D 与 Planner/Operator；v1.5.0 已弃用 KVBM，host/disk offload 转向 engine-native integrations。",
+      "degree": 33,
+      "inbound": 28,
+      "outbound": 17
     },
     {
       "id": "envoy-ai-gateway",
@@ -1884,8 +1941,8 @@
       ],
       "date": "2026-09-13",
       "description": "Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）",
-      "degree": 22,
-      "inbound": 16,
+      "degree": 21,
+      "inbound": 15,
       "outbound": 11
     },
     {
@@ -1943,8 +2000,8 @@
       ],
       "date": "2026-09-27",
       "description": "共享调度 reservation、annotation 交接、device-plugin Allocate 与 HAMi-core 隔离；HAMi-DRA 改变分配路径，需单独核验资源所有权与隔离边界。",
-      "degree": 13,
-      "inbound": 12,
+      "degree": 12,
+      "inbound": 11,
       "outbound": 11
     },
     {
@@ -2016,8 +2073,8 @@
       ],
       "date": "2026-06-14",
       "description": "GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。",
-      "degree": 8,
-      "inbound": 4,
+      "degree": 10,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -2258,8 +2315,8 @@
       ],
       "date": "2026-09-13",
       "description": "Kubernetes 标准化 model serving 平台（InferenceService + LLMISvc/LocalModel/controllers/webhooks/router）",
-      "degree": 22,
-      "inbound": 17,
+      "degree": 21,
+      "inbound": 16,
       "outbound": 12
     },
     {
@@ -2553,11 +2610,11 @@
         "inference-routing",
         "distributed-inference"
       ],
-      "date": "2026-09-22",
+      "date": "2026-10-03",
       "description": "CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 43,
+      "degree": 46,
       "inbound": 39,
-      "outbound": 16
+      "outbound": 22
     },
     {
       "id": "llm-d-batch-gateway",
@@ -2573,8 +2630,8 @@
       ],
       "date": "2026-09-13",
       "description": "llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）",
-      "degree": 12,
-      "inbound": 8,
+      "degree": 13,
+      "inbound": 9,
       "outbound": 9
     },
     {
@@ -2591,8 +2648,8 @@
       ],
       "date": "2026-09-13",
       "description": "llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）",
-      "degree": 13,
-      "inbound": 12,
+      "degree": 15,
+      "inbound": 14,
       "outbound": 5
     },
     {
@@ -2610,8 +2667,8 @@
       ],
       "date": "2026-09-13",
       "description": "无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）",
-      "degree": 16,
-      "inbound": 12,
+      "degree": 17,
+      "inbound": 13,
       "outbound": 8
     },
     {
@@ -2628,9 +2685,9 @@
         "llm-d"
       ],
       "date": "2026-09-13",
-      "description": "llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。",
+      "description": "KV locality index / scorer 历史组件入口；llm-d v0.10.0 已迁入 llm-d-router，旧页保留迁移前的边界与证据。",
       "degree": 15,
-      "inbound": 8,
+      "inbound": 9,
       "outbound": 10
     },
     {
@@ -2723,7 +2780,7 @@
       "date": "2026-09-13",
       "description": "llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。",
       "degree": 18,
-      "inbound": 15,
+      "inbound": 16,
       "outbound": 10
     },
     {
@@ -2740,9 +2797,9 @@
         "llm-d"
       ],
       "date": "2026-09-22",
-      "description": "Deprecated / 历史实现（截至 2026-09-22）；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。",
-      "degree": 15,
-      "inbound": 12,
+      "description": "历史实现与迁移入口；llm-d v0.10.0 的 WVA guides 已 deprecated，仓库更名为 llm-d-autoscaling；当前采用见 llm-d 的 EPP metrics → KEDA → HPA 路径。",
+      "degree": 16,
+      "inbound": 13,
       "outbound": 9
     },
     {
@@ -3041,8 +3098,8 @@
       ],
       "date": "2026-09-27",
       "description": "NVIDIA 节点软件与 operands 生命周期管理；区分 ClusterPolicy 与 GPUCluster 路径，不决定单次 Pod 的 GPU 选择。",
-      "degree": 15,
-      "inbound": 13,
+      "degree": 14,
+      "inbound": 12,
       "outbound": 12
     },
     {
@@ -3060,8 +3117,8 @@
       ],
       "date": "2026-09-27",
       "description": "NVIDIA extended-resource 插件：注册、ListAndWatch/health、Allocate，按配置通过 env/mount/CDI 交接设备。",
-      "degree": 13,
-      "inbound": 12,
+      "degree": 12,
+      "inbound": 11,
       "outbound": 11
     },
     {
@@ -3366,7 +3423,7 @@
       "date": "2026-09-13",
       "description": "成本/质量 LLM routing 的算法与评测基线",
       "degree": 8,
-      "inbound": 7,
+      "inbound": 6,
       "outbound": 8
     },
     {
@@ -3437,11 +3494,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-10-02",
+      "date": "2026-10-03",
       "description": "engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 32,
-      "inbound": 32,
-      "outbound": 10
+      "degree": 36,
+      "inbound": 36,
+      "outbound": 15
     },
     {
       "id": "sig-storage-lib-external-provisioner",
@@ -3551,11 +3608,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-10-02",
-      "description": "engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）",
-      "degree": 45,
-      "inbound": 45,
-      "outbound": 10
+      "date": "2026-10-03",
+      "description": "engine 实现下钻：scheduler、model runner、本地 KV 与并行执行，采用前核验 release 和集成矩阵",
+      "degree": 49,
+      "inbound": 48,
+      "outbound": 14
     },
     {
       "id": "semantic-router",
@@ -3574,7 +3631,7 @@
       "date": "2026-09-13",
       "description": "vLLM Semantic Router，system-level intelligent router（Go/Rust bindings + dashboard/operator）",
       "degree": 9,
-      "inbound": 8,
+      "inbound": 7,
       "outbound": 7
     },
     {
@@ -4822,7 +4879,7 @@
       "date": "2026-06-13",
       "description": "llm-d Batch Gateway 架构（HEAD 66fae7e，OpenAI Batch API / 离线推理：API server + PostgreSQL/Redis/Object Store + processor/GC + 下游 llm-d Router）",
       "degree": 6,
-      "inbound": 1,
+      "inbound": 2,
       "outbound": 6
     },
     {
@@ -4875,9 +4932,9 @@
         "ai-infra"
       ],
       "date": "2026-06-12",
-      "description": "llm-d KV Cache 架构（HEAD 26e2b6f，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）",
-      "degree": 9,
-      "inbound": 2,
+      "description": "llm-d KV Cache 历史架构（HEAD 26e2b6f，KV events / index / scorer 与存储后端）；v0.10.0 迁入 router 的当前上下文见 llm-d。",
+      "degree": 11,
+      "inbound": 4,
       "outbound": 9
     },
     {
@@ -4968,7 +5025,7 @@
       "date": "2026-06-13",
       "description": "历史架构快照（HEAD 526ce85，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。",
       "degree": 6,
-      "inbound": 2,
+      "inbound": 3,
       "outbound": 6
     },
     {
@@ -5248,9 +5305,9 @@
         "autoscaling"
       ],
       "date": "2026-09-13",
-      "description": "NVIDIA Dynamo 文档重构架构（Frontend/Gateway + KV-aware Router + P/D + Runtime 三平面 + DGDR/Planner SLA 闭环）",
+      "description": "Dynamo 历史架构快照（Frontend/Gateway、KV-aware Router、P/D、DGDR/Planner）；v1.5.0 的 KVBM 弃用与 engine-native offload 迁移见 dynamo。",
       "degree": 11,
-      "inbound": 4,
+      "inbound": 5,
       "outbound": 10
     },
     {
@@ -5716,8 +5773,8 @@
       ],
       "date": "2026-09-14",
       "description": "vLLM 本地 HEAD dc36fcce90 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。",
-      "degree": 7,
-      "inbound": 4,
+      "degree": 8,
+      "inbound": 6,
       "outbound": 5
     },
     {
@@ -6757,6 +6814,16 @@
     },
     {
       "source": "aibrix",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix",
       "target": "dynamo",
       "kind": "related"
     },
@@ -6783,16 +6850,26 @@
     {
       "source": "aibrix",
       "target": "llm-inference-serving-project-map",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "aibrix",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "aibrix",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "aibrix",
       "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix",
+      "target": "sglang",
       "kind": "related"
     },
     {
@@ -6847,6 +6924,11 @@
     },
     {
       "source": "batch-inference",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
       "target": "gateway-api-inference-extension",
       "kind": "wikilink"
     },
@@ -6872,8 +6954,23 @@
     },
     {
       "source": "batch-inference",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "llm-serving-reliability",
+      "kind": "related"
+    },
+    {
+      "source": "batch-inference",
       "target": "model-serving-operator",
       "kind": "related"
+    },
+    {
+      "source": "batch-inference",
+      "target": "src-llm-d-batch-gateway-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "cc-connect",
@@ -7536,6 +7633,46 @@
       "kind": "wikilink"
     },
     {
+      "source": "continuous-batching",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "continuous-batching",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
       "source": "controller-runtime",
       "target": "controller-tools",
       "kind": "related"
@@ -7792,6 +7929,11 @@
     },
     {
       "source": "disaggregated-serving",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
       "target": "kv-cache-offload",
       "kind": "related"
     },
@@ -7804,6 +7946,16 @@
       "source": "disaggregated-serving",
       "target": "llm-inference-serving-project-map",
       "kind": "wikilink"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "disaggregated-serving",
@@ -7928,12 +8080,22 @@
     {
       "source": "dynamo",
       "target": "llm-inference-serving-project-map",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "dynamo",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "dynamo",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "dynamo",
@@ -7987,6 +8149,11 @@
     },
     {
       "source": "elastic-kv-cache",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
       "target": "kv-cache-offload",
       "kind": "related"
     },
@@ -8003,6 +8170,16 @@
     {
       "source": "elastic-kv-cache",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "elastic-kv-cache",
+      "target": "llm-serving-reliability",
       "kind": "related"
     },
     {
@@ -8887,6 +9064,11 @@
     },
     {
       "source": "inference-routing",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
       "target": "dynamo",
       "kind": "wikilink"
     },
@@ -8947,6 +9129,16 @@
     },
     {
       "source": "inference-routing",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-serving-reliability",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
       "target": "routellm",
       "kind": "related"
     },
@@ -8954,6 +9146,11 @@
       "source": "inference-routing",
       "target": "semantic-router",
       "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "src-dynamo-architecture",
+      "kind": "wikilink"
     },
     {
       "source": "ingress2gateway",
@@ -11012,6 +11209,11 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
       "target": "inference-routing",
       "kind": "related"
     },
@@ -11034,6 +11236,21 @@
       "source": "kv-cache-offload",
       "target": "llm-inference-serving-project-map",
       "kind": "wikilink"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "wikilink"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "kv-cache-offload",
@@ -11307,6 +11524,11 @@
     },
     {
       "source": "llm-d",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
       "target": "dynamo",
       "kind": "related"
     },
@@ -11337,6 +11559,16 @@
     },
     {
       "source": "llm-d",
+      "target": "llm-d-kv-cache",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-d-router",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
       "target": "llm-d-workload-variant-autoscaler",
       "kind": "wikilink"
     },
@@ -11348,12 +11580,17 @@
     {
       "source": "llm-d",
       "target": "llm-inference-serving-project-map",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "llm-d",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "llm-d",
@@ -11373,6 +11610,16 @@
     {
       "source": "llm-d",
       "target": "src-llm-d-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "src-llm-d-kv-cache-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d",
+      "target": "src-llm-d-workload-variant-autoscaler-architecture",
       "kind": "wikilink"
     },
     {
@@ -12042,11 +12289,6 @@
     },
     {
       "source": "llm-inference",
-      "target": "ai-gateway",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference",
       "target": "aibrix",
       "kind": "related"
     },
@@ -12057,13 +12299,13 @@
     },
     {
       "source": "llm-inference",
-      "target": "disaggregated-serving",
+      "target": "continuous-batching",
       "kind": "related"
     },
     {
       "source": "llm-inference",
-      "target": "dra-driver-nvidia-gpu",
-      "kind": "wikilink"
+      "target": "disaggregated-serving",
+      "kind": "related"
     },
     {
       "source": "llm-inference",
@@ -12077,22 +12319,12 @@
     },
     {
       "source": "llm-inference",
-      "target": "gateway-api-inference-extension",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference",
-      "target": "gpu-operator",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference",
       "target": "gpustack",
       "kind": "related"
     },
     {
       "source": "llm-inference",
-      "target": "hami",
+      "target": "inference-perf",
       "kind": "wikilink"
     },
     {
@@ -12102,7 +12334,7 @@
     },
     {
       "source": "llm-inference",
-      "target": "k8s-device-plugin",
+      "target": "k8s-gpu-device-stack",
       "kind": "wikilink"
     },
     {
@@ -12177,6 +12409,16 @@
     },
     {
       "source": "llm-inference",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
+      "target": "llm-serving-reliability",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
       "target": "model-serving-operator",
       "kind": "wikilink"
     },
@@ -12199,16 +12441,6 @@
       "source": "llm-inference",
       "target": "rbg",
       "kind": "related"
-    },
-    {
-      "source": "llm-inference",
-      "target": "routellm",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference",
-      "target": "semantic-router",
-      "kind": "wikilink"
     },
     {
       "source": "llm-inference",
@@ -12247,6 +12479,11 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "disaggregated-serving",
       "kind": "related"
     },
@@ -12278,11 +12515,6 @@
     {
       "source": "llm-inference-serving-project-map",
       "target": "karpenter",
-      "kind": "wikilink"
-    },
-    {
-      "source": "llm-inference-serving-project-map",
-      "target": "kserve",
       "kind": "wikilink"
     },
     {
@@ -12348,7 +12580,17 @@
     {
       "source": "llm-inference-serving-project-map",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "llm-inference-serving-project-map",
@@ -12402,6 +12644,11 @@
     },
     {
       "source": "llm-inference-serving-project-map",
+      "target": "src-llm-d-kv-cache-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-serving-project-map",
       "target": "src-llm-d-router-architecture",
       "kind": "wikilink"
     },
@@ -12437,6 +12684,16 @@
     },
     {
       "source": "llm-serving-engine-selection-map",
+      "target": "batch-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
       "target": "disaggregated-serving",
       "kind": "related"
     },
@@ -12444,6 +12701,11 @@
       "source": "llm-serving-engine-selection-map",
       "target": "dynamo",
       "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "inference-perf",
+      "kind": "wikilink"
     },
     {
       "source": "llm-serving-engine-selection-map",
@@ -12463,11 +12725,46 @@
     {
       "source": "llm-serving-engine-selection-map",
       "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-d-batch-gateway",
       "kind": "wikilink"
     },
     {
       "source": "llm-serving-engine-selection-map",
+      "target": "llm-d-benchmark",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-d-inference-sim",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
       "target": "llm-inference-serving-project-map",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-engine-selection-map",
+      "target": "llm-serving-reliability",
       "kind": "related"
     },
     {
@@ -12497,6 +12794,91 @@
     },
     {
       "source": "llm-serving-engine-selection-map",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "inference-perf",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "llm-d-benchmark",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-performance",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "src-vllm-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-serving-reliability",
       "target": "vllm",
       "kind": "related"
     },
@@ -12953,6 +13335,21 @@
     {
       "source": "model-serving-operator",
       "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-inference-serving-project-map",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-serving-engine-selection-map",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "llm-serving-reliability",
       "kind": "related"
     },
     {
@@ -13622,6 +14019,31 @@
     },
     {
       "source": "paged-attention",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
+      "target": "elastic-kv-cache",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
       "target": "radix-attention",
       "kind": "related"
     },
@@ -13633,6 +14055,11 @@
     {
       "source": "paged-attention",
       "target": "src-sglang-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "paged-attention",
+      "target": "src-vllm-architecture",
       "kind": "wikilink"
     },
     {
@@ -13788,6 +14215,36 @@
     {
       "source": "prometheus-adapter",
       "target": "src-prometheus-adapter-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "radix-attention",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
+      "target": "elastic-kv-cache",
+      "kind": "wikilink"
+    },
+    {
+      "source": "radix-attention",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
+      "target": "llm-serving-performance",
       "kind": "wikilink"
     },
     {
@@ -14062,6 +14519,21 @@
     },
     {
       "source": "sglang",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "dynamo",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang",
       "target": "elastic-kv-cache",
       "kind": "related"
     },
@@ -14078,12 +14550,22 @@
     {
       "source": "sglang",
       "target": "llm-inference-serving-project-map",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "sglang",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
+      "target": "llm-serving-reliability",
+      "kind": "related"
     },
     {
       "source": "sglang",
@@ -17922,8 +18404,23 @@
     },
     {
       "source": "vllm",
+      "target": "continuous-batching",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
       "target": "elastic-kv-cache",
       "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "inference-routing",
+      "kind": "wikilink"
     },
     {
       "source": "vllm",
@@ -17938,12 +18435,17 @@
     {
       "source": "vllm",
       "target": "llm-inference-serving-project-map",
-      "kind": "wikilink"
+      "kind": "related"
     },
     {
       "source": "vllm",
       "target": "llm-serving-engine-selection-map",
-      "kind": "wikilink"
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "llm-serving-performance",
+      "kind": "related"
     },
     {
       "source": "vllm",
@@ -17980,7 +18482,7 @@
     {
       "id": "concepts",
       "label": "概念",
-      "count": 36
+      "count": 39
     },
     {
       "id": "sources",

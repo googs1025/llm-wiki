@@ -1298,6 +1298,42 @@ tr:hover td { background: var(--accent-soft); }
   min-width: 640px;
 }
 
+.mermaid-figure {
+  margin: 20px 0;
+  padding: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+
+.mermaid-figure .mermaid {
+  min-width: 680px;
+  text-align: center;
+}
+
+.mermaid-figure .mermaid svg {
+  max-width: none;
+  height: auto;
+}
+
+.mermaid-figure.is-rendered .mermaid-source {
+  display: none;
+}
+
+.mermaid-error {
+  margin: 8px 0 0;
+  color: var(--warn);
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .mermaid-figure {
+    margin-inline: -6px;
+    padding: 10px;
+  }
+}
+
 /* ── ASCII art collapsible ──────────────────────────────────────── */
 details.ascii {
   margin: 14px 0;

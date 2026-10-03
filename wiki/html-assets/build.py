@@ -128,9 +128,14 @@ READING_PATHS = [
     },
     {
         "title": "LLM Serving / Inference",
-        "description": "把推理引擎、KV cache、P/D 分离和 serving operator 连起来看。",
+        "description": "从请求与调度，经 P/D、路由、性能和可靠性，走到项目组合与选型。",
         "steps": (
-            ("总览", "llm-inference"),
+            ("基础", "llm-inference"),
+            ("调度", "continuous-batching"),
+            ("分布式", "disaggregated-serving"),
+            ("路由", "inference-routing"),
+            ("性能", "llm-serving-performance"),
+            ("可靠性", "llm-serving-reliability"),
             ("地图", "llm-inference-serving-project-map"),
             ("选型", "llm-serving-engine-selection-map"),
         ),
@@ -439,7 +444,13 @@ MERMAID_RUNTIME = """<script>
 
     mermaidRenderInFlight = true;
     try {
-      window.mermaid.initialize({ startOnLoad: false, theme, securityLevel: "strict" });
+      window.mermaid.initialize({
+        startOnLoad: false,
+        theme,
+        securityLevel: "strict",
+        flowchart: { useMaxWidth: false },
+        sequence: { useMaxWidth: false },
+      });
       await window.mermaid.run({ nodes });
       renderableFigures.forEach((figure) => figure.classList.add("is-rendered"));
     } catch (error) {

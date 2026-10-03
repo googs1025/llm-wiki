@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-10-02</span>
+  <span class="meta">2026-10-03</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,12 +23,14 @@
 
   <header class="page-header">
     <h1>Elastic KV Cache</h1>
-    <p class="page-meta">2026-10-02 · 来源：kvcached-architecture-analysis.md、vllm-architecture-analysis.md、sglang-architecture-analysis.md</p>
+    <p class="page-meta">2026-10-03 · 来源：src-kvcached-architecture、src-vllm-architecture、src-sglang-architecture</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">kv-cache</span><span class="tag">gpu-virtual-memory</span><span class="tag">memory-management</span></div>
   </header>
 
-  <p>Elastic KV cache 指把推理引擎可寻址的 KV 容量与当前真实占用的 GPU 物理显存解耦：引擎拥有稳定的逻辑槽位和 tensor 地址，物理页只在活跃请求使用时映射，并在 block/token 不再被运行请求或 prefix cache 引用后回收。</p>
+  <p>Elastic KV cache 指把推理引擎可寻址的 KV 容量与当前真实占用的 GPU 物理显存解耦：引擎拥有稳定的逻辑槽位和 tensor 地址，需要保存或访问 KV 时映射 physical backing，并在 block/token 不再被运行请求或 prefix cache 引用、且 GPU 读写结束后回收。</p>
 <p><a class="wikilink" href="../entities/kvcached.html">kvcached</a> 是这一模式的直接实现；<a class="wikilink" href="../entities/vllm.html">vllm</a> 的 <a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 和 <a class="wikilink" href="../entities/sglang.html">sglang</a> 的 <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 则分别提供上层 block/token 与 prefix reuse 语义。</p>
+<p>本页的 KVCacheD 类名、布局和同步策略限定于 <a class="wikilink" href="../sources/src-kvcached-architecture.html">src-kvcached-architecture</a> 记录的 KVCacheD <code>884108704f44</code>、vLLM <code>dc36fcce902a</code>、SGLang <code>44ef8fecfe69</code> 集成快照。2026-10-03 更新的是概念边界，不代表这些 patches 已验证兼容两种 engine 的最新 release。</p>
+<p>GPU VMM 的 map/unmap 改变地址背后的显存驻留，不自动把 KV 保存到 CPU/SSD；外部 locality index 也不会替它预留物理页。需要跨层保存内容时使用 <a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a>，需要依据位置选 endpoint 时使用 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>。</p>
 <h2 id="四类容量">四类容量</h2>
 <p>理解弹性 KV 必须区分四个数字：</p>
 <div class="table-wrap"><table>
@@ -77,7 +79,7 @@ GPU virtual tensor address → physical VRAM
 <p><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> 的“page/block”解决 sequence KV 的逻辑碎片和 block table 映射；KVCacheD 的 page 解决 GPU virtual address 与 physical allocation 的映射。它们是上下两层分页，不是重复实现。</p>
 <h2 id="为什么-tensor-指针可以稳定">为什么 tensor 指针可以稳定</h2>
 <p>GPU VMM 允许先 reserve 一段 virtual address，再把不同 physical allocation handle map 到其中的 page-aligned offset。KVCacheD 用该 VA 创建 torch tensor view；attention kernel 捕获和读取的是相同地址。物理页释放时重新映射 zero page，tensor 本身不销毁。</p>
-<p>这使 engine 无需感知物理页生命周期，但引入严格约束：</p>
+<p>稳定地址可让 attention kernel 继续使用原有 tensor view，但 engine 集成仍必须协调分配失败、引用和执行完成，引入严格约束：</p>
 <ul>
 <li>shape/stride 必须与 backend 的真实读写方式一致。</li>
 <li>unmap 前必须确保所有 GPU command 已结束。</li>
@@ -143,13 +145,18 @@ GPU virtual tensor address → physical VRAM
 </tr>
 <tr>
 <td><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></td>
-<td>token-level prefix reuse</td>
+<td>prefix identity、匹配与复用，粒度依配置</td>
 <td>上层 cache metadata</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></td>
 <td>KV 数据跨 GPU/CPU/SSD/远端层级迁移</td>
 <td>可组合，但数据路径和故障域不同</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a> 的 locality index</td>
+<td>记录可能命中的 worker/tier</td>
+<td>不拥有 KV 数据或 physical backing</td>
 </tr>
 <tr>
 <td><a class="wikilink" href="../concepts/gpu-sharing.html">gpu-sharing</a></td>
@@ -172,15 +179,16 @@ GPU virtual tensor address → physical VRAM
 <li>TTFT、ITL、throughput 和 OOM rate。</li>
 <li>TP/PP failure injection、shutdown 后 shared segment/socket cleanup。</li>
 </ul>
+<p>测量解释见 <a class="wikilink" href="../concepts/llm-serving-performance.html">llm-serving-performance</a>；map/unmap 失败、worker 消失与请求取消需要验证 <a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a> 中的恢复和清理边界。接入前应锁定 engine、KVCacheD、设备 backend、layout 和 connector 组合，而不是只检查虚拟容量是否足够。</p>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/radix-attention.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">RadixAttention</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/disaggregated-serving.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Disaggregated Serving</strong></a></div><span class="page-navigation-progress">阅读顺序 134/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kvcached.html">kvcached</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/gpu-sharing.html">gpu-sharing</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/kv-cache-offload.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">KV Cache Offload（KV 多级缓存）</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/disaggregated-serving.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">Disaggregated Serving</strong></a></div><span class="page-navigation-progress">阅读顺序 134/307</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/kvcached.html">kvcached</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/gpu-sharing.html">gpu-sharing</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/llm-serving-performance.html">llm-serving-performance</a></li><li><a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/elastic-kv-cache.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=elastic-kv-cache">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Elastic KV Cache</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>GPU Sharing</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>KVCacheD</title></circle><circle class="mini-node mini-node-analysis" cx="161.0" cy="123.0" r="7"><title>KVCacheD、SGLang 与 vLLM 三项目知识体系</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>PagedAttention</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="79.0" cy="41.0" r="7"><title>SGLang</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/gpu-sharing.html">GPU Sharing</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../concepts/gpu-sharing.html">GPU Sharing</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-integration-implementation-guide.html">KVCacheD × SGLang × vLLM 集成与实验手册</a><span>分析 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · related</span></li><li><a href="../analysis/kvcached-source-code-deep-dive.html">KVCacheD × SGLang × vLLM 源码深潜</a><span>分析 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-kvcached-architecture.html">KVCacheD 与 SGLang、vLLM 架构关系及源码实现</a><span>源文件 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#四类容量">四类容量</a></li><li class=""><a href="#两级分页模型">两级分页模型</a></li><li class=""><a href="#为什么-tensor-指针可以稳定">为什么 tensor 指针可以稳定</a></li><li class=""><a href="#prefix-cache-与弹性的张力">prefix cache 与弹性的张力</a></li><li class=""><a href="#contiguous-与-per-layer-layout">contiguous 与 per-layer layout</a></li><li class=""><a href="#正确性模型">正确性模型</a></li><li class=""><a href="#与相邻概念的区别">与相邻概念的区别</a></li><li class=""><a href="#评估指标">评估指标</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=elastic-kv-cache">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Elastic KV Cache</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>GPU Sharing</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>KVCacheD</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>KVCacheD、SGLang 与 vLLM 三项目知识体系</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>LLM Serving Performance</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>LLM Serving Reliability</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/gpu-sharing.html">GPU Sharing</a><span>概念 · related</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/llm-serving-performance.html">LLM Serving Performance</a><span>概念 · related</span></li><li><a href="../concepts/llm-serving-reliability.html">LLM Serving Reliability</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../concepts/gpu-sharing.html">GPU Sharing</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-integration-implementation-guide.html">KVCacheD × SGLang × vLLM 集成与实验手册</a><span>分析 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · related</span></li><li><a href="../analysis/kvcached-source-code-deep-dive.html">KVCacheD × SGLang × vLLM 源码深潜</a><span>分析 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/paged-attention.html">PagedAttention</a><span>概念 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#四类容量">四类容量</a></li><li class=""><a href="#两级分页模型">两级分页模型</a></li><li class=""><a href="#为什么-tensor-指针可以稳定">为什么 tensor 指针可以稳定</a></li><li class=""><a href="#prefix-cache-与弹性的张力">prefix cache 与弹性的张力</a></li><li class=""><a href="#contiguous-与-per-layer-layout">contiguous 与 per-layer layout</a></li><li class=""><a href="#正确性模型">正确性模型</a></li><li class=""><a href="#与相邻概念的区别">与相邻概念的区别</a></li><li class=""><a href="#评估指标">评估指标</a></li></ul></aside></aside>
 </div>
 
 <script>
@@ -208,6 +216,7 @@ GPU virtual tensor address → physical VRAM
   window.addEventListener("scroll", updateActive, { passive: true });
   updateActive();
 </script>
+
 
 </body>
 </html>

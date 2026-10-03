@@ -51,6 +51,10 @@ class MermaidRenderingTests(unittest.TestCase):
         self.assertIn("mermaid@10.9.0", mermaid_page)
         self.assertNotIn("mermaid@10.9.0", text_page)
 
+    def test_mermaid_runtime_preserves_native_diagram_width(self) -> None:
+        self.assertIn("flowchart: { useMaxWidth: false }", build.MERMAID_RUNTIME)
+        self.assertIn("sequence: { useMaxWidth: false }", build.MERMAID_RUNTIME)
+
     def test_mermaid_theme_rerender_is_serialized(self) -> None:
         node = shutil.which("node")
         if not node:
