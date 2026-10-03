@@ -44,15 +44,15 @@ flowchart TB
     subgraph CTRL["Control plane：期望与异步收敛"]
         Intent["模型 / SLO / 拓扑意图"]
         Config["CRD / Deployment / 平台配置"]
-        Decide["Planner / Autoscaler：容量决策"]
-        Desired["Desired replicas / worker roles"]
-        Act["Operator / HPA：写入 scale / workload spec"]
-        Reconcile["Deployment / workload controllers"]
+        Decide["Autoscaler / Planner / HPA：计算并写入目标"]
+        Desired["已持久化 workload /scale 或平台角色池目标"]
+        Reconcile["Operator / workload controllers：收敛 Pods"]
+        Keda["KEDA：读取外部指标并配置与拥有 HPA"]
         Intent -.-> Config
         Config -.-> Decide
         Decide -.-> Desired
-        Desired -.-> Act
-        Act -.-> Reconcile
+        Desired -.-> Reconcile
+        Keda -.-> Decide
     end
     subgraph WORK["Worker lifecycle"]
         Pool["Worker pools / Pod startup"]
@@ -85,11 +85,12 @@ flowchart TB
     Proxy -.-> Metrics
     Engine -.-> KV
     Metrics -.-> Decide
+    Metrics -.-> Keda
     Metrics -.-> Picker
     KV -.-> Picker
 ```
 
-图注：这是 Kubernetes 部署的逻辑职责图，实线代表请求/选点交互，虚线代表异步控制、生命周期推进或信号。假设 readiness 检查覆盖模型可服务状态，endpoint 发现再把该状态传播给选点方。HPA 也能承担容量决策；图中逻辑决策与写入步骤可以属于同一控制器，scale 指 workload 的子资源，不能据此配置两个独立控制器竞争写副本数。
+图注：这是 Kubernetes 部署的逻辑职责图，实线代表请求/选点交互，虚线代表异步控制、生命周期推进或信号。假设 readiness 检查覆盖模型可服务状态，endpoint 发现再把该状态传播给选点方。HPA 根据指标计算副本目标并写入 workload 的 `/scale`；workload controllers 再收敛 Pods。平台 Planner 也可写自己的角色池目标，由 Operator 转换并执行。图中是候选控制路径，每个目标只应有一个扩缩写入者。
 
 不要从图中推断 Dynamo、llm-d、AIBrix 实现同一组框或能直接互换。Dynamo 的 [Planner/Operator 控制连接](https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture#control-connections)、llm-d 的 [EPP/KEDA/HPA 组合](https://llm-d.ai/docs/dev/architecture#autoscaling)、AIBrix 的 [Gateway/controller/runtime 组件](https://aibrix.readthedocs.io/latest/getting_started/overview.html)拥有不同接口和对象。InferencePool/HTTPRoute 是配置与发现契约，Proxy/Frontend 才承接连接；EPP 咨询不要求 token stream 穿过 EPP 进程。控制权、信号时效及故障边界见 [[model-serving-operator]]、[[inference-routing]]。
 
@@ -97,16 +98,23 @@ flowchart TB
 
 ```mermaid
 sequenceDiagram
-    participant M as Metrics / queue / SLO
-    participant D as Autoscaler / Planner
-    participant A as Desired replicas
-    participant C as Deployment / Operator / HPA
+    participant M as Metrics / EPP queue / SLO
+    participant K as KEDA 可选指标适配
+    participant D as Autoscaler / Planner / HPA
+    participant A as Workload scale / 平台角色池目标
+    participant C as Operator / workload controllers
     participant P as New worker Pod
     participant L as Model loader
     participant E as Endpoint discovery
     participant R as Gateway / Router
-    M-->>D: 观察排队、负载与 SLO 偏差
-    D-->>A: 更新期望副本或角色池目标
+    alt llm-d 的 KEDA 与 HPA 路径
+        M-->>K: 提供 EPP 外部指标
+        K-->>D: 配置与拥有 HPA 并提供评估后的指标
+    else Planner 或其他 autoscaler 路径
+        M-->>D: 观察排队、负载与 SLO 偏差
+    end
+    D->>D: 根据指标与策略计算期望容量
+    D-->>A: 持久化 workload /scale 或平台角色池目标
     A-->>C: watch / reconcile 目标变化
     C-->>P: 收敛 workload 并等待调度后的 Pod 启动
     Note over D,R: Scale-up lag 从采样与决策持续到 endpoint 可路由
@@ -129,6 +137,8 @@ sequenceDiagram
 ```
 
 图注：这是一次扩容的逻辑时序，虚线表示异步状态/信号传播，横向距离不表示时长。假设所选 autoscaler、部署控制器和 discovery 能形成反馈闭环；GPU 容量不足、镜像拉取失败还可能让 Pod 在加载模型前停滞，同样不能计入可服务容量。
+
+HPA 位于决策与目标写入侧：它计算 desired replicas 并更新目标 workload 的 `/scale`，不负责创建或收敛 Pods；Operator 与 Deployment 等 workload controllers 负责后续执行。平台 Planner 可改写自己的角色池目标，再由 Operator 收敛。在 llm-d 路径中，KEDA 的 Prometheus scaler 读取 EPP 信号，KEDA 配置并拥有 HPA、向其提供外部指标，HPA 执行副本决策。见 [Kubernetes HPA](https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/)、[KEDA 概念](https://keda.sh/docs/2.18/concepts/)与 [llm-d dev 扩缩说明](https://llm-d.ai/docs/dev/architecture#autoscaling)。这里聚焦非零副本扩容，KEDA 的零副本激活路径需另按配置核验。
 
 不要从图中推断期望副本增加即等于可用容量增加，或 Ready 保证后续每次请求成功。采样窗口、决策周期、GPU provisioning、镜像/权重下载、warmup 和发现传播均进入 scale-up lag；有界队列、admission/load shedding 必须显式配置。缩容需停止新选点、排空在飞请求，再终止 worker，不能简单反转扩容箭头。容量与 goodput 见 [[llm-serving-performance]]，重试、取消和 draining 见 [[llm-serving-reliability]]。readiness/EndpointSlice 语义见 [Kubernetes Pod 生命周期](https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-termination)。
 
@@ -176,7 +186,9 @@ V1 的 API/Engine Core/GPU worker 分工要求部署同时为 tokenization/调�
 
 ### [[dynamo]]：模块化分布式协作
 
-工程重点是 worker membership、信号延迟、KV transfer、Planner 与 Operator 的所有权。[v1.5.0 release](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)列出的 engine 依赖为 vLLM v0.28.0、SGLang v0.5.18，并记录 backend 已知限制；不能把本页所有独立最新版直接拼成已验证栈。[[src-dynamo-architecture]] 的 KVBM/SequenceHash 等细节保留为旧版研究材料。
+工程重点是 worker membership、信号延迟、KV transfer、Planner 与 Operator 的所有权。[v1.5.0 release](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)列出的 engine 依赖为 vLLM v0.28.0、SGLang v0.5.18，并记录 backend 已知限制；不能把本页所有独立最新版直接拼成已验证栈。
+
+KVBM 已在 Dynamo v1.5.0 被标为 deprecated，计划在 v1.6.0 移除；host/disk 分层 offload 用户应迁向 engine-native KV offloading。KV Cache Runner（KVCR）是针对跨节点 KV 共享的独立早期项目，release 明确它不替代 KVBM。上述状态来自 [v1.5.0 release 的废弃与迁移说明](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)。[[src-dynamo-architecture]] 的 KVBM/SequenceHash 细节保留为旧版研究材料，[[kv-cache-offload]] 中的项目映射也需按这一版本边界解读。
 
 ### [[llm-d]]：Gateway/EPP 与 Kubernetes serving 组合
 
