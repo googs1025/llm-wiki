@@ -1,101 +1,52 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-10-02
-sources: [sglang-architecture-analysis.md, kvcached-architecture-analysis.md]
-related: [vllm, kvcached, elastic-kv-cache, radix-attention, paged-attention, speculative-decoding, prefill-decode-disaggregation, flash-attention, mooncake]
+date: 2026-10-03
+sources: [src-sglang-architecture, src-kvcached-architecture]
+related: ["[[vllm]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[radix-attention]]", "[[paged-attention]]", "[[continuous-batching]]", "[[disaggregated-serving]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
 ---
 
 # SGLang
 
-> 2026-09-14 本地代码分析快照：[[src-sglang-architecture]]，HEAD `2fd835b9c1`。当前 upstream 证据维护在 [[llm-inference-serving-project-map]] 的“当前上游核验（2026-09-22）”小节。
+SGLang 是以 Scheduler、ModelRunner 和前缀 KV 复用为核心的 LLM 推理与 serving 引擎；[[radix-attention]] 描述其前缀组织思路。
 
-**LMSYS / sglang-project 开源的高性能 LLM 推理与 serving 引擎。** Apache 2.0，Python 3.10+，主仓库 [github.com/sgl-project/sglang](https://github.com/sgl-project/sglang)。
+## 当前核验（2026-10-03）
 
-> 下述能力数量、默认值与性能数字反映上述 2026-09-14 本地快照；当前 release/backend 需重新核验。
+核验 release 为 [v0.5.21](https://github.com/sgl-project/sglang/releases/tag/v0.5.21)，发布于 2026-10-02（GitHub UTC 日期）。固定 tag 中可直接核验 [Scheduler](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/managers/scheduler.py)、[ModelRunner](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/model_executor/model_runner.py) 和 [RadixCache](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py)。
 
-## 一句话定位
+[[src-sglang-architecture]] 保留 2026-09-14 本地 HEAD `2fd835b9c1` 的架构分析。其算法数量、进程数量、默认 backend 和性能数字只反映该快照，不作为当前所有部署的共同特性。
 
-把 LLM 推理引擎的**所有"差异化轴"**做到接近开源极致：[[radix-attention]] 取代 [[paged-attention]] 把 KV 复用做到 token 级；4 进程异步流水线 + Scheduler 内 overlap 把 GPU 利用率拉到 95%+；7 套投机解码 + 5 KV transfer backend + 10+ attention backend + 4 grammar backend 全部可插拔；统一 OpenAI / Anthropic / Ollama 协议入口。论文里还提出"SGLang DSL"（fork / gen / select）做结构化生成的前端编译。
+## 架构与状态边界
 
-## 最小架构图
+| 组件 | 责任与状态 |
+|---|---|
+| Tokenizer / API 层 | 协议入口、输入预处理、提交请求和响应处理 |
+| Scheduler | waiting/running 请求、执行预算与批次组织，协调 cache 和 worker |
+| RadixCache / KV pool | 前缀身份、命中、引用与淘汰，以及实际 KV 槽位 |
+| ModelRunner | 模型前向、attention backend、设备执行及引擎并行配置 |
 
-```text
-HTTP / gRPC / SGLang DSL → TokenizerManager
-                                  ↓ ZMQ / shared memory
-Scheduler：EXTEND / DECODE / MIXED · RadixCache · overlap
-                                  ↓
-ModelRunner：attention backend · fused kernel · TP/PP/EP/DP
-                                  ↓
-DetokenizerManager → streaming response
-```
+[[continuous-batching]] 与 chunked prefill 决定不同请求如何共享执行窗口；[[radix-attention]] 减少可复用前缀的计算。v0.5.21 的 RadixKey 匹配按 `page_size` 对齐，因此任意 token 粒度并非通用保证。radix 节点和 [[vllm]] / [[paged-attention]] 的 block table 也不是同一对象。[v0.5.21 RadixCache](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py)
 
-## 关键能力
+Engine 仍拥有本地 KV 布局、有效性与生命周期。外部 router 的 locality index 只提供选点线索，TP/PP/EP/DP 是引擎执行并行方式，平台 prefill/decode 角色划分与副本扩缩则是另一层职责。
 
-| 维度 | 能力 |
-|------|------|
-| **KV 缓存** | [[radix-attention]] —— token 级 radix 树；5 RadixCache 变体（vanilla / hi / mamba / swa / cpp）|
-| **批量化** | 连续批 + chunked prefill + EXTEND/DECODE/MIXED 三态调度 + CUDA Graph 替换 decode 路径 |
-| **多进程流水线** | HTTP / TokenizerManager（主） / Scheduler（GPU subprocess） / DetokenizerManager（subprocess），ZMQ pyobj 三段管道 |
-| **投机解码** | 7 算法：EAGLE-2 / EAGLE-v2 / 多层 EAGLE / FrozenKV-MTP / NGRAM / DFLASH / Standalone，走 `BaseSpecWorker` + `spec_registry` |
-| **[[prefill-decode-disaggregation]]** | 5 transfer backend：[[mooncake]] / NIXL / Mori / Ascend / Fake；prefill 与 decode 节点独立扩容 |
-| **Attention 后端** | 10+：FlashInfer（默认）/ FA3-4 / Triton / FlashMLA / NSA / DSV4 / FlexAttention / TorchNative / Wave / AITER / Intel-AMX |
-| **结构化输出** | xgrammar / outlines / llguidance / reasoner，sampling 前 apply vocab mask |
-| **协议入口** | OpenAI / Anthropic / Ollama / gRPC / 原生 Engine SDK |
-| **分布式** | TP / PP / DP / EP（专家并行）+ Elastic-EP + 专家分布记录器 |
-| **国产硬件** | Ascend NPU / Wave / AITER 一等公民（不是实验路径）|
-| **模型库** | 100+ 模型：LLaMA / Qwen / DeepSeek / Mixtral / Gemma / GPT-OSS / 多模态 |
-| **多模态** | image / audio（Whisper / Qwen-ASR）/ video 预处理 + KV 缓存 |
-| **前端 DSL** | SGLang DSL（fork / gen / select）—— 编译到 RadixCache 友好的执行计划 |
+## P/D 与缓存集成的版本范围
 
-## 接入形态
+[v0.5.21 P/D 指南](https://github.com/sgl-project/sglang/blob/v0.5.21/docs/docs/advanced_features/pd_disaggregation.mdx)描述 Mooncake、NIXL 等传输集成及硬件约束，并列出有状态 Responses 工作流的限制。不能由存在 transfer backend 推出所有模型、cache layout、协议功能和并行方式都能任意组合；见 [[disaggregated-serving]]。
 
-- **HTTP server**：`python -m sglang.launch_server --model-path ...` → FastAPI/uvicorn 默认 8000 端口；推荐用 `sglang serve` CLI
-- **gRPC server**：`--grpc-mode`，走 `entrypoints/grpc_server.py` 适合内部高吞吐 RPC
-- **离线 Engine API**：`from sglang import Engine; engine.generate(...)`，编程式调用不起 HTTP
-- **encoder-only 模式**：`--encoder-only` 启动专用 encoder 实例（给 P/D disagg 用）
-- **Ray 模式**：`--use-ray` 走 Ray cluster scheduler
-- **SGLang DSL**：在 Python 程序里 `@sgl.function def chain_of_thought(s, q): s += sgl.user(q); s += sgl.gen("answer")` —— 编译成多步骤请求，RadixCache 共享 system prompt
+分层缓存、offload 与外部 runtime 还各有版本契约。例如 [[dynamo]] 的发行版固定了自己的 SGLang 依赖，独立 engine 的最新版不能自动替换进去。缓存恢复、请求取消和传输失败的验证应纳入 [[llm-serving-reliability]]。
 
-## 设计哲学（与 [[vllm]] 等同类对照）
+## 适用与采用成本
 
-- **Token 级 KV 复用 vs [[vllm]] block 级**：vLLM 使用固定大小 block，具体大小取决于配置、backend 和版本，前缀复用按 block 边界对齐；SGLang 用 token-level radix 树 + flat KV pool 支持任意 token 边界 split & share。历史 RadixAttention 论文仅在其 LLaMA-7B tree-of-thought / few-shot 工作负载上报告 1.6–6.4× over vLLM，不代表当前通用吞吐结论
-- **4 进程异步流水线**：Tokenize / Forward / Detokenize 拆到不同 OS 进程，ZMQ 串联；任何一环堵塞都不卡其他环，GPU 维持高占用
-- **Mixin 拼装 Scheduler**：4000+ 行的 `scheduler.py` 通过 10+ Mixin 把 disagg/PP/DPAttn/Dllm/Profiler/UpdateWeights 等横切关注点解耦，open-closed 友好；新加 disagg 后端不改主类
-- **可插拔哲学贯穿整栈**：attention backend / spec algorithm / KV transfer / grammar / quantization / model 全可注册可替换；服务启动时按 `server_args` 选择
-- **国产硬件一等公民**：Ascend NPU 不是 fallback 路径，专门有 disagg/ascend、 attention/ascend、`platforms/ascend`，跟 NVIDIA 路径并行
-
-## 工程数据
-
-| 指标 | 实际表现 |
-|------|---------|
-| **prefix 缓存收益** | 历史 RadixAttention 论文在 LLaMA-7B tree-of-thought / few-shot 特定工作负载上报告 throughput **1.6–6.4×** over vLLM，非当前通用结论 |
-| **decode latency** | CUDA graph replay → 单步 ≈ kernel-only |
-| **投机解码加速** | EAGLE-2 默认 topk=5 step=5：典型 **1.5-2.5×** decode 加速 |
-| **P/D 分离收益** | 长 prefill / 长 decode 场景吞吐 **1.3-2×** over collocated |
-| **流水线 overlap** | 4 进程异步 + Scheduler overlap → 单 GPU 占用 95%+ |
-
-## 学术与起源
-
-- **来源论文**：Zheng et al., *"SGLang: Efficient Execution of Structured Language Model Programs"* (NeurIPS 2024) —— 论文里 RadixAttention + SGLang DSL 是核心贡献
-- **组织起源**：LMSYS / UC Berkeley Sky Computing Lab 团队（FastChat / Chatbot Arena / vLLM 都来自相近社区）
-- **生态**：在 DeepSeek 官方推荐推理引擎之一；DeepSeek-V3 的 MTP / MLA 实现是 SGLang 主导贡献
-
-## 在 M4 模块地图中的位置
-
-SGLang 位于 engine/runtime 层，负责 Scheduler、RadixCache 和模型执行，通过 P/D 与分布式集成接口连接外围 serving 层。职责边界见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。
+- 适合：目标模型和硬件已获支持、前缀复用或调度优化有明确收益空间，并能持续做版本回归的推理团队。
+- 不适合：希望把 engine 安装本身当成 Kubernetes 多模型治理、完整 fleet 路由和扩缩方案，或无法验证所需 backend 组合的场景。
+- 下一步核验：固定模型、量化、attention/transfer backend、cache layout 与并行配置，对目标请求长度和前缀分布测 TTFT/ITL、goodput 和内存压力。比较方法见 [[llm-serving-performance]]，避免套用历史论文倍数。
 
 ## 与 KVCacheD 的集成关系
 
-[[kvcached]] 保留 SGLang Scheduler、ScheduleBatch、[[radix-attention]] 和 attention backend，只替换底层 token/page allocator 与 MHA/MLA/Mamba/hybrid KV pool 的 buffer allocation。RadixCache node 仍持有 token-slot indices；只有 cache evict 或请求释放使 page 内全部slot空闲后，KVCacheD 才能归还physical VRAM。
+[[kvcached]] 保留 Scheduler、ScheduleBatch、[[radix-attention]] 和 attention backend，接入底层 token/page allocator 与 KV pool buffer allocation。RadixCache node 仍引用 KV indices；只有上层释放引用并让页中所有槽位空闲后，物理 backing 才能归还。
 
-当前集成让每个 SGLang TP worker 本地拥有自己的 KVCacheD pool，避免把一个rank的pool operation重复广播给peer；这一点与vLLM的EngineCore→worker fan-out模型不同。完整对照见 [[kvcached-sglang-vllm-knowledge-system]]，源码证据见 [[src-kvcached-architecture]]。
+上述集成限定于 [[src-kvcached-architecture]] 的 KVCacheD `884108704f44` / SGLang `44ef8fecfe69` 快照：每个 TP worker 本地拥有自己的 KVCacheD pool，与 vLLM 的 Engine Core→worker fan-out 模式不同。它不构成对 v0.5.21 的兼容承诺；升级需核验 layout、allocator、cache events、P/D 与 worker 生命周期。详见 [[kvcached-sglang-vllm-knowledge-system]] 和 [[elastic-kv-cache]]。
 
-## 相关页面
+## 在 M4 模块地图中的位置
 
-- 架构详解：[[src-sglang-architecture]]
-- 核心算法：[[radix-attention]]、[[speculative-decoding]]、[[prefill-decode-disaggregation]]
-- 同类系统：[[vllm]]（最直接对标）
-- 依赖：[[flash-attention]]（FlashInfer / FA3 / FlashMLA）、[[mooncake]]（KV transfer）
-- 相关概念：[[paged-attention]]（vLLM 的对照系统）
-- 弹性 KV：[[kvcached]]、[[elastic-kv-cache]]
+SGLang 位于 engine/runtime 层，负责请求调度、前缀缓存与模型执行，通过版本化接口连接分布式 serving 层。职责见 [[llm-inference-serving-project-map]]，与 [[vllm]] 及外围平台的组合选择见 [[llm-serving-engine-selection-map]]。
