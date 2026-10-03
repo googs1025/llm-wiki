@@ -32,7 +32,7 @@ Offload 成本包括传输、排队、存储读写与恢复占用的 GPU 空间�
 > [!warning] Conflict
 > NVIDIA Dynamo v1.5.0 已将 KVBM 标记为 deprecated，目标在 v1.6.0 移除。官方建议 host/disk offload 转向 engine-native integrations；早期 KV Cache Runner（KVCR）面向跨节点 KV cache sharing，**不是 KVBM 的直接替代品**。参见 [Dynamo v1.5.0 release 的迁移说明](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)（2026-10-03 核验）。
 
-[[src-dynamo-architecture]] 中的 KVBM 四级层次、SequenceHash 和升降级策略是该 Source 记录的历史快照。本页保留这个证据入口用于理解设计与迁移，不把它作为当前新部署的主推实现。具体 CPU/磁盘层支持、connector 与 engine 版本需重新核验。
+[[src-dynamo-architecture]] 提供其分析时点的 Dynamo 整体架构快照，其中涉及缓存、传输与 offload 的职责和设计。本页保留它作为历史架构阅读入口；当前 KVBM 状态与迁移依据以上官方 release。具体 CPU/磁盘层支持、connector 与 engine 版本需重新核验。
 
 ## 与直接 P/D transfer 的区别
 

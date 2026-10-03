@@ -10,7 +10,7 @@ related: ["[[vllm]]", "[[radix-attention]]", "[[sglang]]", "[[continuous-batchin
 
 PagedAttention 是 [[vllm]] 论文提出的本地 KV 分块寻址与管理机制：序列使用逻辑 block 表达 KV，block table 把逻辑位置映射到实际 KV buffer 中的物理 block，attention kernel 按映射访问数据。这里的“物理 block”属于 engine 的 KV 分配层，不等于 GPU 驱动的物理显存页；后者见 [[elastic-kv-cache]]。
 
-核心收益是让序列按需使用非连续的 KV blocks，减少为每个请求按最大长度预留空间造成的浪费。block 大小、布局与 attention backend 有关，不存在适用于所有版本、模型和硬件的统一 block size。[vLLM Paged Attention 设计](https://docs.vllm.ai/en/latest/design/paged_attention/)描述了这种按 block 寻址的 kernel 布局；原始分析保存在 [[src-vllm-architecture]]。
+核心收益是让序列按需使用非连续的 KV blocks，减少为每个请求按最大长度预留空间造成的浪费。block 大小、布局与 attention backend 有关，不存在适用于所有版本、模型和硬件的统一 block size。[vLLM 历史 PagedAttention kernel 设计](https://docs.vllm.ai/en/latest/design/paged_attention/)解释了原始设计中的分块寻址；官方已注明它不再描述当前代码，不能作为当前 vLLM backend 的布局证据。版本化架构分析见 [[src-vllm-architecture]]。
 
 ## 核心思想
 
@@ -19,14 +19,15 @@ PagedAttention:
   按 block 按需分配（block size = B）
   Block 0: [████████]  complete (B/B tokens)
   Block 1: [█████░░░]  partial tail (k/B tokens, 0 < k < B)
-  Block 2: [░░░░░░░░]  free (B slots)
+  Block 2: [░░░░░░░░]  allocated to req1, not yet populated (0/B tokens)
+  Block 3: [░░░░░░░░]  unallocated, free (B slots)
 
   Block Table per req:
     req0: [B0, B1]
     req1: [B0, B2]   ← 已验证可复用的 prefix 在 B0
 ```
 
-图中共享 B0 需要额外的前缀身份、有效性和引用管理；拥有 block table 本身不保证两个请求能共享 KV。
+图中 B2 已分配给 req1，尚未写入有效 KV；B3 才是可供分配的空闲物理 block。未填充的槽位不等于整个 block 未分配。共享 B0 还需要额外的前缀身份、有效性和引用管理；拥有 block table 本身不保证两个请求能共享 KV。
 
 ## 分配、复用与回收
 

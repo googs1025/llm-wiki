@@ -34,7 +34,7 @@ NVIDIA Dynamo 是 engine 上方可模块化采用的分布式 serving runtime，
 > [!warning] Conflict
 > KVBM 在 v1.5.0 已被标记为 deprecated，目标在 v1.6.0 移除；host/disk offload 应转向 engine-native integrations。早期 KV Cache Runner（KVCR）面向跨节点 KV sharing，**不是 KVBM 的直接替代品**。[官方 v1.5.0 迁移说明](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)
 
-[[src-dynamo-architecture]] 的 KVBM 四级层次是历史快照，用于设计理解与迁移，不能继续作为当前主推能力。[[kv-cache-offload]] 进一步区分数据副本、tier residency、外部索引和直接 P/D transfer。
+[[src-dynamo-architecture]] 是其分析时点的整体架构快照，包含缓存、传输与 offload 的一般设计；当前 KVBM 状态与迁移应以上述官方说明为准。[[kv-cache-offload]] 进一步区分数据副本、tier residency、外部索引和直接 P/D transfer。
 
 ## 适用与采用成本
 

@@ -22,7 +22,7 @@ RadixAttention 是 [[sglang]] 提出的前缀 KV 复用机制：把 token 序列
 | Prefix match | 返回可复用的最长前缀及索引，未命中 suffix 继续 prefill |
 | 引用与淘汰 | 在飞请求的引用保护 KV；可淘汰节点释放所占槽位，策略由实现决定 |
 
-[[src-sglang-architecture]] 保留了 2026-09-14 本地快照中的 TreeNode、ReqToTokenPool / TokenToKVPool 和 cache 变体细节；那份实现清单不能直接代表所有后续 release。
+[[src-sglang-architecture]] 提供 2026-09-14 所分析版本的 SGLang 历史架构、调度与缓存流程概览；其中的对象关系和执行路径不能直接外推到所有后续 release。
 
 ## 当前粒度约束（2026-10-03）
 
