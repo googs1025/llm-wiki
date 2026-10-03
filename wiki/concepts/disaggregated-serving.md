@@ -3,7 +3,7 @@ title: Disaggregated Serving
 tags: [concept, ai-infra, llm-inference, llm-serving, kv-cache]
 date: 2026-10-03
 sources: [dynamo-architecture-analysis.md]
-related: [dynamo, vllm, sglang, paged-attention, kv-cache-offload, llm-inference, inference-routing, llm-serving-performance, llm-serving-reliability]
+related: ['[[dynamo]]', '[[vllm]]', '[[sglang]]', '[[paged-attention]]', '[[kv-cache-offload]]', '[[llm-inference]]', '[[inference-routing]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]']
 ---
 
 # Disaggregated Serving（分离式服务）
