@@ -64,6 +64,7 @@ class TopicGroupTests(unittest.TestCase):
 
 class TopicDownloadLinkTests(unittest.TestCase):
     def test_every_topic_card_links_to_existing_pdf_with_topic_context(self):
+        self.assertEqual(BUILD.PDF_OUT, BUILD.OUT / "pdf")
         groups = BUILD.build_topic_groups(BUILD.collect_page_meta())
         topic_grid = BUILD.render_topic_grid(groups)
         pdf_links = re.findall(
@@ -74,6 +75,7 @@ class TopicDownloadLinkTests(unittest.TestCase):
         self.assertEqual(len(pdf_links), len(groups))
         for group, (href, aria_label, visible_text) in zip(groups, pdf_links):
             with self.subTest(slug=group["slug"]):
+                self.assertEqual(href, f'pdf/{group["slug"]}.pdf')
                 resolved_target = (BUILD.OUT / href).resolve()
                 expected_target = (BUILD.PDF_OUT / f'{group["slug"]}.pdf').resolve()
                 self.assertEqual(resolved_target, expected_target)
@@ -518,7 +520,7 @@ class TopicExportTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0)
-        self.assertIn("would write: wiki/pdf/ai-agent-memory.pdf", result.stdout)
+        self.assertIn("would write: wiki/html/pdf/ai-agent-memory.pdf", result.stdout)
         self.assertEqual(output.exists(), existed_before)
 
     def test_direct_cli_uses_inline_dependencies(self):
@@ -539,7 +541,7 @@ class TopicExportTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("would write: wiki/pdf/ai-agent-memory.pdf", result.stdout)
+        self.assertIn("would write: wiki/html/pdf/ai-agent-memory.pdf", result.stdout)
 
     def test_export_topic_pdf_requires_weasyprint(self):
         with mock.patch.object(BUILD.shutil, "which", return_value=None):

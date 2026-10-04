@@ -88,7 +88,7 @@ wiki/           # LLM 生成和维护的知识页
 ./wiki/html-assets/build.py --pdf-topics
 ```
 
-PDF 输出到 `wiki/pdf/`；全部主题导出会刷新首页四个主题对应的四份下载文件。为了让不同操作系统上的字体选择可重现，构建使用 `wiki/html-assets/fonts/` 中锁定版本的 OFL Noto CJK、Noto Sans Mono CJK、Noto Sans Symbols 2 和 Noto Emoji；字体来源、commit 与校验值见该目录的 `README.md`。
+PDF 输出到 `wiki/html/pdf/`，因此本地 HTML 与 GitHub Pages 使用相同的下载路径；全部主题导出会刷新首页四个主题对应的四份下载文件。为了让不同操作系统上的字体选择可重现，构建使用 `wiki/html-assets/fonts/` 中锁定版本的 OFL Noto CJK、Noto Sans Mono CJK、Noto Sans Symbols 2 和 Noto Emoji；字体来源、commit 与校验值见该目录的 `README.md`。
 
 ## 当前关注方向
 
