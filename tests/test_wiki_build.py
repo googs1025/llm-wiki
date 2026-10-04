@@ -59,6 +59,17 @@ class TopicGroupTests(unittest.TestCase):
         )
 
 
+class TopicDownloadLinkTests(unittest.TestCase):
+    def test_every_topic_card_links_to_its_pdf(self):
+        groups = BUILD.build_topic_groups(BUILD.collect_page_meta())
+        topic_grid = BUILD.render_topic_grid(groups)
+
+        self.assertEqual(topic_grid.count(">下载 PDF</a>"), len(groups))
+        for group in groups:
+            with self.subTest(slug=group["slug"]):
+                self.assertIn(f'href="pdf/{group["slug"]}.pdf"', topic_grid)
+
+
 class TopicBookTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -261,6 +272,7 @@ class TopicExportTests(unittest.TestCase):
 
             self.assertEqual(output.name, "test-memory.pdf")
             self.assertTrue(output.read_bytes().startswith(b"%PDF-"))
+            self.assertEqual(output.stat().st_mode & 0o777, 0o644)
 
     def test_find_topic_selects_exact_slug(self):
         self.assertIs(BUILD.find_topic([self.group], "test-memory"), self.group)

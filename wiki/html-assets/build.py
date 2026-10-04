@@ -1113,6 +1113,7 @@ def export_topic_pdf(
         if not is_complete_pdf(staging_path):
             raise RuntimeError(f"Renderer did not produce a valid PDF: {output_path}")
         try:
+            staging_path.chmod(0o644)
             os.replace(staging_path, output_path)
         except OSError as exc:
             raise RuntimeError(f"Unable to publish PDF: {exc}") from exc
@@ -1588,12 +1589,16 @@ def render_topic_grid(topic_groups: list[dict[str, object]]) -> str:
             f'<a href="{esc(p.href)}">{esc(p.title)}</a>'
             for p in links
         )
+        pdf_link = (
+            f'<a class="topic-pdf-link" href="pdf/{esc(group["slug"])}.pdf">'
+            "下载 PDF</a>"
+        )
         cards.append(
             '<section class="topic-card">'
             f'<div class="topic-card-head"><h2>{esc(group["title"])}</h2>'
             f'<span>{esc(group["count"])} pages</span></div>'
             f'<p>{esc(group["description"])}</p>'
-            f'<div class="topic-links">{link_html}</div>'
+            f'<div class="topic-links">{link_html}{pdf_link}</div>'
             '</section>'
         )
     return '<div class="topic-grid">' + "".join(cards) + "</div>"

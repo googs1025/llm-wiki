@@ -74,6 +74,22 @@ wiki/           # LLM 生成和维护的知识页
 
 构建结果写入 `wiki/html/`。其中部分手工维护的 HTML 页面会被构建脚本跳过，避免覆盖自定义内容。
 
+## 主题 PDF 导出
+
+主题 PDF 导出需要安装 WeasyPrint。导出单个主题：
+
+```bash
+./wiki/html-assets/build.py --pdf-topic ai-agent-memory
+```
+
+导出全部主题：
+
+```bash
+./wiki/html-assets/build.py --pdf-topics
+```
+
+PDF 输出到 `wiki/pdf/`；全部主题导出会刷新首页四个主题对应的四份下载文件。
+
 ## 当前关注方向
 
 - AI Agent 长期记忆：采集、压缩、检索、注入、scope 隔离与事实一致性。
