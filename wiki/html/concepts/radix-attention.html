@@ -65,7 +65,7 @@
 <p>在 <a href="https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py">SGLang v0.5.21 RadixCache 源码</a>中，<code>RadixKey.match</code> 的结果会按 <code>page_size</code> 对齐；key 还具有额外命名空间语义。因此“任意 token 边界都能 split/share”只适用于满足相应粒度条件的路径，不是所有 attention backend 和 cache 变体的共同保证。</p>
 <p>前缀相同也不自动意味着 KV 可用：模型、adapter、tokenization、缓存布局与状态必须兼容，且数据在使用前不能已经被淘汰。Radix 树的匹配结果需要与 KV allocator、请求引用和实际 residency 一起解释；cache eviction 不等于释放 GPU 驱动层的物理页，后者见 <a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a>。</p>
 <h2 id="和连续批处理的关系">和连续批处理的关系</h2>
-<p><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a> 每轮决定 waiting/running 请求如何共享 token 与 KV 预算。前缀命中会减少需要执行的 prefill，但缓存保留也会占用 KV 空间，影响后续请求的准入与抢占。请求结束后可以释放请求引用并保留前缀缓存；容量压力下再按策略淘汰。完整状态边界见 <a class="wikilink" href="../concepts/llm-inference.html">F2 · KV Block 生命周期</a>。</p>
+<p><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a> 每轮决定 waiting/running 请求如何共享 token 与 KV 预算。前缀命中会减少需要执行的 prefill，但缓存保留也会占用 KV 空间，影响后续请求的准入与抢占。请求结束后可以释放请求引用并保留前缀缓存；容量压力下再按策略淘汰。完整状态边界见 <a class="wikilink" href="../concepts/llm-inference.html#f2--kv-block-生命周期">F2 · KV Block 生命周期</a>。</p>
 <h2 id="本地缓存与外部路由">本地缓存与外部路由</h2>
 <p>RadixCache 在 engine 内确认“这个前缀有哪些可复用 KV”。外部 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a> 可以维护相似的前缀树或 locality index，回答“哪个 endpoint 更可能命中”。外部索引是异步信息，既不持有 engine 的本地引用，也不替 engine 保证数据仍然存在。</p>
 <p><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a> 则实际搬运 KV 内容，并在恢复后交由 engine 验证和接入。树匹配、endpoint picking 与 KV 数据复制可以协同，但各自拥有不同状态与失败边界。</p>

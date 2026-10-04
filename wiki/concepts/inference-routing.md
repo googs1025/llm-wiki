@@ -20,13 +20,13 @@ Routing 位于流量入口与 engine 执行之间。[[llm-inference-serving-proj
 |---|---|---|
 | Gateway/API endpoint picking | [[gateway-api-inference-extension]], [[llm-d-router]] | endpoint health、metrics、InferencePool、目标模型 |
 | 语义/模型能力路由 | [[semantic-router]], RouteLLM | prompt semantic、成本/质量、guard、模型能力 |
-| KV/cache aware routing | [[llm-d-kv-cache]], [[dynamo]], [[kthena]], [[aibrix]] | prefix overlap、KV block location、worker load、LoRA/cache affinity |
+| KV/cache aware routing | [[llm-d-router]]（历史独立仓库：[[llm-d-kv-cache]]）、[[dynamo]], [[kthena]], [[aibrix]] | prefix overlap、KV block location、worker load、LoRA/cache affinity |
 | Batch-to-serving dispatch | [[llm-d-batch-gateway]] | batch job、per-model plan、processor concurrency、下游 endpoint capacity |
 | Edge/provider governance | [[envoy-ai-gateway]], [[ai-gateway]] | auth、provider、quota、rate limit、audit、fallback |
 
 ## 选型提示
 
-不要把所有 router 混为一类。[[llm-d-router]] / Gateway API router 更靠近 Kubernetes endpoint；semantic router 更靠近 prompt/model selection；KV-aware router 更靠近 serving runtime 和 cache locality，[[llm-d-kv-cache]] 则把 KV event/index/scoring 这层单独拆出来。[[dynamo]] 的不同 selection host 是部署组合示例，具体集成及版本边界见 [[src-dynamo-architecture]]，不应据此假设各项目采用同一选点评分算法。
+不要把所有 router 混为一类。[[llm-d-router]] / Gateway API router 更靠近 Kubernetes endpoint；semantic router 更靠近 prompt/model selection；KV-aware router 更靠近 serving runtime 和 cache locality。[[llm-d-kv-cache]] 曾将 KV event/index/scoring 拆为独立仓库；[[llm-d]] 的 [v0.10.0 release](https://github.com/llm-d/llm-d/releases/tag/v0.10.0) 已将这部分代码与职责迁入 [[llm-d-router]]，KV event/index/scoring 的逻辑职责仍然存在。当前组件边界见 [[llm-inference-serving-project-map]]，迁移前的设计见 [[src-llm-d-kv-cache-architecture]]。[[dynamo]] 的不同 selection host 是部署组合示例，具体集成及版本边界见 [[src-dynamo-architecture]]，不应据此假设各项目采用同一选点评分算法。
 
 [[llm-d-inference-sim]] 对 routing 选型很有用：它不会给出真实 GPU 性能，但能在无 GPU 环境中模拟 OpenAI/vLLM API、KV block/cache events、TTFT/ITL 和 fake metrics，从而验证 endpoint picking、KV-aware scoring 和 autoscaling 闭环。[[llm-d-batch-gateway]] 则说明 batch workload 的“路由”更多发生在 processor 的 per-model plan 和并发控制层，不应和在线低延迟 request routing 混在一起评估。
 

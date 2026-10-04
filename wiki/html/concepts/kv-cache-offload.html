@@ -60,7 +60,7 @@
 </tr>
 </tbody>
 </table></div>
-<p><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> / <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 管理的本地 KV 与外部索引不能混为一谈。索引命中后，engine 仍须检查缓存身份、布局、模型/adapter 与数据完整性；传输失败、条目过期或源副本被淘汰时，需要按策略重试、回退重算或失败。跨组件责任见 <a class="wikilink" href="../concepts/llm-inference.html">F2 · KV Block 生命周期</a> 与 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>。</p>
+<p><a class="wikilink" href="../concepts/paged-attention.html">paged-attention</a> / <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 管理的本地 KV 与外部索引不能混为一谈。索引命中后，engine 仍须检查缓存身份、布局、模型/adapter 与数据完整性；传输失败、条目过期或源副本被淘汰时，需要按策略重试、回退重算或失败。跨组件责任见 <a class="wikilink" href="../concepts/llm-inference.html#f2--kv-block-生命周期">F2 · KV Block 生命周期</a> 与 <a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a>。</p>
 <h2 id="写入与恢复的边界">写入与恢复的边界</h2>
 <p>写入侧先选择允许保留或迁移的 KV，保证在复制完成前源数据不被覆盖，再发布可读取的副本状态。恢复侧先确认缓存身份和兼容性，预留目的空间，完成实际数据复制，并在 engine 接受后才将对应前缀视为可用。外部 locality event 可以晚到或丢失，不能替代上述完成与有效性条件。</p>
 <p>Offload 成本包括传输、排队、存储读写与恢复占用的 GPU 空间。是否值得采用，取决于这些成本是否低于节省的 prefill，以及是否改善目标 TTFT、goodput 和成本；见 <a class="wikilink" href="../concepts/llm-serving-performance.html">llm-serving-performance</a>。超时、取消、重复操作和已写副本的清理见 <a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a>。</p>

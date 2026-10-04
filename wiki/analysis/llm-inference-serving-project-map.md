@@ -188,7 +188,7 @@ V1 的 API/Engine Core/GPU worker 分工要求部署同时为 tokenization/调�
 
 工程重点是 worker membership、信号延迟、KV transfer、Planner 与 Operator 的所有权。[v1.5.0 release](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)列出的 engine 依赖为 vLLM v0.28.0、SGLang v0.5.18，并记录 backend 已知限制；不能把本页所有独立最新版直接拼成已验证栈。
 
-KVBM 已在 Dynamo v1.5.0 被标为 deprecated，计划在 v1.6.0 移除；host/disk 分层 offload 用户应迁向 engine-native KV offloading。KV Cache Runner（KVCR）是针对跨节点 KV 共享的独立早期项目，release 明确它不替代 KVBM。上述状态来自 [v1.5.0 release 的废弃与迁移说明](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)。[[src-dynamo-architecture]] 的 KVBM/SequenceHash 细节保留为旧版研究材料，[[kv-cache-offload]] 中的项目映射也需按这一版本边界解读。
+KVBM 已在 Dynamo v1.5.0 被标为 deprecated，计划在 v1.6.0 移除；host/disk 分层 offload 用户应迁向 engine-native KV offloading。KV Cache Runner（KVCR）是针对跨节点 KV 共享的独立早期项目，release 明确它不替代 KVBM。上述状态来自 [v1.5.0 release 的废弃与迁移说明](https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0)。[[src-dynamo-architecture]] 保留整体架构与 cache offload 的历史快照，[[kv-cache-offload]] 中的项目映射也需按这一版本边界解读。
 
 ### [[llm-d]]：Gateway/EPP 与 Kubernetes serving 组合
 

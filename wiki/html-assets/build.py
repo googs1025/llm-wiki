@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import sys
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
@@ -269,6 +270,9 @@ class Resolver:
             return None
         cat, real_stem = resolved
         target_path = f"{cat}/{real_stem}.html"
+        _, separator, heading = target.split("|", 1)[0].partition("#")
+        if separator:
+            target_path += f"#{slugify(heading)}"
         if from_cat is None:
             return target_path  # called from wiki/html/index.html
         return f"../{target_path}"
@@ -337,6 +341,34 @@ def navigation_item_for(
 
 # ── Wikilink preprocessing ───────────────────────────────────────
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
+FENCE_OPEN_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+
+
+def markdown_segments(body: str) -> Iterator[tuple[bool, str]]:
+    """Yield (is_fenced_code, original_text), preserving fences without placeholders."""
+    chunk: list[str] = []
+    closing: re.Pattern[str] | None = None
+    for line in body.splitlines(keepends=True):
+        content = line.rstrip("\r\n")
+        if closing is not None:
+            chunk.append(line)
+            if closing.fullmatch(content):
+                yield True, "".join(chunk)
+                chunk = []
+                closing = None
+            continue
+
+        opening = FENCE_OPEN_RE.match(content)
+        if opening and not (opening[1][0] == "`" and "`" in opening[2]):
+            if chunk:
+                yield False, "".join(chunk)
+            fence = opening[1]
+            closing = re.compile(r" {0,3}" + re.escape(fence[0]) + "{" + str(len(fence)) + r",}[ \t]*")
+            chunk = [line]
+        else:
+            chunk.append(line)
+    if chunk:
+        yield closing is not None, "".join(chunk)
 
 
 def rewrite_wikilinks(body: str, resolver: Resolver, from_cat: str | None) -> str:
@@ -352,11 +384,11 @@ def rewrite_wikilinks(body: str, resolver: Resolver, from_cat: str | None) -> st
             return f'<a class="wikilink" href="{href}">{htmllib.escape(label)}</a>'
         return f'<span class="wikilink wikilink-missing" title="未建页：{htmllib.escape(target)}">{htmllib.escape(label)}</span>'
 
-    return WIKILINK_RE.sub(repl, body)
+    return "".join(text if fenced else WIKILINK_RE.sub(repl, text) for fenced, text in markdown_segments(body))
 
 
 # ── TOC extraction ───────────────────────────────────────────────
-HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$", re.MULTILINE)
+HEADING_RE = re.compile(r"^(#{1,6})[ \t]+([^\r\n]+?)[ \t]*(?=\r?$)", re.MULTILINE)
 
 
 def slugify(s: str) -> str:
@@ -370,7 +402,13 @@ def extract_toc(body: str) -> list[tuple[int, str, str]]:
     """Return [(level, text, slug)] for h2/h3 (skip h1; it's the page title)."""
     toc = []
     seen: dict[str, int] = {}
-    for m in HEADING_RE.finditer(body):
+    headings = (
+        match
+        for fenced, text in markdown_segments(body)
+        if not fenced
+        for match in HEADING_RE.finditer(text)
+    )
+    for m in headings:
         hashes, text = m.group(1), m.group(2)
         level = len(hashes)
         if level < 2 or level > 3:
@@ -404,13 +442,28 @@ def inject_heading_ids(body: str) -> str:
             seen[slug] = 1
         return f"{hashes} {text} {{#{slug}}}"
 
-    return HEADING_RE.sub(repl, body)
+    return "".join(text if fenced else HEADING_RE.sub(repl, text) for fenced, text in markdown_segments(body))
 
 
 # ── HTML shell ───────────────────────────────────────────────────
 MERMAID_RUNTIME = """<script>
   let mermaidRenderInFlight = false;
   let mermaidRenderPending = false;
+
+  function showMermaidError(figures, text) {
+    figures.forEach((figure) => {
+      const target = figure.querySelector(".mermaid");
+      if (!target) return;
+      figure.classList.remove("is-rendered");
+      figure.querySelectorAll(".mermaid-error").forEach((error) => error.remove());
+      target.hidden = true;
+      target.setAttribute("aria-hidden", "true");
+      const message = document.createElement("p");
+      message.className = "mermaid-error";
+      message.textContent = text;
+      figure.appendChild(message);
+    });
+  }
 
   async function renderMermaidDiagrams() {
     if (mermaidRenderInFlight) {
@@ -454,17 +507,7 @@ MERMAID_RUNTIME = """<script>
       await window.mermaid.run({ nodes });
       renderableFigures.forEach((figure) => figure.classList.add("is-rendered"));
     } catch (error) {
-      renderableFigures.forEach((figure) => {
-        const target = figure.querySelector(".mermaid");
-        if (!target) return;
-        figure.classList.remove("is-rendered");
-        target.hidden = true;
-        target.setAttribute("aria-hidden", "true");
-        const message = document.createElement("p");
-        message.className = "mermaid-error";
-        message.textContent = "图表渲染失败，以下保留 Mermaid 源码。";
-        figure.appendChild(message);
-      });
+      showMermaidError(renderableFigures, "图表渲染失败，以下保留 Mermaid 源码。");
       console.error("Mermaid diagram rendering failed", error);
     } finally {
       mermaidRenderInFlight = false;
@@ -475,7 +518,33 @@ MERMAID_RUNTIME = """<script>
     }
   }
 
-  renderMermaidDiagrams();
+  const mermaidLoader = document.getElementById("mermaid-loader");
+  let mermaidLoadTimeout;
+  function mermaidLoadFailed() {
+    clearTimeout(mermaidLoadTimeout);
+    if (window.mermaid) return;
+    showMermaidError(
+      Array.from(document.querySelectorAll(".mermaid-figure")),
+      "图表组件加载失败或超时，以下保留 Mermaid 源码。"
+    );
+  }
+  function mermaidLoaded() {
+    clearTimeout(mermaidLoadTimeout);
+    if (!window.mermaid) {
+      mermaidLoadFailed();
+      return;
+    }
+    renderMermaidDiagrams();
+  }
+  if (mermaidLoader) {
+    mermaidLoader.addEventListener("load", mermaidLoaded);
+    mermaidLoader.addEventListener("error", mermaidLoadFailed);
+  }
+  if (window.mermaid) {
+    mermaidLoaded();
+  } else {
+    mermaidLoadTimeout = setTimeout(mermaidLoadFailed, 8000);
+  }
   document.getElementById("theme-toggle").addEventListener("click", () => {
     renderMermaidDiagrams();
   });
@@ -816,7 +885,7 @@ def build_page(
     meta_right = page.fm.date or ""
     category_label = "ROOT" if is_root else page.category
     extra_head = (
-        f'  <script src="https://cdn.jsdelivr.net/npm/mermaid@{MERMAID_VERSION}/dist/mermaid.min.js"></script>'
+        f'  <script id="mermaid-loader" defer src="https://cdn.jsdelivr.net/npm/mermaid@{MERMAID_VERSION}/dist/mermaid.min.js"></script>'
         if has_mermaid
         else ""
     )

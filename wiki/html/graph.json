@@ -1005,9 +1005,9 @@
       ],
       "date": "2026-10-03",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 43,
+      "degree": 44,
       "inbound": 43,
-      "outbound": 21
+      "outbound": 22
     },
     {
       "id": "device-plugin",
@@ -4933,8 +4933,8 @@
       ],
       "date": "2026-06-12",
       "description": "llm-d KV Cache 历史架构（HEAD 26e2b6f，KV events / index / scorer 与存储后端）；v0.10.0 迁入 router 的当前上下文见 llm-d。",
-      "degree": 11,
-      "inbound": 4,
+      "degree": 12,
+      "inbound": 5,
       "outbound": 9
     },
     {
@@ -9150,6 +9150,11 @@
     {
       "source": "inference-routing",
       "target": "src-dynamo-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "inference-routing",
+      "target": "src-llm-d-kv-cache-architecture",
       "kind": "wikilink"
     },
     {

@@ -51,7 +51,7 @@
 </ul>
 <p>当前前缀缓存实现见 <a href="https://docs.vllm.ai/en/latest/design/prefix_caching/">vLLM Prefix Caching</a>。该链接为 2026-10-03 核验的 latest 文档，具体匹配粒度应回到部署 release 的代码和配置确认。</p>
 <h2 id="和调度及外部-kv-系统的边界">和调度及外部 KV 系统的边界</h2>
-<p><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a> 决定本轮哪些请求前进、需要多少 KV；PagedAttention 提供它使用的局部空间管理。申请、写入、引用、保留与回收的共同流程见 <a class="wikilink" href="../concepts/llm-inference.html">F2 · KV Block 生命周期</a>。</p>
+<p><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a> 决定本轮哪些请求前进、需要多少 KV；PagedAttention 提供它使用的局部空间管理。申请、写入、引用、保留与回收的共同流程见 <a class="wikilink" href="../concepts/llm-inference.html#f2--kv-block-生命周期">F2 · KV Block 生命周期</a>。</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>

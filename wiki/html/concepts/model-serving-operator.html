@@ -31,7 +31,7 @@
 <h2 id="扩缩执行与就绪的所有权">扩缩、执行与就绪的所有权</h2>
 <p>HPA 根据指标计算期望副本数并写入目标 workload 的 <code>/scale</code>；Deployment 等 workload controllers 再收敛 Pods。模型服务 operator 可以管理这些 workload，或把平台角色池目标转换成底层资源，但不能把 HPA 的目标计算与 Pod 收敛写成同一个动作。<a href="https://kubernetes.io/docs/concepts/workloads/autoscaling/horizontal-pod-autoscale/">Kubernetes HPA</a></p>
 <p>在 llm-d 的 EPP metrics → KEDA → HPA 路径中，KEDA 的 Prometheus scaler 接入外部指标，KEDA 配置并拥有 HPA，非零副本扩缩决策由 HPA 执行；零副本激活需另按 KEDA 配置核验。<a href="https://llm-d.ai/docs/dev/architecture/advanced/autoscaling">llm-d dev autoscaling</a>、<a href="https://keda.sh/docs/2.18/concepts/">KEDA 概念</a></p>
-<p>Pod 存在或期望副本增加不代表模型可服务。GPU 资源就位后还要加载权重、warmup，通过 readiness 并传播到 endpoint discovery，router 才能使用新容量；缩容则需要停止新选点并排空请求。职责图见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">A4 · Kubernetes Serving 控制面</a>，传播时序见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">S3 · 扩缩与就绪传播时序</a>，故障行为见 <a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a>。</p>
+<p>Pod 存在或期望副本增加不代表模型可服务。GPU 资源就位后还要加载权重、warmup，通过 readiness 并传播到 endpoint discovery，router 才能使用新容量；缩容则需要停止新选点并排空请求。职责图见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html#a4--kubernetes-serving-控制面">A4 · Kubernetes Serving 控制面</a>，传播时序见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html#s3--扩缩与就绪传播时序">S3 · 扩缩与就绪传播时序</a>，故障行为见 <a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a>。</p>
 <h2 id="operator-与相邻组件">Operator 与相邻组件</h2>
 <p>以下是既有 Source 中的角色对照，不表示每个项目都是 Kubernetes operator，也不把旧 API 清单视为当前版本保证；版本与采用条件沿各实体页核验。</p>
 <div class="table-wrap"><table>
