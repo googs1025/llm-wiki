@@ -2,12 +2,15 @@ import importlib.util
 import io
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+
+from pypdf import PdfWriter
 
 
 BUILD_PATH = Path(__file__).resolve().parents[1] / "wiki" / "html-assets" / "build.py"
@@ -198,6 +201,44 @@ class TopicBookTests(unittest.TestCase):
         self.assertNotIn("<a ", code_block.group(1))
         self.assertNotIn("```", chapter)
 
+    def test_topic_images_resolve_locally_without_touching_urls_or_code(self):
+        source = (
+            '![diagram](../../raw/assets/demo.png "Architecture")\n'
+            "![external](https://example.com/demo.png)\n"
+            "![embedded](data:image/png;base64,AAAA)\n"
+            "![anchor](#diagram)\n"
+            "Inline `![literal](../../raw/assets/inline.png)` stays literal.\n\n"
+            "```markdown\n"
+            "![literal](../../raw/assets/fenced.png)\n"
+            "```\n"
+        )
+        page_path = BUILD.WIKI / "concepts" / "synthetic.md"
+
+        rewritten = BUILD.rewrite_topic_image_destinations(source, page_path.parent)
+
+        expected = (BUILD.WIKI / "concepts" / "../../raw/assets/demo.png").resolve().as_uri()
+        self.assertIn(f'![diagram]({expected} "Architecture")', rewritten)
+        self.assertIn("![external](https://example.com/demo.png)", rewritten)
+        self.assertIn("![embedded](data:image/png;base64,AAAA)", rewritten)
+        self.assertIn("![anchor](#diagram)", rewritten)
+        self.assertIn("`![literal](../../raw/assets/inline.png)`", rewritten)
+        self.assertIn("![literal](../../raw/assets/fenced.png)", rewritten)
+
+    def test_render_chapter_uses_absolute_file_uri_for_local_images(self):
+        page_path = BUILD.WIKI / "concepts" / "synthetic.md"
+        page = BUILD.Page(
+            md_path=page_path,
+            category="concepts",
+            fm=BUILD.Frontmatter(title="Synthetic"),
+            body_md="![diagram](../../raw/assets/demo.png)",
+            title="Synthetic",
+        )
+
+        chapter = BUILD.render_topic_chapter(page, self.resolver, {"synthetic"})
+
+        expected = (page_path.parent / "../../raw/assets/demo.png").resolve().as_uri()
+        self.assertIn(f'<img alt="diagram" src="{expected}"', chapter)
+
     def test_chapter_heading_ids_are_unique_across_book(self):
         pages_by_stem = {page.stem: page for page in BUILD.collect_page_meta()}
         group = {
@@ -293,9 +334,12 @@ class TopicBookTests(unittest.TestCase):
 
 
 class TopicExportTests(unittest.TestCase):
-    VALID_PDF = b"%PDF-1.7\nfixture object payload\nstartxref\n0\n%%EOF\n"
-
     def setUp(self):
+        valid_pdf = io.BytesIO()
+        writer = PdfWriter()
+        writer.add_blank_page(width=72, height=72)
+        writer.write(valid_pdf)
+        self.valid_pdf = valid_pdf.getvalue()
         self.page = BUILD.PageMeta(
             title="Agent Memory",
             href="concepts/agent-memory.html",
@@ -313,17 +357,46 @@ class TopicExportTests(unittest.TestCase):
             "count": 1,
         }
 
+    def test_export_topic_pdf_rejects_marker_shaped_malformed_output(self):
+        malformed_pdf = b"%PDF-1.7\nnot a PDF object graph\nstartxref\n0\n%%EOF\n"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            renderer = temp / "fake-weasyprint"
+            renderer.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' '%PDF-1.7' 'not a PDF object graph' "
+                "'startxref' '0' '%%EOF' > \"$2\"\n",
+                encoding="utf-8",
+            )
+            renderer.chmod(renderer.stat().st_mode | 0o111)
+            output = temp / "pdf" / "test-memory.pdf"
+            output.parent.mkdir()
+            output.write_bytes(self.valid_pdf)
+
+            with self.assertRaisesRegex(RuntimeError, "valid PDF"):
+                BUILD.export_topic_pdf(
+                    self.group,
+                    BUILD.Resolver(),
+                    output_dir=output.parent,
+                    renderer=os.fspath(renderer),
+                )
+
+            self.assertEqual(output.read_bytes(), self.valid_pdf)
+            self.assertNotEqual(output.read_bytes(), malformed_pdf)
+            self.assertEqual(list(output.parent.iterdir()), [output])
+
     def test_export_topic_pdf_runs_renderer_and_writes_pdf(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
+            fixture = temp / "valid.pdf"
+            fixture.write_bytes(self.valid_pdf)
             renderer = temp / "fake-weasyprint"
             renderer.write_text(
                 "#!/bin/sh\n"
                 "test -f \"$1\" || exit 3\n"
                 "test \"$XDG_CACHE_HOME\" = \"${1%/*}/cache\" || exit 4\n"
                 "test \"${2%/*}\" = \"${0%/*}/pdf\" || exit 5\n"
-                "printf '%s\\n' '%PDF-1.7' 'fixture object payload' "
-                "'startxref' '0' '%%EOF' > \"$2\"\n",
+                f"cp {shlex.quote(os.fspath(fixture))} \"$2\"\n",
                 encoding="utf-8",
             )
             renderer.chmod(renderer.stat().st_mode | 0o111)
@@ -336,7 +409,7 @@ class TopicExportTests(unittest.TestCase):
             )
 
             self.assertEqual(output.name, "test-memory.pdf")
-            self.assertTrue(output.read_bytes().startswith(b"%PDF-"))
+            self.assertEqual(output.read_bytes(), self.valid_pdf)
             self.assertEqual(output.stat().st_mode & 0o777, 0o644)
 
     def test_find_topic_selects_exact_slug(self):
@@ -435,7 +508,7 @@ class TopicExportTests(unittest.TestCase):
             renderer.chmod(renderer.stat().st_mode | 0o111)
             output = temp / "pdf" / "test-memory.pdf"
             output.parent.mkdir()
-            original = self.VALID_PDF.replace(b"fixture", b"existing")
+            original = self.valid_pdf
             output.write_bytes(original)
 
             with self.assertRaises(RuntimeError):
@@ -456,7 +529,7 @@ class TopicExportTests(unittest.TestCase):
             renderer.chmod(renderer.stat().st_mode | 0o111)
             output = temp / "pdf" / "test-memory.pdf"
             output.parent.mkdir()
-            output.write_bytes(self.VALID_PDF)
+            output.write_bytes(self.valid_pdf)
 
             with self.assertRaises(RuntimeError):
                 BUILD.export_topic_pdf(
@@ -486,7 +559,7 @@ class TopicExportTests(unittest.TestCase):
             output_dir = temp / "pdf"
             output_dir.mkdir()
             output = output_dir / "test-memory.pdf"
-            output.write_bytes(self.VALID_PDF)
+            output.write_bytes(self.valid_pdf)
 
             with self.assertRaisesRegex(RuntimeError, "timed out"):
                 BUILD.export_topic_pdf(
@@ -497,24 +570,25 @@ class TopicExportTests(unittest.TestCase):
                     timeout=0.05,
                 )
 
-            self.assertEqual(output.read_bytes(), self.VALID_PDF)
+            self.assertEqual(output.read_bytes(), self.valid_pdf)
             self.assertEqual(list(output_dir.iterdir()), [output])
 
     def test_export_topic_pdf_publish_error_preserves_destination_and_cleans_staging(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
+            fixture = temp / "valid.pdf"
+            fixture.write_bytes(self.valid_pdf)
             renderer = temp / "fake-weasyprint"
             renderer.write_text(
                 "#!/bin/sh\n"
-                "printf '%s\\n' '%PDF-1.7' 'fixture object payload' "
-                "'startxref' '0' '%%EOF' > \"$2\"\n",
+                f"cp {shlex.quote(os.fspath(fixture))} \"$2\"\n",
                 encoding="utf-8",
             )
             renderer.chmod(renderer.stat().st_mode | 0o111)
             output_dir = temp / "pdf"
             output_dir.mkdir()
             output = output_dir / "test-memory.pdf"
-            original = self.VALID_PDF.replace(b"fixture", b"existing")
+            original = self.valid_pdf
             output.write_bytes(original)
 
             with (

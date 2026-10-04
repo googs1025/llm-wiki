@@ -1,7 +1,7 @@
-#!/usr/bin/env -S uv run --quiet --with markdown --script
+#!/usr/bin/env -S uv run --quiet --with markdown --with 'pypdf>=6.0,<7' --script
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["markdown>=3.6"]
+# dependencies = ["markdown>=3.6", "pypdf>=6.0,<7"]
 # ///
 """
 llm-wiki HTML builder.
@@ -29,12 +29,14 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable, Iterator
+from urllib.parse import unquote, urlsplit
 from dataclasses import dataclass, field
 from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 
 import markdown as md
+from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 WIKI = ROOT / "wiki"
@@ -379,6 +381,14 @@ def markdown_segments(body: str) -> Iterator[tuple[bool, str]]:
         yield closing is not None, "".join(chunk)
 
 
+MARKDOWN_IMAGE_RE = re.compile(
+    r"(?P<prefix>!\[[^\]\n]*\]\([ \t]*)"
+    r"(?P<destination><[^>\n]+>|[^\s)\n]+)"
+    r"(?P<title>[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^\)\n]*\)))?"
+    r"(?P<suffix>[ \t]*\))"
+)
+
+
 def transform_outside_fenced_code(body: str, transform: Callable[[str], str]) -> str:
     """Apply transform to Markdown prose while preserving fenced code verbatim."""
     return "".join(
@@ -462,6 +472,38 @@ def rewrite_topic_wikilinks(body: str, resolver: Resolver, included: set[str]) -
         lambda prose: transform_outside_inline_code(
             prose,
             lambda text: WIKILINK_RE.sub(repl, text),
+        ),
+    )
+
+
+def rewrite_topic_image_destinations(body: str, source_dir: Path) -> str:
+    """Resolve page-relative Markdown images for the temporary topic book."""
+
+    def repl(match: re.Match) -> str:
+        raw_destination = match.group("destination")
+        angled = raw_destination.startswith("<") and raw_destination.endswith(">")
+        destination = raw_destination[1:-1] if angled else raw_destination
+        parsed = urlsplit(destination)
+        if destination.startswith("#") or parsed.scheme or parsed.netloc:
+            return match.group(0)
+
+        absolute_uri = (source_dir / unquote(parsed.path)).resolve().as_uri()
+        if parsed.query:
+            absolute_uri += f"?{parsed.query}"
+        if parsed.fragment:
+            absolute_uri += f"#{parsed.fragment}"
+        if angled:
+            absolute_uri = f"<{absolute_uri}>"
+        return (
+            f'{match.group("prefix")}{absolute_uri}'
+            f'{match.group("title") or ""}{match.group("suffix")}'
+        )
+
+    return transform_outside_fenced_code(
+        body,
+        lambda prose: transform_outside_inline_code(
+            prose,
+            lambda text: MARKDOWN_IMAGE_RE.sub(repl, text),
         ),
     )
 
@@ -1004,11 +1046,12 @@ def load_page(md_path: Path, category: str) -> Page:
 def render_topic_chapter(page: Page, resolver: Resolver, included: set[str]) -> str:
     body_with_ids = inject_heading_ids(page.body_md, namespace=page_anchor(page.md_path.stem))
     body_with_links = rewrite_topic_wikilinks(body_with_ids, resolver, included)
+    body_with_images = rewrite_topic_image_destinations(body_with_links, page.md_path.parent)
     converter = md.Markdown(
         extensions=["fenced_code", "tables", "attr_list", "admonition", "sane_lists", "nl2br"],
         output_format="html5",
     )
-    body_html = converter.convert(body_with_links)
+    body_html = converter.convert(body_with_images)
     body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
     anchor = htmllib.escape(page_anchor(page.md_path.stem), quote=True)
     title = htmllib.escape(page.title)
@@ -1128,18 +1171,16 @@ def export_topic_pdf(
 
 
 def is_complete_pdf(path: Path) -> bool:
-    if not path.is_file() or path.stat().st_size < 32:
+    try:
+        reader = PdfReader(path, strict=True)
+        if reader.is_encrypted:
+            return False
+        root = reader.trailer.get("/Root")
+        if root is None or root.get("/Pages") is None:
+            return False
+        return len(reader.pages) > 0
+    except Exception:
         return False
-    size = path.stat().st_size
-    with path.open("rb") as pdf_file:
-        header = pdf_file.read(8)
-        pdf_file.seek(max(0, size - 4096))
-        trailer = pdf_file.read()
-    return bool(
-        re.match(rb"%PDF-\d\.\d", header)
-        and b"startxref" in trailer
-        and trailer.rstrip().endswith(b"%%EOF")
-    )
 
 
 def render_root_navigation(
