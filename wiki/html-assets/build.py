@@ -1,7 +1,7 @@
-#!/usr/bin/env -S uv run --quiet --with markdown --with 'pypdf>=6.0,<7' --script
+#!/usr/bin/env -S uv run --quiet --script
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["markdown>=3.6", "pypdf>=6.0,<7"]
+# dependencies = ["markdown==3.10.2", "pypdf==6.19.0"]
 # ///
 """
 llm-wiki HTML builder.
@@ -381,14 +381,6 @@ def markdown_segments(body: str) -> Iterator[tuple[bool, str]]:
         yield closing is not None, "".join(chunk)
 
 
-MARKDOWN_IMAGE_RE = re.compile(
-    r"(?P<prefix>!\[[^\]\n]*\]\([ \t]*)"
-    r"(?P<destination><[^>\n]+>|[^\s)\n]+)"
-    r"(?P<title>[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^\)\n]*\)))?"
-    r"(?P<suffix>[ \t]*\))"
-)
-
-
 def transform_outside_fenced_code(body: str, transform: Callable[[str], str]) -> str:
     """Apply transform to Markdown prose while preserving fenced code verbatim."""
     return "".join(
@@ -479,31 +471,165 @@ def rewrite_topic_wikilinks(body: str, resolver: Resolver, included: set[str]) -
 def rewrite_topic_image_destinations(body: str, source_dir: Path) -> str:
     """Resolve page-relative Markdown images for the temporary topic book."""
 
-    def repl(match: re.Match) -> str:
-        raw_destination = match.group("destination")
-        angled = raw_destination.startswith("<") and raw_destination.endswith(">")
-        destination = raw_destination[1:-1] if angled else raw_destination
+    def unescape_destination(destination: str) -> str:
+        punctuation = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+        output: list[str] = []
+        cursor = 0
+        while cursor < len(destination):
+            if (
+                destination[cursor] == "\\"
+                and cursor + 1 < len(destination)
+                and destination[cursor + 1] in punctuation
+            ):
+                cursor += 1
+            output.append(destination[cursor])
+            cursor += 1
+        return "".join(output)
+
+    def resolve_destination(raw_destination: str) -> str:
+        destination = unescape_destination(raw_destination)
         parsed = urlsplit(destination)
         if destination.startswith("#") or parsed.scheme or parsed.netloc:
-            return match.group(0)
+            return raw_destination
 
         absolute_uri = (source_dir / unquote(parsed.path)).resolve().as_uri()
         if parsed.query:
             absolute_uri += f"?{parsed.query}"
         if parsed.fragment:
             absolute_uri += f"#{parsed.fragment}"
+        return absolute_uri
+
+    def destination_span(text: str, start: int) -> tuple[int, int, int] | None:
+        cursor = start + 2
+        bracket_depth = 0
+        while cursor < len(text):
+            char = text[cursor]
+            if char == "\\" and cursor + 1 < len(text):
+                cursor += 2
+                continue
+            if char == "[":
+                bracket_depth += 1
+            elif char == "]":
+                if bracket_depth == 0:
+                    break
+                bracket_depth -= 1
+            cursor += 1
+        if cursor + 1 >= len(text) or text[cursor + 1] != "(":
+            return None
+
+        cursor += 2
+        while cursor < len(text) and text[cursor] in " \t":
+            cursor += 1
+        angled = cursor < len(text) and text[cursor] == "<"
         if angled:
-            absolute_uri = f"<{absolute_uri}>"
-        return (
-            f'{match.group("prefix")}{absolute_uri}'
-            f'{match.group("title") or ""}{match.group("suffix")}'
-        )
+            destination_start = cursor + 1
+            cursor = destination_start
+            while cursor < len(text):
+                if text[cursor] == "\\" and cursor + 1 < len(text):
+                    cursor += 2
+                    continue
+                if text[cursor] == ">":
+                    break
+                if text[cursor] == "\n":
+                    return None
+                cursor += 1
+            if cursor >= len(text):
+                return None
+            destination_end = cursor
+            cursor += 1
+        else:
+            destination_start = cursor
+            parenthesis_depth = 0
+            while cursor < len(text):
+                char = text[cursor]
+                if char == "\\" and cursor + 1 < len(text):
+                    cursor += 2
+                    continue
+                if char == "(":
+                    parenthesis_depth += 1
+                elif char == ")":
+                    if parenthesis_depth == 0:
+                        break
+                    parenthesis_depth -= 1
+                elif char in " \t" and parenthesis_depth == 0:
+                    break
+                elif char == "\n":
+                    return None
+                cursor += 1
+            if cursor >= len(text) or parenthesis_depth != 0:
+                return None
+            destination_end = cursor
+
+        title_separator = cursor
+        while cursor < len(text) and text[cursor] in " \t":
+            cursor += 1
+        if cursor < len(text) and text[cursor] == ")":
+            return destination_start, destination_end, cursor + 1
+        if cursor == title_separator or cursor >= len(text):
+            return None
+
+        delimiter = text[cursor]
+        if delimiter in "\"'":
+            cursor += 1
+            while cursor < len(text):
+                if text[cursor] == "\\" and cursor + 1 < len(text):
+                    cursor += 2
+                    continue
+                if text[cursor] == delimiter:
+                    cursor += 1
+                    break
+                if text[cursor] == "\n":
+                    return None
+                cursor += 1
+            else:
+                return None
+        elif delimiter == "(":
+            title_depth = 1
+            cursor += 1
+            while cursor < len(text) and title_depth:
+                if text[cursor] == "\\" and cursor + 1 < len(text):
+                    cursor += 2
+                    continue
+                if text[cursor] == "(":
+                    title_depth += 1
+                elif text[cursor] == ")":
+                    title_depth -= 1
+                elif text[cursor] == "\n":
+                    return None
+                cursor += 1
+            if title_depth:
+                return None
+        else:
+            return None
+
+        while cursor < len(text) and text[cursor] in " \t":
+            cursor += 1
+        if cursor >= len(text) or text[cursor] != ")":
+            return None
+        return destination_start, destination_end, cursor + 1
+
+    def rewrite_prose(text: str) -> str:
+        output: list[str] = []
+        output_cursor = 0
+        search_cursor = 0
+        while (image_start := text.find("![", search_cursor)) >= 0:
+            span = destination_span(text, image_start)
+            if span is None:
+                search_cursor = image_start + 2
+                continue
+            destination_start, destination_end, image_end = span
+            output.append(text[output_cursor:destination_start])
+            output.append(resolve_destination(text[destination_start:destination_end]))
+            output_cursor = destination_end
+            search_cursor = image_end
+        output.append(text[output_cursor:])
+        return "".join(output)
 
     return transform_outside_fenced_code(
         body,
         lambda prose: transform_outside_inline_code(
             prose,
-            lambda text: MARKDOWN_IMAGE_RE.sub(repl, text),
+            rewrite_prose,
         ),
     )
 

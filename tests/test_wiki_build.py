@@ -224,6 +224,22 @@ class TopicBookTests(unittest.TestCase):
         self.assertIn("`![literal](../../raw/assets/inline.png)`", rewritten)
         self.assertIn("![literal](../../raw/assets/fenced.png)", rewritten)
 
+    def test_topic_images_support_balanced_escaped_and_angled_destinations(self):
+        source = (
+            "![balanced](../../raw/assets/a(b).png)\n"
+            "![escaped](../../raw/assets/a\\(b\\).png)\n"
+            '![angled](<../../raw/assets/a (b).png> "Diagram title")\n'
+        )
+        page_path = BUILD.WIKI / "concepts" / "synthetic.md"
+
+        rewritten = BUILD.rewrite_topic_image_destinations(source, page_path.parent)
+
+        balanced = (page_path.parent / "../../raw/assets/a(b).png").resolve().as_uri()
+        angled = (page_path.parent / "../../raw/assets/a (b).png").resolve().as_uri()
+        self.assertIn(f"![balanced]({balanced})", rewritten)
+        self.assertIn(f"![escaped]({balanced})", rewritten)
+        self.assertIn(f'![angled](<{angled}> "Diagram title")', rewritten)
+
     def test_render_chapter_uses_absolute_file_uri_for_local_images(self):
         page_path = BUILD.WIKI / "concepts" / "synthetic.md"
         page = BUILD.Page(
@@ -238,6 +254,22 @@ class TopicBookTests(unittest.TestCase):
 
         expected = (page_path.parent / "../../raw/assets/demo.png").resolve().as_uri()
         self.assertIn(f'<img alt="diagram" src="{expected}"', chapter)
+
+    def test_render_chapter_keeps_full_parenthesized_image_destination(self):
+        page_path = BUILD.WIKI / "concepts" / "synthetic.md"
+        page = BUILD.Page(
+            md_path=page_path,
+            category="concepts",
+            fm=BUILD.Frontmatter(title="Synthetic"),
+            body_md="![diagram](../../raw/assets/a(b).png)",
+            title="Synthetic",
+        )
+
+        chapter = BUILD.render_topic_chapter(page, self.resolver, {"synthetic"})
+
+        expected = (page_path.parent / "../../raw/assets/a(b).png").resolve().as_uri()
+        self.assertIn(f'<img alt="diagram" src="{expected}">', chapter)
+        self.assertNotIn(".png)</p>", chapter)
 
     def test_chapter_heading_ids_are_unique_across_book(self):
         pages_by_stem = {page.stem: page for page in BUILD.collect_page_meta()}
@@ -488,6 +520,26 @@ class TopicExportTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("would write: wiki/pdf/ai-agent-memory.pdf", result.stdout)
         self.assertEqual(output.exists(), existed_before)
+
+    def test_direct_cli_uses_inline_dependencies(self):
+        env = os.environ.copy()
+        env["UV_CACHE_DIR"] = "/private/tmp/llm-wiki-test-uv-cache"
+
+        result = subprocess.run(
+            [
+                os.fspath(BUILD_PATH),
+                "--dry-run",
+                "--pdf-topic",
+                "ai-agent-memory",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("would write: wiki/pdf/ai-agent-memory.pdf", result.stdout)
 
     def test_export_topic_pdf_requires_weasyprint(self):
         with mock.patch.object(BUILD.shutil, "which", return_value=None):
