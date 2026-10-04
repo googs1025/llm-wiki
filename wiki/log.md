@@ -483,3 +483,12 @@ Rohit Ghumare 出品的本地化跨 Agent 持久记忆服务。TS + iii-engine�
 - 基于 NFD、NVIDIA GPU Operator、Device Plugin、DRA Driver、HAMi 与 Kubernetes DRA 当前官方证据，重构 discovery → node software → allocation → runtime injection → sharing/isolation 主线。
 - 更新 [[k8s-gpu-device-stack]] 的 D1–D5 与 [[kubernetes-dra-design-deep-dive]] 的 ResourceClaim/scheduler/kubelet/CDI 生命周期。
 - 同步四个 Concept 和五个 Entity；保留历史 Source/ASCII 图，更新 Index、HTML 与 graph。
+
+## [2026-10-03] query | Optimize LLM Inference / Serving knowledge system
+
+- 将 [[llm-inference]] 重构为 workload / SLO 驱动的专题入口，串联调度、KV、P/D、路由、控制面、性能、可靠性与项目选型；同步 Index 和首页八步阅读路径。
+- 新增 [[continuous-batching]]、[[llm-serving-performance]]、[[llm-serving-reliability]]；规范 A1–A4、F1–F4、S1–S4 共 12 张 Mermaid 图，由各主题页面保有唯一图源，地图与相关页面交叉引用。
+- 基于 2026-10-03 的上游 release、仓库与官方文档证据校准 vLLM、SGLang、Dynamo、llm-d、AIBrix 的职责和集成边界；明确 Dynamo v1.5.0 KVBM 弃用、llm-d v0.10.0 KV cache 迁入 router 与 WVA guides 迁移，保留历史 Source 和原始图。
+- 为 HTML builder 增加通用 Mermaid 10.9.0 渐进渲染、主题切换与源码回退；重建页面和 graph，让导航与可视化使用相同 Markdown 来源。
+- 验证：导航验收由 3 项预期失败转为全部通过；Mermaid 与 Markdown 预处理 `unittest` 13/13，覆盖 fenced Mermaid 源码保真、标题片段链接保留，以及 CDN 延迟或失败时的非阻塞源码回退与迟到加载恢复。Python 编译、frontmatter / 图编号 / wikilink / 生成 HTML 链接与片段 / graph 检查通过，结果为 `12 diagrams; 3 new concepts; new missing links: 0`。此前两次构建均写入 304、保留手工页 7、总计 311，生成 diff 一致。
+- 此前 Chrome headless / CDP 实测全部 12 张图完成渲染，A1 / S2 在深浅主题、1280px / 640px 下无页面横向溢出；阻断 CDN 后保留可见 Mermaid 源码，未记录 JavaScript runtime exception。已知 agentmemory Source HTML 转义漂移属于构建基线，单独排除。
