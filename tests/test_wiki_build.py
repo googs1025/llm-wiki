@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -101,7 +102,68 @@ class TopicBookTests(unittest.TestCase):
 
         self.assertIn("[agent-memory](#page-agent-memory)", rewritten)
         self.assertIn("Mem0", rewritten)
+        self.assertNotIn("[[mem0|Mem0]]", rewritten)
         self.assertNotIn(".html", rewritten)
+
+    def test_topic_wikilink_fragment_targets_namespaced_heading(self):
+        rewritten = BUILD.rewrite_topic_wikilinks(
+            "[[agent-memory#核心挑战|Jump]]",
+            self.resolver,
+            {"agent-memory"},
+        )
+
+        self.assertEqual("[Jump](#page-agent-memory--核心挑战)", rewritten)
+
+    def test_topic_wikilinks_preserve_fenced_and_inline_code(self):
+        source = (
+            "Outside [[agent-memory]].\n\n"
+            "```text\n"
+            "┌────────────────────┐\n"
+            "│ [[agent-memory]]   │\n"
+            "└────────────────────┘\n"
+            "```\n\n"
+            "Inline `[[agent-memory]]` stays literal.\n"
+        )
+
+        rewritten = BUILD.rewrite_topic_wikilinks(
+            source,
+            self.resolver,
+            {"agent-memory"},
+        )
+
+        self.assertIn("Outside [agent-memory](#page-agent-memory).", rewritten)
+        self.assertIn(
+            "```text\n"
+            "┌────────────────────┐\n"
+            "│ [[agent-memory]]   │\n"
+            "└────────────────────┘\n"
+            "```",
+            rewritten,
+        )
+        self.assertIn("`[[agent-memory]]`", rewritten)
+
+    def test_chapter_heading_ids_are_unique_across_book(self):
+        pages_by_stem = {page.stem: page for page in BUILD.collect_page_meta()}
+        group = {
+            "slug": "shared-heading-test",
+            "title": "Shared Heading Test",
+            "description": "Pages with overlapping heading names.",
+            "pages": [
+                pages_by_stem["agent-memory-project-map"],
+                pages_by_stem["agent-runtime-sandbox-project-map"],
+            ],
+            "count": 2,
+        }
+
+        book = BUILD.build_topic_book(
+            group,
+            self.resolver,
+            generated_on="2026-10-04",
+        )
+        ids = re.findall(r'\sid="([^"]+)"', book)
+
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertIn('id="page-agent-memory-project-map--一句话分层"', book)
 
     def test_book_uses_existing_print_stylesheet(self):
         book = BUILD.build_topic_book(
@@ -111,7 +173,11 @@ class TopicBookTests(unittest.TestCase):
         )
 
         self.assertIn("topic-pdf.css", book)
-        self.assertTrue((BUILD.WIKI / "html-assets" / "topic-pdf.css").is_file())
+        stylesheet = BUILD.WIKI / "html-assets" / "topic-pdf.css"
+        self.assertTrue(stylesheet.is_file())
+        css = stylesheet.read_text(encoding="utf-8")
+        self.assertNotIn("word-break: break-word", css)
+        self.assertRegex(css, r"img\s*,\s*svg\s*\{")
 
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ import os
 import re
 import shutil
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import date
 from html.parser import HTMLParser
@@ -376,6 +376,36 @@ def markdown_segments(body: str) -> Iterator[tuple[bool, str]]:
         yield closing is not None, "".join(chunk)
 
 
+def transform_outside_fenced_code(body: str, transform: Callable[[str], str]) -> str:
+    """Apply transform to Markdown prose while preserving fenced code verbatim."""
+    return "".join(
+        text if fenced else transform(text)
+        for fenced, text in markdown_segments(body)
+    )
+
+
+def transform_outside_inline_code(body: str, transform: Callable[[str], str]) -> str:
+    """Apply transform outside matching Markdown backtick code spans."""
+    output: list[str] = []
+    cursor = 0
+    while opening := re.search(r"`+", body[cursor:]):
+        opening_start = cursor + opening.start()
+        opening_end = cursor + opening.end()
+        delimiter = opening.group(0)
+        closing = re.search(
+            rf"(?<!`){re.escape(delimiter)}(?!`)",
+            body[opening_end:],
+        )
+        if closing is None:
+            break
+        closing_end = opening_end + closing.end()
+        output.append(transform(body[cursor:opening_start]))
+        output.append(body[opening_start:closing_end])
+        cursor = closing_end
+    output.append(transform(body[cursor:]))
+    return "".join(output)
+
+
 def rewrite_wikilinks(body: str, resolver: Resolver, from_cat: str | None) -> str:
     def repl(m: re.Match) -> str:
         target = m.group(1).strip()
@@ -409,18 +439,28 @@ def rewrite_topic_wikilinks(body: str, resolver: Resolver, included: set[str]) -
             target_with_fragment = target_with_fragment.strip()
             label = label.strip()
 
-        target, _, _fragment = target_with_fragment.partition("#")
+        target, separator, fragment = target_with_fragment.partition("#")
         target = target.strip()
+        fragment = fragment.strip()
         readable = label or target
         readable = htmllib.escape(readable).replace("[", "\\[").replace("]", "\\]")
         resolved = resolver.resolve(target)
         if resolved:
             _category, stem = resolved
             if stem.lower() in included_lower:
-                return f"[{readable}](#{page_anchor(stem)})"
+                anchor = page_anchor(stem)
+                if separator and fragment:
+                    anchor = f"{anchor}--{slugify(fragment)}"
+                return f"[{readable}](#{anchor})"
         return readable
 
-    return WIKILINK_RE.sub(repl, body)
+    return transform_outside_fenced_code(
+        body,
+        lambda prose: transform_outside_inline_code(
+            prose,
+            lambda text: WIKILINK_RE.sub(repl, text),
+        ),
+    )
 
 
 # ── TOC extraction ───────────────────────────────────────────────
@@ -459,7 +499,7 @@ def extract_toc(body: str) -> list[tuple[int, str, str]]:
     return toc
 
 
-def inject_heading_ids(body: str) -> str:
+def inject_heading_ids(body: str, namespace: str | None = None) -> str:
     """Add {#slug} to h2/h3 so python-markdown's toc extension picks them up."""
     seen: dict[str, int] = {}
 
@@ -476,9 +516,11 @@ def inject_heading_ids(body: str) -> str:
             slug = f"{slug}-{seen[slug]}"
         else:
             seen[slug] = 1
+        if namespace:
+            slug = f"{namespace}--{slug}"
         return f"{hashes} {text} {{#{slug}}}"
 
-    return "".join(text if fenced else HEADING_RE.sub(repl, text) for fenced, text in markdown_segments(body))
+    return transform_outside_fenced_code(body, lambda prose: HEADING_RE.sub(repl, prose))
 
 
 # ── HTML shell ───────────────────────────────────────────────────
@@ -957,7 +999,7 @@ def load_page(md_path: Path, category: str) -> Page:
 
 
 def render_topic_chapter(page: Page, resolver: Resolver, included: set[str]) -> str:
-    body_with_ids = inject_heading_ids(page.body_md)
+    body_with_ids = inject_heading_ids(page.body_md, namespace=page_anchor(page.md_path.stem))
     body_with_links = rewrite_topic_wikilinks(body_with_ids, resolver, included)
     converter = md.Markdown(
         extensions=["fenced_code", "tables", "attr_list", "admonition", "sane_lists", "nl2br"],

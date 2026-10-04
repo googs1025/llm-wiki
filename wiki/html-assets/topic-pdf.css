@@ -101,7 +101,8 @@ pre {
   padding: 0.8em;
 }
 
-img {
+img,
+svg {
   height: auto;
   max-width: 100%;
 }
@@ -116,7 +117,6 @@ td {
   border: 1px solid #cbd2dc;
   overflow-wrap: anywhere;
   padding: 0.4em 0.55em;
-  word-break: break-word;
 }
 
 blockquote {
