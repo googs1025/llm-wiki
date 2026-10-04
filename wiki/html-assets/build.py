@@ -28,6 +28,7 @@ import shutil
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from datetime import date
 from html.parser import HTMLParser
 from pathlib import Path
 
@@ -389,6 +390,37 @@ def rewrite_wikilinks(body: str, resolver: Resolver, from_cat: str | None) -> st
         return f'<span class="wikilink wikilink-missing" title="未建页：{htmllib.escape(target)}">{htmllib.escape(label)}</span>'
 
     return "".join(text if fenced else WIKILINK_RE.sub(repl, text) for fenced, text in markdown_segments(body))
+
+
+def page_anchor(stem: str) -> str:
+    return f"page-{slugify(stem)}"
+
+
+def rewrite_topic_wikilinks(body: str, resolver: Resolver, included: set[str]) -> str:
+    """Rewrite wiki links for a self-contained book without local HTML links."""
+    included_lower = {stem.lower() for stem in included}
+
+    def repl(m: re.Match) -> str:
+        raw_target = m.group(1).strip()
+        target_with_fragment = raw_target
+        label: str | None = None
+        if "|" in target_with_fragment:
+            target_with_fragment, label = target_with_fragment.split("|", 1)
+            target_with_fragment = target_with_fragment.strip()
+            label = label.strip()
+
+        target, _, _fragment = target_with_fragment.partition("#")
+        target = target.strip()
+        readable = label or target
+        readable = htmllib.escape(readable).replace("[", "\\[").replace("]", "\\]")
+        resolved = resolver.resolve(target)
+        if resolved:
+            _category, stem = resolved
+            if stem.lower() in included_lower:
+                return f"[{readable}](#{page_anchor(stem)})"
+        return readable
+
+    return WIKILINK_RE.sub(repl, body)
 
 
 # ── TOC extraction ───────────────────────────────────────────────
@@ -922,6 +954,72 @@ def load_page(md_path: Path, category: str) -> Page:
         h1 = re.search(r"^#\s+(.+?)\s*$", body, re.MULTILINE)
         title = h1.group(1).strip() if h1 else md_path.stem
     return Page(md_path=md_path, category=category, fm=fm, body_md=body, title=title)
+
+
+def render_topic_chapter(page: Page, resolver: Resolver, included: set[str]) -> str:
+    body_with_ids = inject_heading_ids(page.body_md)
+    body_with_links = rewrite_topic_wikilinks(body_with_ids, resolver, included)
+    converter = md.Markdown(
+        extensions=["fenced_code", "tables", "attr_list", "admonition", "sane_lists", "nl2br"],
+        output_format="html5",
+    )
+    body_html = converter.convert(body_with_links)
+    body_html = re.sub(r"<h1[^>]*>.*?</h1>\s*", "", body_html, count=1, flags=re.DOTALL)
+    anchor = htmllib.escape(page_anchor(page.md_path.stem), quote=True)
+    title = htmllib.escape(page.title)
+    return f'<article class="book-chapter" id="{anchor}"><h1>{title}</h1>{body_html}</article>'
+
+
+def build_topic_book(
+    group: dict[str, object],
+    resolver: Resolver,
+    generated_on: str | None = None,
+) -> str:
+    page_metas = group.get("pages")
+    if not isinstance(page_metas, list) or not all(isinstance(page, PageMeta) for page in page_metas):
+        raise TypeError("topic group pages must be a list of PageMeta objects")
+
+    generated_on = date.today().isoformat() if generated_on is None else generated_on
+    included = {page.stem for page in page_metas}
+    pages = [
+        load_page(WIKI / page.category / f"{page.stem}.md", page.category)
+        for page in page_metas
+    ]
+    title = htmllib.escape(str(group.get("title", "")))
+    description = htmllib.escape(str(group.get("description", "")))
+    generated = htmllib.escape(generated_on)
+    stylesheet = htmllib.escape(
+        (WIKI / "html-assets" / "topic-pdf.css").resolve().as_uri(),
+        quote=True,
+    )
+    toc_items = "".join(
+        f'<li><a href="#{htmllib.escape(page_anchor(page.md_path.stem), quote=True)}">'
+        f'{htmllib.escape(page.title)}</a></li>'
+        for page in pages
+    )
+    chapters = "".join(render_topic_chapter(page, resolver, included) for page in pages)
+
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>{title}</title>
+  <link rel="stylesheet" href="{stylesheet}" />
+</head>
+<body>
+  <section class="book-cover">
+    <h1>{title}</h1>
+    <p class="book-description">{description}</p>
+    <p class="book-meta">{len(pages)} 篇 · {generated}</p>
+  </section>
+  <nav class="book-toc" aria-label="目录">
+    <h1>目录</h1>
+    <ol>{toc_items}</ol>
+  </nav>
+  <main>{chapters}</main>
+</body>
+</html>
+"""
 
 
 def render_root_navigation(

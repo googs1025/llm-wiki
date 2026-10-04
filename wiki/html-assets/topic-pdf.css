@@ -1,0 +1,127 @@
+@page {
+  size: A4;
+  margin: 20mm 18mm 22mm;
+
+  @bottom-center {
+    content: counter(page);
+    color: #6b7280;
+    font-size: 9pt;
+  }
+}
+
+@page :first {
+  @bottom-center {
+    content: none;
+  }
+}
+
+html {
+  color: #172033;
+  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  font-size: 10.5pt;
+  line-height: 1.65;
+}
+
+body {
+  margin: 0;
+}
+
+.book-cover {
+  align-items: center;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 230mm;
+  text-align: center;
+}
+
+.book-cover h1 {
+  font-size: 30pt;
+  line-height: 1.2;
+  margin: 0 0 16mm;
+}
+
+.book-description {
+  color: #46536a;
+  font-size: 13pt;
+  max-width: 130mm;
+}
+
+.book-meta {
+  color: #6b7280;
+  margin-top: 20mm;
+}
+
+.book-toc {
+  break-before: page;
+}
+
+.book-toc li {
+  margin: 0.6em 0;
+}
+
+.book-toc a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-chapter {
+  break-before: page;
+}
+
+.book-chapter > h1 {
+  bookmark-level: 1;
+  font-size: 24pt;
+  line-height: 1.25;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  break-after: avoid;
+  break-inside: avoid;
+  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC", sans-serif;
+}
+
+pre,
+code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+pre {
+  background: #f4f6f8;
+  border: 1px solid #d8dee8;
+  border-radius: 4px;
+  padding: 0.8em;
+}
+
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid #cbd2dc;
+  overflow-wrap: anywhere;
+  padding: 0.4em 0.55em;
+  word-break: break-word;
+}
+
+blockquote {
+  border-left: 3px solid #8794aa;
+  color: #46536a;
+  margin-left: 0;
+  padding: 0.15em 0 0.15em 1em;
+}
