@@ -1043,6 +1043,10 @@ def build_topic_book(
         for page in pages
     )
     chapters = "".join(render_topic_chapter(page, resolver, included) for page in pages)
+    for symbol in ("✅", "⚠", "❌"):
+        chapters = chapters.replace(f"{symbol}\ufe0e", symbol)
+        chapters = chapters.replace(f"{symbol}\ufe0f", symbol)
+        chapters = chapters.replace(symbol, f"{symbol}\ufe0e")
 
     return f"""<!doctype html>
 <html lang="zh-CN">
@@ -1590,8 +1594,8 @@ def render_topic_grid(topic_groups: list[dict[str, object]]) -> str:
             for p in links
         )
         pdf_link = (
-            f'<a class="topic-pdf-link" href="pdf/{esc(group["slug"])}.pdf">'
-            "下载 PDF</a>"
+            f'<a class="topic-pdf-link" href="../pdf/{esc(group["slug"])}.pdf">'
+            f'下载 {esc(group["title"])} PDF</a>'
         )
         cards.append(
             '<section class="topic-card">'

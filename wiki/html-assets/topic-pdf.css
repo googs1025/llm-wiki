@@ -1,3 +1,45 @@
+@font-face {
+  font-family: "Wiki Noto Sans CJK SC";
+  font-style: normal;
+  font-weight: normal;
+  src: url("fonts/NotoSansCJKsc-Regular.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Wiki Noto Sans CJK SC";
+  font-style: italic;
+  font-weight: normal;
+  src: url("fonts/NotoSansCJKsc-Regular.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Wiki Noto Sans Mono CJK SC";
+  font-style: normal;
+  font-weight: normal;
+  src: url("fonts/NotoSansMonoCJKsc-Regular.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Wiki Noto Sans Mono CJK SC";
+  font-style: italic;
+  font-weight: normal;
+  src: url("fonts/NotoSansMonoCJKsc-Regular.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "Wiki Noto Sans Symbols 2";
+  font-style: normal;
+  font-weight: normal;
+  src: url("fonts/NotoSansSymbols2-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Wiki Noto Emoji";
+  font-style: normal;
+  font-weight: normal;
+  src: url("fonts/NotoEmoji-Regular.ttf") format("truetype");
+}
+
 @page {
   size: A4;
   margin: 20mm 18mm 22mm;
@@ -17,7 +59,7 @@
 
 html {
   color: #172033;
-  font-family: "Noto Serif CJK SC", "Source Han Serif SC", "Songti SC", SimSun, serif;
+  font-family: "Wiki Noto Sans CJK SC", "Wiki Noto Sans Symbols 2", "Wiki Noto Emoji";
   font-size: 10.5pt;
   line-height: 1.65;
 }
@@ -84,12 +126,12 @@ h5,
 h6 {
   break-after: avoid;
   break-inside: avoid;
-  font-family: "Noto Sans CJK SC", "Source Han Sans SC", "PingFang SC", sans-serif;
+  font-family: "Wiki Noto Sans CJK SC", "Wiki Noto Sans Symbols 2", "Wiki Noto Emoji";
 }
 
 pre,
 code {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: "Wiki Noto Sans Mono CJK SC", "Wiki Noto Sans Symbols 2", "Wiki Noto Emoji";
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }

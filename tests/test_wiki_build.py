@@ -60,14 +60,23 @@ class TopicGroupTests(unittest.TestCase):
 
 
 class TopicDownloadLinkTests(unittest.TestCase):
-    def test_every_topic_card_links_to_its_pdf(self):
+    def test_every_topic_card_links_to_existing_pdf_with_topic_context(self):
         groups = BUILD.build_topic_groups(BUILD.collect_page_meta())
         topic_grid = BUILD.render_topic_grid(groups)
+        pdf_links = re.findall(
+            r'<a class="topic-pdf-link" href="([^"]+)"(?: aria-label="([^"]*)")?>([^<]*)</a>',
+            topic_grid,
+        )
 
-        self.assertEqual(topic_grid.count(">下载 PDF</a>"), len(groups))
-        for group in groups:
+        self.assertEqual(len(pdf_links), len(groups))
+        for group, (href, aria_label, visible_text) in zip(groups, pdf_links):
             with self.subTest(slug=group["slug"]):
-                self.assertIn(f'href="pdf/{group["slug"]}.pdf"', topic_grid)
+                resolved_target = (BUILD.OUT / href).resolve()
+                expected_target = (BUILD.PDF_OUT / f'{group["slug"]}.pdf').resolve()
+                self.assertEqual(resolved_target, expected_target)
+                self.assertTrue(resolved_target.is_file())
+                accessible_label = aria_label or visible_text
+                self.assertIn(group["title"], accessible_label)
 
 
 class TopicBookTests(unittest.TestCase):
@@ -225,6 +234,62 @@ class TopicBookTests(unittest.TestCase):
         css = stylesheet.read_text(encoding="utf-8")
         self.assertNotIn("word-break: break-word", css)
         self.assertRegex(css, r"img\s*,\s*svg\s*\{")
+
+    def test_print_stylesheet_uses_only_bundled_open_fonts(self):
+        fonts = BUILD.WIKI / "html-assets" / "fonts"
+        expected_files = [
+            "NotoSansCJKsc-Regular.otf",
+            "NotoSansMonoCJKsc-Regular.otf",
+            "NotoSansSymbols2-Regular.ttf",
+            "NotoEmoji-Regular.ttf",
+            "NotoEmoji-Variable.ttf",
+            "OFL.txt",
+            "NotoEmoji-OFL.txt",
+            "NotoSansSymbols2-OFL.txt",
+            "README.md",
+        ]
+        for filename in expected_files:
+            with self.subTest(filename=filename):
+                asset = fonts / filename
+                self.assertTrue(asset.is_file())
+                self.assertGreater(asset.stat().st_size, 0)
+
+        css = (BUILD.WIKI / "html-assets" / "topic-pdf.css").read_text(
+            encoding="utf-8"
+        )
+        self.assertGreaterEqual(css.count("@font-face"), 3)
+        for filename in expected_files[:4]:
+            self.assertIn(f'url("fonts/{filename}")', css)
+        for proprietary_font in (
+            "PingFang",
+            "Songti",
+            "Andale",
+            "Apple",
+            "Hiragino",
+            "SFMono",
+        ):
+            self.assertNotIn(proprietary_font, css)
+
+    def test_book_forces_text_presentation_for_emoji_symbols(self):
+        pages_by_stem = {page.stem: page for page in BUILD.collect_page_meta()}
+        group = {
+            "slug": "emoji-presentation-test",
+            "title": "Emoji Presentation Test",
+            "description": "Use bundled monochrome glyphs.",
+            "pages": [pages_by_stem["src-agent-sandbox-architecture"]],
+            "count": 1,
+        }
+
+        book = BUILD.build_topic_book(
+            group,
+            self.resolver,
+            generated_on="2026-10-04",
+        )
+
+        for symbol in ("✅", "⚠", "❌"):
+            with self.subTest(symbol=symbol):
+                self.assertIn(f"{symbol}\ufe0e", book)
+                self.assertNotRegex(book, rf"{symbol}(?!\ufe0e)")
 
 
 class TopicExportTests(unittest.TestCase):
