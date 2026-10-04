@@ -142,6 +142,37 @@ class TopicBookTests(unittest.TestCase):
         )
         self.assertIn("`[[agent-memory]]`", rewritten)
 
+    def test_render_chapter_preserves_fence_immediately_after_heading(self):
+        page = BUILD.Page(
+            md_path=Path("synthetic.md"),
+            category="concepts",
+            fm=BUILD.Frontmatter(title="Synthetic"),
+            body_md=(
+                "# Synthetic\n\n"
+                "## Diagram\n"
+                "```text\n"
+                "┌────────────────────┐\n"
+                "│ [[agent-memory]]   │\n"
+                "└────────────────────┘\n"
+                "```\n"
+            ),
+            title="Synthetic",
+        )
+
+        chapter = BUILD.render_topic_chapter(
+            page,
+            self.resolver,
+            {"agent-memory", "synthetic"},
+        )
+        code_block = re.search(r"<pre><code[^>]*>(.*?)</code></pre>", chapter, re.DOTALL)
+
+        self.assertIn('id="page-synthetic--diagram"', chapter)
+        self.assertIsNotNone(code_block)
+        assert code_block is not None
+        self.assertIn("[[agent-memory]]", code_block.group(1))
+        self.assertNotIn("<a ", code_block.group(1))
+        self.assertNotIn("```", chapter)
+
     def test_chapter_heading_ids_are_unique_across_book(self):
         pages_by_stem = {page.stem: page for page in BUILD.collect_page_meta()}
         group = {
