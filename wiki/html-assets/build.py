@@ -53,6 +53,7 @@ CATEGORY_LABELS = {
 
 TOPIC_GROUPS = [
     {
+        "slug": "ai-agent-memory",
         "title": "AI Agent / Memory",
         "description": "长期记忆、MCP、coding agent、Agent framework 与个人 AI 工具链。",
         "tags": {"agent-memory", "ai-agent", "mcp", "claude-code", "agent-framework"},
@@ -64,6 +65,7 @@ TOPIC_GROUPS = [
         ),
     },
     {
+        "slug": "agent-runtime-sandbox",
         "title": "Agent Runtime / Sandbox",
         "description": "Agent 会话编排、沙箱隔离、凭据托管、网关治理和多 Agent 协作。",
         "tags": {"agent-runtime", "agent-sandbox", "sandbox", "multi-agent", "ai-gateway"},
@@ -75,6 +77,7 @@ TOPIC_GROUPS = [
         ),
     },
     {
+        "slug": "llm-inference-serving",
         "title": "LLM Inference / Serving",
         "description": "推理服务、KV cache、PagedAttention、RadixAttention 和多云 GPU 编排。",
         "tags": {"llm-inference", "llm-serving", "kv-cache", "ai-infra", "gpu"},
@@ -86,6 +89,7 @@ TOPIC_GROUPS = [
         ),
     },
     {
+        "slug": "kubernetes-cloud-native",
         "title": "Kubernetes / Cloud Native",
         "description": "Kubernetes、KEP 设计追踪、GitOps、controller/operator、GPU 资源栈、安全和可观测。",
         "tags": {"kubernetes", "cloud-native", "gitops", "controller", "operator", "kep"},
@@ -1261,11 +1265,14 @@ def build_topic_groups(pages: list[PageMeta]) -> list[dict[str, object]]:
                 key=lambda p: (p.category != "analysis", p.title.lower()),
             )
         )
+        ordered = list({p.href: p for p in ordered}.values())
         groups.append(
             {
+                "slug": cfg["slug"],
                 "title": cfg["title"],
                 "description": cfg["description"],
-                "count": len(unique),
+                "count": len(ordered),
+                "pages": ordered,
                 "links": ordered[:4],
             }
         )
