@@ -1,4 +1,5 @@
 import importlib.util
+import io
 import os
 import re
 import subprocess
@@ -216,6 +217,8 @@ class TopicBookTests(unittest.TestCase):
 
 
 class TopicExportTests(unittest.TestCase):
+    VALID_PDF = b"%PDF-1.7\nfixture object payload\nstartxref\n0\n%%EOF\n"
+
     def setUp(self):
         self.page = BUILD.PageMeta(
             title="Agent Memory",
@@ -242,7 +245,9 @@ class TopicExportTests(unittest.TestCase):
                 "#!/bin/sh\n"
                 "test -f \"$1\" || exit 3\n"
                 "test \"$XDG_CACHE_HOME\" = \"${1%/*}/cache\" || exit 4\n"
-                "printf '%%PDF-1.7\\nfixture\\n' > \"$2\"\n",
+                "test \"${2%/*}\" = \"${0%/*}/pdf\" || exit 5\n"
+                "printf '%s\\n' '%PDF-1.7' 'fixture object payload' "
+                "'startxref' '0' '%%EOF' > \"$2\"\n",
                 encoding="utf-8",
             )
             renderer.chmod(renderer.stat().st_mode | 0o111)
@@ -287,6 +292,29 @@ class TopicExportTests(unittest.TestCase):
         ):
             self.assertIn(slug, result.stderr)
 
+    def test_cli_unknown_topic_is_rejected_before_html_writes(self):
+        with tempfile.TemporaryDirectory(dir=BUILD.ROOT) as temp_dir:
+            output_dir = Path(temp_dir) / "html"
+            output_dir.mkdir()
+            sentinel = output_dir / "index.html"
+            original = f"{BUILD.AUTO_MARKER}\nsentinel\n"
+            sentinel.write_text(original, encoding="utf-8")
+
+            with (
+                mock.patch.object(BUILD, "OUT", output_dir),
+                mock.patch.object(
+                    sys,
+                    "argv",
+                    [os.fspath(BUILD_PATH), "--pdf-topic", "does-not-exist"],
+                ),
+                mock.patch.object(sys, "stdout", io.StringIO()),
+                mock.patch.object(sys, "stderr", io.StringIO()),
+                self.assertRaisesRegex(SystemExit, "2"),
+            ):
+                BUILD.main()
+
+            self.assertEqual(sentinel.read_text(encoding="utf-8"), original)
+
     def test_cli_dry_run_does_not_require_renderer_or_write_pdf(self):
         output = BUILD.PDF_OUT / "ai-agent-memory.pdf"
         existed_before = output.exists()
@@ -319,18 +347,18 @@ class TopicExportTests(unittest.TestCase):
             ):
                 BUILD.export_topic_pdf(self.group, BUILD.Resolver())
 
-    def test_export_topic_pdf_rejects_invalid_renderer_output(self):
+    def test_export_topic_pdf_rejects_truncated_output_and_preserves_destination(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = Path(temp_dir)
             renderer = temp / "fake-weasyprint"
             renderer.write_text(
-                "#!/bin/sh\nprintf 'not a pdf\\n' > \"$2\"\n",
+                "#!/bin/sh\nprintf '%s\\n' '%PDF-1.7' 'truncated' > \"$2\"\n",
                 encoding="utf-8",
             )
             renderer.chmod(renderer.stat().st_mode | 0o111)
             output = temp / "pdf" / "test-memory.pdf"
             output.parent.mkdir()
-            original = b"%PDF-1.7\nexisting\n"
+            original = self.VALID_PDF.replace(b"fixture", b"existing")
             output.write_bytes(original)
 
             with self.assertRaises(RuntimeError):
@@ -341,6 +369,7 @@ class TopicExportTests(unittest.TestCase):
                     renderer=os.fspath(renderer),
                 )
             self.assertEqual(output.read_bytes(), original)
+            self.assertEqual(list(output.parent.iterdir()), [output])
 
     def test_export_topic_pdf_rejects_missing_new_output(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -350,7 +379,7 @@ class TopicExportTests(unittest.TestCase):
             renderer.chmod(renderer.stat().st_mode | 0o111)
             output = temp / "pdf" / "test-memory.pdf"
             output.parent.mkdir()
-            output.write_bytes(b"%PDF-1.7\nstale\n")
+            output.write_bytes(self.VALID_PDF)
 
             with self.assertRaises(RuntimeError):
                 BUILD.export_topic_pdf(
@@ -359,6 +388,7 @@ class TopicExportTests(unittest.TestCase):
                     output_dir=temp / "pdf",
                     renderer=os.fspath(renderer),
                 )
+            self.assertEqual(list(output.parent.iterdir()), [output])
 
     def test_export_topic_pdf_wraps_renderer_spawn_error(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -369,6 +399,60 @@ class TopicExportTests(unittest.TestCase):
                     output_dir=Path(temp_dir) / "pdf",
                     renderer=os.fspath(Path(temp_dir) / "missing-renderer"),
                 )
+
+    def test_export_topic_pdf_times_out_and_cleans_staging_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            renderer = temp / "fake-weasyprint"
+            renderer.write_text("#!/bin/sh\nwhile :; do :; done\n", encoding="utf-8")
+            renderer.chmod(renderer.stat().st_mode | 0o111)
+            output_dir = temp / "pdf"
+            output_dir.mkdir()
+            output = output_dir / "test-memory.pdf"
+            output.write_bytes(self.VALID_PDF)
+
+            with self.assertRaisesRegex(RuntimeError, "timed out"):
+                BUILD.export_topic_pdf(
+                    self.group,
+                    BUILD.Resolver(),
+                    output_dir=output_dir,
+                    renderer=os.fspath(renderer),
+                    timeout=0.05,
+                )
+
+            self.assertEqual(output.read_bytes(), self.VALID_PDF)
+            self.assertEqual(list(output_dir.iterdir()), [output])
+
+    def test_export_topic_pdf_publish_error_preserves_destination_and_cleans_staging(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = Path(temp_dir)
+            renderer = temp / "fake-weasyprint"
+            renderer.write_text(
+                "#!/bin/sh\n"
+                "printf '%s\\n' '%PDF-1.7' 'fixture object payload' "
+                "'startxref' '0' '%%EOF' > \"$2\"\n",
+                encoding="utf-8",
+            )
+            renderer.chmod(renderer.stat().st_mode | 0o111)
+            output_dir = temp / "pdf"
+            output_dir.mkdir()
+            output = output_dir / "test-memory.pdf"
+            original = self.VALID_PDF.replace(b"fixture", b"existing")
+            output.write_bytes(original)
+
+            with (
+                mock.patch.object(BUILD.os, "replace", side_effect=OSError("read-only")),
+                self.assertRaisesRegex(RuntimeError, "Unable to publish PDF"),
+            ):
+                BUILD.export_topic_pdf(
+                    self.group,
+                    BUILD.Resolver(),
+                    output_dir=output_dir,
+                    renderer=os.fspath(renderer),
+                )
+
+            self.assertEqual(output.read_bytes(), original)
+            self.assertEqual(list(output_dir.iterdir()), [output])
 
 
 if __name__ == "__main__":

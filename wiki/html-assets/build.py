@@ -1072,6 +1072,7 @@ def export_topic_pdf(
     resolver: Resolver,
     output_dir: Path = PDF_OUT,
     renderer: str | None = None,
+    timeout: float = 300,
 ) -> Path:
     renderer = renderer or shutil.which("weasyprint")
     if renderer is None:
@@ -1079,32 +1080,61 @@ def export_topic_pdf(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{group['slug']}.pdf"
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_path = Path(temp_dir)
-        html_path = temp_path / "book.html"
-        rendered_path = temp_path / "book.pdf"
-        cache_path = temp_path / "cache"
-        cache_path.mkdir()
-        html_path.write_text(build_topic_book(group, resolver), encoding="utf-8")
-        env = os.environ.copy()
-        env["XDG_CACHE_HOME"] = os.fspath(cache_path)
-        try:
-            subprocess.run(
-                [renderer, os.fspath(html_path), os.fspath(rendered_path)],
-                check=True,
-                env=env,
-            )
-        except OSError as exc:
-            raise RuntimeError(f"Unable to run PDF renderer: {exc}") from exc
+    staging_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{group['slug']}.",
+            suffix=".pdf.tmp",
+            dir=output_dir,
+            delete=False,
+        ) as staging_file:
+            staging_path = Path(staging_file.name)
 
-        if not rendered_path.is_file():
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            html_path = temp_path / "book.html"
+            cache_path = temp_path / "cache"
+            cache_path.mkdir()
+            html_path.write_text(build_topic_book(group, resolver), encoding="utf-8")
+            env = os.environ.copy()
+            env["XDG_CACHE_HOME"] = os.fspath(cache_path)
+            try:
+                subprocess.run(
+                    [renderer, os.fspath(html_path), os.fspath(staging_path)],
+                    check=True,
+                    env=env,
+                    timeout=timeout,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError(f"PDF renderer timed out after {timeout:g} seconds") from exc
+            except OSError as exc:
+                raise RuntimeError(f"Unable to run PDF renderer: {exc}") from exc
+
+        if not is_complete_pdf(staging_path):
             raise RuntimeError(f"Renderer did not produce a valid PDF: {output_path}")
-        with rendered_path.open("rb") as pdf_file:
-            magic = pdf_file.read(5)
-        if magic != b"%PDF-":
-            raise RuntimeError(f"Renderer did not produce a valid PDF: {output_path}")
-        os.replace(rendered_path, output_path)
+        try:
+            os.replace(staging_path, output_path)
+        except OSError as exc:
+            raise RuntimeError(f"Unable to publish PDF: {exc}") from exc
+    finally:
+        if staging_path is not None:
+            staging_path.unlink(missing_ok=True)
     return output_path
+
+
+def is_complete_pdf(path: Path) -> bool:
+    if not path.is_file() or path.stat().st_size < 32:
+        return False
+    size = path.stat().st_size
+    with path.open("rb") as pdf_file:
+        header = pdf_file.read(8)
+        pdf_file.seek(max(0, size - 4096))
+        trailer = pdf_file.read()
+    return bool(
+        re.match(rb"%PDF-\d\.\d", header)
+        and b"startxref" in trailer
+        and trailer.rstrip().endswith(b"%%EOF")
+    )
 
 
 def render_root_navigation(
@@ -2386,12 +2416,21 @@ def main() -> int:
 
     resolver = Resolver()
     order = reading_order(resolver)
-    OUT.mkdir(parents=True, exist_ok=True)
-    sync_html_assets(args.dry_run)
     index_body_html, descriptions = collect_index_descriptions(resolver)
-    graph_data = collect_graph_data(resolver, descriptions)
     pages = collect_page_meta(descriptions)
     topic_groups = build_topic_groups(pages)
+    try:
+        selected_topics = (
+            [find_topic(topic_groups, args.pdf_topic)]
+            if args.pdf_topic
+            else topic_groups if args.pdf_topics else []
+        )
+    except ValueError as exc:
+        ap.error(str(exc))
+
+    OUT.mkdir(parents=True, exist_ok=True)
+    sync_html_assets(args.dry_run)
+    graph_data = collect_graph_data(resolver, descriptions)
 
     stats = {"written": 0, "skipped": 0, "total": 0}
 
@@ -2482,11 +2521,6 @@ def main() -> int:
         stats["skipped"] += 1
 
     try:
-        selected_topics = (
-            [find_topic(topic_groups, args.pdf_topic)]
-            if args.pdf_topic
-            else topic_groups if args.pdf_topics else []
-        )
         for topic in selected_topics:
             output_path = PDF_OUT / f"{topic['slug']}.pdf"
             if args.dry_run:
@@ -2494,7 +2528,7 @@ def main() -> int:
             else:
                 export_topic_pdf(topic, resolver)
                 print(f"  ✓ {output_path.relative_to(ROOT)}")
-    except (ValueError, RuntimeError, subprocess.CalledProcessError) as exc:
+    except (RuntimeError, OSError, subprocess.CalledProcessError) as exc:
         ap.error(str(exc))
 
     print(
