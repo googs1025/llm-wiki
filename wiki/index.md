@@ -1,6 +1,6 @@
 ---
 title: Wiki 索引
-date: 2026-10-02
+date: 2026-10-03
 ---
 
 # 知识库索引
@@ -92,17 +92,17 @@ date: 2026-10-02
 - [[mcp-lifecycle-operator]] — MCP Lifecycle Operator 用声明式 API 部署、管理和安全滚动 MCP Servers，把 Agent tool server 生命周期放进 Kubernetes control plane。
 
 ### LLM Serving / AI Gateway
-- [[dynamo]] — NVIDIA 开源的 distributed serving runtime（Rust + Python + Go，可选 P/D 分离 + KV 感知路由 + 四级 KV 缓存 + SLA 自动扩缩）
+- [[dynamo]] — NVIDIA distributed serving runtime：KV-aware routing、可选 P/D 与 Planner/Operator；v1.5.0 已弃用 KVBM，host/disk offload 转向 engine-native integrations。
 - [[vllm]] — engine 层的高吞吐 LLM 推理引擎（UC Berkeley，PagedAttention 创始者，Dynamo backend 之一）
 - [[sglang]] — engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）
 - [[kvcached]] — vLLM/SGLang 的 GPU VMM KV memory plugin：稳定虚拟 tensor + 按需 physical page backing，用于同卡多模型弹性显存共享
 - [[aibrix]] — K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）
 - [[llm-d]] — CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）
 - [[llm-d-router]] — llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。
-- [[llm-d-kv-cache]] — llm-d KV locality index / scorer，把 vLLM/SGLang KV events 转成 cache-hit routing signal。
+- [[llm-d-kv-cache]] — KV locality index / scorer 历史组件入口；llm-d v0.10.0 已迁入 [[llm-d-router]]，旧页保留迁移前的边界与证据。
 - [[llm-d-batch-gateway]] — llm-d OpenAI Batch API / 离线推理控制面（API server + PostgreSQL/Redis/Object Store + processor/GC）
 - [[llm-d-benchmark]] — llm-d benchmark 实验编排器（scenario/spec 渲染 + K8s lifecycle + harness/result workspace）
-- [[llm-d-workload-variant-autoscaler]] — **Deprecated / 历史实现（截至 2026-09-22）**；当前 llm-d 文档采用 EPP metrics → KEDA Prometheus scaler → HPA。详见该 Entity 的 Conflict 注记。
+- [[llm-d-workload-variant-autoscaler]] — 历史实现与迁移入口；llm-d v0.10.0 的 WVA guides 已 deprecated，仓库更名为 llm-d-autoscaling；当前采用见 [[llm-d]] 的 EPP metrics → KEDA → HPA 路径。
 - [[llm-d-inference-sim]] — 无 GPU vLLM 行为模拟器（OpenAI/vLLM API + KV events + latency/failure/metrics simulation）
 - [[llm-d-planner]] — llm-d-incubation 部署规划器（业务意图 + SLO + GPU capacity + quality/cost/latency 推荐 + Kubernetes YAML）
 - [[inference-perf]] — GenAI inference performance benchmarking tool，用于对 OpenAI-compatible/serving endpoint 做负载、延迟和吞吐测量。
@@ -156,14 +156,19 @@ date: 2026-10-02
 - [[gpu-programming-learning]] — GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解
 
 ### LLM Serving 执行层
-- **M4 模块地图**：[[llm-inference-serving-project-map]] → [[llm-serving-engine-selection-map]]；engine → routing → distributed runtime / K8s control plane → KV/GPU infrastructure。
-- [[vllm]] / [[sglang]] 最新架构与推理优化：V1、RadixCache、KV、连续批、融合 kernel 与 TP/PP/EP/DP 对照
-- [[llm-inference]] — LLM 推理系统从引擎、路由、缓存、网关到 K8s serving 的总体概念
-- [[paged-attention]] — KV cache 分块管理基础理念（vLLM 起源，Dynamo KVBM 沿用）
-- [[radix-attention]] — KV-aware 路由的算法基础（SGLang 起源，Dynamo router 沿用）
+
+阅读路径：[[llm-inference]] → [[continuous-batching]] → [[paged-attention]] / [[radix-attention]] / [[kv-cache-offload]] / [[elastic-kv-cache]] → [[disaggregated-serving]] → [[inference-routing]] → [[llm-serving-performance]] → [[llm-serving-reliability]] → [[llm-inference-serving-project-map]] → [[llm-serving-engine-selection-map]]。
+
+- [[llm-inference]] — 以 workload / SLO 为起点，串联请求、调度、KV、分布式执行、控制面和故障合同的专题入口
+- [[continuous-batching]] — 逐 iteration 选择请求与 token 工作量，解释 token/KV 预算、chunked prefill、抢占和公平性
+- [[paged-attention]] — engine 本地 KV 的逻辑块、物理块、block table 与引用生命周期
+- [[radix-attention]] — 基于前缀树的 KV 复用与引用管理；外部 locality index 是路由提示，复用有效性由 engine 检查
+- [[kv-cache-offload]] — KV 数据的分层驻留、迁移与恢复；Dynamo KVBM 为历史实现，当前 offload 需按 engine/connector 版本核验
 - [[elastic-kv-cache]] — 将 engine logical KV capacity 与 GPU physical backing 解耦；KVCacheD 在 PagedAttention/RadixAttention 下层按需 map/unmap VRAM page
-- [[disaggregated-serving]] — Prefill/Decode 分离式服务（Dynamo 的一等可选部署模式）
-- [[kv-cache-offload]] — KV 多级缓存方法论（GPU→CPU→SSD→远端，Dynamo KVBM 实现）
+- [[disaggregated-serving]] — P/D 角色池、KV handoff 合同与拓扑成本，区分阶段分离和 TP/PP/EP/DP
+- [[llm-serving-performance]] — TTFT、ITL、TPOT、goodput 与成本口径，用负载分布、队列、缓存冷热和失败分母解释压测结果
+- [[llm-serving-reliability]] — deadline、过载、重试、取消、清理、readiness 与 drain，区分首 token 前后的恢复边界
+- [[vllm]] / [[sglang]] — engine 实现下钻：scheduler、model runner、本地 KV 与并行执行，采用前核验 release 和集成矩阵
 
 ### LLM Serving 流量 / 网关 / 批处理
 - [[ai-gateway]] — 面向 LLM/MCP/A2A 的 API gateway / AI gateway 能力面
@@ -218,7 +223,7 @@ date: 2026-10-02
 - [[src-agentcube-architecture]] — AgentCube 架构（HEAD `208da32`，Volcano 社区 AI Agent / Code Interpreter 会话编排层，基于 agent-sandbox 做 Router + WorkloadManager + WarmPool）
 - [[src-agentgateway-architecture]] — agentgateway 架构（v1.2.0-alpha.2，Istio 系骨架 + Rust 数据面，LLM/MCP/A2A 三协议 AI Gateway）
 - [[src-powermem-architecture]] — PowerMem 架构（v1.1.1，OceanBase 持久化记忆中间件，向量+全文+稀疏+图四路混合 + 艾宾浩斯衰减）
-- [[src-dynamo-architecture]] — NVIDIA Dynamo 文档重构架构（Frontend/Gateway + KV-aware Router + P/D + Runtime 三平面 + DGDR/Planner SLA 闭环）
+- [[src-dynamo-architecture]] — Dynamo 历史架构快照（Frontend/Gateway、KV-aware Router、P/D、DGDR/Planner）；v1.5.0 的 KVBM 弃用与 engine-native offload 迁移见 [[dynamo]]。
 - [[src-k8s-serving-stack-comparison]] — Kubernetes serving stack 对比（llm-d、AIBrix、KServe、KubeAI、OME、GPUStack、RBG、Kthena）
 - [[src-nanobot-architecture]] — nanobot 架构（v0.2.0，HKUDS 个人 AI Agent 框架，8 态状态机 + 17 渠道 + Fallback Provider + Mid-turn 注入）
 - [[src-agentmemory-architecture]] — agentmemory 架构（v0.9.21，本地化跨 Agent 记忆服务，iii-engine 总线 + BM25+Vector+Graph 三流 RRF + 12 hooks + 53 MCP tools，零 LLM 压缩默认）
@@ -243,7 +248,7 @@ date: 2026-10-02
 - [[src-aibrix-architecture]] — AIBrix 架构（HEAD `ac2c161`，vLLM 生态 K8s GenAI inference infrastructure：gateway/routing、PodAutoscaler、ModelAdapter、KV cache/event sync、LoRA、distributed inference、GPU failure detection）
 - [[src-llm-d-architecture]] — llm-d 架构（HEAD `2734681`，CNCF Sandbox 分布式 LLM inference serving stack：Router/EPP + InferencePool + model server + KV cache management + P/D disaggregation + autoscaling/batch guides）
 - [[src-llm-d-router-architecture]] — llm-d Router 架构（HEAD `a0173a7`，LLM-aware inference entry point：Envoy/ext-proc + Endpoint Picker(EPP) + filters/scorers/scrapers + InferenceObjective/ModelRewrite + P/D sidecar）
-- [[src-llm-d-kv-cache-architecture]] — llm-d KV Cache 架构（HEAD `26e2b6f`，KV-cache aware routing library/service：KVEvents ingestion + kvblock index + tokenizer service + scorer/indexer + Valkey/Redis/in-memory backends + vLLM connectors）
+- [[src-llm-d-kv-cache-architecture]] — llm-d KV Cache 历史架构（HEAD `26e2b6f`，KV events / index / scorer 与存储后端）；v0.10.0 迁入 router 的当前上下文见 [[llm-d]]。
 - [[src-llm-d-batch-gateway-architecture]] — llm-d Batch Gateway 架构（HEAD `66fae7e`，OpenAI Batch API / 离线推理：API server + PostgreSQL/Redis/Object Store + processor/GC + 下游 llm-d Router）
 - [[src-llm-d-benchmark-architecture]] — llm-d Benchmark 架构（HEAD `bd8dc5e`，benchmark 实验编排：scenario/spec 渲染、K8s lifecycle、harness 适配、workspace/result collection）
 - [[src-llm-d-workload-variant-autoscaler-architecture]] — 历史架构快照（HEAD `526ce85`，当前 dev docs 已标记 deprecated）；该快照记录 VariantAutoscaling CRD + Prometheus/GPU inventory/capacity model + HPA/KEDA 指标驱动。
@@ -332,7 +337,7 @@ date: 2026-10-02
 - [[kubernetes-node-runtime-observability-security-design]] — kubelet/CRI、resource managers、sidecar lifecycle、user namespace/rootless kubelet、CRI stats、PSI 和 resource health 设计详解。
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
-- [[llm-inference-serving-project-map]] — LLM Inference / Serving D1–D5 模块地图，以 vLLM / SGLang / Dynamo / llm-d / AIBrix 五个锚点项目拆解边界。
+- [[llm-inference-serving-project-map]] — LLM Serving 项目边界地图：用五个锚点项目对照 engine、routing、runtime、Kubernetes control plane 与 KV infrastructure，补齐 A4 控制面和 S3 就绪传播。
 - [[kvcached-sglang-vllm-knowledge-system]] — KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。
 - [[kvcached-source-code-deep-dive]] — 三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。
 - [[kvcached-integration-implementation-guide]] — KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。
@@ -340,7 +345,7 @@ date: 2026-10-02
 - [[coding-agent-selection-map]] — Coding Agent / Personal Agent 选型地图（Claude Code / OpenCode / OpenClaude / NemoClaw / nanobot）
 - [[agent-memory-selection-matrix]] — Agent Memory 细分选型矩阵（claude-mem / agent-recall / agentmemory / PowerMem / memsearch / TencentDB-Agent-Memory）
 - [[agent-runtime-sandbox-selection-map]] — Agent Runtime / Sandbox 细分选型地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway）
-- [[llm-serving-engine-selection-map]] — LLM Serving 分层选型地图：先选架构层，再选项目组合。
+- [[llm-serving-engine-selection-map]] — 从 workload / SLO 与实测瓶颈选择架构层和项目组合，明确避免条件、采用成本和验证项。
 - [[mcp-gateway-tooling-map]] — MCP Server / Tool Gateway 对比地图（FastMCP / GitHub MCP / Playwright MCP / kubectl MCP / agentgateway / Plano）
 - [[agent-skills-plugin-system-map]] — Agent Skills / Plugin System 对比地图（plugin / skill / MCP tool 三种扩展形态）
 - [[code-semantic-search-rag-map]] — Code Semantic Search / Code RAG 对比地图（Claude Context / memsearch / Milvus / tree-sitter）

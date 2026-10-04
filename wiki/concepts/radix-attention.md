@@ -1,114 +1,47 @@
 ---
 title: RadixAttention
 tags: [concept, ai-infra, kv-cache, llm-inference, prefix-sharing]
-date: 2026-09-22
-sources: [sglang-architecture-analysis.md]
-related: [sglang, paged-attention, vllm]
+date: 2026-10-03
+sources: [src-sglang-architecture]
+related: ["[[sglang]]", "[[paged-attention]]", "[[vllm]]", "[[continuous-batching]]", "[[llm-inference]]", "[[inference-routing]]", "[[kv-cache-offload]]"]
 ---
 
 # RadixAttention
 
-[[sglang]] 论文（Zheng et al., NeurIPS 2024）提出的 **token 级 KV 缓存复用机制**。它用 **radix 树** + **两级 KV pool** 实现"任意 token 边界都能 split & share"；[[vllm]] 的 [[paged-attention]] 则使用配置内固定大小、按 block 边界复用的逻辑/物理 block，具体大小取决于配置、attention backend 和版本。历史论文仅在其 LLaMA-7B tree-of-thought / few-shot 等工作负载上报告 **1.6–6.4×** over vLLM，不是当前通用吞吐结论。
+RadixAttention 是 [[sglang]] 提出的前缀 KV 复用机制：把 token 序列的共享前缀组织成 radix 树，树节点关联已经计算好的 KV 位置；新请求先匹配前缀，再只计算未命中的部分。树组织的是缓存身份与复用关系，底层 KV pool 负责实际内容和寻址。
 
-## 核心数据结构
+这与 [[paged-attention]] 的逻辑 block → 物理 KV block 映射侧重点不同。两者都需要分配、引用、回收和 attention addressing，不能把 RadixCache node 当成 vLLM block，也不能把 radix 树描述为对分页机制的全面替代。
 
-### TreeNode
+## 核心数据与操作
 
-每个节点持有：
-- `key: RadixKey` —— 变长 token 序列（支持 bigram 模式给 EAGLE 用）
-- `value: torch.Tensor` —— 指向 `TokenToKVPool` 的 KV 索引张量
-- `children: dict[int, TreeNode]` —— 首 token 到子节点的映射
-- `lock_ref: int` —— 引用计数，>0 时禁止 evict（保护 in-flight 请求）
-- `evicted: bool` —— 已 evict 的占位（支持增量恢复）
+| 对象或操作 | 语义 |
+|---|---|
+| Prefix key | 标识 token 前缀及影响缓存兼容性的命名空间或额外键 |
+| Tree node | 保存一段共享前缀、子节点和对应 KV indices；分叉时可拆分节点 |
+| KV pool | 持有实际 K/V buffer；树的 value 指向其中的槽位 |
+| Prefix match | 返回可复用的最长前缀及索引，未命中 suffix 继续 prefill |
+| 引用与淘汰 | 在飞请求的引用保护 KV；可淘汰节点释放所占槽位，策略由实现决定 |
 
-### 两级 KV pool
+[[src-sglang-architecture]] 提供 2026-09-14 所分析版本的 SGLang 历史架构、调度与缓存流程概览；其中的对象关系和执行路径不能直接外推到所有后续 release。
 
-```
-┌──── ReqToTokenPool ────┐     ┌──── TokenToKVPool ────┐
-│ shape: [N_req, ctx_max]│     │ flat token-indexed    │
-│ row i → list of token  │ ──> │ [kv_0, kv_1, ..., kv_M]│
-│         indices for    │     │ 物理 GPU K, V tensors │
-│         req i          │     │ MHA / MLA / NSA 变体  │
-└────────────────────────┘     └───────────────────────┘
-              ▲                          ▲
-              │                          │
-              └── radix 树叶 value ──────┘
-                  指向 KV pool 索引区间
-```
+## 当前粒度约束（2026-10-03）
 
-**双跳的好处**：radix 树叶直接指向 KV pool 位置；attention kernel 用 device-resident `req_to_token` 张量做一次 gather —— 既保留 token 级粒度，又能让 kernel 高效访存。
+在 [SGLang v0.5.21 RadixCache 源码](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py)中，`RadixKey.match` 的结果会按 `page_size` 对齐；key 还具有额外命名空间语义。因此“任意 token 边界都能 split/share”只适用于满足相应粒度条件的路径，不是所有 attention backend 和 cache 变体的共同保证。
 
-## 核心算法
+前缀相同也不自动意味着 KV 可用：模型、adapter、tokenization、缓存布局与状态必须兼容，且数据在使用前不能已经被淘汰。Radix 树的匹配结果需要与 KV allocator、请求引用和实际 residency 一起解释；cache eviction 不等于释放 GPU 驱动层的物理页，后者见 [[elastic-kv-cache]]。
 
-### match_prefix(input_ids)
+## 和连续批处理的关系
 
-```
-walk from root:
-  for each level:
-    find child whose key shares prefix with remaining input_ids
-    if full match → descend
-    if partial match → SPLIT child:
-        原节点截断到匹配长度
-        剩余 token 移到新子节点（保留原 value 的对应区间）
-    if no match → stop
-return (device_indices, last_node)
-  device_indices = 已命中所有节点 value 的拼接（直接喂 attention kernel）
-  last_node     = 匹配链尾（给后续 insert 用）
-```
+[[continuous-batching]] 每轮决定 waiting/running 请求如何共享 token 与 KV 预算。前缀命中会减少需要执行的 prefill，但缓存保留也会占用 KV 空间，影响后续请求的准入与抢占。请求结束后可以释放请求引用并保留前缀缓存；容量压力下再按策略淘汰。完整状态边界见 [[llm-inference#F2 · KV Block 生命周期|F2 · KV Block 生命周期]]。
 
-### insert(req)
+## 本地缓存与外部路由
 
-请求完成时调用：
-1. 在 `req.last_node` 下挂新节点，`key = req.fill_ids[len(prefix):]`
-2. `value = req.out_cache_loc`（这次 forward 新写入的 KV 槽位）
-3. 父节点 `lock_ref` 递减 → 完成后可被 evict
+RadixCache 在 engine 内确认“这个前缀有哪些可复用 KV”。外部 [[inference-routing]] 可以维护相似的前缀树或 locality index，回答“哪个 endpoint 更可能命中”。外部索引是异步信息，既不持有 engine 的本地引用，也不替 engine 保证数据仍然存在。
 
-### Eviction
+[[kv-cache-offload]] 则实际搬运 KV 内容，并在恢复后交由 engine 验证和接入。树匹配、endpoint picking 与 KV 数据复制可以协同，但各自拥有不同状态与失败边界。
 
-5 策略：LRU / LFU / FIFO / SLRU / Priority。
-evict 时 pop `evictable_leaves` 堆顶 → free 该节点 `value` 指向的 KV 槽位 → 递归向上 unlock。`lock_ref > 0` 的节点跳过（保护 in-flight 请求）。
+## 出处与评估
 
-## 前缀命中与分叉流程
+Zheng et al., *SGLang: Efficient Execution of Structured Language Model Programs*, NeurIPS 2024。历史论文中的吞吐结果只对应其当时模型与工作负载；当前评估应同时记录前缀分布、命中长度、缓存占用、淘汰压力和 TTFT，见 [[llm-serving-performance]]。
 
-```text
-输入 token prefix → Radix root → longest-prefix match
-        ┌───────────────┴────────────────┐
-        │ 完整命中                        │ 部分命中/未命中
-        │ 复用已有 KV 节点                │ split node / 新建 suffix
-        └───────────────┬────────────────┘
-                        ↓
-             只对未命中 suffix 执行 prefill
-                        ↓
-             insert token → KV pool → radix tree
-                        ↓
-             eviction 从可回收叶节点释放
-```
-
-## vs [[paged-attention]] 关键差异
-
-| 维度 | RadixAttention | PagedAttention |
-|------|----------------|----------------|
-| **复用粒度** | token 级（树节点变长） | 配置内固定大小的 block（大小依配置/backend/版本） |
-| **索引结构** | Radix 树 + 两级 pool | Block table（数组） |
-| **任意分叉点 split** | ✅ 树节点动态 split | 默认 full-block APC 按 block 边界对齐；可选更细的可配置 match unit |
-| **碎片** | 区间连续 | partial block 可有未用槽，程度依 block size 与负载而定 |
-| **共享 system prompt** | Radix 树支持任意 token 边界的前缀分叉 | 默认 full-block APC 路径需等待完整 block；当前 vLLM 可通过 `cache_partial_block` / 可配置 `prefix_match_unit` 使用更细的 partial entry，受配置/backend/版本与 match-unit 约束 |
-| **实现复杂度** | 较高（树平衡 + lock_ref + evict） | 较低（block table 哈希） |
-| **历史论文工作负载** | LLaMA-7B tree-of-thought / few-shot 等工作负载报告 1.6–6.4× over vLLM，非当前通用结论 | 论文当时的对照实现 |
-
-## 工程要点
-
-- **radix 树是 lock-free 的**：单 Scheduler 进程独占，不需要锁
-- **device_indices 是 device-resident 张量**：直接喂 attention kernel，省去 CPU↔GPU 拷贝
-- **bigram 模式**：给 EAGLE 投机解码用 —— key 是 (token_i, token_i+1) 对而非单 token，匹配 draft tree 结构
-- **5 变体并存（2026-09-14 分析快照）**：`radix_cache.py`（vanilla）/ `hiradix_cache.py`（分层）/ `mamba_radix_cache.py`（Mamba）/ `swa_radix_cache.py`（Sliding Window Attention）/ `radix_cache_cpp.py`（C++ 加速版），按 attention 类型在启动时绑定；当前 release 需重新核验该 inventory
-
-## 出处
-
-Zheng et al., *"SGLang: Efficient Execution of Structured Language Model Programs"*, NeurIPS 2024。
-
-## 相关页面
-
-- 工程实现：[[sglang]] → `mem_cache/radix_cache.py`
-- 对照算法：[[paged-attention]]（[[vllm]] 的 KV 管理）
-- 架构详解：[[src-sglang-architecture]]
+工程入口为 [[sglang]] 与 [[src-sglang-architecture]]；[[vllm]] / [[paged-attention]] 提供本地 KV 分块管理的对照。

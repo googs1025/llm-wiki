@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · concepts</span>
   <span class="spacer"></span>
-  <span class="meta">2026-09-22</span>
+  <span class="meta">2026-10-03</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,67 +23,78 @@
 
   <header class="page-header">
     <h1>PagedAttention</h1>
-    <p class="page-meta">2026-09-22 · 来源：vllm-architecture-analysis.md</p>
+    <p class="page-meta">2026-10-03 · 来源：src-vllm-architecture</p>
     <div class="tags"><span class="tag">concept</span><span class="tag">ai-infra</span><span class="tag">kv-cache</span><span class="tag">llm-inference</span></div>
   </header>
 
-  <p><a class="wikilink" href="../entities/vllm.html">vllm</a> 论文（Kwon et al., SOSP 2023）提出的 <strong>block 级 KV 缓存管理机制</strong>；当前官方架构仍以 block table、attention backend 与 prefix caching 组合扩展。它把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache：在一个确定的配置内，KV 按固定大小的逻辑/物理 block 管理，每个请求用 <strong>block table</strong> 记录"逻辑序列位置 → 物理 block"映射。具体 block 大小取决于配置、attention backend 和版本。</p>
+  <p>PagedAttention 是 <a class="wikilink" href="../entities/vllm.html">vllm</a> 论文提出的本地 KV 分块寻址与管理机制：序列使用逻辑 block 表达 KV，block table 把逻辑位置映射到实际 KV buffer 中的物理 block，attention kernel 按映射访问数据。这里的“物理 block”属于 engine 的 KV 分配层，不等于 GPU 驱动的物理显存页；后者见 <a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a>。</p>
+<p>核心收益是让序列按需使用非连续的 KV blocks，减少为每个请求按最大长度预留空间造成的浪费。block 大小、布局与 attention backend 有关，不存在适用于所有版本、模型和硬件的统一 block size。<a href="https://docs.vllm.ai/en/latest/design/paged_attention/">vLLM 历史 PagedAttention kernel 设计</a>解释了原始设计中的分块寻址；官方已注明它不再描述当前代码，不能作为当前 vLLM backend 的布局证据。版本化架构分析见 <a class="wikilink" href="../sources/src-vllm-architecture.html">src-vllm-architecture</a>。</p>
 <h2 id="核心思想">核心思想</h2>
-<pre><code>传统 (HF transformers):
-  按 max_seq_len 预分配 KV         浪费严重
-  ──────────────────────────────
-  [req0  used  ][   unused   ]
-  [req1 used][        unused        ]
-
-PagedAttention:
+<pre><code class="language-text">PagedAttention:
   按 block 按需分配（block size = B）
   Block 0: [████████]  complete (B/B tokens)
   Block 1: [█████░░░]  partial tail (k/B tokens, 0 &lt; k &lt; B)
-  Block 2: [░░░░░░░░]  free (B slots)
+  Block 2: [░░░░░░░░]  allocated to req1, not yet populated (0/B tokens)
+  Block 3: [░░░░░░░░]  unallocated, free (B slots)
 
   Block Table per req:
     req0: [B0, B1]
-    req1: [B0, B2]   ← 共享 system prompt 在 B0
+    req1: [B0, B2]   ← 已验证可复用的 prefix 在 B0
 </code></pre>
-<h2 id="关键机制">关键机制</h2>
+<p>图中 B2 已分配给 req1，尚未写入有效 KV；B3 才是可供分配的空闲物理 block。未填充的槽位不等于整个 block 未分配。共享 B0 还需要额外的前缀身份、有效性和引用管理；拥有 block table 本身不保证两个请求能共享 KV。</p>
+<h2 id="分配复用与回收">分配、复用与回收</h2>
 <ul>
-<li><strong>Block table</strong>：每个请求有一个 <code>int32 list[blocks]</code>，attention kernel 用它把"逻辑 token 索引"翻译成"物理 KV 位置"</li>
-<li><strong>Block 大小固定于当前配置</strong>：逻辑/物理 block 使用同一 block size <code>B</code>；具体 <code>B</code> 依配置、attention backend 和版本而定</li>
-<li><strong>Prefix sharing</strong>：传统/默认 full-block APC 路径按 block 边界共享 system prompt，partial tail 在形成完整 block 前不可复用。当前 vLLM 可通过 <code>cache_partial_block</code> 与可配置的 <code>prefix_match_unit</code> 启用更细粒度的 partial entry，但仍受配置、backend、版本及整除/match-unit 约束。Block table 的共享使用引用计数管理，释放时只有 ref=0 才回收。详见 <a href="https://docs.vllm.ai/en/latest/design/prefix_caching/">Prefix Caching</a> 与 <a href="https://docs.vllm.ai/en/latest/api/vllm/v1/core/block_pool/">BlockPool API</a></li>
-<li><strong>Copy-on-write</strong>：beam search 等场景 fork 同一个 block table，写入时拷贝</li>
-<li><strong>Swap to CPU</strong>：内存紧张时把不活跃 block swap 到 CPU pinned memory</li>
+<li>调度器为本轮需要执行的 token 申请 KV slots；逻辑 block table 与物理 KV buffer 的映射必须一致。</li>
+<li>Prefix caching 可在该分块体系上识别已有前缀并复用 blocks。缓存键、共享边界、partial-block 支持和引用计数由实际实现决定，不能从“分页”直接推出。</li>
+<li>请求完成会释放其引用；仍被其他请求或前缀缓存保留的 KV 不一定立即被覆盖。缓存淘汰、请求释放与底层显存释放属于不同动作。</li>
+<li>共享后的写入隔离、抢占时的重算或 offload 需遵守目标 engine 的协议，不能假设所有 PagedAttention 路径都支持 CPU swap 或 copy-on-write。</li>
 </ul>
-<h2 id="工程影响">工程影响</h2>
-<ul>
-<li><strong>首创性</strong>：2023 年第一个把虚存分页引入 LLM serving，HuggingFace TGI / Ray Serve / Anyscale / Together AI 都基于此或受启发</li>
-<li><strong>吞吐量</strong>：典型 2-4× over HF transformers</li>
-<li><strong>简单可靠</strong>：block table 是数组，无需锁，调度逻辑直接</li>
-</ul>
-<h2 id="逻辑地址到物理-kv-的流程">逻辑地址到物理 KV 的流程</h2>
-<pre><code class="language-text">请求 token 位置 i → 逻辑 block = i // block_size
-        → block table[logical block]
-        → 物理 GPU KV block
-        → attention kernel gather K/V
-        → 写入新 token block 或触发扩容
-</code></pre>
-<h2 id="局限与-radix-attention-的对比">局限与 <a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a> 的对比</h2>
-<ul>
-<li><strong>Block 边界刚性</strong>：前缀共享按当前 block size <code>B</code> 对齐，不能在 block 内任意分叉</li>
-<li><strong>默认 full-block APC 的 partial tail 限制</strong>：在传统/默认路径中，末尾未满的 block 在形成完整 block 前无法被前缀复用；启用 <code>cache_partial_block</code> 并配置 <code>prefix_match_unit</code> 后可以更细粒度匹配，实际边界依配置/backend/版本与整除约束而定</li>
-<li><strong>内部碎片依负载而定</strong>：程度取决于 block size、请求长度分布与实现配置</li>
-</ul>
-<p><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a>（<a class="wikilink" href="../entities/sglang.html">sglang</a> 提出）通过 token 级 radix 树 + flat KV pool 解决这些限制。</p>
-<h2 id="出处">出处</h2>
-<p>Kwon et al., <em>"Efficient Memory Management for Large Language Model Serving with PagedAttention"</em>, SOSP 2023。</p>
+<p>当前前缀缓存实现见 <a href="https://docs.vllm.ai/en/latest/design/prefix_caching/">vLLM Prefix Caching</a>。该链接为 2026-10-03 核验的 latest 文档，具体匹配粒度应回到部署 release 的代码和配置确认。</p>
+<h2 id="和调度及外部-kv-系统的边界">和调度及外部 KV 系统的边界</h2>
+<p><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a> 决定本轮哪些请求前进、需要多少 KV；PagedAttention 提供它使用的局部空间管理。申请、写入、引用、保留与回收的共同流程见 <a class="wikilink" href="../concepts/llm-inference.html#f2--kv-block-生命周期">F2 · KV Block 生命周期</a>。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>相邻机制</th>
+<th>负责什么</th>
+<th>与 PagedAttention 的区别</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></td>
+<td>用前缀树组织缓存身份、匹配与淘汰</td>
+<td>前缀语义和寻址布局是不同轴；不能推定与 vLLM block 对象相同</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></td>
+<td>用负载或外部 locality index 选择 endpoint</td>
+<td>外部索引记录位置线索，实际 KV 有效性由 engine 确认</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></td>
+<td>将 KV 内容复制到 CPU、SSD 或远端，再按需恢复</td>
+<td>block table 不执行跨层复制，也不保证远端副本存在</td>
+</tr>
+<tr>
+<td><a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a></td>
+<td>将稳定的 GPU 虚拟地址与物理 backing 解耦</td>
+<td>engine 的 block 可用不代表底层物理显存一定能成功映射</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="评估与出处">评估与出处</h2>
+<p>关注 block 利用率、尾块浪费、分配失败与抢占、前缀命中后的实际 prefill 节省。吞吐收益需固定模型、硬件、请求长度和调度配置后测量，不能沿用历史论文中的倍数作为当前通用承诺。</p>
+<p>Kwon et al., <em>Efficient Memory Management for Large Language Model Serving with PagedAttention</em>, SOSP 2023；工程证据见 <a class="wikilink" href="../sources/src-vllm-architecture.html">src-vllm-architecture</a>，SGLang 的对照分析见 <a class="wikilink" href="../sources/src-sglang-architecture.html">src-sglang-architecture</a>。</p>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/llm-inference.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">LLM Inference</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/radix-attention.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">RadixAttention</strong></a></div><span class="page-navigation-progress">阅读顺序 132/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../concepts/continuous-batching.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">Continuous Batching</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../concepts/radix-attention.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">RadixAttention</strong></a></div><span class="page-navigation-progress">阅读顺序 131/307</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/radix-attention.html">radix-attention</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../concepts/continuous-batching.html">continuous-batching</a></li><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/elastic-kv-cache.html">elastic-kv-cache</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · concepts · <a href="../../concepts/paged-attention.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=paged-attention">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">PagedAttention</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="41.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="178.0" cy="82.0" r="7"><title>SGLang 架构与推理优化</title></circle><circle class="mini-node mini-node-entities" cx="161.0" cy="123.0" r="7"><title>vLLM</title></circle><circle class="mini-node mini-node-analysis" cx="120.0" cy="140.0" r="7"><title>AI Infra 中文学习项目地图</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-concepts" cx="62.0" cy="82.0" r="7"><title>Elastic KV Cache</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>GPU 编程学习</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-sglang-architecture.html">SGLang 架构与推理优化</a><span>源文件 · wikilink</span></li><li><a href="../entities/vllm.html">vLLM</a><span>实体 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../concepts/elastic-kv-cache.html">Elastic KV Cache</a><span>概念 · related</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · related</span></li><li><a href="../analysis/kvcached-source-code-deep-dive.html">KVCacheD × SGLang × vLLM 源码深潜</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心思想">核心思想</a></li><li class=""><a href="#关键机制">关键机制</a></li><li class=""><a href="#工程影响">工程影响</a></li><li class=""><a href="#逻辑地址到物理-kv-的流程">逻辑地址到物理 KV 的流程</a></li><li class=""><a href="#局限与-radix-attention-的对比">局限与 radix-attention 的对比</a></li><li class=""><a href="#出处">出处</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=paged-attention">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">PagedAttention</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>Continuous Batching</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Elastic KV Cache</title></circle><circle class="mini-node mini-node-concepts" cx="178.0" cy="82.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-concepts" cx="120.0" cy="140.0" r="7"><title>LLM Inference</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>RadixAttention</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>SGLang</title></circle><circle class="mini-node mini-node-sources" cx="79.0" cy="41.0" r="7"><title>SGLang 架构与推理优化</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/continuous-batching.html">Continuous Batching</a><span>概念 · related</span></li><li><a href="../concepts/elastic-kv-cache.html">Elastic KV Cache</a><span>概念 · related</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li><li><a href="../concepts/radix-attention.html">RadixAttention</a><span>概念 · related</span></li><li><a href="../entities/sglang.html">SGLang</a><span>实体 · related</span></li><li><a href="../sources/src-sglang-architecture.html">SGLang 架构与推理优化</a><span>源文件 · wikilink</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../concepts/continuous-batching.html">Continuous Batching</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../concepts/elastic-kv-cache.html">Elastic KV Cache</a><span>概念 · related</span></li><li><a href="../concepts/gpu-programming-learning.html">GPU 编程学习</a><span>概念 · related</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/kvcached.html">KVCacheD</a><span>实体 · related</span></li><li><a href="../analysis/kvcached-sglang-vllm-knowledge-system.html">KVCacheD、SGLang 与 vLLM 三项目知识体系</a><span>分析 · related</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#核心思想">核心思想</a></li><li class=""><a href="#分配复用与回收">分配、复用与回收</a></li><li class=""><a href="#和调度及外部-kv-系统的边界">和调度及外部 KV 系统的边界</a></li><li class=""><a href="#评估与出处">评估与出处</a></li></ul></aside></aside>
 </div>
 
 <script>
@@ -111,6 +122,7 @@ PagedAttention:
   window.addEventListener("scroll", updateActive, { passive: true });
   updateActive();
 </script>
+
 
 </body>
 </html>

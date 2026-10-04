@@ -1,16 +1,20 @@
 ---
 title: Elastic KV Cache
 tags: [concept, ai-infra, llm-inference, kv-cache, gpu-virtual-memory, memory-management]
-date: 2026-10-02
-sources: [kvcached-architecture-analysis.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md]
-related: [kvcached, vllm, sglang, paged-attention, radix-attention, kv-cache-offload, gpu-sharing, llm-inference]
+date: 2026-10-03
+sources: [src-kvcached-architecture, src-vllm-architecture, src-sglang-architecture]
+related: ["[[kvcached]]", "[[vllm]]", "[[sglang]]", "[[paged-attention]]", "[[radix-attention]]", "[[kv-cache-offload]]", "[[gpu-sharing]]", "[[llm-inference]]", "[[inference-routing]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]"]
 ---
 
 # Elastic KV Cache
 
-Elastic KV cache 指把推理引擎可寻址的 KV 容量与当前真实占用的 GPU 物理显存解耦：引擎拥有稳定的逻辑槽位和 tensor 地址，物理页只在活跃请求使用时映射，并在 block/token 不再被运行请求或 prefix cache 引用后回收。
+Elastic KV cache 指把推理引擎可寻址的 KV 容量与当前真实占用的 GPU 物理显存解耦：引擎拥有稳定的逻辑槽位和 tensor 地址，需要保存或访问 KV 时映射 physical backing，并在 block/token 不再被运行请求或 prefix cache 引用、且 GPU 读写结束后回收。
 
 [[kvcached]] 是这一模式的直接实现；[[vllm]] 的 [[paged-attention]] 和 [[sglang]] 的 [[radix-attention]] 则分别提供上层 block/token 与 prefix reuse 语义。
+
+本页的 KVCacheD 类名、布局和同步策略限定于 [[src-kvcached-architecture]] 记录的 KVCacheD `884108704f44`、vLLM `dc36fcce902a`、SGLang `44ef8fecfe69` 集成快照。2026-10-03 更新的是概念边界，不代表这些 patches 已验证兼容两种 engine 的最新 release。
+
+GPU VMM 的 map/unmap 改变地址背后的显存驻留，不自动把 KV 保存到 CPU/SSD；外部 locality index 也不会替它预留物理页。需要跨层保存内容时使用 [[kv-cache-offload]]，需要依据位置选 endpoint 时使用 [[inference-routing]]。
 
 ## 四类容量
 
@@ -45,7 +49,7 @@ GPU virtual tensor address → physical VRAM
 
 GPU VMM 允许先 reserve 一段 virtual address，再把不同 physical allocation handle map 到其中的 page-aligned offset。KVCacheD 用该 VA 创建 torch tensor view；attention kernel 捕获和读取的是相同地址。物理页释放时重新映射 zero page，tensor 本身不销毁。
 
-这使 engine 无需感知物理页生命周期，但引入严格约束：
+稳定地址可让 attention kernel 继续使用原有 tensor view，但 engine 集成仍必须协调分配失败、引用和执行完成，引入严格约束：
 
 - shape/stride 必须与 backend 的真实读写方式一致。
 - unmap 前必须确保所有 GPU command 已结束。
@@ -86,8 +90,9 @@ Elastic KV cache 需要同时维持三类不变量：
 | 概念 | 主要解决的问题 | 与 Elastic KV 的关系 |
 |---|---|---|
 | [[paged-attention]] | engine 内 KV block 管理和 attention addressing | 上层逻辑索引 |
-| [[radix-attention]] | token-level prefix reuse | 上层 cache metadata |
+| [[radix-attention]] | prefix identity、匹配与复用，粒度依配置 | 上层 cache metadata |
 | [[kv-cache-offload]] | KV 数据跨 GPU/CPU/SSD/远端层级迁移 | 可组合，但数据路径和故障域不同 |
+| [[inference-routing]] 的 locality index | 记录可能命中的 worker/tier | 不拥有 KV 数据或 physical backing |
 | [[gpu-sharing]] | GPU 调度、分区、执行/显存隔离 | 更外层资源治理 |
 | sleep mode | 释放 KV，甚至权重和 allocator state | 粗粒度实例生命周期；Elastic KV 是请求级/页级 |
 
@@ -99,6 +104,8 @@ Elastic KV cache 需要同时维持三类不变量：
 - prefix hit rate 与 page-aware eviction 造成的命中损失。
 - TTFT、ITL、throughput 和 OOM rate。
 - TP/PP failure injection、shutdown 后 shared segment/socket cleanup。
+
+测量解释见 [[llm-serving-performance]]；map/unmap 失败、worker 消失与请求取消需要验证 [[llm-serving-reliability]] 中的恢复和清理边界。接入前应锁定 engine、KVCacheD、设备 backend、layout 和 connector 组合，而不是只检查虚拟容量是否足够。
 
 ## 相关页面
 

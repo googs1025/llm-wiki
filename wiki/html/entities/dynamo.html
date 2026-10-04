@@ -14,7 +14,7 @@
   <a class="brand" href="../index.html"><span class="brand-dot"></span>llm-wiki</a>
   <span class="meta">wiki · entities</span>
   <span class="spacer"></span>
-  <span class="meta">2026-09-22</span>
+  <span class="meta">2026-10-03</span>
   <button id="theme-toggle" aria-label="切换主题">🌓 主题</button>
 </header>
 
@@ -23,66 +23,67 @@
 
   <header class="page-header">
     <h1>Dynamo</h1>
-    <p class="page-meta">2026-09-22 · 来源：dynamo-architecture-analysis.md</p>
+    <p class="page-meta">2026-10-03 · 来源：src-dynamo-architecture</p>
     <div class="tags"><span class="tag">entity</span><span class="tag">ai-infra</span><span class="tag">llm-inference</span><span class="tag">llm-serving</span><span class="tag">distributed-serving</span><span class="tag">kv-cache</span><span class="tag">kubernetes</span><span class="tag">autoscaling</span><span class="tag">nvidia</span></div>
   </header>
 
-  <p>NVIDIA 开源的数据中心级 LLM 推理编排层。Dynamo 位于推理 engine 之上，负责入口、路由、P/D 协调、KV 传输、容量控制、Kubernetes 部署与故障连续性；不替代 SGLang、vLLM 或 TensorRT-LLM 的 GPU 执行内核。</p>
-<h2 id="架构边界">架构边界</h2>
-<p>Frontend / Gateway EPP → KV-aware Router → backend workers 是请求路径；DGDR / Profiler / AIConfigurator → DGD / DCD → Operator 是部署路径；Planner → connector / Operator 是运行时容量路径。三条路径通过 Runtime 的 discovery、request 和 event planes 连接。</p>
-<h2 id="什么时候用">什么时候用</h2>
-<ul>
-<li>多 GPU、多节点或长上下文在线推理。</li>
-<li>需要独立扩缩 prefill/decode、KV-aware routing 或高速 KV transfer。</li>
-<li>需要按 TTFT/ITL/SLA 和 TCO 做容量规划与自动扩缩。</li>
-<li>需要 Gateway API 入口、请求迁移、canary health check 或 topology-aware deployment。</li>
-</ul>
-<h2 id="什么时候不用">什么时候不用</h2>
-<p>单模型、单 GPU、没有跨节点协调和 SLA 控制需求时，直接使用 <a class="wikilink" href="../entities/vllm.html">vllm</a> 或 <a class="wikilink" href="../entities/sglang.html">sglang</a> 更简单。若只需要标准 Kubernetes 模型生命周期而不需要 Dynamo 的 P/D、KV 和 Planner，应优先比较 <a class="wikilink" href="../entities/kserve.html">kserve</a>、<a class="wikilink" href="../entities/ome.html">ome</a> 等 Operator。</p>
-<h2 id="与同类比较">与同类比较</h2>
+  <p>NVIDIA Dynamo 是 engine 上方可模块化采用的分布式 serving runtime，协调请求路由、worker 发现、P/D、KV transfer 与容量控制；模型前向和本地 KV 仍由 vLLM、SGLang 等 backend engine 负责。</p>
+<h2 id="当前核验2026-10-03">当前核验（2026-10-03）</h2>
+<p>核验 release 为 <a href="https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0">v1.5.0</a>，发布于 2026-09-21（GitHub UTC 日期）。其依赖矩阵固定 vLLM <strong>0.28.0</strong>、SGLang <strong>0.5.18</strong>；<a class="wikilink" href="../entities/vllm.html">vllm</a> 和 <a class="wikilink" href="../entities/sglang.html">sglang</a> 的独立最新版不自动具备兼容性。该版本还将 AIConfigurator 更名为 AISimulate，升级规划工具时应检查新包与 CLI。</p>
+<p><a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> 保存较早的文档与实现分析。下文引用的 dev 文档是本次核验时看到的架构边界，不能把它的全部配置或默认值外推为 v1.5.0 的保证。</p>
+<h2 id="架构与状态边界">架构与状态边界</h2>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>项目</th>
-<th>主要边界</th>
-<th>与 Dynamo 的差异</th>
+<th>路径</th>
+<th>主要职责</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a class="wikilink" href="../entities/vllm.html">vllm</a> / <a class="wikilink" href="../entities/sglang.html">sglang</a></td>
-<td>推理 engine</td>
-<td>更靠近单机/多 GPU 执行与 batching</td>
+<td>Request plane</td>
+<td>Frontend / Router 接收与协调请求，backend workers 执行；P/D 模式传递阶段结果与 transfer metadata</td>
 </tr>
 <tr>
-<td><a class="wikilink" href="../entities/llm-d.html">llm-d</a></td>
-<td>K8s inference stack、router、pool</td>
-<td>更强调云原生入口与组件生态，Dynamo 更强调 engine 上方的端到端编排</td>
+<td>Discovery / event plane</td>
+<td>发现 worker，传播 KV events 和运行信号，支持路由与观测</td>
 </tr>
 <tr>
-<td><a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a></td>
-<td>Gateway API inference endpoint picking</td>
-<td>可作为 Dynamo 的入口承载，不能替代完整 P/D/KV/Planner</td>
+<td>Control connections</td>
+<td>Planner 根据指标更新期望 worker 数；Kubernetes Operator 负责收敛资源和生命周期</td>
 </tr>
 <tr>
-<td><a class="wikilink" href="../entities/kserve.html">kserve</a> / <a class="wikilink" href="../entities/ome.html">ome</a></td>
-<td>模型服务 CRD/operator</td>
-<td>更偏声明式生命周期，Dynamo 提供更深的 serving runtime 协调</td>
+<td>KV 数据路径</td>
+<td>engine 维护本地 KV，所选 connector / transport 协调实际跨 worker 传输</td>
 </tr>
 </tbody>
 </table></div>
-<p>详细架构与业务问题见 <a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a>。</p>
-<h2 id="在-m4-模块地图中的位置">在 M4 模块地图中的位置</h2>
-<p>Dynamo 围绕可插拔 engine 提供分布式 serving runtime，协调 frontend/routing、服务发现与事件、worker 角色、KV transfer 和容量规划。职责边界见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>，与 engine、Kubernetes 组件的组合选择见 <a class="wikilink" href="../analysis/llm-serving-engine-selection-map.html">llm-serving-engine-selection-map</a>。</p>
+<p>以上区分依据 <a href="https://docs.nvidia.com/dynamo/dev/knowledge-base/concepts/architecture">Dynamo dev 架构文档</a>。请求、事件和控制连接可使用不同机制；Operator 不逐请求选点，locality index 也不代替 engine KV 数据。</p>
+<p><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a> 的 prefill/decode 是服务角色；backend 内部 TP/PP/EP/DP 是执行并行方式。选择角色池规模与选择单个 worker 内的并行拓扑是不同决策，最终都需用 <a class="wikilink" href="../concepts/llm-serving-performance.html">llm-serving-performance</a> 的目标负载验证。</p>
+<h2 id="kvbm-迁移边界">KVBM 迁移边界</h2>
+<blockquote>
+<p>[!warning] Conflict<br>
+KVBM 在 v1.5.0 已被标记为 deprecated，目标在 v1.6.0 移除；host/disk offload 应转向 engine-native integrations。早期 KV Cache Runner（KVCR）面向跨节点 KV sharing，<strong>不是 KVBM 的直接替代品</strong>。<a href="https://github.com/ai-dynamo/dynamo/releases/tag/v1.5.0">官方 v1.5.0 迁移说明</a></p>
+</blockquote>
+<p><a class="wikilink" href="../sources/src-dynamo-architecture.html">src-dynamo-architecture</a> 是其分析时点的整体架构快照，包含缓存、传输与 offload 的一般设计；当前 KVBM 状态与迁移应以上述官方说明为准。<a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a> 进一步区分数据副本、tier residency、外部索引和直接 P/D transfer。</p>
+<h2 id="适用与采用成本">适用与采用成本</h2>
+<ul>
+<li>适合：需要跨 worker 请求协调、KV-aware routing、P/D 角色池与 Planner 容量闭环，且能承担 engine/connector/runtime 版本管理的团队。</li>
+<li>不适合：只有单模型单实例推理，或只需标准模型生命周期而没有分布式 runtime 需求。前者直接使用 engine 更简，后者可比较 <a class="wikilink" href="../entities/kserve.html">kserve</a> / <a class="wikilink" href="../entities/ome.html">ome</a>。</li>
+<li>下一步核验：锁定 backend pins、GPU/互联和部署模式，检查传输、路由事件、readiness 与取消/故障恢复路径；KVBM 用户还需单独验证 offload 迁移。可靠性检查入口见 <a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a>。</li>
+</ul>
+<h2 id="与同类及模块地图的关系">与同类及模块地图的关系</h2>
+<p><a class="wikilink" href="../entities/llm-d.html">llm-d</a> 更围绕 Kubernetes Proxy/EPP、InferencePool 和 Model Server 组合；<a class="wikilink" href="../entities/gateway-api-inference-extension.html">gateway-api-inference-extension</a> 提供入口选点契约；<a class="wikilink" href="../entities/kserve.html">kserve</a> / <a class="wikilink" href="../entities/ome.html">ome</a> 聚焦模型服务生命周期。它们和 Dynamo 可能组合，采用前要明确哪些组件拥有路由、KV transfer 和扩缩写入权。</p>
+<p>Dynamo 在 M4 位于分布式 runtime 层，并提供可选控制组件。职责见 <a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a>，组合与运维成本见 <a class="wikilink" href="../analysis/llm-serving-engine-selection-map.html">llm-serving-engine-selection-map</a>。</p>
 
-  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../entities/mcp-lifecycle-operator.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">MCP Lifecycle Operator</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../entities/vllm.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">vLLM</strong></a></div><span class="page-navigation-progress">阅读顺序 79/304</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../concepts/ai-gateway.html">ai-gateway</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li></ul></section></nav>
+  <nav class="page-navigation" aria-label="页面阅读导航"><div class="page-navigation-actions"><a class="page-navigation-link previous" href="../entities/mcp-lifecycle-operator.html"><span class="navigation-label">← 上一页</span><strong class="navigation-title">MCP Lifecycle Operator</strong></a><a class="page-navigation-index" href="../index.html">返回索引</a><a class="page-navigation-link next recommended" href="../entities/vllm.html"><span class="navigation-label">推荐阅读下一页 →</span><strong class="navigation-title">vLLM</strong></a></div><span class="page-navigation-progress">阅读顺序 79/307</span><section class="related-panel" aria-labelledby="related-frontmatter"><h2 id="related-frontmatter">相关页面</h2><ul><li><a class="wikilink" href="../concepts/llm-inference.html">llm-inference</a></li><li><a class="wikilink" href="../concepts/inference-routing.html">inference-routing</a></li><li><a class="wikilink" href="../concepts/disaggregated-serving.html">disaggregated-serving</a></li><li><a class="wikilink" href="../concepts/kv-cache-offload.html">kv-cache-offload</a></li><li><a class="wikilink" href="../concepts/model-serving-operator.html">model-serving-operator</a></li><li><a class="wikilink" href="../concepts/ai-gateway.html">ai-gateway</a></li><li><a class="wikilink" href="../entities/sglang.html">sglang</a></li><li><a class="wikilink" href="../entities/vllm.html">vllm</a></li><li><a class="wikilink" href="../concepts/llm-serving-performance.html">llm-serving-performance</a></li><li><a class="wikilink" href="../concepts/llm-serving-reliability.html">llm-serving-reliability</a></li><li><a class="wikilink" href="../analysis/llm-inference-serving-project-map.html">llm-inference-serving-project-map</a></li><li><a class="wikilink" href="../analysis/llm-serving-engine-selection-map.html">llm-serving-engine-selection-map</a></li></ul></section></nav>
 
   <div class="footer">
     🦊 llm-wiki · entities · <a href="../../entities/dynamo.md">查看 Markdown 源</a>
   </div>
   </main>
 
-  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=dynamo">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Dynamo</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>AI Gateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Gateway API Inference Extension</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>llm-d</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>LLM Inference</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/ai-gateway.html">AI Gateway</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · wikilink</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../analysis/github-stars-ingest-candidates.html">GitHub Stars 下一批摄入候选清单</a><span>分析 · wikilink</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · wikilink</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · wikilink</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#架构边界">架构边界</a></li><li class=""><a href="#什么时候用">什么时候用</a></li><li class=""><a href="#什么时候不用">什么时候不用</a></li><li class=""><a href="#与同类比较">与同类比较</a></li><li class=""><a href="#在-m4-模块地图中的位置">在 M4 模块地图中的位置</a></li></ul></aside></aside>
+  <aside class="right-rail"><aside class="side-panel page-relations"><div class="side-panel-head"><h3>关系图谱</h3><a href="../graph.html?focus=dynamo">全局打开</a></div><svg class="mini-graph" viewBox="0 0 240 150" role="img" aria-label="本页一跳关系图"><line x1="120.0" y1="82.0" x2="120.0" y2="24.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="41.0" /><line x1="120.0" y1="82.0" x2="178.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="161.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="120.0" y2="140.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="123.0" /><line x1="120.0" y1="82.0" x2="62.0" y2="82.0" /><line x1="120.0" y1="82.0" x2="79.0" y2="41.0" /><circle class="mini-node mini-node-current" cx="120" cy="82" r="10" /><text x="120" y="108" text-anchor="middle">Dynamo</text><circle class="mini-node mini-node-concepts" cx="120.0" cy="24.0" r="7"><title>AI Gateway</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="41.0" r="7"><title>Disaggregated Serving</title></circle><circle class="mini-node mini-node-entities" cx="178.0" cy="82.0" r="7"><title>Gateway API Inference Extension</title></circle><circle class="mini-node mini-node-concepts" cx="161.0" cy="123.0" r="7"><title>Inference Routing</title></circle><circle class="mini-node mini-node-entities" cx="120.0" cy="140.0" r="7"><title>KServe</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="123.0" r="7"><title>KV Cache Offload（KV 多级缓存）</title></circle><circle class="mini-node mini-node-entities" cx="62.0" cy="82.0" r="7"><title>llm-d</title></circle><circle class="mini-node mini-node-concepts" cx="79.0" cy="41.0" r="7"><title>LLM Inference</title></circle></svg><h4>它指向</h4><ul class="side-link-list"><li><a href="../concepts/ai-gateway.html">AI Gateway</a><span>概念 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../entities/gateway-api-inference-extension.html">Gateway API Inference Extension</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · related</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · wikilink</span></li><li><a href="../concepts/kv-cache-offload.html">KV Cache Offload（KV 多级缓存）</a><span>概念 · related</span></li><li><a href="../entities/llm-d.html">llm-d</a><span>实体 · wikilink</span></li><li><a href="../concepts/llm-inference.html">LLM Inference</a><span>概念 · related</span></li></ul><h4>反向链接</h4><ul class="side-link-list"><li><a href="../analysis/ai-infra-learning-cn-map.html">AI Infra 中文学习项目地图</a><span>分析 · wikilink</span></li><li><a href="../entities/aibrix.html">AIBrix</a><span>实体 · related</span></li><li><a href="../concepts/disaggregated-serving.html">Disaggregated Serving</a><span>概念 · related</span></li><li><a href="../analysis/github-stars-ingest-candidates.html">GitHub Stars 下一批摄入候选清单</a><span>分析 · wikilink</span></li><li><a href="../entities/gpustack.html">GPUStack</a><span>实体 · wikilink</span></li><li><a href="../concepts/inference-routing.html">Inference Routing</a><span>概念 · wikilink</span></li><li><a href="../entities/kserve.html">KServe</a><span>实体 · wikilink</span></li><li><a href="../entities/kubeai.html">KubeAI</a><span>实体 · wikilink</span></li></ul></aside><aside class="toc"><h4>本页目录</h4><ul><li class=""><a href="#当前核验2026-10-03">当前核验（2026-10-03）</a></li><li class=""><a href="#架构与状态边界">架构与状态边界</a></li><li class=""><a href="#kvbm-迁移边界">KVBM 迁移边界</a></li><li class=""><a href="#适用与采用成本">适用与采用成本</a></li><li class=""><a href="#与同类及模块地图的关系">与同类及模块地图的关系</a></li></ul></aside></aside>
 </div>
 
 <script>
@@ -110,6 +111,7 @@
   window.addEventListener("scroll", updateActive, { passive: true });
   updateActive();
 </script>
+
 
 </body>
 </html>

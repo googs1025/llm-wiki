@@ -1,73 +1,56 @@
 ---
 title: PagedAttention
 tags: [concept, ai-infra, kv-cache, llm-inference]
-date: 2026-09-22
-sources: [vllm-architecture-analysis.md]
-related: [vllm, radix-attention, sglang]
+date: 2026-10-03
+sources: [src-vllm-architecture]
+related: ["[[vllm]]", "[[radix-attention]]", "[[sglang]]", "[[continuous-batching]]", "[[llm-inference]]", "[[kv-cache-offload]]", "[[elastic-kv-cache]]", "[[inference-routing]]"]
 ---
 
 # PagedAttention
 
-[[vllm]] 论文（Kwon et al., SOSP 2023）提出的 **block 级 KV 缓存管理机制**；当前官方架构仍以 block table、attention backend 与 prefix caching 组合扩展。它把 OS 虚存分页思想（按页分配 + 页表映射）搬到 LLM KV cache：在一个确定的配置内，KV 按固定大小的逻辑/物理 block 管理，每个请求用 **block table** 记录"逻辑序列位置 → 物理 block"映射。具体 block 大小取决于配置、attention backend 和版本。
+PagedAttention 是 [[vllm]] 论文提出的本地 KV 分块寻址与管理机制：序列使用逻辑 block 表达 KV，block table 把逻辑位置映射到实际 KV buffer 中的物理 block，attention kernel 按映射访问数据。这里的“物理 block”属于 engine 的 KV 分配层，不等于 GPU 驱动的物理显存页；后者见 [[elastic-kv-cache]]。
+
+核心收益是让序列按需使用非连续的 KV blocks，减少为每个请求按最大长度预留空间造成的浪费。block 大小、布局与 attention backend 有关，不存在适用于所有版本、模型和硬件的统一 block size。[vLLM 历史 PagedAttention kernel 设计](https://docs.vllm.ai/en/latest/design/paged_attention/)解释了原始设计中的分块寻址；官方已注明它不再描述当前代码，不能作为当前 vLLM backend 的布局证据。版本化架构分析见 [[src-vllm-architecture]]。
 
 ## 核心思想
 
-```
-传统 (HF transformers):
-  按 max_seq_len 预分配 KV         浪费严重
-  ──────────────────────────────
-  [req0  used  ][   unused   ]
-  [req1 used][        unused        ]
-
+```text
 PagedAttention:
   按 block 按需分配（block size = B）
   Block 0: [████████]  complete (B/B tokens)
   Block 1: [█████░░░]  partial tail (k/B tokens, 0 < k < B)
-  Block 2: [░░░░░░░░]  free (B slots)
+  Block 2: [░░░░░░░░]  allocated to req1, not yet populated (0/B tokens)
+  Block 3: [░░░░░░░░]  unallocated, free (B slots)
 
   Block Table per req:
     req0: [B0, B1]
-    req1: [B0, B2]   ← 共享 system prompt 在 B0
+    req1: [B0, B2]   ← 已验证可复用的 prefix 在 B0
 ```
 
-## 关键机制
+图中 B2 已分配给 req1，尚未写入有效 KV；B3 才是可供分配的空闲物理 block。未填充的槽位不等于整个 block 未分配。共享 B0 还需要额外的前缀身份、有效性和引用管理；拥有 block table 本身不保证两个请求能共享 KV。
 
-- **Block table**：每个请求有一个 `int32 list[blocks]`，attention kernel 用它把"逻辑 token 索引"翻译成"物理 KV 位置"
-- **Block 大小固定于当前配置**：逻辑/物理 block 使用同一 block size `B`；具体 `B` 依配置、attention backend 和版本而定
-- **Prefix sharing**：传统/默认 full-block APC 路径按 block 边界共享 system prompt，partial tail 在形成完整 block 前不可复用。当前 vLLM 可通过 `cache_partial_block` 与可配置的 `prefix_match_unit` 启用更细粒度的 partial entry，但仍受配置、backend、版本及整除/match-unit 约束。Block table 的共享使用引用计数管理，释放时只有 ref=0 才回收。详见 [Prefix Caching](https://docs.vllm.ai/en/latest/design/prefix_caching/) 与 [BlockPool API](https://docs.vllm.ai/en/latest/api/vllm/v1/core/block_pool/)
-- **Copy-on-write**：beam search 等场景 fork 同一个 block table，写入时拷贝
-- **Swap to CPU**：内存紧张时把不活跃 block swap 到 CPU pinned memory
+## 分配、复用与回收
 
-## 工程影响
+- 调度器为本轮需要执行的 token 申请 KV slots；逻辑 block table 与物理 KV buffer 的映射必须一致。
+- Prefix caching 可在该分块体系上识别已有前缀并复用 blocks。缓存键、共享边界、partial-block 支持和引用计数由实际实现决定，不能从“分页”直接推出。
+- 请求完成会释放其引用；仍被其他请求或前缀缓存保留的 KV 不一定立即被覆盖。缓存淘汰、请求释放与底层显存释放属于不同动作。
+- 共享后的写入隔离、抢占时的重算或 offload 需遵守目标 engine 的协议，不能假设所有 PagedAttention 路径都支持 CPU swap 或 copy-on-write。
 
-- **首创性**：2023 年第一个把虚存分页引入 LLM serving，HuggingFace TGI / Ray Serve / Anyscale / Together AI 都基于此或受启发
-- **吞吐量**：典型 2-4× over HF transformers
-- **简单可靠**：block table 是数组，无需锁，调度逻辑直接
+当前前缀缓存实现见 [vLLM Prefix Caching](https://docs.vllm.ai/en/latest/design/prefix_caching/)。该链接为 2026-10-03 核验的 latest 文档，具体匹配粒度应回到部署 release 的代码和配置确认。
 
-## 逻辑地址到物理 KV 的流程
+## 和调度及外部 KV 系统的边界
 
-```text
-请求 token 位置 i → 逻辑 block = i // block_size
-        → block table[logical block]
-        → 物理 GPU KV block
-        → attention kernel gather K/V
-        → 写入新 token block 或触发扩容
-```
+[[continuous-batching]] 决定本轮哪些请求前进、需要多少 KV；PagedAttention 提供它使用的局部空间管理。申请、写入、引用、保留与回收的共同流程见 [[llm-inference#F2 · KV Block 生命周期|F2 · KV Block 生命周期]]。
 
-## 局限与 [[radix-attention]] 的对比
+| 相邻机制 | 负责什么 | 与 PagedAttention 的区别 |
+|---|---|---|
+| [[radix-attention]] | 用前缀树组织缓存身份、匹配与淘汰 | 前缀语义和寻址布局是不同轴；不能推定与 vLLM block 对象相同 |
+| [[inference-routing]] | 用负载或外部 locality index 选择 endpoint | 外部索引记录位置线索，实际 KV 有效性由 engine 确认 |
+| [[kv-cache-offload]] | 将 KV 内容复制到 CPU、SSD 或远端，再按需恢复 | block table 不执行跨层复制，也不保证远端副本存在 |
+| [[elastic-kv-cache]] | 将稳定的 GPU 虚拟地址与物理 backing 解耦 | engine 的 block 可用不代表底层物理显存一定能成功映射 |
 
-- **Block 边界刚性**：前缀共享按当前 block size `B` 对齐，不能在 block 内任意分叉
-- **默认 full-block APC 的 partial tail 限制**：在传统/默认路径中，末尾未满的 block 在形成完整 block 前无法被前缀复用；启用 `cache_partial_block` 并配置 `prefix_match_unit` 后可以更细粒度匹配，实际边界依配置/backend/版本与整除约束而定
-- **内部碎片依负载而定**：程度取决于 block size、请求长度分布与实现配置
+## 评估与出处
 
-[[radix-attention]]（[[sglang]] 提出）通过 token 级 radix 树 + flat KV pool 解决这些限制。
+关注 block 利用率、尾块浪费、分配失败与抢占、前缀命中后的实际 prefill 节省。吞吐收益需固定模型、硬件、请求长度和调度配置后测量，不能沿用历史论文中的倍数作为当前通用承诺。
 
-## 出处
-
-Kwon et al., *"Efficient Memory Management for Large Language Model Serving with PagedAttention"*, SOSP 2023。
-
-## 相关页面
-
-- 工程实现：[[vllm]]
-- 改进算法：[[radix-attention]]（[[sglang]] 提出）
-- 同类对比：[[sglang]] 架构详解 → [[src-sglang-architecture]]
+Kwon et al., *Efficient Memory Management for Large Language Model Serving with PagedAttention*, SOSP 2023；工程证据见 [[src-vllm-architecture]]，SGLang 的对照分析见 [[src-sglang-architecture]]。
