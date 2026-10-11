@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
+import json
 import re
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -22,6 +25,24 @@ SPEC.loader.exec_module(build)
 
 CATEGORIES = ("analysis", "concepts", "entities", "sources")
 PLACEHOLDERS = ("TBD", "TODO", "FIXME", "待补")
+NEW_SLUGS = (
+    "llm-inference-request-lifecycle",
+    "aibrix-inference-request-flow",
+    "dynamo-inference-request-flow",
+    "llm-d-inference-request-flow",
+    "vllm-gpu-execution-path",
+    "sglang-gpu-execution-path",
+    "llm-gpu-kernel-execution-path",
+)
+HANDCRAFTED_HTML_SHA256 = {
+    "src-agent-sandbox-architecture.html": "fdba44d4044ebb43d079e64312961ea190b6604ad13c57abf4bae1fcb288a622",
+    "src-agentgateway-architecture.html": "c8c864b2974cc837e7f1e867a00cbf2a7964de323ae8ad24ee38bbc7b23c1b3b",
+    "src-claude-context-architecture.html": "d0e989a760a3694b3498ba64ac908c00046be4a3abe4e729ebbbd75367eaed59",
+    "src-claude-mem-architecture.html": "08d79f7f87c78cc52f1fccc95a95f825f74bc36aaff211a1ac29e0b8e27bc374",
+    "src-hiclaw-architecture.html": "1cd6e513069ef9dc1065153393a67fb9232b9360ed3e685e143f0a0dbb155f1a",
+    "src-nanobot-architecture.html": "4dced8e8b319128eda6ad6566528df712750cfe4f134f5575f7041f9af7d30d2",
+    "src-powermem-architecture.html": "fd83f3357f37f16d53c41fe8ee4e9500107fbd180d9b5d01dba2edf3aa040466",
+}
 BASELINE_MISSING_WIKILINKS = frozenset(
     {
         "AI Agent",
@@ -396,21 +417,12 @@ class RequestToCudaWikiTest(unittest.TestCase):
             self.assertIn(symbol, text)
 
     def test_navigation_and_backlinks(self) -> None:
-        slugs = (
-            "llm-inference-request-lifecycle",
-            "aibrix-inference-request-flow",
-            "dynamo-inference-request-flow",
-            "llm-d-inference-request-flow",
-            "vllm-gpu-execution-path",
-            "sglang-gpu-execution-path",
-            "llm-gpu-kernel-execution-path",
-        )
         wiki_paths = [
             candidate
             for category in CATEGORIES
             for candidate in (WIKI / category).glob("*.md")
         ] + [WIKI / "index.md", WIKI / "log.md"]
-        for slug in slugs:
+        for slug in NEW_SLUGS:
             inbound = [
                 candidate
                 for candidate in wiki_paths
@@ -420,7 +432,7 @@ class RequestToCudaWikiTest(unittest.TestCase):
             self.assertTrue(inbound, f"{slug}: no inbound wikilink")
 
         index = (WIKI / "index.md").read_text(encoding="utf-8")
-        for slug in slugs:
+        for slug in NEW_SLUGS:
             self.assertIn(f"[[{slug}]]", index)
         reading_path = (
             "[[llm-inference-request-lifecycle]] → "
@@ -457,6 +469,105 @@ class RequestToCudaWikiTest(unittest.TestCase):
         log = (WIKI / "log.md").read_text(encoding="utf-8")
         entry = "## [2026-10-11] query | Trace inference requests from gateways to CUDA"
         self.assertEqual(log.count(entry), 1)
+
+    def test_global_content_integrity(self) -> None:
+        total_diagrams = 0
+        fixed_shas = {
+            "aibrix-inference-request-flow": "1d6472b83d2b70ce873dbd953add835e1ccc6a71",
+            "dynamo-inference-request-flow": "b208989fbe1cfbfde64d11334d8af4ff04fe1a99",
+            "llm-d-inference-request-flow": "d870bcd132fc118b1433940a7842140275cc6cc9",
+            "vllm-gpu-execution-path": "276fbcff2717bd934cfa37c8a2e4c391f3e7237b",
+            "sglang-gpu-execution-path": "e328c7ecbd69ebf77f38db9aa64eecefd760fe4b",
+        }
+        for slug in NEW_SLUGS:
+            text = self.assert_common_page_contract(slug)
+            total_diagrams += count_ascii_diagrams(slug)
+            if slug in fixed_shas:
+                self.assertIn(fixed_shas[slug], text)
+                self.assertIn("https://github.com/", text)
+        self.assertGreaterEqual(total_diagrams, 40)
+
+        allowed_statuses = {
+            "documented",
+            "tested",
+            "experimental",
+            "conceptual",
+            "unsupported / not found",
+        }
+        support_row = re.compile(
+            r"(?m)^\| (vLLM|SGLang) \| (Aggregated|P/D) \| ([^|]+?) \|"
+        )
+        for slug in (
+            "aibrix-inference-request-flow",
+            "dynamo-inference-request-flow",
+            "llm-d-inference-request-flow",
+        ):
+            _path, text = load_markdown(slug)
+            rows = support_row.findall(text)
+            self.assertEqual(len(rows), 4, f"{slug}: support matrix size")
+            self.assertEqual(
+                {(engine, mode) for engine, mode, _status in rows},
+                {
+                    ("vLLM", "Aggregated"),
+                    ("vLLM", "P/D"),
+                    ("SGLang", "Aggregated"),
+                    ("SGLang", "P/D"),
+                },
+            )
+            for _engine, _mode, status in rows:
+                self.assertIn(status.strip(), allowed_statuses)
+
+        all_markdown = [
+            candidate
+            for category in CATEGORIES
+            for candidate in (WIKI / category).glob("*.md")
+        ] + [WIKI / "index.md", WIKI / "log.md"]
+        current_missing = collect_missing_wikilinks(all_markdown)
+        self.assertFalse(
+            current_missing - BASELINE_MISSING_WIKILINKS,
+            f"new missing wikilinks: {sorted(current_missing - BASELINE_MISSING_WIKILINKS)}",
+        )
+
+        raw_diff = subprocess.run(
+            ["git", "diff", "--quiet", "71030f1", "--", "raw"], cwd=ROOT
+        )
+        self.assertEqual(raw_diff.returncode, 0, "raw/ changed from implementation base")
+        for filename, expected in HANDCRAFTED_HTML_SHA256.items():
+            content = (WIKI / "html" / "sources" / filename).read_bytes()
+            self.assertEqual(hashlib.sha256(content).hexdigest(), expected, filename)
+
+    def test_generated_output(self) -> None:
+        generated_pages: dict[str, Path] = {}
+        for slug in NEW_SLUGS:
+            html_path = WIKI / "html" / "analysis" / f"{slug}.html"
+            self.assertTrue(html_path.is_file(), f"missing generated page: {slug}")
+            generated_pages[slug] = html_path
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<pre><code class=\"language-text\">", html)
+            self.assertNotIn("wikilink-missing", html)
+
+            for href in re.findall(r'href="([^"]+)"', html):
+                if href.startswith(("http://", "https://", "mailto:", "#")):
+                    continue
+                target_ref = href.split("#", 1)[0].split("?", 1)[0]
+                if not target_ref:
+                    continue
+                target = (html_path.parent / target_ref).resolve()
+                self.assertTrue(target.exists(), f"{slug}: missing href target {href}")
+
+        overview_html = generated_pages[
+            "llm-inference-request-lifecycle"
+        ].read_text(encoding="utf-8")
+        self.assertIn("L0–L8 端到端总图", overview_html)
+        self.assertIn("──►", overview_html)
+
+        graph = json.loads((WIKI / "html" / "graph.json").read_text(encoding="utf-8"))
+        node_ids = {node["id"] for node in graph["nodes"]}
+        self.assertTrue(set(NEW_SLUGS) <= node_ids)
+        edges = {(edge["source"], edge["target"]) for edge in graph["edges"]}
+        overview = "llm-inference-request-lifecycle"
+        for target in NEW_SLUGS[1:]:
+            self.assertIn((overview, target), edges)
 
 
 if __name__ == "__main__":

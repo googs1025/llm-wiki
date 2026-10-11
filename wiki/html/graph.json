@@ -148,6 +148,27 @@
       "outbound": 14
     },
     {
+      "id": "aibrix-inference-request-flow",
+      "title": "AIBrix 推理请求全链路：vLLM/SGLang 与 Aggregated/P-D",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/aibrix-inference-request-flow.html",
+      "tags": [
+        "analysis",
+        "aibrix",
+        "llm-serving",
+        "inference-routing",
+        "vllm",
+        "sglang",
+        "disaggregated-serving"
+      ],
+      "date": "2026-10-11",
+      "description": "AIBrix Envoy ext_proc、combined fallback、vLLM response-merge 与 SGLang bootstrap/watchdog 四象限请求流。",
+      "degree": 8,
+      "inbound": 6,
+      "outbound": 8
+    },
+    {
       "id": "code-semantic-search-rag-map",
       "title": "Code Semantic Search / Code RAG 对比地图",
       "category": "analysis",
@@ -579,6 +600,48 @@
       "outbound": 24
     },
     {
+      "id": "llm-gpu-kernel-execution-path",
+      "title": "LLM 推理 GPU 执行路径：从 Framework Op 到 CUDA Kernel 与 SM",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/llm-gpu-kernel-execution-path.html",
+      "tags": [
+        "analysis",
+        "llm-inference",
+        "gpu",
+        "cuda",
+        "kernel",
+        "tensor-core",
+        "performance"
+      ],
+      "date": "2026-10-11",
+      "description": "Framework op 到 CUDA stream/grid/block/warp/SM、Tensor Core/CUDA core、HBM 与 NCCL/NIXL 的 GPU 下钻。",
+      "degree": 11,
+      "inbound": 10,
+      "outbound": 8
+    },
+    {
+      "id": "llm-inference-request-lifecycle",
+      "title": "LLM 推理请求端到端生命周期：从入口到 CUDA",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/llm-inference-request-lifecycle.html",
+      "tags": [
+        "analysis",
+        "llm-inference",
+        "request-lifecycle",
+        "vllm",
+        "sglang",
+        "cuda",
+        "gpu"
+      ],
+      "date": "2026-10-11",
+      "description": "从 OpenAI 请求对象、Gateway/Router、aggregated/P-D 分叉、engine handoff 到 CUDA 的统一 L0–L8 学习入口。",
+      "degree": 17,
+      "inbound": 7,
+      "outbound": 17
+    },
+    {
       "id": "llm-d-kubernetes-sigs-candidate-map",
       "title": "llm-d / Kubernetes SIGs 候选项目地图",
       "category": "analysis",
@@ -596,6 +659,28 @@
       "degree": 64,
       "inbound": 3,
       "outbound": 63
+    },
+    {
+      "id": "llm-d-inference-request-flow",
+      "title": "llm-d 推理请求全链路：vLLM/SGLang 与 Aggregated/P-D",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/llm-d-inference-request-flow.html",
+      "tags": [
+        "analysis",
+        "llm-d",
+        "llm-serving",
+        "gateway-api",
+        "inferencepool",
+        "vllm",
+        "sglang",
+        "disaggregated-serving"
+      ],
+      "date": "2026-10-11",
+      "description": "llm-d Proxy/EPP/InferencePool/coordinator 的 vLLM/SGLang aggregated/P-D 请求流。",
+      "degree": 11,
+      "inbound": 7,
+      "outbound": 10
     },
     {
       "id": "mcp-gateway-tooling-map",
@@ -617,6 +702,27 @@
       "outbound": 5
     },
     {
+      "id": "dynamo-inference-request-flow",
+      "title": "NVIDIA Dynamo 推理请求全链路：vLLM/SGLang 与 Aggregated/P-D",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/dynamo-inference-request-flow.html",
+      "tags": [
+        "analysis",
+        "dynamo",
+        "llm-serving",
+        "vllm",
+        "sglang",
+        "kv-aware-routing",
+        "nixl"
+      ],
+      "date": "2026-10-11",
+      "description": "Dynamo Frontend/Runtime/KV Router 三平面、vLLM/SGLang aggregated/P-D 与 NIXL 路径。",
+      "degree": 9,
+      "inbound": 7,
+      "outbound": 9
+    },
+    {
       "id": "openkruise-project-candidate-map",
       "title": "OpenKruise 项目候选地图",
       "category": "analysis",
@@ -634,6 +740,48 @@
       "degree": 17,
       "inbound": 2,
       "outbound": 16
+    },
+    {
+      "id": "sglang-gpu-execution-path",
+      "title": "SGLang 请求到 GPU Kernel 的执行路径",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/sglang-gpu-execution-path.html",
+      "tags": [
+        "analysis",
+        "sglang",
+        "llm-inference",
+        "scheduler",
+        "radix-cache",
+        "cuda",
+        "gpu"
+      ],
+      "date": "2026-10-11",
+      "description": "SGLang 的 TokenizerManager、Scheduler、ScheduleBatch、RadixCache、ModelRunner 与 kernel handoff。",
+      "degree": 10,
+      "inbound": 8,
+      "outbound": 10
+    },
+    {
+      "id": "vllm-gpu-execution-path",
+      "title": "vLLM 请求到 GPU Kernel 的执行路径",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/vllm-gpu-execution-path.html",
+      "tags": [
+        "analysis",
+        "vllm",
+        "llm-inference",
+        "scheduler",
+        "kv-cache",
+        "cuda",
+        "gpu"
+      ],
+      "date": "2026-10-11",
+      "description": "vLLM V1 的 AsyncLLM、EngineCore、Scheduler、KVCacheManager、GPUModelRunner 与 kernel handoff。",
+      "degree": 10,
+      "inbound": 9,
+      "outbound": 9
     },
     {
       "id": "agent-delegation",
@@ -889,11 +1037,11 @@
         "llm-serving",
         "kv-cache"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "P/D 角色池、KV handoff 合同与拓扑成本，区分阶段分离和 TP/PP/EP/DP",
-      "degree": 31,
-      "inbound": 29,
-      "outbound": 12
+      "degree": 38,
+      "inbound": 36,
+      "outbound": 17
     },
     {
       "id": "ebbinghaus-forgetting-curve",
@@ -984,11 +1132,11 @@
         "ai-infra",
         "learning"
       ],
-      "date": "2026-06-21",
+      "date": "2026-10-11",
       "description": "GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解",
-      "degree": 10,
-      "inbound": 2,
-      "outbound": 10
+      "degree": 11,
+      "inbound": 3,
+      "outbound": 11
     },
     {
       "id": "inference-routing",
@@ -1003,11 +1151,11 @@
         "ai-gateway",
         "gateway-api"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "按 KV cache、语义、成本、模型质量、负载做推理请求路由",
-      "degree": 44,
-      "inbound": 43,
-      "outbound": 22
+      "degree": 48,
+      "inbound": 47,
+      "outbound": 25
     },
     {
       "id": "device-plugin",
@@ -1079,11 +1227,11 @@
         "llm-inference",
         "memory-hierarchy"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "KV 数据的分层驻留、迁移与恢复；Dynamo KVBM 为历史实现，当前 offload 需按 engine/connector 版本核验",
-      "degree": 36,
-      "inbound": 31,
-      "outbound": 17
+      "degree": 42,
+      "inbound": 36,
+      "outbound": 20
     },
     {
       "id": "llm-inference",
@@ -1097,11 +1245,11 @@
         "llm-inference",
         "llm-serving"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "以 workload / SLO 为起点，串联请求、调度、KV、分布式执行、控制面和故障合同的专题入口",
-      "degree": 81,
-      "inbound": 75,
-      "outbound": 36
+      "degree": 82,
+      "inbound": 76,
+      "outbound": 37
     },
     {
       "id": "llm-serving-performance",
@@ -1190,11 +1338,11 @@
         "kv-cache",
         "llm-inference"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "engine 本地 KV 的逻辑块、物理块、block table 与引用生命周期",
-      "degree": 20,
-      "inbound": 19,
-      "outbound": 10
+      "degree": 23,
+      "inbound": 22,
+      "outbound": 12
     },
     {
       "id": "radix-attention",
@@ -1209,11 +1357,11 @@
         "llm-inference",
         "prefix-sharing"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "基于前缀树的 KV 复用与引用管理；外部 locality index 是路由提示，复用有效性由 engine 检查",
-      "degree": 22,
-      "inbound": 20,
-      "outbound": 10
+      "degree": 25,
+      "inbound": 23,
+      "outbound": 12
     },
     {
       "id": "repo-wiki-generation",
@@ -1509,11 +1657,11 @@
         "ai-infra",
         "kv-cache"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "K8s inference control plane（gateway/routing/autoscaling/LoRA/KV events）",
-      "degree": 19,
-      "inbound": 10,
-      "outbound": 15
+      "degree": 21,
+      "inbound": 12,
+      "outbound": 16
     },
     {
       "id": "apiserver-network-proxy",
@@ -1881,11 +2029,11 @@
         "autoscaling",
         "nvidia"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "NVIDIA distributed serving runtime：KV-aware routing、可选 P/D 与 Planner/Operator；v1.5.0 已弃用 KVBM，host/disk offload 转向 engine-native integrations。",
-      "degree": 33,
-      "inbound": 28,
-      "outbound": 17
+      "degree": 35,
+      "inbound": 30,
+      "outbound": 18
     },
     {
       "id": "envoy-ai-gateway",
@@ -1941,8 +2089,8 @@
       ],
       "date": "2026-09-13",
       "description": "Kubernetes Gateway API 推理扩展（InferencePool + Endpoint Picker）",
-      "degree": 21,
-      "inbound": 15,
+      "degree": 22,
+      "inbound": 16,
       "outbound": 11
     },
     {
@@ -2610,11 +2758,11 @@
         "inference-routing",
         "distributed-inference"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "CNCF Sandbox 的 K8s routing/serving stack（Router/EPP + InferencePool + KV/P-D/autoscaling）",
-      "degree": 46,
-      "inbound": 39,
-      "outbound": 22
+      "degree": 48,
+      "inbound": 41,
+      "outbound": 23
     },
     {
       "id": "llm-d-batch-gateway",
@@ -2779,8 +2927,8 @@
       ],
       "date": "2026-09-13",
       "description": "llm-d 智能入口层，用 EPP filters/scorers/scrapers 对 InferencePool endpoints 做选择。",
-      "degree": 18,
-      "inbound": 16,
+      "degree": 19,
+      "inbound": 17,
       "outbound": 10
     },
     {
@@ -2798,8 +2946,8 @@
       ],
       "date": "2026-09-22",
       "description": "历史实现与迁移入口；llm-d v0.10.0 的 WVA guides 已 deprecated，仓库更名为 llm-d-autoscaling；当前采用见 llm-d 的 EPP metrics → KEDA → HPA 路径。",
-      "degree": 16,
-      "inbound": 13,
+      "degree": 17,
+      "inbound": 14,
       "outbound": 9
     },
     {
@@ -3494,11 +3642,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "engine 层的高性能 LLM 推理引擎（LMSYS，RadixAttention 创始者，Dynamo backend 之一）",
-      "degree": 36,
-      "inbound": 36,
-      "outbound": 15
+      "degree": 38,
+      "inbound": 38,
+      "outbound": 16
     },
     {
       "id": "sig-storage-lib-external-provisioner",
@@ -3608,11 +3756,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-11",
       "description": "engine 实现下钻：scheduler、model runner、本地 KV 与并行执行，采用前核验 release 和集成矩阵",
-      "degree": 49,
-      "inbound": 48,
-      "outbound": 14
+      "degree": 51,
+      "inbound": 50,
+      "outbound": 15
     },
     {
       "id": "semantic-router",
@@ -3861,8 +4009,8 @@
       ],
       "date": "2026-06-12",
       "description": "AIBrix 架构（HEAD ac2c161，vLLM 生态 K8s GenAI inference infrastructure：gateway/routing、PodAutoscaler、ModelAdapter、KV cache/event sync、LoRA、distributed inference、GPU failure detection）",
-      "degree": 11,
-      "inbound": 2,
+      "degree": 12,
+      "inbound": 3,
       "outbound": 10
     },
     {
@@ -5306,8 +5454,8 @@
       ],
       "date": "2026-09-13",
       "description": "Dynamo 历史架构快照（Frontend/Gateway、KV-aware Router、P/D、DGDR/Planner）；v1.5.0 的 KVBM 弃用与 engine-native offload 迁移见 dynamo。",
-      "degree": 11,
-      "inbound": 5,
+      "degree": 12,
+      "inbound": 6,
       "outbound": 10
     },
     {
@@ -6814,6 +6962,11 @@
     },
     {
       "source": "aibrix",
+      "target": "aibrix-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix",
       "target": "batch-inference",
       "kind": "related"
     },
@@ -6885,6 +7038,46 @@
     {
       "source": "aibrix",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "aibrix",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "src-aibrix-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "aibrix-inference-request-flow",
+      "target": "vllm-gpu-execution-path",
       "kind": "related"
     },
     {
@@ -7924,7 +8117,17 @@
     },
     {
       "source": "disaggregated-serving",
+      "target": "aibrix-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
       "target": "dynamo",
+      "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "dynamo-inference-request-flow",
       "kind": "related"
     },
     {
@@ -7935,6 +8138,11 @@
     {
       "source": "disaggregated-serving",
       "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "llm-d-inference-request-flow",
       "kind": "related"
     },
     {
@@ -7974,6 +8182,11 @@
     },
     {
       "source": "disaggregated-serving",
+      "target": "sglang-gpu-execution-path",
+      "kind": "wikilink"
+    },
+    {
+      "source": "disaggregated-serving",
       "target": "src-dynamo-architecture",
       "kind": "wikilink"
     },
@@ -7981,6 +8194,11 @@
       "source": "disaggregated-serving",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "disaggregated-serving",
+      "target": "vllm-gpu-execution-path",
+      "kind": "wikilink"
     },
     {
       "source": "dra-driver-nvidia-gpu",
@@ -8045,6 +8263,11 @@
     {
       "source": "dynamo",
       "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo",
+      "target": "dynamo-inference-request-flow",
       "kind": "related"
     },
     {
@@ -8120,6 +8343,51 @@
     {
       "source": "dynamo",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "dynamo",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "src-dynamo-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "dynamo-inference-request-flow",
+      "target": "vllm-gpu-execution-path",
       "kind": "related"
     },
     {
@@ -8729,6 +8997,11 @@
     },
     {
       "source": "gpu-programming-learning",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "gpu-programming-learning",
       "target": "llm-inference",
       "kind": "related"
     },
@@ -9059,6 +9332,11 @@
     },
     {
       "source": "inference-routing",
+      "target": "aibrix-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
       "target": "batch-inference",
       "kind": "related"
     },
@@ -9071,6 +9349,11 @@
       "source": "inference-routing",
       "target": "dynamo",
       "kind": "wikilink"
+    },
+    {
+      "source": "inference-routing",
+      "target": "dynamo-inference-request-flow",
+      "kind": "related"
     },
     {
       "source": "inference-routing",
@@ -9105,6 +9388,11 @@
     {
       "source": "inference-routing",
       "target": "llm-d-batch-gateway",
+      "kind": "related"
+    },
+    {
+      "source": "inference-routing",
+      "target": "llm-d-inference-request-flow",
       "kind": "related"
     },
     {
@@ -11214,6 +11502,11 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "dynamo-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
       "target": "elastic-kv-cache",
       "kind": "related"
     },
@@ -11224,12 +11517,22 @@
     },
     {
       "source": "kv-cache-offload",
+      "target": "llm-d-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
       "target": "llm-d-kv-cache",
       "kind": "related"
     },
     {
       "source": "kv-cache-offload",
       "target": "llm-d-router",
+      "kind": "related"
+    },
+    {
+      "source": "kv-cache-offload",
+      "target": "llm-gpu-kernel-execution-path",
       "kind": "related"
     },
     {
@@ -11564,6 +11867,11 @@
     },
     {
       "source": "llm-d",
+      "target": "llm-d-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d",
       "target": "llm-d-kv-cache",
       "kind": "wikilink"
     },
@@ -11701,6 +12009,56 @@
       "source": "llm-d-benchmark",
       "target": "src-llm-d-benchmark-architecture",
       "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "gateway-api-inference-extension",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "llm-d",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "llm-d-router",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "llm-d-workload-variant-autoscaler",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "llm-d-inference-request-flow",
+      "target": "vllm-gpu-execution-path",
+      "kind": "related"
     },
     {
       "source": "llm-d-inference-sim",
@@ -12293,6 +12651,46 @@
       "kind": "wikilink"
     },
     {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "gpu-programming-learning",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "llm-gpu-kernel-execution-path",
+      "target": "vllm-gpu-execution-path",
+      "kind": "related"
+    },
+    {
       "source": "llm-inference",
       "target": "aibrix",
       "kind": "related"
@@ -12404,6 +12802,11 @@
     },
     {
       "source": "llm-inference",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference",
       "target": "llm-inference-serving-project-map",
       "kind": "wikilink"
     },
@@ -12470,6 +12873,91 @@
     {
       "source": "llm-inference",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "aibrix",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "aibrix-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "dynamo",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "dynamo-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "inference-routing",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "kv-cache-offload",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "llm-d",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "llm-d-inference-request-flow",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "llm-inference",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "paged-attention",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "radix-attention",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "sglang",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "vllm",
+      "kind": "wikilink"
+    },
+    {
+      "source": "llm-inference-request-lifecycle",
+      "target": "vllm-gpu-execution-path",
       "kind": "related"
     },
     {
@@ -14044,6 +14532,11 @@
     },
     {
       "source": "paged-attention",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
       "target": "llm-inference",
       "kind": "related"
     },
@@ -14070,6 +14563,11 @@
     {
       "source": "paged-attention",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "paged-attention",
+      "target": "vllm-gpu-execution-path",
       "kind": "related"
     },
     {
@@ -14244,6 +14742,11 @@
     },
     {
       "source": "radix-attention",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
       "target": "llm-inference",
       "kind": "related"
     },
@@ -14260,6 +14763,11 @@
     {
       "source": "radix-attention",
       "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "radix-attention",
+      "target": "sglang-gpu-execution-path",
       "kind": "related"
     },
     {
@@ -14584,6 +15092,11 @@
     },
     {
       "source": "sglang",
+      "target": "sglang-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "sglang",
       "target": "src-kvcached-architecture",
       "kind": "wikilink"
     },
@@ -14596,6 +15109,56 @@
       "source": "sglang",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "aibrix-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "dynamo-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "llm-d-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "radix-attention",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "sglang",
+      "kind": "related"
+    },
+    {
+      "source": "sglang-gpu-execution-path",
+      "target": "vllm-gpu-execution-path",
+      "kind": "wikilink"
     },
     {
       "source": "sig-storage-lib-external-provisioner",
@@ -18476,6 +19039,56 @@
       "source": "vllm",
       "target": "src-vllm-architecture",
       "kind": "wikilink"
+    },
+    {
+      "source": "vllm",
+      "target": "vllm-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "aibrix-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "disaggregated-serving",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "dynamo-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "kv-cache-offload",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "llm-d-inference-request-flow",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "llm-gpu-kernel-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "paged-attention",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "vllm",
+      "kind": "related"
     }
   ],
   "categories": [
@@ -18497,7 +19110,7 @@
     {
       "id": "analysis",
       "label": "分析",
-      "count": 32
+      "count": 39
     }
   ]
 }
