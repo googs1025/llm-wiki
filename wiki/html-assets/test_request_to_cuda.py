@@ -348,6 +348,53 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for symbol in symbols:
             self.assertIn(symbol, text)
 
+    def test_llmd_contract(self) -> None:
+        slug = "llm-d-inference-request-flow"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "Proxy / EPP / InferencePool 所有权",
+                "支持矩阵",
+                "vLLM × Aggregated",
+                "vLLM × P/D",
+                "SGLang × Aggregated",
+                "SGLang × P/D",
+                "EPP Filter → Score → Pick",
+                "InferencePool",
+                "P/D Coordinator",
+                "KV Index 与 KV Payload",
+                "流式返回",
+                "失败与取消",
+                "KEDA / HPA / DisaggregatedSet 旁路",
+                "源码入口",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 6)
+        for arrow in ("──►", "··►", "══►"):
+            self.assertIn(arrow, text)
+        self.assertIn("a9cf07a77a3016db21ae87134e5745b3a2d45ba6", text)
+        self.assertIn("d870bcd132fc118b1433940a7842140275cc6cc9", text)
+        for row in (
+            "| vLLM | Aggregated | documented |",
+            "| vLLM | P/D | documented |",
+            "| SGLang | Aggregated | documented |",
+            "| SGLang | P/D | documented |",
+        ):
+            self.assertIn(row, text)
+        symbols = (
+            "StreamingServer.Process",
+            "Director.HandleRequest",
+            "Scheduler.Schedule",
+            "InferencePoolReconciler.Reconcile",
+            "Server.handleInference",
+            "sglangKV.PreparePrefillKVParams",
+            "nixlKV.PrepareDecodeKVParams",
+        )
+        for symbol in symbols:
+            self.assertIn(symbol, text)
+
 
 if __name__ == "__main__":
     unittest.main()
