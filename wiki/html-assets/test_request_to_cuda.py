@@ -153,6 +153,43 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for arrow in ("──►", "··►", "══►"):
             self.assertIn(arrow, text)
 
+    def test_gpu_kernel_contract(self) -> None:
+        slug = "llm-gpu-kernel-execution-path"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "Host 到 Device",
+                "Grid、Block、Warp 与 SM",
+                "GPU 内存层级",
+                "Tensor Core 与 CUDA Core",
+                "Transformer 单层 Kernel 序列",
+                "GEMM Tiling",
+                "Attention Tiling",
+                "CUDA Graph",
+                "Kernel Fusion",
+                "NCCL 与 NIXL",
+                "性能观测",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 10)
+        terms = (
+            "HBM",
+            "L2",
+            "shared memory",
+            "register",
+            "LD/ST",
+            "MMA",
+            "occupancy",
+            "Nsight Systems",
+            "Nsight Compute",
+        )
+        for term in terms:
+            self.assertIn(term, text)
+        self.assertIn("276fbcff2717bd934cfa37c8a2e4c391f3e7237b", text)
+        self.assertIn("e328c7ecbd69ebf77f38db9aa64eecefd760fe4b", text)
+
 
 if __name__ == "__main__":
     unittest.main()
