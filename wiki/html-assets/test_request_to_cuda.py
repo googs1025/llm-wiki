@@ -263,6 +263,46 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for symbol in symbols:
             self.assertIn(symbol, text)
 
+    def test_aibrix_contract(self) -> None:
+        slug = "aibrix-inference-request-flow"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "支持矩阵",
+                "vLLM × Aggregated",
+                "vLLM × P/D",
+                "SGLang × Aggregated",
+                "SGLang × P/D",
+                "KV Metadata / KV Payload / Token Stream",
+                "失败与取消",
+                "控制面旁路",
+                "源码入口",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 6)
+        self.assertIn("1d6472b83d2b70ce873dbd953add835e1ccc6a71", text)
+        matrix_rows = (
+            "| vLLM | Aggregated | documented |",
+            "| vLLM | P/D | documented |",
+            "| SGLang | Aggregated | tested |",
+            "| SGLang | P/D | documented |",
+        )
+        for row in matrix_rows:
+            self.assertIn(row, text)
+        symbols = (
+            "Server.Process",
+            "Server.HandleRequestHeaders",
+            "Server.HandleRequestBody",
+            "pdRouter.Route",
+            "pdRouter.filterPrefillDecodePods",
+            "VLLMHandler.MergePrefillResponse",
+            "SGLangHandler.AugmentPrefillRequest",
+        )
+        for symbol in symbols:
+            self.assertIn(symbol, text)
+
 
 if __name__ == "__main__":
     unittest.main()
