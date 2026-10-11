@@ -1,9 +1,9 @@
 ---
 title: Dynamo
 tags: [entity, ai-infra, llm-inference, llm-serving, distributed-serving, kv-cache, kubernetes, autoscaling, nvidia]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-dynamo-architecture]
-related: ["[[llm-inference]]", "[[inference-routing]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[model-serving-operator]]", "[[ai-gateway]]", "[[sglang]]", "[[vllm]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[llm-inference]]", "[[inference-routing]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[model-serving-operator]]", "[[ai-gateway]]", "[[sglang]]", "[[vllm]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[dynamo-inference-request-flow]]"]
 ---
 
 # Dynamo
@@ -43,6 +43,8 @@ NVIDIA Dynamo 是 engine 上方可模块化采用的分布式 serving runtime，
 - 下一步核验：锁定 backend pins、GPU/互联和部署模式，检查传输、路由事件、readiness 与取消/故障恢复路径；KVBM 用户还需单独验证 offload 迁移。可靠性检查入口见 [[llm-serving-reliability]]。
 
 ## 与同类及模块地图的关系
+
+[[dynamo-inference-request-flow]] 分别画出 vLLM/SGLang 的 aggregated 与 P/D 路径，并把 Distributed Runtime 的 request/event/discovery planes、KV-aware selection 与 NIXL payload transfer 分开。四个基础组合在当前官方文档中均有明确路径，feature pairing 仍按 backend matrix 单独核验。
 
 [[llm-d]] 更围绕 Kubernetes Proxy/EPP、InferencePool 和 Model Server 组合；[[gateway-api-inference-extension]] 提供入口选点契约；[[kserve]] / [[ome]] 聚焦模型服务生命周期。它们和 Dynamo 可能组合，采用前要明确哪些组件拥有路由、KV transfer 和扩缩写入权。
 

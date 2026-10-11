@@ -1,6 +1,6 @@
 ---
 title: Wiki 索引
-date: 2026-10-03
+date: 2026-10-11
 ---
 
 # 知识库索引
@@ -338,6 +338,14 @@ date: 2026-10-03
 - [[agent-memory-project-map]] — Agent Memory 项目地图（claude-mem / agent-recall / agentmemory / powermem / memsearch / TencentDB-Agent-Memory 横向对比与选型）
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Serving 项目边界地图：用五个锚点项目对照 engine、routing、runtime、Kubernetes control plane 与 KV infrastructure，补齐 A4 控制面和 S3 就绪传播。
+- 请求到 CUDA 阅读路径：[[llm-inference-request-lifecycle]] → [[aibrix-inference-request-flow]] / [[dynamo-inference-request-flow]] / [[llm-d-inference-request-flow]] → [[vllm-gpu-execution-path]] / [[sglang-gpu-execution-path]] → [[llm-gpu-kernel-execution-path]]。
+- [[llm-inference-request-lifecycle]] — 从 OpenAI 请求对象、Gateway/Router、aggregated/P-D 分叉、engine handoff 到 CUDA 的统一 L0–L8 学习入口。
+- [[aibrix-inference-request-flow]] — AIBrix Envoy ext_proc、combined fallback、vLLM response-merge 与 SGLang bootstrap/watchdog 四象限请求流。
+- [[dynamo-inference-request-flow]] — Dynamo Frontend/Runtime/KV Router 三平面、vLLM/SGLang aggregated/P-D 与 NIXL 路径。
+- [[llm-d-inference-request-flow]] — llm-d Proxy/EPP/InferencePool/coordinator 的 vLLM/SGLang aggregated/P-D 请求流。
+- [[vllm-gpu-execution-path]] — vLLM V1 的 AsyncLLM、EngineCore、Scheduler、KVCacheManager、GPUModelRunner 与 kernel handoff。
+- [[sglang-gpu-execution-path]] — SGLang 的 TokenizerManager、Scheduler、ScheduleBatch、RadixCache、ModelRunner 与 kernel handoff。
+- [[llm-gpu-kernel-execution-path]] — Framework op 到 CUDA stream/grid/block/warp/SM、Tensor Core/CUDA core、HBM 与 NCCL/NIXL 的 GPU 下钻。
 - [[kvcached-sglang-vllm-knowledge-system]] — KVCacheD / SGLang / vLLM 三项目知识体系：对象映射、两级分页、完整请求生命周期、prefix ownership、多进程一致性与分层阅读路线。
 - [[kvcached-source-code-deep-dive]] — 三仓逐函数源码深潜：自动注入、Python/C++ API、FTensor/PageAllocator、SGLang/vLLM patched call chains、TP/PP 事务、layout 与调试索引。
 - [[kvcached-integration-implementation-guide]] — KVCacheD × SGLang × vLLM 集成与实验手册：版本锁定、安装验证、同/跨引擎共置、prefix/limit、TP/PP、故障注入、正确性与升级流程。

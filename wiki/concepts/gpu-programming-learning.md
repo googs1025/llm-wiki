@@ -1,14 +1,18 @@
 ---
 title: GPU 编程学习
 tags: [concept, gpu, cuda, musa, ai-infra, learning]
-date: 2026-06-21
+date: 2026-10-11
 sources: [musa-learning-notes-architecture-analysis.md, ai-infra-learning-cn-stars.md]
-related: ["[[musa-learning-notes]]", "[[src-musa-learning-notes-architecture]]", "[[src-ai-infra-learning-cn-stars]]", "[[llm-inference]]", "[[k8s-gpu-device-stack]]", "[[paged-attention]]", "[[radix-attention]]"]
+related: ["[[musa-learning-notes]]", "[[src-musa-learning-notes-architecture]]", "[[src-ai-infra-learning-cn-stars]]", "[[llm-inference]]", "[[k8s-gpu-device-stack]]", "[[paged-attention]]", "[[radix-attention]]", "[[llm-gpu-kernel-execution-path]]"]
 ---
 
 # GPU 编程学习
 
 GPU 编程学习是从“会调用模型/框架”走向“能理解推理性能、显存瓶颈和 kernel 行为”的底层路径。当前 wiki 已有 [[src-ai-infra-learning-cn-stars]] 和 [[ai-infra-learning-cn-map]] 作为 AI Infra 学习路线，[[musa-learning-notes]] 则补上一个具体的 CUDA / MUSA 动手系列入口。
+
+## 请求到 CUDA 中的位置
+
+[[llm-gpu-kernel-execution-path]] 是 serving 到 GPU 的桥：从 PyTorch dispatcher、Triton/CUDA/custom op 和 CUDA Graph，继续到 grid/block/warp/SM、HBM/L2/shared memory/register、Tensor Core/CUDA core、NCCL/NIXL 与 Nsight。它回答“线上请求为什么在 GPU 上快或慢”，本页继续提供动手学习路线。
 
 ## 分层
 

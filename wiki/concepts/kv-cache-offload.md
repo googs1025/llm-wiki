@@ -1,9 +1,9 @@
 ---
 title: KV Cache Offload（KV 多级缓存）
 tags: [concept, ai-infra, kv-cache, llm-inference, memory-hierarchy]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-dynamo-architecture, src-llm-d-kv-cache-architecture]
-related: ["[[dynamo]]", "[[llm-d-kv-cache]]", "[[llm-d-router]]", "[[paged-attention]]", "[[radix-attention]]", "[[disaggregated-serving]]", "[[vllm]]", "[[sglang]]", "[[llm-inference]]", "[[inference-routing]]", "[[elastic-kv-cache]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]"]
+related: ["[[dynamo]]", "[[llm-d-kv-cache]]", "[[llm-d-router]]", "[[paged-attention]]", "[[radix-attention]]", "[[disaggregated-serving]]", "[[vllm]]", "[[sglang]]", "[[llm-inference]]", "[[inference-routing]]", "[[elastic-kv-cache]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[dynamo-inference-request-flow]]", "[[llm-d-inference-request-flow]]", "[[llm-gpu-kernel-execution-path]]"]
 ---
 
 # KV Cache Offload（KV 多级缓存）
@@ -20,6 +20,10 @@ KV cache offload 将实际 KV 数据复制到 GPU 之外的存储层，在需要
 | GPU physical backing | 虚拟地址到实际显存页的映射 | [[elastic-kv-cache]] 的 map/unmap，和 CPU/SSD 数据保存是不同动作 |
 
 [[paged-attention]] / [[radix-attention]] 管理的本地 KV 与外部索引不能混为一谈。索引命中后，engine 仍须检查缓存身份、布局、模型/adapter 与数据完整性；传输失败、条目过期或源副本被淘汰时，需要按策略重试、回退重算或失败。跨组件责任见 [[llm-inference#F2 · KV Block 生命周期|F2 · KV Block 生命周期]] 与 [[inference-routing]]。
+
+## 请求到 CUDA 中的位置
+
+[[dynamo-inference-request-flow]] 与 [[llm-d-inference-request-flow]] 把 KV locality index、P/D transfer metadata 和真实 KV payload 分开；[[llm-gpu-kernel-execution-path]] 则说明 payload 回到 GPU 后如何经 block/page mapping 被 attention kernel 读取。Offload tier、P/D handoff 与 engine prefix cache 可以组合，但没有统一的跨项目一致性协议。
 
 ## 写入与恢复的边界
 

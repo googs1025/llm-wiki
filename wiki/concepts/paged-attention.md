@@ -1,9 +1,9 @@
 ---
 title: PagedAttention
 tags: [concept, ai-infra, kv-cache, llm-inference]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-vllm-architecture]
-related: ["[[vllm]]", "[[radix-attention]]", "[[sglang]]", "[[continuous-batching]]", "[[llm-inference]]", "[[kv-cache-offload]]", "[[elastic-kv-cache]]", "[[inference-routing]]"]
+related: ["[[vllm]]", "[[radix-attention]]", "[[sglang]]", "[[continuous-batching]]", "[[llm-inference]]", "[[kv-cache-offload]]", "[[elastic-kv-cache]]", "[[inference-routing]]", "[[vllm-gpu-execution-path]]", "[[llm-gpu-kernel-execution-path]]"]
 ---
 
 # PagedAttention
@@ -11,6 +11,10 @@ related: ["[[vllm]]", "[[radix-attention]]", "[[sglang]]", "[[continuous-batchin
 PagedAttention 是 [[vllm]] 论文提出的本地 KV 分块寻址与管理机制：序列使用逻辑 block 表达 KV，block table 把逻辑位置映射到实际 KV buffer 中的物理 block，attention kernel 按映射访问数据。这里的“物理 block”属于 engine 的 KV 分配层，不等于 GPU 驱动的物理显存页；后者见 [[elastic-kv-cache]]。
 
 核心收益是让序列按需使用非连续的 KV blocks，减少为每个请求按最大长度预留空间造成的浪费。block 大小、布局与 attention backend 有关，不存在适用于所有版本、模型和硬件的统一 block size。[vLLM 历史 PagedAttention kernel 设计](https://docs.vllm.ai/en/latest/design/paged_attention/)解释了原始设计中的分块寻址；官方已注明它不再描述当前代码，不能作为当前 vLLM backend 的布局证据。版本化架构分析见 [[src-vllm-architecture]]。
+
+## 请求到 CUDA 中的位置
+
+[[vllm-gpu-execution-path]] 展示 `KVCacheManager` 如何把 prefix hit 与新 token 变成 block ownership，再由 `GPUModelRunner` 准备 block table/slot mapping；[[llm-gpu-kernel-execution-path]] 继续解释 attention kernel 如何把逻辑 block 和 offset 转成实际 device address、HBM/L2 transaction 与 MMA/reduction。
 
 ## 核心思想
 

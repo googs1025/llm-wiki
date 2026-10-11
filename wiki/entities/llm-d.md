@@ -1,9 +1,9 @@
 ---
 title: llm-d
 tags: [entity, llm-serving, kubernetes, gateway-api, inference-routing, distributed-inference]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-k8s-serving-stack-comparison, src-llm-d-architecture]
-related: ["[[llm-inference]]", "[[inference-routing]]", "[[model-serving-operator]]", "[[gateway-api]]", "[[kserve]]", "[[aibrix]]", "[[dynamo]]", "[[vllm]]", "[[sglang]]", "[[disaggregated-serving]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[llm-inference]]", "[[inference-routing]]", "[[model-serving-operator]]", "[[gateway-api]]", "[[kserve]]", "[[aibrix]]", "[[dynamo]]", "[[vllm]]", "[[sglang]]", "[[disaggregated-serving]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[llm-d-inference-request-flow]]"]
 ---
 
 # llm-d
@@ -44,5 +44,7 @@ KV locality index 维护位置元数据，offload / P2P sharing 搬运实际 KV�
 - 下一步核验：对照所选 release 的组件与 model-server image 矩阵，验证 P/D connector、cache event schema、EPP 指标、扩缩唯一写入者、readiness 和 draining。失败与重试入口见 [[llm-serving-reliability]]。
 
 ## 在 M4 模块地图中的位置
+
+[[llm-d-inference-request-flow]] 固定当前 docs 与 Router/EPP/coordinator commits，区分 Proxy、EPP、InferencePool 和 engine ownership，并分别展开 vLLM/SGLang aggregated/P-D。当前 autoscaling 主线是 EPP metrics → KEDA → HPA，P/D workload 由 DisaggregatedSet/LWS 等异步控制面维护。
 
 llm-d 位于 Kubernetes routing/serving stack 层，连接流量入口、选点与 Model Server。与 [[dynamo]]、[[aibrix]] 的责任交集见 [[llm-inference-serving-project-map]]，组合选择见 [[llm-serving-engine-selection-map]]。

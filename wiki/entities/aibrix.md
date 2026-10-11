@@ -1,9 +1,9 @@
 ---
 title: AIBrix
 tags: [entity, llm-serving, kubernetes, vllm, ai-infra, kv-cache]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-k8s-serving-stack-comparison, src-aibrix-architecture]
-related: ["[[llm-inference]]", "[[inference-routing]]", "[[model-serving-operator]]", "[[vllm]]", "[[sglang]]", "[[dynamo]]", "[[llm-d]]", "[[kv-cache-offload]]", "[[disaggregated-serving]]", "[[batch-inference]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[llm-inference]]", "[[inference-routing]]", "[[model-serving-operator]]", "[[vllm]]", "[[sglang]]", "[[dynamo]]", "[[llm-d]]", "[[kv-cache-offload]]", "[[disaggregated-serving]]", "[[batch-inference]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[aibrix-inference-request-flow]]"]
 ---
 
 # AIBrix
@@ -39,5 +39,7 @@ AIBrix 是可组合的多引擎推理基础设施，提供 Kubernetes 控制能�
 - 下一步核验：固定目标 engine、KV connector 和 AIBrix 版本，验证支持矩阵、路由与状态同步、readiness/故障剔除；使用 [[batch-inference]] 时另测持久化、取消、重试与输出归档。引入 preview 组件要估算升级和数据迁移成本。
 
 ## 在 M4 模块地图中的位置
+
+[[aibrix-inference-request-flow]] 固定到 2026-10-11 upstream，区分 vLLM/SGLang 与 aggregated/P-D。当前文档明确支持两种 engine 的 P/D；SGLang aggregated 在该页保守标为 `tested`，因为实现/endpoint 证据存在，但 dedicated standard gateway recipe 不如 P/D 路径完整。
 
 AIBrix 跨 Kubernetes 推理控制面与请求数据面，组件化提供 routing、生命周期、KV 和多角色编排。与 [[llm-d]]、[[dynamo]] 的职责交集见 [[llm-inference-serving-project-map]]，组合与采用成本见 [[llm-serving-engine-selection-map]]。
