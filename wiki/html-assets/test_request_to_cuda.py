@@ -303,6 +303,51 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for symbol in symbols:
             self.assertIn(symbol, text)
 
+    def test_dynamo_contract(self) -> None:
+        slug = "dynamo-inference-request-flow"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "Frontend 与 Runtime 所有权",
+                "支持矩阵",
+                "vLLM × Aggregated",
+                "vLLM × P/D",
+                "SGLang × Aggregated",
+                "SGLang × P/D",
+                "KV-aware Routing",
+                "Request / Event / Discovery Planes",
+                "NIXL KV Transfer",
+                "Token 返回",
+                "失败、取消与迁移",
+                "Planner / Operator 旁路",
+                "源码入口",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 6)
+        for arrow in ("──►", "··►", "══►"):
+            self.assertIn(arrow, text)
+        self.assertIn("b208989fbe1cfbfde64d11334d8af4ff04fe1a99", text)
+        for row in (
+            "| vLLM | Aggregated | documented |",
+            "| vLLM | P/D | documented |",
+            "| SGLang | Aggregated | documented |",
+            "| SGLang | P/D | documented |",
+        ):
+            self.assertIn(row, text)
+        symbols = (
+            "frontend.async_main",
+            "SelectionCore.select",
+            "KvIndexer.find_match_details",
+            "dynamo.vllm.handlers.DecodeWorkerHandler.generate",
+            "dynamo.vllm.handlers.PrefillWorkerHandler.generate",
+            "dynamo.sglang.request_handlers.llm.DecodeWorkerHandler.generate",
+            "dynamo.sglang.request_handlers.llm.PrefillWorkerHandler.generate",
+        )
+        for symbol in symbols:
+            self.assertIn(symbol, text)
+
 
 if __name__ == "__main__":
     unittest.main()
