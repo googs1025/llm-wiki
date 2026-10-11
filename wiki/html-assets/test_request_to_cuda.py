@@ -224,6 +224,45 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for symbol in symbols:
             self.assertIn(symbol, text)
 
+    def test_sglang_contract(self) -> None:
+        slug = "sglang-gpu-execution-path"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "进程与 IPC 边界",
+                "TokenizerManager",
+                "Scheduler Event Loop",
+                "ScheduleBatch 与 ForwardMode",
+                "RadixCache",
+                "Token 到 KV 分配",
+                "ModelRunner",
+                "Overlap 与 CUDA Graph",
+                "TP、PP、EP",
+                "P/D Bootstrap 边界",
+                "Detokenizer 与流式返回",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 7)
+        self.assertIn("e328c7ecbd69ebf77f38db9aa64eecefd760fe4b", text)
+        symbols = (
+            "TokenizerManager.generate_request",
+            "TokenizerManager._send_one_request",
+            "Scheduler.event_loop_normal",
+            "Scheduler.get_next_batch_to_run",
+            "ScheduleBatch.prepare_for_extend",
+            "ScheduleBatch.prepare_for_decode",
+            "RadixCache.match_prefix",
+            "PagedTokenToKVPoolAllocator.alloc_extend",
+            "PagedTokenToKVPoolAllocator.alloc_decode",
+            "ModelRunner.forward",
+            "ModelRunner.sample",
+            "DetokenizerManager.event_loop",
+        )
+        for symbol in symbols:
+            self.assertIn(symbol, text)
+
 
 if __name__ == "__main__":
     unittest.main()
