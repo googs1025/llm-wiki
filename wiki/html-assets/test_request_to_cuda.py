@@ -190,6 +190,40 @@ class RequestToCudaWikiTest(unittest.TestCase):
         self.assertIn("276fbcff2717bd934cfa37c8a2e4c391f3e7237b", text)
         self.assertIn("e328c7ecbd69ebf77f38db9aa64eecefd760fe4b", text)
 
+    def test_vllm_contract(self) -> None:
+        slug = "vllm-gpu-execution-path"
+        text = self.assert_common_page_contract(slug)
+        assert_headings(
+            self,
+            slug,
+            (
+                "进程与队列边界",
+                "请求进入 EngineCore",
+                "Scheduler 与 Continuous Batch",
+                "KVCacheManager 与 Block Table",
+                "GPUModelRunner",
+                "Prefill、Chunked Prefill 与 Decode",
+                "CUDA Graph 与 Attention Backend",
+                "TP、PP、EP、DP",
+                "P/D Connector 边界",
+                "Token 返回与取消",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 7)
+        self.assertIn("276fbcff2717bd934cfa37c8a2e4c391f3e7237b", text)
+        symbols = (
+            "AsyncLLM.generate",
+            "EngineCore.step",
+            "Scheduler.schedule",
+            "Scheduler.update_from_output",
+            "KVCacheManager.get_computed_blocks",
+            "KVCacheManager.allocate_slots",
+            "GPUModelRunner.execute_model",
+            "GPUModelRunner.sample_tokens",
+        )
+        for symbol in symbols:
+            self.assertIn(symbol, text)
+
 
 if __name__ == "__main__":
     unittest.main()
