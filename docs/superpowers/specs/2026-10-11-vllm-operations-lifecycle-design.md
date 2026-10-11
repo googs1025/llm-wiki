@@ -295,10 +295,10 @@ Probe 设计需要区分：
 
 ## 12. 提交与 PR 边界
 
-设计、计划和实现提交继续追加到 `feature/inference-request-to-cuda` / PR #49。实现完成后的 durable commit 使用：
+设计、计划和实现提交位于独立分支 `feature/vllm-operations-lifecycle`，完成后创建一个以最新 `main` 为 base 的新 PR。PR #49 已合并且不承载本扩展。实现完成后的 durable commit 使用：
 
 ```text
 query: Add vLLM operations lifecycle and runbook
 ```
 
-不force-push已合并的main历史；只正常追加提交。若main在实施期间前进，完成前再次fetch/rebase并用`--force-with-lease`更新feature branch。
+不force-push已合并的main历史；只正常追加提交。若main在实施期间前进，完成前再次fetch/rebase并用`--force-with-lease`更新新feature branch。

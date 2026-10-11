@@ -23,7 +23,7 @@
 - Multi-rank sleep/wake/reload is an all-participant operational boundary; partial rank success leaves the serving group unready.
 - Use `text` fences for diagrams; keep wikilinks in prose outside diagram fences.
 - Use the latest main builder's declared `uv` dependencies for tests/builds, preserve hand-crafted HTML, and prove the second build is identical.
-- Continue on `feature/inference-request-to-cuda` / PR #49; use normal commits, fetch/rebase latest `origin/main` before final push if remote main advances, and update with `--force-with-lease` only when rebase requires it.
+- Work on independent branch `feature/vllm-operations-lifecycle`; create a new PR against `main`. PR #49 is already merged and must not be updated. Use normal commits, fetch/rebase latest `origin/main` before final push if remote main advances, and use `--force-with-lease` only when rebase requires it.
 
 ## Review Focus
 
@@ -250,14 +250,14 @@ git add wiki/html wiki/html-assets/test_request_to_cuda.py
 git commit -m "query: Add vLLM operations lifecycle and runbook"
 ```
 
-### Task 5: Rebase Safety and PR #49 Update
+### Task 5: Rebase Safety and New PR Creation
 
 **Files:** None unless conflict resolution is required.
 
 **Interfaces:**
 
 - Consumes: verified Task 4 HEAD and current `origin/main`.
-- Produces: mergeable PR #49 with successful build checks.
+- Produces: a new mergeable PR against `main` with successful build checks.
 
 - [ ] **Step 1: Fetch and compare main**
 
@@ -273,6 +273,6 @@ Run the full unittest file, builder twice/hash comparison, compile check, `git d
 
 Expected: all green and the branch is based on current `origin/main`.
 
-- [ ] **Step 4: Update PR safely**
+- [ ] **Step 4: Push branch and create the new PR**
 
-Push normally if no rewrite occurred; otherwise use `git push --force-with-lease`. Verify PR #49 base is `main`, `mergeable=MERGEABLE`, `mergeStateStatus=CLEAN`, and build checks pass. Preserve the worktree for review feedback.
+Push normally if no rewrite occurred; otherwise use `git push --force-with-lease`. Create a new PR from `feature/vllm-operations-lifecycle` to `main`, then verify `mergeable=MERGEABLE`, `mergeStateStatus=CLEAN`, and build checks pass. Preserve the worktree for review feedback.
