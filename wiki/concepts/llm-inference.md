@@ -1,9 +1,9 @@
 ---
 title: LLM Inference
 tags: [concept, ai-infra, llm-inference, llm-serving]
-date: 2026-10-03
+date: 2026-10-11
 sources: [dynamo-architecture-analysis.md, k8s-serving-stack-comparison-2026-09-13.md, vllm-architecture-analysis.md, sglang-architecture-analysis.md, kvcached-architecture-analysis.md, llm-d-architecture-analysis.md, llm-d-router-architecture-analysis.md, llm-d-kv-cache-architecture-analysis.md, aibrix-architecture-analysis.md, kserve-architecture-analysis.md, llm-d-batch-gateway-architecture-analysis.md, llm-d-benchmark-architecture-analysis.md, llm-d-workload-variant-autoscaler-architecture-analysis.md, llm-d-inference-sim-architecture-analysis.md]
-related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]', '[[continuous-batching]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]']
+related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[dynamo]]', '[[llm-d]]', '[[llm-d-router]]', '[[llm-d-kv-cache]]', '[[aibrix]]', '[[kserve]]', '[[kubeai]]', '[[ome]]', '[[gpustack]]', '[[rbg]]', '[[kthena]]', '[[paged-attention]]', '[[radix-attention]]', '[[disaggregated-serving]]', '[[kv-cache-offload]]', '[[inference-routing]]', '[[batch-inference]]', '[[llm-d-batch-gateway]]', '[[llm-d-benchmark]]', '[[llm-d-workload-variant-autoscaler]]', '[[llm-d-inference-sim]]', '[[continuous-batching]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]', '[[llm-inference-request-lifecycle]]']
 ---
 
 # LLM Inference
@@ -32,6 +32,8 @@ related: ['[[vllm]]', '[[sglang]]', '[[kvcached]]', '[[elastic-kv-cache]]', '[[d
 TTFT、ITL、TPOT、goodput 的口径与实验矩阵见 [[llm-serving-performance]]；首 token 前后重试、backpressure 和清理责任见 [[llm-serving-reliability]]。本页不预设跨模型、硬件和负载通用的数字目标或默认参数。
 
 ## 端到端阅读路径
+
+需要沿一个真实请求从平台入口、vLLM/SGLang 到 CUDA kernel逐层下钻时，使用 [[llm-inference-request-lifecycle]]；下面七步继续提供稳定概念顺序。
 
 1. API / SLO → routing / admission / queue：先声明请求与流式合同，再用 [[inference-routing]] 理解模型选择、候选端点与有界准入，区分入口排队和 engine waiting queue。
 2. Engine schedule / batch / execute：读 [[continuous-batching]]，再沿 [[vllm]] / [[sglang]] 的 scheduler、ModelRunner 和 attention backend 看一轮执行。

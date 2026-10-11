@@ -5,6 +5,10 @@ date: 2026-04-22
 
 # 操作日志
 
+## [2026-10-11] query | Trace inference requests from gateways to CUDA
+
+新增七页请求级学习路径：统一入口、AIBrix/Dynamo/llm-d 三个平台流、vLLM/SGLang 两条引擎源码链，以及 framework op 到 CUDA kernel、SM、Tensor Core/CUDA core 与 HBM/L2/shared/register 的 GPU 下钻。各平台分别核验 aggregated/P-D × vLLM/SGLang，固定 2026-10-11 upstream commits，并区分 routing/KV metadata、KV payload、token stream 与异步 control plane。
+
 ## [2026-10-02] ingest | KVCacheD 与 SGLang、vLLM 三项目知识体系
 
 基于本地 KVCacheD `884108704f44`、SGLang `44ef8fecfe69`、vLLM `dc36fcce902a` 做三仓源码分析。新增 KVCacheD raw/source/entity、Elastic KV Cache 概念和三项目关系知识地图，更新 vLLM、SGLang、LLM Inference、GPU Sharing 与索引。核心关系：vLLM/SGLang 保留 scheduler、prefix metadata、block/token index 与 attention kernel；KVCacheD 在 allocator/tensor seam 下接 GPU VMM，以稳定 VA + 按需 physical page backing 实现同卡多实例弹性，并用 TP/PP transactional unmap 与 async release barrier 维持跨 rank 生命周期一致性。

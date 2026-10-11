@@ -395,6 +395,69 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for symbol in symbols:
             self.assertIn(symbol, text)
 
+    def test_navigation_and_backlinks(self) -> None:
+        slugs = (
+            "llm-inference-request-lifecycle",
+            "aibrix-inference-request-flow",
+            "dynamo-inference-request-flow",
+            "llm-d-inference-request-flow",
+            "vllm-gpu-execution-path",
+            "sglang-gpu-execution-path",
+            "llm-gpu-kernel-execution-path",
+        )
+        wiki_paths = [
+            candidate
+            for category in CATEGORIES
+            for candidate in (WIKI / category).glob("*.md")
+        ] + [WIKI / "index.md", WIKI / "log.md"]
+        for slug in slugs:
+            inbound = [
+                candidate
+                for candidate in wiki_paths
+                if candidate.stem != slug
+                and f"[[{slug}" in candidate.read_text(encoding="utf-8")
+            ]
+            self.assertTrue(inbound, f"{slug}: no inbound wikilink")
+
+        index = (WIKI / "index.md").read_text(encoding="utf-8")
+        for slug in slugs:
+            self.assertIn(f"[[{slug}]]", index)
+        reading_path = (
+            "[[llm-inference-request-lifecycle]] → "
+            "[[aibrix-inference-request-flow]] / [[dynamo-inference-request-flow]] / "
+            "[[llm-d-inference-request-flow]] → [[vllm-gpu-execution-path]] / "
+            "[[sglang-gpu-execution-path]] → [[llm-gpu-kernel-execution-path]]"
+        )
+        self.assertIn(reading_path, index)
+
+        entity_targets = {
+            "aibrix": "aibrix-inference-request-flow",
+            "dynamo": "dynamo-inference-request-flow",
+            "llm-d": "llm-d-inference-request-flow",
+            "vllm": "vllm-gpu-execution-path",
+            "sglang": "sglang-gpu-execution-path",
+        }
+        for entity, target in entity_targets.items():
+            _path, text = load_markdown(entity)
+            self.assertIn(f"[[{target}]]", text)
+
+        concept_targets = {
+            "llm-inference": "llm-inference-request-lifecycle",
+            "inference-routing": "aibrix-inference-request-flow",
+            "disaggregated-serving": "llm-d-inference-request-flow",
+            "paged-attention": "vllm-gpu-execution-path",
+            "radix-attention": "sglang-gpu-execution-path",
+            "kv-cache-offload": "dynamo-inference-request-flow",
+            "gpu-programming-learning": "llm-gpu-kernel-execution-path",
+        }
+        for concept, target in concept_targets.items():
+            _path, text = load_markdown(concept)
+            self.assertIn(f"[[{target}]]", text)
+
+        log = (WIKI / "log.md").read_text(encoding="utf-8")
+        entry = "## [2026-10-11] query | Trace inference requests from gateways to CUDA"
+        self.assertEqual(log.count(entry), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

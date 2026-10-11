@@ -1,9 +1,9 @@
 ---
 title: SGLang
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-sglang-architecture, src-kvcached-architecture]
-related: ["[[vllm]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[radix-attention]]", "[[paged-attention]]", "[[continuous-batching]]", "[[disaggregated-serving]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[vllm]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[radix-attention]]", "[[paged-attention]]", "[[continuous-batching]]", "[[disaggregated-serving]]", "[[llm-serving-performance]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[sglang-gpu-execution-path]]"]
 ---
 
 # SGLang
@@ -28,6 +28,10 @@ SGLang 是以 Scheduler、ModelRunner 和前缀 KV 复用为核心的 LLM 推理
 [[continuous-batching]] 与 chunked prefill 决定不同请求如何共享执行窗口；[[radix-attention]] 减少可复用前缀的计算。v0.5.21 的 RadixKey 匹配按 `page_size` 对齐，因此任意 token 粒度并非通用保证。radix 节点和 [[vllm]] / [[paged-attention]] 的 block table 也不是同一对象。[v0.5.21 RadixCache](https://github.com/sgl-project/sglang/blob/v0.5.21/python/sglang/srt/mem_cache/radix_cache.py)
 
 Engine 仍拥有本地 KV 布局、有效性与生命周期。外部 router 的 locality index 只提供选点线索，TP/PP/EP/DP 是引擎执行并行方式，平台 prefill/decode 角色划分与副本扩缩则是另一层职责。
+
+## 请求到 GPU 的当前入口
+
+[[sglang-gpu-execution-path]] 固定到 2026-10-11 upstream，沿 `TokenizerManager → Scheduler event loop → ScheduleBatch → RadixCache/KV allocator → ModelRunner → DetokenizerManager` 追到 kernel，并单独解释 overlap scheduling、CUDA Graph 和 P/D bootstrap，而不是套用 vLLM 的对象名称。
 
 ## P/D 与缓存集成的版本范围
 

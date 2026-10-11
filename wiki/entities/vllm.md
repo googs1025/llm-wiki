@@ -1,9 +1,9 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-vllm-architecture, src-kvcached-architecture]
-related: ["[[sglang]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[paged-attention]]", "[[radix-attention]]", "[[continuous-batching]]", "[[llm-serving-performance]]", "[[disaggregated-serving]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[sglang]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[paged-attention]]", "[[radix-attention]]", "[[continuous-batching]]", "[[llm-serving-performance]]", "[[disaggregated-serving]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[vllm-gpu-execution-path]]"]
 ---
 
 # vLLM
@@ -26,6 +26,10 @@ vLLM 是 LLM 推理与 serving 引擎，拥有请求调度、模型执行和本�
 | 条件启用的 DP Coordinator | 协调 DP ranks 的负载和执行；不是整个 Kubernetes fleet 的 autoscaler |
 
 这些职责依据 [V1 process architecture](https://docs.vllm.ai/en/latest/design/arch_overview/#v1-process-architecture)。[[continuous-batching]] 决定每轮工作，[[paged-attention]] 和前缀缓存提供本地 KV 管理；外部 [[inference-routing]] 可以使用 cache events 做选点，但 KV 的布局、有效性与释放仍由 engine 管理。
+
+## 请求到 GPU 的当前入口
+
+[[vllm-gpu-execution-path]] 固定到 2026-10-11 upstream，沿 `AsyncLLM.generate → EngineCore.step → Scheduler.schedule → KVCacheManager → GPUModelRunner → sampler` 追到 attention/GEMM/MoE kernels，并说明 vLLM P/D connector 在 scheduler-side KV accounting 与 worker-side data movement 的边界。
 
 TP/PP/EP/DP 属于引擎的执行并行方式，可以跨设备或节点；平台把实例分成 prefill/decode 角色池属于另一层的 [[disaggregated-serving]]。两层可以组合，不能把增加某种并行度等同于完成 P/D 编排。
 

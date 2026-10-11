@@ -1,9 +1,9 @@
 ---
 title: RadixAttention
 tags: [concept, ai-infra, kv-cache, llm-inference, prefix-sharing]
-date: 2026-10-03
+date: 2026-10-11
 sources: [src-sglang-architecture]
-related: ["[[sglang]]", "[[paged-attention]]", "[[vllm]]", "[[continuous-batching]]", "[[llm-inference]]", "[[inference-routing]]", "[[kv-cache-offload]]"]
+related: ["[[sglang]]", "[[paged-attention]]", "[[vllm]]", "[[continuous-batching]]", "[[llm-inference]]", "[[inference-routing]]", "[[kv-cache-offload]]", "[[sglang-gpu-execution-path]]", "[[llm-gpu-kernel-execution-path]]"]
 ---
 
 # RadixAttention
@@ -11,6 +11,10 @@ related: ["[[sglang]]", "[[paged-attention]]", "[[vllm]]", "[[continuous-batchin
 RadixAttention 是 [[sglang]] 提出的前缀 KV 复用机制：把 token 序列的共享前缀组织成 radix 树，树节点关联已经计算好的 KV 位置；新请求先匹配前缀，再只计算未命中的部分。树组织的是缓存身份与复用关系，底层 KV pool 负责实际内容和寻址。
 
 这与 [[paged-attention]] 的逻辑 block → 物理 KV block 映射侧重点不同。两者都需要分配、引用、回收和 attention addressing，不能把 RadixCache node 当成 vLLM block，也不能把 radix 树描述为对分页机制的全面替代。
+
+## 请求到 CUDA 中的位置
+
+[[sglang-gpu-execution-path]] 展示 `RadixCache.match_prefix`、request-to-token pool 和 paged token-to-KV allocator 的当前调用链；[[llm-gpu-kernel-execution-path]] 再解释树中保存的 KV indices 如何成为 attention backend 的地址计算、gather、tile 与 GPU memory access。Radix tree 管复用/所有权，不直接执行 attention。
 
 ## 核心数据与操作
 

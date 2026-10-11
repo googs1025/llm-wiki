@@ -1,9 +1,9 @@
 ---
 title: Disaggregated Serving
 tags: [concept, ai-infra, llm-inference, llm-serving, kv-cache]
-date: 2026-10-03
+date: 2026-10-11
 sources: [dynamo-architecture-analysis.md]
-related: ['[[dynamo]]', '[[vllm]]', '[[sglang]]', '[[paged-attention]]', '[[kv-cache-offload]]', '[[llm-inference]]', '[[inference-routing]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]']
+related: ['[[dynamo]]', '[[vllm]]', '[[sglang]]', '[[paged-attention]]', '[[kv-cache-offload]]', '[[llm-inference]]', '[[inference-routing]]', '[[llm-serving-performance]]', '[[llm-serving-reliability]]', '[[aibrix-inference-request-flow]]', '[[dynamo-inference-request-flow]]', '[[llm-d-inference-request-flow]]']
 ---
 
 # Disaggregated Serving（分离式服务）
@@ -13,6 +13,10 @@ related: ['[[dynamo]]', '[[vllm]]', '[[sglang]]', '[[paged-attention]]', '[[kv-c
 ## 在 M4 中的位置
 
 P/D 分离同时改变 [[llm-inference-serving-project-map]] 的请求路径和 KV 生命周期：Prefill 与 Decode 独立扩缩，交接时按明确的 backend contract 传递元数据与 KV。[[inference-routing]] 负责端点选择与协调，[[llm-serving-performance]] 解释排队、TTFT、ITL 和传输代价，[[llm-serving-reliability]] 解释取消、超时和故障边界。
+
+## 请求到 CUDA 中的位置
+
+三套平台的实际 P/D 时序分别见 [[aibrix-inference-request-flow]]、[[dynamo-inference-request-flow]] 和 [[llm-d-inference-request-flow]]。它们会在 engine handoff 处进入 [[vllm-gpu-execution-path]] 或 [[sglang-gpu-execution-path]]：control metadata、KV payload 与 token stream 是三条不同路径，不能只画成一根“KV transfer”箭头。
 
 ## 为什么要分离
 
