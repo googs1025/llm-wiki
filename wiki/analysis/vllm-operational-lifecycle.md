@@ -3,14 +3,14 @@ title: vLLM 运维生命周期：启动、Preload、Sleep、更新与退出
 tags: [analysis, vllm, llm-serving, operations, lifecycle, gpu-memory, reliability]
 date: 2026-10-12
 sources: []
-related: ["[[vllm]]", "[[vllm-gpu-execution-path]]", "[[llm-inference-request-lifecycle]]", "[[llm-serving-reliability]]", "[[model-serving-operator]]", "[[gpu-programming-learning]]"]
+related: ["[[vllm]]", "[[vllm-production-operations-runbook]]", "[[vllm-gpu-execution-path]]", "[[llm-inference-request-lifecycle]]", "[[llm-serving-reliability]]", "[[model-serving-operator]]", "[[gpu-programming-learning]]"]
 ---
 
 # vLLM 运维生命周期：启动、Preload、Sleep、更新与退出
 
 本页解释一个 vLLM 实例如何从 process 创建走到 serving、暂停、释放 GPU memory、恢复、更新权重和退出。主线不是“有哪些命令”，而是每个动作改变了哪些 owner 的状态：API process、EngineCore、GPU workers、preload daemon、外部 Gateway/Kubernetes 分别掌握什么。
 
-可执行命令和故障排查由配套的 vLLM production operations runbook 承载；单次请求在 engine 内的调用链见 [[vllm-gpu-execution-path]]。
+可执行命令和故障排查见 [[vllm-production-operations-runbook]]；单次请求在 engine 内的调用链见 [[vllm-gpu-execution-path]]。
 
 ## 版本与证据边界
 
@@ -363,4 +363,4 @@ vLLM lifecycle action
              └··► readiness/membership update
 ```
 
-[[model-serving-operator]] 或 AIBrix/Dynamo/llm-d 可以编排这些动作，但不能改变vLLM内部ownership：它们应把engine state反馈到readiness，再决定扩缩/rollout。完整操作顺序由配套production runbook展开。
+[[model-serving-operator]] 或 AIBrix/Dynamo/llm-d 可以编排这些动作，但不能改变vLLM内部ownership：它们应把engine state反馈到readiness，再决定扩缩/rollout。完整操作顺序见 [[vllm-production-operations-runbook]]。

@@ -302,6 +302,48 @@ class RequestToCudaWikiTest(unittest.TestCase):
             r"zero_copy.{0,160}(?:不能|禁止|不兼容).{0,160}Sleep",
         )
 
+    def test_vllm_operations_runbook_contract(self) -> None:
+        slug = "vllm-production-operations-runbook"
+        text = self.assert_common_page_contract(slug, "2026-10-12")
+        assert_headings(
+            self,
+            slug,
+            (
+                "使用方式与版本标签",
+                "启动前检查",
+                "普通启动",
+                "Preload Daemon",
+                "Health、Startup 与 Readiness",
+                "安全 Drain",
+                "Sleep Level 0",
+                "只释放 KV Cache",
+                "Sleep Level 1",
+                "Sleep Level 2 与权重更新",
+                "Wake 与恢复流量",
+                "LoRA 运维",
+                "Graceful Shutdown",
+                "Kubernetes Rolling Upgrade",
+                "故障诊断树",
+                "回滚",
+                "Post-operation Checklist",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 5)
+        for phase in (
+            "PRECHECK",
+            "REMOVE FROM ROUTING",
+            "DRAIN/POLICY",
+            "EXECUTE",
+            "VERIFY",
+            "RECOVER/ROLLBACK",
+            "POSTCHECK",
+        ):
+            self.assertIn(phase, text)
+        self.assertIn("VLLM_SERVER_DEV_MODE=1", text)
+        self.assertRegex(text, r"zero_copy.{0,180}(?:不能|禁止|不兼容).{0,180}Sleep")
+        self.assertRegex(text, r"(?:已输出|已经输出).{0,80}token.{0,100}(?:不能|不可).{0,80}透明")
+        self.assertRegex(text, r"(?:单个|部分).{0,40}rank.{0,120}(?:整个|全部).{0,40}(?:group|实例组).{0,80}(?:unready|不可用|退出)")
+
     def test_sglang_contract(self) -> None:
         slug = "sglang-gpu-execution-path"
         text = self.assert_common_page_contract(slug)
