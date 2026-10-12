@@ -34,6 +34,10 @@ NEW_SLUGS = (
     "sglang-gpu-execution-path",
     "llm-gpu-kernel-execution-path",
 )
+OPS_SLUGS = (
+    "vllm-operational-lifecycle",
+    "vllm-production-operations-runbook",
+)
 HANDCRAFTED_HTML_SHA256 = {
     "src-agent-sandbox-architecture.html": "fdba44d4044ebb43d079e64312961ea190b6604ad13c57abf4bae1fcb288a622",
     "src-agentgateway-architecture.html": "c8c864b2974cc837e7f1e867a00cbf2a7964de323ae8ad24ee38bbc7b23c1b3b",
@@ -101,14 +105,16 @@ def parse_page(slug: str) -> tuple[build.Frontmatter, str]:
     return build.parse_frontmatter(text)
 
 
-def assert_frontmatter(test: unittest.TestCase, slug: str) -> None:
+def assert_frontmatter(
+    test: unittest.TestCase, slug: str, expected_date: str = "2026-10-11"
+) -> None:
     _path, text = load_markdown(slug)
     frontmatter, _body = build.parse_frontmatter(text)
     for key in ("title", "tags", "date", "sources", "related"):
         test.assertRegex(text, rf"(?m)^{key}:", f"{slug}: missing {key}")
     test.assertTrue(frontmatter.title, f"{slug}: empty title")
     test.assertTrue(frontmatter.tags, f"{slug}: empty tags")
-    test.assertEqual(frontmatter.date, "2026-10-11")
+    test.assertEqual(frontmatter.date, expected_date)
     test.assertTrue(frontmatter.related, f"{slug}: empty related")
 
 
@@ -137,8 +143,10 @@ def collect_missing_wikilinks(paths: Iterable[Path]) -> set[str]:
 
 
 class RequestToCudaWikiTest(unittest.TestCase):
-    def assert_common_page_contract(self, slug: str) -> str:
-        assert_frontmatter(self, slug)
+    def assert_common_page_contract(
+        self, slug: str, expected_date: str = "2026-10-11"
+    ) -> str:
+        assert_frontmatter(self, slug, expected_date)
         _path, text = load_markdown(slug)
         for placeholder in PLACEHOLDERS:
             self.assertNotIn(placeholder, text, f"{slug}: placeholder {placeholder}")
@@ -244,6 +252,55 @@ class RequestToCudaWikiTest(unittest.TestCase):
         )
         for symbol in symbols:
             self.assertIn(symbol, text)
+
+    def test_vllm_operational_lifecycle_contract(self) -> None:
+        slug = "vllm-operational-lifecycle"
+        text = self.assert_common_page_contract(slug, "2026-10-12")
+        assert_headings(
+            self,
+            slug,
+            (
+                "版本与证据边界",
+                "Lifecycle 状态机",
+                "Process / Engine / Worker / Daemon 所有权",
+                "普通启动与 Preload 启动",
+                "Warmup 与 Ready",
+                "Drain 与 Pause",
+                "Sleep Level 0/1/2",
+                "Partial Wake 与 Reload Weights",
+                "Preload Cache Modes",
+                "LoRA 生命周期",
+                "Shutdown 与 Restart",
+                "资源状态矩阵",
+                "失败与恢复边界",
+                "外部控制面接口",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 7)
+        for evidence_label in (
+            "release-documented",
+            "main-documented",
+            "development-endpoint",
+            "integration-dependent",
+            "external-control-plane",
+        ):
+            self.assertIn(evidence_label, text)
+        self.assertIn("v0.31.0", text)
+        self.assertIn("c85616efc6f0eaa50ca1f1a09c32368aedffd3d8", text)
+        for term in (
+            "zero_copy",
+            "ipc_cache",
+            "weights",
+            "kv_cache",
+            "scheduling",
+            "CUDA Graph",
+            "NCCL",
+        ):
+            self.assertIn(term, text)
+        self.assertRegex(
+            text,
+            r"zero_copy.{0,160}(?:不能|禁止|不兼容).{0,160}Sleep",
+        )
 
     def test_sglang_contract(self) -> None:
         slug = "sglang-gpu-execution-path"
