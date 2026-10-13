@@ -719,6 +719,49 @@ class RequestToCudaWikiTest(unittest.TestCase):
         for target in NEW_SLUGS[1:]:
             self.assertIn((overview, target), edges)
 
+    def test_vllm_operations_generated_output(self) -> None:
+        total_diagrams = sum(count_ascii_diagrams(slug) for slug in OPS_SLUGS)
+        self.assertGreaterEqual(total_diagrams, 12)
+
+        generated_pages: dict[str, Path] = {}
+        for slug in OPS_SLUGS:
+            html_path = WIKI / "html" / "analysis" / f"{slug}.html"
+            self.assertTrue(html_path.is_file(), f"missing generated page: {slug}")
+            generated_pages[slug] = html_path
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<pre><code class=\"language-text\">", html)
+            self.assertNotIn("wikilink-missing", html)
+            for href in re.findall(r'href="([^"]+)"', html):
+                if href.startswith(("http://", "https://", "mailto:", "#")):
+                    continue
+                target_ref = href.split("#", 1)[0].split("?", 1)[0]
+                if not target_ref:
+                    continue
+                target = (html_path.parent / target_ref).resolve()
+                self.assertTrue(target.exists(), f"{slug}: missing href target {href}")
+
+        self.assertIn(
+            "Lifecycle 状态机",
+            generated_pages["vllm-operational-lifecycle"].read_text(
+                encoding="utf-8"
+            ),
+        )
+        self.assertIn(
+            "Post-operation Checklist",
+            generated_pages["vllm-production-operations-runbook"].read_text(
+                encoding="utf-8"
+            ),
+        )
+
+        graph = json.loads((WIKI / "html" / "graph.json").read_text(encoding="utf-8"))
+        node_ids = {node["id"] for node in graph["nodes"]}
+        self.assertTrue(set(OPS_SLUGS) <= node_ids)
+        edges = {(edge["source"], edge["target"]) for edge in graph["edges"]}
+        lifecycle, runbook = OPS_SLUGS
+        self.assertIn((lifecycle, runbook), edges)
+        self.assertIn(("vllm", lifecycle), edges)
+        self.assertIn(("vllm", runbook), edges)
+
 
 if __name__ == "__main__":
     unittest.main()

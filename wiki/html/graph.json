@@ -635,11 +635,11 @@
         "cuda",
         "gpu"
       ],
-      "date": "2026-10-11",
+      "date": "2026-10-12",
       "description": "从 OpenAI 请求对象、Gateway/Router、aggregated/P-D 分叉、engine handoff 到 CUDA 的统一 L0–L8 学习入口。",
-      "degree": 17,
-      "inbound": 7,
-      "outbound": 17
+      "degree": 18,
+      "inbound": 8,
+      "outbound": 18
     },
     {
       "id": "llm-d-kubernetes-sigs-candidate-map",
@@ -763,6 +763,27 @@
       "outbound": 10
     },
     {
+      "id": "vllm-production-operations-runbook",
+      "title": "vLLM 生产运维 Runbook：启动、Drain、Sleep、Preload 与升级",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/vllm-production-operations-runbook.html",
+      "tags": [
+        "analysis",
+        "vllm",
+        "llm-serving",
+        "operations",
+        "runbook",
+        "kubernetes",
+        "reliability"
+      ],
+      "date": "2026-10-12",
+      "description": "vLLM 启动、probes、Preload、Sleep 各级、权重更新、滚动升级、故障诊断与回滚的生产操作手册。",
+      "degree": 6,
+      "inbound": 4,
+      "outbound": 6
+    },
+    {
       "id": "vllm-gpu-execution-path",
       "title": "vLLM 请求到 GPU Kernel 的执行路径",
       "category": "analysis",
@@ -777,11 +798,32 @@
         "cuda",
         "gpu"
       ],
-      "date": "2026-10-11",
+      "date": "2026-10-12",
       "description": "vLLM V1 的 AsyncLLM、EngineCore、Scheduler、KVCacheManager、GPUModelRunner 与 kernel handoff。",
-      "degree": 10,
-      "inbound": 9,
-      "outbound": 9
+      "degree": 12,
+      "inbound": 11,
+      "outbound": 10
+    },
+    {
+      "id": "vllm-operational-lifecycle",
+      "title": "vLLM 运维生命周期：启动、Preload、Sleep、更新与退出",
+      "category": "analysis",
+      "category_label": "分析",
+      "href": "analysis/vllm-operational-lifecycle.html",
+      "tags": [
+        "analysis",
+        "vllm",
+        "llm-serving",
+        "operations",
+        "lifecycle",
+        "gpu-memory",
+        "reliability"
+      ],
+      "date": "2026-10-12",
+      "description": "vLLM process/engine/worker/preload daemon 状态机，覆盖启动、Warmup、Drain、Sleep/Wake、Reload、LoRA 与 Shutdown 的资源 ownership。",
+      "degree": 8,
+      "inbound": 6,
+      "outbound": 8
     },
     {
       "id": "agent-delegation",
@@ -1134,8 +1176,8 @@
       ],
       "date": "2026-10-11",
       "description": "GPU / CUDA / MUSA kernel 学习路径，从 Runtime/Stream/Graph 到访存、GEMM 与推理性能理解",
-      "degree": 11,
-      "inbound": 3,
+      "degree": 12,
+      "inbound": 4,
       "outbound": 11
     },
     {
@@ -1266,8 +1308,8 @@
       ],
       "date": "2026-10-03",
       "description": "TTFT、ITL、TPOT、goodput 与成本口径，用负载分布、队列、缓存冷热和失败分母解释压测结果",
-      "degree": 16,
-      "inbound": 14,
+      "degree": 17,
+      "inbound": 15,
       "outbound": 8
     },
     {
@@ -1283,11 +1325,11 @@
         "reliability",
         "fault-tolerance"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-12",
       "description": "deadline、过载、重试、取消、清理、readiness 与 drain，区分首 token 前后的恢复边界",
-      "degree": 17,
-      "inbound": 13,
-      "outbound": 9
+      "degree": 19,
+      "inbound": 15,
+      "outbound": 11
     },
     {
       "id": "merkle-dag-fingerprint",
@@ -1320,11 +1362,11 @@
         "operator",
         "llm-serving"
       ],
-      "date": "2026-10-03",
+      "date": "2026-10-12",
       "description": "Kubernetes 上声明式管理模型服务的 operator 模式",
-      "degree": 61,
-      "inbound": 52,
-      "outbound": 31
+      "degree": 63,
+      "inbound": 54,
+      "outbound": 33
     },
     {
       "id": "paged-attention",
@@ -3756,11 +3798,11 @@
         "kv-cache",
         "oss"
       ],
-      "date": "2026-10-11",
+      "date": "2026-10-12",
       "description": "engine 实现下钻：scheduler、model runner、本地 KV 与并行执行，采用前核验 release 和集成矩阵",
-      "degree": 51,
-      "inbound": 50,
-      "outbound": 15
+      "degree": 53,
+      "inbound": 52,
+      "outbound": 17
     },
     {
       "id": "semantic-router",
@@ -5921,8 +5963,8 @@
       ],
       "date": "2026-09-14",
       "description": "vLLM 本地 HEAD dc36fcce90 的 EngineCore/Scheduler/KVCacheManager/ModelRunner 代码路径与推理优化。",
-      "degree": 8,
-      "inbound": 6,
+      "degree": 9,
+      "inbound": 7,
       "outbound": 5
     },
     {
@@ -12961,6 +13003,11 @@
       "kind": "related"
     },
     {
+      "source": "llm-inference-request-lifecycle",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
+    },
+    {
       "source": "llm-inference-serving-project-map",
       "target": "aibrix",
       "kind": "related"
@@ -13373,6 +13420,16 @@
     {
       "source": "llm-serving-reliability",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "llm-serving-reliability",
+      "target": "vllm-production-operations-runbook",
       "kind": "related"
     },
     {
@@ -13883,6 +13940,16 @@
     {
       "source": "model-serving-operator",
       "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "model-serving-operator",
+      "target": "vllm-production-operations-runbook",
       "kind": "related"
     },
     {
@@ -19046,6 +19113,16 @@
       "kind": "related"
     },
     {
+      "source": "vllm",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "vllm",
+      "target": "vllm-production-operations-runbook",
+      "kind": "related"
+    },
+    {
       "source": "vllm-gpu-execution-path",
       "target": "aibrix-inference-request-flow",
       "kind": "wikilink"
@@ -19089,6 +19166,81 @@
       "source": "vllm-gpu-execution-path",
       "target": "vllm",
       "kind": "related"
+    },
+    {
+      "source": "vllm-gpu-execution-path",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "gpu-programming-learning",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "llm-inference-request-lifecycle",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "llm-serving-reliability",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "src-vllm-architecture",
+      "kind": "wikilink"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "vllm-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-operational-lifecycle",
+      "target": "vllm-production-operations-runbook",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "llm-serving-performance",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "llm-serving-reliability",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "model-serving-operator",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "vllm",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "vllm-gpu-execution-path",
+      "kind": "related"
+    },
+    {
+      "source": "vllm-production-operations-runbook",
+      "target": "vllm-operational-lifecycle",
+      "kind": "related"
     }
   ],
   "categories": [
@@ -19110,7 +19262,7 @@
     {
       "id": "analysis",
       "label": "分析",
-      "count": 39
+      "count": 41
     }
   ]
 }
