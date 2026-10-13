@@ -1,9 +1,9 @@
 ---
 title: Model Serving Operator
 tags: [concept, model-serving, kubernetes, operator, llm-serving]
-date: 2026-10-03
+date: 2026-10-12
 sources: [src-dynamo-architecture, src-kserve-architecture, src-ome-architecture, src-kubeai-architecture, src-gpustack-architecture, src-llm-d-workload-variant-autoscaler-architecture, src-llm-d-batch-gateway-architecture, src-openkruise-projects-current-state]
-related: ["[[kserve]]", "[[llm-inference]]", "[[inference-routing]]", "[[kubernetes]]", "[[vllm]]", "[[llm-d]]", "[[llm-d-router]]", "[[llm-d-kv-cache]]", "[[llm-d-workload-variant-autoscaler]]", "[[llm-d-batch-gateway]]", "[[batch-inference]]", "[[kubernetes-workload-automation]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]"]
+related: ["[[kserve]]", "[[llm-inference]]", "[[inference-routing]]", "[[kubernetes]]", "[[vllm]]", "[[llm-d]]", "[[llm-d-router]]", "[[llm-d-kv-cache]]", "[[llm-d-workload-variant-autoscaler]]", "[[llm-d-batch-gateway]]", "[[batch-inference]]", "[[kubernetes-workload-automation]]", "[[llm-serving-reliability]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[vllm-operational-lifecycle]]", "[[vllm-production-operations-runbook]]"]
 ---
 
 # Model Serving Operator
@@ -17,6 +17,10 @@ HPA 根据指标计算期望副本数并写入目标 workload 的 `/scale`；Dep
 在 llm-d 的 EPP metrics → KEDA → HPA 路径中，KEDA 的 Prometheus scaler 接入外部指标，KEDA 配置并拥有 HPA，非零副本扩缩决策由 HPA 执行；零副本激活需另按 KEDA 配置核验。[llm-d dev autoscaling](https://llm-d.ai/docs/dev/architecture/advanced/autoscaling)、[KEDA 概念](https://keda.sh/docs/2.18/concepts/)
 
 Pod 存在或期望副本增加不代表模型可服务。GPU 资源就位后还要加载权重、warmup，通过 readiness 并传播到 endpoint discovery，router 才能使用新容量；缩容则需要停止新选点并排空请求。职责图见 [[llm-inference-serving-project-map#A4 · Kubernetes Serving 控制面|A4 · Kubernetes Serving 控制面]]，传播时序见 [[llm-inference-serving-project-map#S3 · 扩缩与就绪传播时序|S3 · 扩缩与就绪传播时序]]，故障行为见 [[llm-serving-reliability]]。
+
+## 和 vLLM Lifecycle 的接口
+
+[[vllm-operational-lifecycle]] 定义 engine 内部 STARTING/READY/DRAINING/SLEEPING/WAKING 等状态及资源 ownership；operator 只负责编排这些动作、反映 readiness 并管理 replacement，不能把 process health 当成 engine ready。执行顺序、probes、rolling upgrade 与 rollback 见 [[vllm-production-operations-runbook]]。
 
 ## Operator 与相邻组件
 

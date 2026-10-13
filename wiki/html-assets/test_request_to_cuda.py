@@ -38,6 +38,12 @@ OPS_SLUGS = (
     "vllm-operational-lifecycle",
     "vllm-production-operations-runbook",
 )
+PAGE_EXPECTED_DATES = {
+    "llm-inference-request-lifecycle": "2026-10-12",
+    "vllm-gpu-execution-path": "2026-10-12",
+    "vllm-operational-lifecycle": "2026-10-12",
+    "vllm-production-operations-runbook": "2026-10-12",
+}
 HANDCRAFTED_HTML_SHA256 = {
     "src-agent-sandbox-architecture.html": "fdba44d4044ebb43d079e64312961ea190b6604ad13c57abf4bae1fcb288a622",
     "src-agentgateway-architecture.html": "c8c864b2974cc837e7f1e867a00cbf2a7964de323ae8ad24ee38bbc7b23c1b3b",
@@ -155,7 +161,7 @@ class RequestToCudaWikiTest(unittest.TestCase):
 
     def test_overview_contract(self) -> None:
         slug = "llm-inference-request-lifecycle"
-        text = self.assert_common_page_contract(slug)
+        text = self.assert_common_page_contract(slug, PAGE_EXPECTED_DATES[slug])
         assert_headings(
             self,
             slug,
@@ -221,7 +227,7 @@ class RequestToCudaWikiTest(unittest.TestCase):
 
     def test_vllm_contract(self) -> None:
         slug = "vllm-gpu-execution-path"
-        text = self.assert_common_page_contract(slug)
+        text = self.assert_common_page_contract(slug, PAGE_EXPECTED_DATES[slug])
         assert_headings(
             self,
             slug,
@@ -343,6 +349,49 @@ class RequestToCudaWikiTest(unittest.TestCase):
         self.assertRegex(text, r"zero_copy.{0,180}(?:不能|禁止|不兼容).{0,180}Sleep")
         self.assertRegex(text, r"(?:已输出|已经输出).{0,80}token.{0,100}(?:不能|不可).{0,80}透明")
         self.assertRegex(text, r"(?:单个|部分).{0,40}rank.{0,120}(?:整个|全部).{0,40}(?:group|实例组).{0,80}(?:unready|不可用|退出)")
+
+    def test_vllm_operations_navigation_and_backlinks(self) -> None:
+        wiki_paths = [
+            candidate
+            for category in CATEGORIES
+            for candidate in (WIKI / category).glob("*.md")
+        ] + [WIKI / "index.md", WIKI / "log.md"]
+        for slug in OPS_SLUGS:
+            inbound = [
+                candidate
+                for candidate in wiki_paths
+                if candidate.stem not in OPS_SLUGS
+                and f"[[{slug}" in candidate.read_text(encoding="utf-8")
+            ]
+            self.assertTrue(inbound, f"{slug}: no external inbound wikilink")
+
+        _path, vllm_entity = load_markdown("vllm")
+        for slug in OPS_SLUGS:
+            self.assertIn(f"[[{slug}]]", vllm_entity)
+
+        _path, reliability = load_markdown("llm-serving-reliability")
+        self.assertIn("[[vllm-production-operations-runbook]]", reliability)
+        _path, operator = load_markdown("model-serving-operator")
+        self.assertIn("[[vllm-operational-lifecycle]]", operator)
+        for analysis_slug in (
+            "vllm-gpu-execution-path",
+            "llm-inference-request-lifecycle",
+        ):
+            _path, analysis_text = load_markdown(analysis_slug)
+            self.assertIn("[[vllm-operational-lifecycle]]", analysis_text)
+
+        index = (WIKI / "index.md").read_text(encoding="utf-8")
+        reading_path = (
+            "[[vllm-operational-lifecycle]] → "
+            "[[vllm-production-operations-runbook]]"
+        )
+        self.assertIn(reading_path, index)
+        for slug in OPS_SLUGS:
+            self.assertIn(f"[[{slug}]]", index)
+
+        log = (WIKI / "log.md").read_text(encoding="utf-8")
+        entry = "## [2026-10-12] query | Add vLLM operations lifecycle and runbook"
+        self.assertEqual(log.count(entry), 1)
 
     def test_sglang_contract(self) -> None:
         slug = "sglang-gpu-execution-path"
@@ -579,7 +628,9 @@ class RequestToCudaWikiTest(unittest.TestCase):
             "sglang-gpu-execution-path": "e328c7ecbd69ebf77f38db9aa64eecefd760fe4b",
         }
         for slug in NEW_SLUGS:
-            text = self.assert_common_page_contract(slug)
+            text = self.assert_common_page_contract(
+                slug, PAGE_EXPECTED_DATES.get(slug, "2026-10-11")
+            )
             total_diagrams += count_ascii_diagrams(slug)
             if slug in fixed_shas:
                 self.assertIn(fixed_shas[slug], text)
