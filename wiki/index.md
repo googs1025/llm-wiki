@@ -1,6 +1,6 @@
 ---
 title: Wiki 索引
-date: 2026-10-11
+date: 2026-10-12
 ---
 
 # 知识库索引
@@ -339,6 +339,9 @@ date: 2026-10-11
 - [[agent-runtime-sandbox-project-map]] — Agent Runtime / Sandbox 项目地图（agent-sandbox / OpenKruise Agents / AgentCube / OpenShell / NemoClaw / HiClaw / AgentScope / agentgateway 分层对比）
 - [[llm-inference-serving-project-map]] — LLM Serving 项目边界地图：用五个锚点项目对照 engine、routing、runtime、Kubernetes control plane 与 KV infrastructure，补齐 A4 控制面和 S3 就绪传播。
 - 请求到 CUDA 阅读路径：[[llm-inference-request-lifecycle]] → [[aibrix-inference-request-flow]] / [[dynamo-inference-request-flow]] / [[llm-d-inference-request-flow]] → [[vllm-gpu-execution-path]] / [[sglang-gpu-execution-path]] → [[llm-gpu-kernel-execution-path]]。
+- vLLM 运维阅读路径：[[vllm-operational-lifecycle]] → [[vllm-production-operations-runbook]]。
+- [[vllm-operational-lifecycle]] — vLLM process/engine/worker/preload daemon 状态机，覆盖启动、Warmup、Drain、Sleep/Wake、Reload、LoRA 与 Shutdown 的资源 ownership。
+- [[vllm-production-operations-runbook]] — vLLM 启动、probes、Preload、Sleep 各级、权重更新、滚动升级、故障诊断与回滚的生产操作手册。
 - [[llm-inference-request-lifecycle]] — 从 OpenAI 请求对象、Gateway/Router、aggregated/P-D 分叉、engine handoff 到 CUDA 的统一 L0–L8 学习入口。
 - [[aibrix-inference-request-flow]] — AIBrix Envoy ext_proc、combined fallback、vLLM response-merge 与 SGLang bootstrap/watchdog 四象限请求流。
 - [[dynamo-inference-request-flow]] — Dynamo Frontend/Runtime/KV Router 三平面、vLLM/SGLang aggregated/P-D 与 NIXL 路径。

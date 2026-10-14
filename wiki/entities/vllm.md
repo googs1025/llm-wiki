@@ -1,18 +1,18 @@
 ---
 title: vLLM
 tags: [entity, ai-infra, llm-inference, llm-serving, kv-cache, oss]
-date: 2026-10-11
+date: 2026-10-12
 sources: [src-vllm-architecture, src-kvcached-architecture]
-related: ["[[sglang]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[paged-attention]]", "[[radix-attention]]", "[[continuous-batching]]", "[[llm-serving-performance]]", "[[disaggregated-serving]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[vllm-gpu-execution-path]]"]
+related: ["[[sglang]]", "[[kvcached]]", "[[elastic-kv-cache]]", "[[paged-attention]]", "[[radix-attention]]", "[[continuous-batching]]", "[[llm-serving-performance]]", "[[disaggregated-serving]]", "[[llm-inference-serving-project-map]]", "[[llm-serving-engine-selection-map]]", "[[vllm-gpu-execution-path]]", "[[vllm-operational-lifecycle]]", "[[vllm-production-operations-runbook]]"]
 ---
 
 # vLLM
 
 vLLM 是 LLM 推理与 serving 引擎，拥有请求调度、模型执行和本地 KV 管理；[[paged-attention]] 是理解其 KV 分块寻址的重要入口。
 
-## 当前核验（2026-10-03）
+## 当前核验（2026-10-12）
 
-核验 release 为 [v0.30.0](https://github.com/vllm-project/vllm/releases/tag/v0.30.0)，发布于 2026-09-22（GitHub UTC 日期）。当日 [latest V1 架构文档](https://docs.vllm.ai/en/latest/design/arch_overview/#v1-process-architecture)将 API Server、Engine Core 与 GPU workers 分开；DP Coordinator 按部署方式启用，不能继续用“单进程主导”概括 V1。
+核验 release 为 [v0.31.0](https://github.com/vllm-project/vllm/releases/tag/v0.31.0)，发布于 2026-10-05（GitHub UTC 日期）。当前 [latest V1 架构文档](https://docs.vllm.ai/en/latest/design/arch_overview/#v1-process-architecture)将 API Server、Engine Core 与 GPU workers 分开；DP Coordinator 按部署方式启用，不能继续用“单进程主导”概括 V1。
 
 [[src-vllm-architecture]] 是 2026-09-14 本地 HEAD `dc36fcce90` 的架构快照；下述当前核验与旧 Source 的类清单、默认值和性能数字分开解读。
 
@@ -30,6 +30,10 @@ vLLM 是 LLM 推理与 serving 引擎，拥有请求调度、模型执行和本�
 ## 请求到 GPU 的当前入口
 
 [[vllm-gpu-execution-path]] 固定到 2026-10-11 upstream，沿 `AsyncLLM.generate → EngineCore.step → Scheduler.schedule → KVCacheManager → GPUModelRunner → sampler` 追到 attention/GEMM/MoE kernels，并说明 vLLM P/D connector 在 scheduler-side KV accounting 与 worker-side data movement 的边界。
+
+## 运维生命周期入口
+
+[[vllm-operational-lifecycle]] 解释 process/engine/worker/preload daemon 的状态与资源 ownership；[[vllm-production-operations-runbook]] 提供启动、health/readiness、drain、Sleep、Preload、权重更新、LoRA、滚动升级和故障回滚步骤。两页区分 v0.31.0 release、固定 main、development endpoints 与外部 Kubernetes 控制面。
 
 TP/PP/EP/DP 属于引擎的执行并行方式，可以跨设备或节点；平台把实例分成 prefill/decode 角色池属于另一层的 [[disaggregated-serving]]。两层可以组合，不能把增加某种并行度等同于完成 P/D 编排。
 

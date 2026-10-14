@@ -1,9 +1,9 @@
 ---
 title: LLM Serving Reliability
 tags: [concept, llm-inference, llm-serving, reliability, fault-tolerance]
-date: 2026-10-03
+date: 2026-10-12
 sources: [src-vllm-architecture, src-sglang-architecture, src-k8s-serving-stack-comparison]
-related: [llm-inference, llm-serving-performance, continuous-batching, inference-routing, disaggregated-serving, model-serving-operator, vllm, sglang]
+related: [llm-inference, llm-serving-performance, continuous-batching, inference-routing, disaggregated-serving, model-serving-operator, vllm, sglang, vllm-operational-lifecycle, vllm-production-operations-runbook]
 ---
 
 # LLM Serving Reliability
@@ -15,6 +15,10 @@ related: [llm-inference, llm-serving-performance, continuous-batching, inference
 文本生成是有状态的流式请求。重试是否安全取决于调用方幂等键、采样参数与随机状态、模型/revision、已产生 token，以及服务端是否仍能辨识同一执行尝试。首 token 前的失败可在合同允许的次数、deadline 和预算内重试；一旦已向客户端发送 token，透明重放可能重复内容、改变采样轨迹或掩盖部分结果，通常应终止该流并明确报告中断。不得据此推断所有系统实现这些策略，或中途流重放是透明的。
 
 [[continuous-batching]] 是 engine 内的调度；入口准入、排队和拒绝是请求路径上的合同。[[model-serving-operator]]、自动扩缩和模型装载则多是异步控制路径：它们最终改变可用容量，却不能替代当前请求的 admission 决策。
+
+## vLLM 生命周期实例化
+
+[[vllm-operational-lifecycle]] 把本页的抽象故障边界映射到 vLLM scheduler、weights、KV、worker ranks 与 preload daemon；[[vllm-production-operations-runbook]] 给出先退出 routing、选择 drain/abort/keep、再 Sleep/reload/restart 的顺序。特别是已输出 token 的 stream、部分 rank 成功和 zero-copy daemon ownership，都不能靠 Pod 仍存活来判断安全恢复。
 
 ## S4 · 在线请求故障与降级时序
 

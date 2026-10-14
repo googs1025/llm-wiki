@@ -5,6 +5,10 @@ date: 2026-04-22
 
 # 操作日志
 
+## [2026-10-12] query | Add vLLM operations lifecycle and runbook
+
+新增 [[vllm-operational-lifecycle]] 与 [[vllm-production-operations-runbook]]：以 vLLM v0.31.0 和固定 upstream main 为证据，串联普通加载、Preload/ipc_cache、Warmup/Readiness、Drain、Sleep L0/L1/L2、KV-only release、Partial Wake、Reload Weights、LoRA、Shutdown 与 Kubernetes rolling upgrade。明确 stable/main/development endpoint 边界、zero-copy daemon ownership、流式请求不可透明恢复和多 rank 一致性要求。
+
 ## [2026-10-11] query | Trace inference requests from gateways to CUDA
 
 新增七页请求级学习路径：统一入口、AIBrix/Dynamo/llm-d 三个平台流、vLLM/SGLang 两条引擎源码链，以及 framework op 到 CUDA kernel、SM、Tensor Core/CUDA core 与 HBM/L2/shared/register 的 GPU 下钻。各平台分别核验 aggregated/P-D × vLLM/SGLang，固定 2026-10-11 upstream commits，并区分 routing/KV metadata、KV payload、token stream 与异步 control plane。

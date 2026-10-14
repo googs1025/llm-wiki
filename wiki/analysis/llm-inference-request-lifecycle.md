@@ -1,9 +1,9 @@
 ---
 title: LLM 推理请求端到端生命周期：从入口到 CUDA
 tags: [analysis, llm-inference, request-lifecycle, vllm, sglang, cuda, gpu]
-date: 2026-10-11
+date: 2026-10-12
 sources: []
-related: ["[[llm-inference]]", "[[disaggregated-serving]]", "[[inference-routing]]", "[[aibrix-inference-request-flow]]", "[[dynamo-inference-request-flow]]", "[[llm-d-inference-request-flow]]", "[[vllm-gpu-execution-path]]", "[[sglang-gpu-execution-path]]", "[[llm-gpu-kernel-execution-path]]"]
+related: ["[[llm-inference]]", "[[disaggregated-serving]]", "[[inference-routing]]", "[[aibrix-inference-request-flow]]", "[[dynamo-inference-request-flow]]", "[[llm-d-inference-request-flow]]", "[[vllm-gpu-execution-path]]", "[[sglang-gpu-execution-path]]", "[[llm-gpu-kernel-execution-path]]", "[[vllm-operational-lifecycle]]"]
 ---
 
 # LLM 推理请求端到端生命周期：从入口到 CUDA
@@ -214,6 +214,8 @@ Kubernetes API · Operator · HPA/KEDA · Planner · health/discovery · KV even
 ```
 
 控制面可能改变下一次 endpoint 候选集、现有 worker readiness 或队列容量，也可能触发 graceful drain。它不会为已经输出一部分 token 的请求自动提供无损迁移；是否能恢复取决于 KV、generated tokens、sampling state 和 backend 协议是否可重建。
+
+vLLM实例从loading/warmup到ready，再到drain、Sleep/Wake、reload与shutdown的异步路径见 [[vllm-operational-lifecycle]]。这些动作改变后续请求能否进入L4–L8，不能嵌进单次token hot path当作同步步骤。
 
 ## 箭头与执行位置约定
 

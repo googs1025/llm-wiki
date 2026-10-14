@@ -1,9 +1,9 @@
 ---
 title: vLLM 请求到 GPU Kernel 的执行路径
 tags: [analysis, vllm, llm-inference, scheduler, kv-cache, cuda, gpu]
-date: 2026-10-11
+date: 2026-10-12
 sources: [vllm-architecture-analysis.md]
-related: ["[[vllm]]", "[[llm-inference-request-lifecycle]]", "[[llm-gpu-kernel-execution-path]]", "[[paged-attention]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]"]
+related: ["[[vllm]]", "[[llm-inference-request-lifecycle]]", "[[llm-gpu-kernel-execution-path]]", "[[paged-attention]]", "[[disaggregated-serving]]", "[[kv-cache-offload]]", "[[vllm-operational-lifecycle]]"]
 ---
 
 # vLLM 请求到 GPU Kernel 的执行路径
@@ -11,6 +11,10 @@ related: ["[[vllm]]", "[[llm-inference-request-lifecycle]]", "[[llm-gpu-kernel-e
 本页沿 vLLM V1 的当前源码走完一次生成请求：API/`AsyncLLM` 把请求交给 EngineCore，`Scheduler` 在 token budget 和 KV capacity 下组成 iteration，worker 的 `GPUModelRunner` 准备 block table、slot mapping 和 tensor inputs，模型 forward 进入 attention/GEMM/MoE/custom ops，最后 sampling 结果回到 scheduler 与流式输出。
 
 平台入口如何把请求送进 vLLM，分别见 [[aibrix-inference-request-flow]]、[[dynamo-inference-request-flow]] 和 [[llm-d-inference-request-flow]]；kernel 进入 SM、Tensor Core 和 HBM 后的细节见 [[llm-gpu-kernel-execution-path]]。
+
+## 运维状态与执行状态的边界
+
+本页假设 engine 已 ready 且 scheduler允许执行。Weights/KV/CUDA Graph/NCCL 在 Sleep、Wake、Reload 和 Shutdown 中如何分配/释放，见 [[vllm-operational-lifecycle]]；外部系统必须先drain并退出routing，不能在本页的GPU iteration仍访问资源时执行memory lifecycle动作。
 
 ## 当前源码快照
 

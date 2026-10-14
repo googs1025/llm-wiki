@@ -34,6 +34,16 @@ NEW_SLUGS = (
     "sglang-gpu-execution-path",
     "llm-gpu-kernel-execution-path",
 )
+OPS_SLUGS = (
+    "vllm-operational-lifecycle",
+    "vllm-production-operations-runbook",
+)
+PAGE_EXPECTED_DATES = {
+    "llm-inference-request-lifecycle": "2026-10-12",
+    "vllm-gpu-execution-path": "2026-10-12",
+    "vllm-operational-lifecycle": "2026-10-12",
+    "vllm-production-operations-runbook": "2026-10-12",
+}
 HANDCRAFTED_HTML_SHA256 = {
     "src-agent-sandbox-architecture.html": "fdba44d4044ebb43d079e64312961ea190b6604ad13c57abf4bae1fcb288a622",
     "src-agentgateway-architecture.html": "c8c864b2974cc837e7f1e867a00cbf2a7964de323ae8ad24ee38bbc7b23c1b3b",
@@ -101,14 +111,16 @@ def parse_page(slug: str) -> tuple[build.Frontmatter, str]:
     return build.parse_frontmatter(text)
 
 
-def assert_frontmatter(test: unittest.TestCase, slug: str) -> None:
+def assert_frontmatter(
+    test: unittest.TestCase, slug: str, expected_date: str = "2026-10-11"
+) -> None:
     _path, text = load_markdown(slug)
     frontmatter, _body = build.parse_frontmatter(text)
     for key in ("title", "tags", "date", "sources", "related"):
         test.assertRegex(text, rf"(?m)^{key}:", f"{slug}: missing {key}")
     test.assertTrue(frontmatter.title, f"{slug}: empty title")
     test.assertTrue(frontmatter.tags, f"{slug}: empty tags")
-    test.assertEqual(frontmatter.date, "2026-10-11")
+    test.assertEqual(frontmatter.date, expected_date)
     test.assertTrue(frontmatter.related, f"{slug}: empty related")
 
 
@@ -137,8 +149,10 @@ def collect_missing_wikilinks(paths: Iterable[Path]) -> set[str]:
 
 
 class RequestToCudaWikiTest(unittest.TestCase):
-    def assert_common_page_contract(self, slug: str) -> str:
-        assert_frontmatter(self, slug)
+    def assert_common_page_contract(
+        self, slug: str, expected_date: str = "2026-10-11"
+    ) -> str:
+        assert_frontmatter(self, slug, expected_date)
         _path, text = load_markdown(slug)
         for placeholder in PLACEHOLDERS:
             self.assertNotIn(placeholder, text, f"{slug}: placeholder {placeholder}")
@@ -147,7 +161,7 @@ class RequestToCudaWikiTest(unittest.TestCase):
 
     def test_overview_contract(self) -> None:
         slug = "llm-inference-request-lifecycle"
-        text = self.assert_common_page_contract(slug)
+        text = self.assert_common_page_contract(slug, PAGE_EXPECTED_DATES[slug])
         assert_headings(
             self,
             slug,
@@ -213,7 +227,7 @@ class RequestToCudaWikiTest(unittest.TestCase):
 
     def test_vllm_contract(self) -> None:
         slug = "vllm-gpu-execution-path"
-        text = self.assert_common_page_contract(slug)
+        text = self.assert_common_page_contract(slug, PAGE_EXPECTED_DATES[slug])
         assert_headings(
             self,
             slug,
@@ -244,6 +258,140 @@ class RequestToCudaWikiTest(unittest.TestCase):
         )
         for symbol in symbols:
             self.assertIn(symbol, text)
+
+    def test_vllm_operational_lifecycle_contract(self) -> None:
+        slug = "vllm-operational-lifecycle"
+        text = self.assert_common_page_contract(slug, "2026-10-12")
+        assert_headings(
+            self,
+            slug,
+            (
+                "版本与证据边界",
+                "Lifecycle 状态机",
+                "Process / Engine / Worker / Daemon 所有权",
+                "普通启动与 Preload 启动",
+                "Warmup 与 Ready",
+                "Drain 与 Pause",
+                "Sleep Level 0/1/2",
+                "Partial Wake 与 Reload Weights",
+                "Preload Cache Modes",
+                "LoRA 生命周期",
+                "Shutdown 与 Restart",
+                "资源状态矩阵",
+                "失败与恢复边界",
+                "外部控制面接口",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 7)
+        for evidence_label in (
+            "release-documented",
+            "main-documented",
+            "development-endpoint",
+            "integration-dependent",
+            "external-control-plane",
+        ):
+            self.assertIn(evidence_label, text)
+        self.assertIn("v0.31.0", text)
+        self.assertIn("c85616efc6f0eaa50ca1f1a09c32368aedffd3d8", text)
+        for term in (
+            "zero_copy",
+            "ipc_cache",
+            "weights",
+            "kv_cache",
+            "scheduling",
+            "CUDA Graph",
+            "NCCL",
+        ):
+            self.assertIn(term, text)
+        self.assertRegex(
+            text,
+            r"zero_copy.{0,160}(?:不能|禁止|不兼容).{0,160}Sleep",
+        )
+
+    def test_vllm_operations_runbook_contract(self) -> None:
+        slug = "vllm-production-operations-runbook"
+        text = self.assert_common_page_contract(slug, "2026-10-12")
+        assert_headings(
+            self,
+            slug,
+            (
+                "使用方式与版本标签",
+                "启动前检查",
+                "普通启动",
+                "Preload Daemon",
+                "Health、Startup 与 Readiness",
+                "安全 Drain",
+                "Sleep Level 0",
+                "只释放 KV Cache",
+                "Sleep Level 1",
+                "Sleep Level 2 与权重更新",
+                "Wake 与恢复流量",
+                "LoRA 运维",
+                "Graceful Shutdown",
+                "Kubernetes Rolling Upgrade",
+                "故障诊断树",
+                "回滚",
+                "Post-operation Checklist",
+            ),
+        )
+        self.assertGreaterEqual(count_ascii_diagrams(slug), 5)
+        for phase in (
+            "PRECHECK",
+            "REMOVE FROM ROUTING",
+            "DRAIN/POLICY",
+            "EXECUTE",
+            "VERIFY",
+            "RECOVER/ROLLBACK",
+            "POSTCHECK",
+        ):
+            self.assertIn(phase, text)
+        self.assertIn("VLLM_SERVER_DEV_MODE=1", text)
+        self.assertRegex(text, r"zero_copy.{0,180}(?:不能|禁止|不兼容).{0,180}Sleep")
+        self.assertRegex(text, r"(?:已输出|已经输出).{0,80}token.{0,100}(?:不能|不可).{0,80}透明")
+        self.assertRegex(text, r"(?:单个|部分).{0,40}rank.{0,120}(?:整个|全部).{0,40}(?:group|实例组).{0,80}(?:unready|不可用|退出)")
+
+    def test_vllm_operations_navigation_and_backlinks(self) -> None:
+        wiki_paths = [
+            candidate
+            for category in CATEGORIES
+            for candidate in (WIKI / category).glob("*.md")
+        ] + [WIKI / "index.md", WIKI / "log.md"]
+        for slug in OPS_SLUGS:
+            inbound = [
+                candidate
+                for candidate in wiki_paths
+                if candidate.stem not in OPS_SLUGS
+                and f"[[{slug}" in candidate.read_text(encoding="utf-8")
+            ]
+            self.assertTrue(inbound, f"{slug}: no external inbound wikilink")
+
+        _path, vllm_entity = load_markdown("vllm")
+        for slug in OPS_SLUGS:
+            self.assertIn(f"[[{slug}]]", vllm_entity)
+
+        _path, reliability = load_markdown("llm-serving-reliability")
+        self.assertIn("[[vllm-production-operations-runbook]]", reliability)
+        _path, operator = load_markdown("model-serving-operator")
+        self.assertIn("[[vllm-operational-lifecycle]]", operator)
+        for analysis_slug in (
+            "vllm-gpu-execution-path",
+            "llm-inference-request-lifecycle",
+        ):
+            _path, analysis_text = load_markdown(analysis_slug)
+            self.assertIn("[[vllm-operational-lifecycle]]", analysis_text)
+
+        index = (WIKI / "index.md").read_text(encoding="utf-8")
+        reading_path = (
+            "[[vllm-operational-lifecycle]] → "
+            "[[vllm-production-operations-runbook]]"
+        )
+        self.assertIn(reading_path, index)
+        for slug in OPS_SLUGS:
+            self.assertIn(f"[[{slug}]]", index)
+
+        log = (WIKI / "log.md").read_text(encoding="utf-8")
+        entry = "## [2026-10-12] query | Add vLLM operations lifecycle and runbook"
+        self.assertEqual(log.count(entry), 1)
 
     def test_sglang_contract(self) -> None:
         slug = "sglang-gpu-execution-path"
@@ -480,7 +628,9 @@ class RequestToCudaWikiTest(unittest.TestCase):
             "sglang-gpu-execution-path": "e328c7ecbd69ebf77f38db9aa64eecefd760fe4b",
         }
         for slug in NEW_SLUGS:
-            text = self.assert_common_page_contract(slug)
+            text = self.assert_common_page_contract(
+                slug, PAGE_EXPECTED_DATES.get(slug, "2026-10-11")
+            )
             total_diagrams += count_ascii_diagrams(slug)
             if slug in fixed_shas:
                 self.assertIn(fixed_shas[slug], text)
@@ -568,6 +718,49 @@ class RequestToCudaWikiTest(unittest.TestCase):
         overview = "llm-inference-request-lifecycle"
         for target in NEW_SLUGS[1:]:
             self.assertIn((overview, target), edges)
+
+    def test_vllm_operations_generated_output(self) -> None:
+        total_diagrams = sum(count_ascii_diagrams(slug) for slug in OPS_SLUGS)
+        self.assertGreaterEqual(total_diagrams, 12)
+
+        generated_pages: dict[str, Path] = {}
+        for slug in OPS_SLUGS:
+            html_path = WIKI / "html" / "analysis" / f"{slug}.html"
+            self.assertTrue(html_path.is_file(), f"missing generated page: {slug}")
+            generated_pages[slug] = html_path
+            html = html_path.read_text(encoding="utf-8")
+            self.assertIn("<pre><code class=\"language-text\">", html)
+            self.assertNotIn("wikilink-missing", html)
+            for href in re.findall(r'href="([^"]+)"', html):
+                if href.startswith(("http://", "https://", "mailto:", "#")):
+                    continue
+                target_ref = href.split("#", 1)[0].split("?", 1)[0]
+                if not target_ref:
+                    continue
+                target = (html_path.parent / target_ref).resolve()
+                self.assertTrue(target.exists(), f"{slug}: missing href target {href}")
+
+        self.assertIn(
+            "Lifecycle 状态机",
+            generated_pages["vllm-operational-lifecycle"].read_text(
+                encoding="utf-8"
+            ),
+        )
+        self.assertIn(
+            "Post-operation Checklist",
+            generated_pages["vllm-production-operations-runbook"].read_text(
+                encoding="utf-8"
+            ),
+        )
+
+        graph = json.loads((WIKI / "html" / "graph.json").read_text(encoding="utf-8"))
+        node_ids = {node["id"] for node in graph["nodes"]}
+        self.assertTrue(set(OPS_SLUGS) <= node_ids)
+        edges = {(edge["source"], edge["target"]) for edge in graph["edges"]}
+        lifecycle, runbook = OPS_SLUGS
+        self.assertIn((lifecycle, runbook), edges)
+        self.assertIn(("vllm", lifecycle), edges)
+        self.assertIn(("vllm", runbook), edges)
 
 
 if __name__ == "__main__":
